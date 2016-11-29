@@ -1,0 +1,27 @@
+Index: tools/quake3/q3map2/brush.c
+===================================================================
+--- tools/quake3/q3map2/brush.c	(revision 369)
++++ tools/quake3/q3map2/brush.c	(working copy)
+@@ -357,6 +357,8 @@
+ 	side_t		*side;
+ 	plane_t		*plane;
+ 	
++	static	int	brushord = -1;
++	brushord++;
+ 	
+ 	/* walk the list of brush sides */
+ 	for( i = 0; i < brush->numsides; i++ )
+@@ -367,6 +369,13 @@
+ 		
+ 		/* make huge winding */
+ 		w = BaseWindingForPlane( plane->normal, plane->dist );
++		Sys_Printf(">>> BaseWindingForPlane() for brush %i, side %i is as follows:\n", brushord, i);
++		for (j = 0; j < w->numpoints; j++) {
++			Sys_Printf(">>> (%.1f %.1f %.1f) [rounded to nearest integer coordinates]\n",
++					Q_rint(w->p[j][0]),
++					Q_rint(w->p[j][1]),
++					Q_rint(w->p[j][2]));
++		}
+ 		
+ 		/* walk the list of brush sides */
+ 		for( j = 0; j < brush->numsides && w != NULL; j++ )

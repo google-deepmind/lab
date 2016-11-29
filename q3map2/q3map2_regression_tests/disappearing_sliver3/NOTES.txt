@@ -1,0 +1,36 @@
+Random notes for Rambetter, don't expect to understand this:
+============================================================
+
+Brush 0 is the problem.
+
+Side 0 is the problem (under surf tri).
+Side 1 is the +y 4-face.
+Side 2 is the -x 4-face.
+Side 3 is the -y 4-face.
+side 4 is the +z tri.
+
+(6144, 16122) -> (6784, 16241)
+x "climb" of side 1 is 6784 - 6144 = 640.
+y "climb" of side 1 is 16241 - 16122 = 119.
+
+x/y "climb rate" of side 1 is 640 / 119 = 5.378151261.
+
+After clipping side 0 against side 1, we get
+************
+**** (-262144, -33762.8125) -> (262144, 63722)
+************
+The slope of that is (262144 + 262144) / (63722 + 33762.8125) = 5.378150571. 
+
+(-262144, y) -> (6784, 16241)
+So (6784 + 262144) / (16241 - y) = 640 / 119
+So y = 16241 - ((119 * (6784 + 262144)) / 640) = -33762.8
+
+(6144, 16122) -> (262144, y)
+So (262144 - 6144) / (y - 16122) = 640 / 119
+So y = 16122 + ((119 * (262144 - 6144)) / 640) = 63722
+
+After clipping side 0 against side 1 should have
+************
+**** (-262144, -33762.8) -> (262144, 63722)
+************
+

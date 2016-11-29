@@ -1,0 +1,709 @@
+Q3Map2 Version History + Changelog (Reverse Chronological Order)
+
+2.5.16 (2004-10-18)
+
+- New: -fixaas mode to reassociate an AAS file with a changed BSP
+- New: -nostyles switch on light phase disabling lightstyles
+- Using libmhash cryptographic hashing library instead of md5lib
+
+
+2.5.15 (2004-07-08)
+
+- New: q3map_rgbGen, q3map_rgbMod or q3map_colorGen, q3map_colorMod
+- New: q3map_alphaGen const (like q3map_alphaMod set)
+- New: q3map_noVertexLight to suppress overwriting of vertex rgb
+- q3map_backShader now works again, can be used instead of
+  q3map_cloneShader + q3map_invert on the target shader
+- q3map_alphaMod volume brushes in func_group entities will now only
+  affect that entity's surfaces
+- q3map_clipModel now works on trans/nonsolid shaders, allowing
+  simplified clipping surfaces in models
+- Fixed bug in alphaMod code where only the first vertex was being
+  modded (thanks Ratty)
+- Vis exits instead of crashing with divide-by-zero when there are
+  no portals on simple box maps
+- All of a surface's lightmaps must be solid or not solid, fixing
+  ST coord problem with non-Raven games using lightstyles
+- Reverted a change in the meta code which was causing lightmap coord
+  overflows and ugly self-shadowing errors on surface boundaries
+- Any use of lightstyles automatically sets -nocollapse to reduce
+  total shader counts
+- Tenebrae lightmap size changed to 512x512
+
+
+2.5.14 (2004-04-09)
+
+- New: -dirty mode courtesy of RaP7oR (dirtmapping/ambient occlusion)
+- New: q3map_skyLight code using more uniform angular distribution about
+  the sky hemisphere
+- New: q3map_alphaMod set N.N
+- New: q3map_alphaMod scale N.N
+- New: q3map_alphaMod volume - applies all other q3map_alphaMod directives
+  to each vertex inside a brush textured with this shader, allowing large
+  faded scrolling fire shaders, waterfalls, marquees, explicit dotProduct
+  terrain blending control, etc.
+- Fixed a bug in alphaMod code where the type of the first alphaMod was
+  being used for all subsequent alphaMods
+- Lowered vertex-lit surface limits to 999 verts, 1000 was breaking Quake 3
+- Tightened up solid lightmap tolerances
+- Fixed bug in solid lightmap code where lightmap SD coords were being
+  incorrectly set
+
+
+2.5.13 (2004-03-03)
+
+- New: -convert -format <game> to convert between different BSP formats.
+  Example, to convert a Jedi Academy map to Enemy Territory:
+  -game ja -convert -format et
+- New: -game etut support for Urban Terror on Enemy Territory
+- New: -analyze mode for reverse engineering a BSP format
+- New: -compensate N.N (default 1.0) for descaling lightmap/vertex/grid
+  data to compensate for ingame overbrighting. 4.0 is a good value for
+  Quake 3 if used in combination with -gamma 2.2
+- New: compensate/gamma per-game setting
+- New: -light -cpma argument for "classic" (sic) vertex lighting
+- Replaced malloc() with stack allocation in IlluminateRawLightmap for
+  most small/medium lightmap calculations
+- Misc cleanups in q3map2.h
+- Support for non-128x128 lightmaps
+- The -meta process will now generate surfaces with more than 64
+  verts that have non-lightmapped shaders
+- Extended lightmap size tolerance to 2x for merging meta triangles in
+  maps with aggressive lightmapscale. Sorry kids!
+- Moved surface finish pass (celshading, cloning) to final surface pass.
+  This should fix a bug involving fog/tesselation/celshading/cloning
+- Solid-color lightmaps (within 1/255 in RGB) are detected and replaced
+  with a single pixel lightmap, saving space
+
+
+2.5.12 (2004-01-18)
+
+- New: -dark option for dark lightmap/brush seams in -light (Unreal 1-ish)
+- New: spawnflags 4 on misc_model entities makes them forcemeta/lightmapped
+  unless explicitly set as vertex lit in their shader(s). This can be
+  combined with spawnflags 2 (solid) as spawnflags 6
+- New: -gamma N.N switch sets lightmap/vertex gamma value for more
+  realistic lighting, instead of using high ambient/minlight. Default
+  is 1.0 (linear ramp), good values are between 1.5 and 2.2
+- Changed q3map_lightmapGamma N.N to q3map_lightmapBrightness N.N, to
+  better match its intended function
+- Ported to VS.NET 2003 and GtkRadiant 1.5 (spog_branch)
+- Fixed bug in _skybox maps where sunlight was leaking through brushes.
+  Thanks pjw!
+- Fixed bug in ASE loader where models without submodels/submaterials
+  would not load properly.
+- Fixed bug where q3map_tcGen was not being applied to models
+- Optimized MergeMetaTriangles a bit
+- Added KOR's fix to raytracer
+- -bouncegrid no longer affects the lightgrid dir
+- Added feature to PicoModel where spaces in material names in 3DS, ASE
+  and LWO models will mark the end of the shader name, so you can have
+  "textures/foo/bar 1" and "textures/foo/bar 2" in Lightwave, and both
+  surfaces will map to "textures/foo/bar"
+
+
+2.5.11 (2003-12-01)
+
+- New: added support for _skybox entities to generate "portal sky"
+  surfaces in games w/o native support (Quake 3). _skybox entities have
+  3 keys: _scale (default 64), and angle/angles (for rotation of the
+  skybox relative to the map)
+- New: added -skyfix switch to BSP phase as a workaround hack for
+  the black GL_CLAMP border on skybox edges on ATI (and newer nvidia)
+  video cards. Note: unnecessary in ET or JA
+- New: Added _anglescale to light entities for scaling angle attenuation.
+  Use a small value (< 1.0) to lessen the angle attenuation, and a high
+  value (> 1.0) for sharper, more faceted lighting
+- New: Added _lightmapscale support to misc_model entities
+- Custom shaders (external lightmaps, styles) will not be generated
+  if the find/replace text cannot be found
+- Tightened up light culling epsilon from 1.0 to 0.125 to stop certain
+  surface lights from being incorrectly culled (thanks RasputiN!)
+- Fixed bug where small 3 and 4 sided brush faces were getting fanned,
+  adding triangle/vertex counts
+- Moved to Visual Studio .NET, with aggressive optimizations enabled
+- Cleaned up missing image warnings
+- Parsing images out of shader stages if not found explicit/implicitly
+- Loads Enemy Territory implicitMap images if editor/light image not found
+
+
+2.5.10 (2003-10-22)
+
+- New: Lightwave model support (beta) courtesy of RR2DO2
+- New: Heretic 2 FM model support courtesy of Nurail
+- Re-enabled vertex cache friendly triangle reordering with fix
+- Disabled triangle reordering on certain surfaces, including autosprite
+  shaders due to visual errors
+- Fixed bug in radiosity where sorting of lights by style took forever.
+  Thanks ReBoOT!
+- Fixed bug in sun lighting code where maps too far off the origin would
+  not be properly it by sun or sky light. Thanks MindLink!
+- Entity causing a leak will be printed and selected in Radiant if BSP
+  monitoring is enabled. Requested by heeen
+- Fixed odd bug causing 10x slowdown in lighting in some maps. Should
+  be back to 2.5.7 performance. Also fixed a couple old bugs related to
+  autosprite shader (point) lights and backsplash lights not being styled
+  or setup correctly
+
+
+2.5.9 (2003-10-12)
+
+- Disabled triangle reordering for now (crashing on some maps)
+
+
+2.5.8 (2003-10-02)
+
+- New: Added two new sun parameters: angular deviation (width of the sun in
+  degrees) and sampling count (jitters). This allows for decent approximation
+  of penumbra "half-shadow" effects from sunlight with 16+ samples. These
+  parameters are accessible for entity lights (including spots and suns) via
+  these entity keys: _deviance and _samples. To use in shaders, use the new
+  q3map_sunExt <r> <g> <b> <brightness> <angle> <elevation> <deviance> <samples>
+- New: q3map_lightmapFilterRadius <self> <other> for light-emitting shaders.
+  Put *after* any q3map_sun directives or else your sun will be filtered. This
+  is good for eliminating the "stadium lighting" effect from q3map_skyLight.
+  Also usable as an entity key: _filterradius or _filter
+- New: Quake 2 MD2 model support in PicoModel for misc_model entities
+  (thanks to Nurail!)
+- Re-enabled vertex-cache-aware triangle reordering. Will probably have a
+  negligible effect on rendering performance, but can't hurt
+- Added short-circuit to raytracer: any empty nodes (including children) are
+  ignored on sun traces
+- Added BSP file size printout
+- Filtering of any kind now disables adaptive supersampling on a per-light,
+  per-ightmap basis
+- Fixed another _minlight <-> styled light interaction bug (thanks pjw!)
+
+
+2.5.7 (2003-08-31)
+
+- New: Jedi Academy support via -game ja
+- New: DDS (DXT1/3/5) texture support for future games
+- Re-enabled q3map_surfaceModel support, and the 'oriented' flag works as well
+- Re-enabled (fixed, really) large external lightmap support
+- Fixed a bug in the model code that would cause a crash if an uninvertable
+  matrix was created
+- Fixed a bug in Mathlib m4x4_t code where the tolerance for a singular matrix
+  was too low and crapping out on small (scaled down) matrices
+- Fixed bug in divide-by-zero on lightmap efficiency calculation
+- Added -force switch, allows unsupported BSP formats to (try) to be loaded
+
+
+2.5.6 (2003-08-15)
+
+- New: can convert BSP files to MAP files via -convert -format map. Note: not
+  perfect by any means, as certain pieces of data are irretrievably lost, such
+  as func_group entities (including terrain specifics), brush face texturing
+  info, and light/misc_model entities with Q3Map2-generated BSPs
+
+
+2.5.5
+
+- New: -scale N.N mode to scale the BSP
+- New: -light -lomem switch to supress trace BSP optimization. This
+  feature trades lighting performance for decreased memory usage
+- New: Added negative light support (note: will not darken below _minlight value)
+  might screw up radiosity, haven't tested much. Should work with entity
+  lights, shader lights, sun/sky lights and radiosity. Lightfilter shadows
+  tint negative lights too, so the end effect is subtraction of the color
+- New: Lightstyle support for non-Raven (JK2/SOF2) games, including Quake 3,
+  RTCW, ET, EF. Only works with lightmapped surfaces, use with care
+- Fixed long standing terrain texturing bug, should produce exact desired
+  results all of the time now. May require fixing alphamaps that were
+  kludged together to accomodate this bug on existing maps
+- Fixed bug (huh, wtf) causing misc_model surfaces to not be fogged
+- Fixed bug where fog brushes wouldn't fog surfaces if a global map fog
+  shader was present
+- Fixed bug where -patchmeta surfaces were being ignored for raytracing
+- Fixed long-standing bug where twosided surfaces were not correctly
+  bouncing light. You can now have a foggy glass window that re-emits
+  bright light with q3map_bounce 3.0 or so
+- Fixed really stupid bug in radiosity with bouncing styled lights
+- Stripping .map and appending .bsp in -info mode
+- Fixed bug where tesselated brush face surfaces were not being fogged
+- Twosided surfaces (using cull disable/twosided/none) are now lit twosided
+- Added tighter tolerance for alphashadow/lightfilter shadowing to raytracer
+  which fixed problem with double shadows from tracing near triangle seams
+- Brush entities should now be properly fogged. Really.
+- Styled lightmaps are no longer affected by _minlight (doh)
+
+
+2.5.4 (2003-04-01)
+
+- New: q3map_tessSize support for JK2/SOF2
+- New: -lightmapsize N argument
+- Fixed bug where switched styled lights weren't working correctly in SOF2/JK2
+- Fixed bug where external lightmaps with generated shaders were referencing
+  the wrong lightmap
+- Fixed bug causing lightgrid brushes to be ignored
+- Added variable sphere around trace sample points to inhibit occluder geometry
+
+
+2.5.3 (2003-03-06)
+
+- New: SOF2/JK2 light styles now supported
+- New: q3map_lightStyle N to set shader lightstyles
+- New: Tenebrae 2 support via -game tenebrae
+- New: -light -deluxe and -debugdeluxe for Tenebrae "deluxemap" static
+  lighting algorithm
+- Light envelopes now properly clipped to the PVS
+- q3map_vertexScale re-enabled (scales vertex lighting per-shader)
+- Minor bug in brush bevel code corrected
+- Brushes from func_group entities are correctly sorted on insertion
+- Fixed a couple misc warnings to print "percent" instead of "%"
+- Added -custinfoparms support to -light mode to suppress warnings
+- _minlight, _minvertexlight and _mingridlight order independent, and now
+  allow for values of 0
+
+
+2.5.2 (2003-02-17)
+
+- Fixed crash bugs with global map fog
+- Model loading really only warns once now
+
+
+2.5.1 (2003-02-17) (Splash Damage internal release)
+
+- Added more Hella-Fast juice to light code. Overall should be 35% faster
+- Refactored surface portion of raytracer code for less memory usage
+- Changed UVW epsilon in raytracer to catch more edge cases
+- Removed bounds check on occluded luxel finding, was causing more problems
+  than it was solving
+- Adaptive antialiasing code now ignores unmapped luxels for better shadow
+  edges and higher performance
+- Brushes in the BSP are now sorted opaque first
+- Fixed Really Stupid bug causing MapRawLightmap to take about 4x as long
+- Added optimization to make MapRawLightmap 2x as fast
+- New non-sucky quadrilateral subdivision of patches for MapRawLightmap
+- Patches with < 90 degrees of curvature are now box-lightmapped
+- Patch vertex normals now correctly stored, fixing bug in 2.5.0
+- Prints warning if map with < 10% detail brushes is detected
+
+
+2.5.0 (2003-02-14) (Splash Damage internal release)
+
+RAYTRACING AND SHADOW CALCULATION
+- New raytracing code. Rewrote the raytracer to maximize efficiency on modern
+  "caulk-hull" maps. Uses triangle intercept code written by SPoG, based on code
+  by Tomas Moller and Ben Trumbore (Journal of Graphics Tools, 2(1):21-28, 1997)
+  and a biased octree leaf subdivision scheme by Y.T.
+- Shadows (casting and receiving) are now controllable per-entity
+  New entity keys: "_castShadows" or "_cs" and "_receiveShadows" or "_rc"
+  Values: 0 = no shadows, 1 = worldspawn shadows, > 1 explicit shadow group,
+  negative values imply no worldspawn shadow interation.
+  *Entities, including model2 and RTCW misc_gamemodels can now cast shadows*
+
+RADIOSITY
+- Bumped up default and smallest radiosity patch size. Performance should be
+  approximately 4x with a small quality tradeoff
+- Radiosity patches now trace to centroid of triangle, and not bounds center
+- Radiosity and surface lights are now nudged around a bit if in solid
+- Radiosity light generation code is now thread-safe
+- Radiosity -dump files now .map instead of .pfb
+- Poorly worded "q3map_bounce" renamed to "q3map_bounceScale" (old still works)
+- New -bounceonly switch to store only bounced light in the BSP (for Tenebrae)
+
+MISC LIGHTING
+- Optimized case where light and sample are coplanar
+- Forcing nudged luxels to stay within lightmap surfaces' bounds
+
+CURVED SURFACES
+- New -subdivisions N argument, works with -patchmeta and -light for setting
+  patch level-of-detail. Default value is 8, use 4 to simulate default Q3
+- All patch tesselation code changed to create x-patterned tesselation for
+  better lighting
+- Storing patch LOD info in the .srf file for better patch light/shadows
+
+FOG
+- Reworked fog code to fix bad interation with fog and clipped models
+
+MODELS
+- Entities with attached MD3/ASE misc_models now have their bounds correctly set
+- Attached misc_models now support q3map_clipModel for solidity
+- Missing models will only warn once, rather than spew errors
+
+MISC
+- Metasurface merging no longer folds nonplanar triangles into planar surfaces
+  and vice-versa *
+- Fixed Really Stupid Bug where entity numbering was not loaded by lighting code
+  resulting in lightmaps merging across entity boundaries *
+
+* Might result in slightly larger BSP. For maximum efficiency, ungroup
+  func_group entities before doing a final compile
+
+TODO
++ Document new shadow stuff
++ Merge adjacent light-casting triangles into convex windings
+
+
+2.3.38 (2003-02-07)
+
+- New lighting code, return of Smoove-B. Intelligently antialises shadow edges
+  when you use the new -samples N switch. Get -extra quality in 1/3 the time
+- New lightmap filtering code. Now using a proper 0.25/0.5/1.0 filter kernel.
+  Also operates on individual lightsources, so per-lightsource filter/kernel
+  settings are now possible
+- New -patchmeta fixes, now does stitching and adaptive subdivision.
+  Thanks Sock!
+- Nonsolid patches will no longer be in the BSP when run with -patchmeta
+- Misc fog fixes, including q3map_noFog support in maps with global _fog
+  support (SOF2/JK2)
+- Now stripping misc_model entities from the BSP
+- Fixed disappearing face bug that's been present since 2.3.36.
+  Thanks Shadowspawn!
+
+
+2.3.37 (2003-01-24)
+
+- Building from GtkRadiant CVS trunk
+- Added new brush bevel code by MrElusive to fix lingering aas problems (sweet!)
+- Added -snap N arg to BSP phase for axial bevel plane snapping to reduce
+  clipped model plane count (note: will muck with above, use with care)
+- Patches in terrain entities should now have proper vertex alpha set
+- Fixed bug in fur code where fur was being limited to 2 layers (thanks pazur)
+- Reduced vertexlight search area to a reasonable size to keep vertex lighting
+  times down
+
+
+2.3.36 (2003-01-15)
+
+- Plane hashing re-enabled (I suck)
+- Plane hashing optimized (faster parsing of larger maps)
+- Plane finding accuracy code enabled
+- New ASE clipping code
+  + With above should be 10-50% faster
+  + Should generate 33% fewer planes
+  + Generates mostly-axial 5-sided polyhedra instead of pyramids,
+    for tighter 2-sided clipping
+- New -light args:
+  + -scale N -- scales all lightsources (area, radiosity, point, sky)
+  + -sky[scale] N -- scales sky lights (q3map_skylight, q3map_sunlight)
+- Changed fur code to scale fur offset based on original vertex alpha
+
+
+2.3.35 (2003-01-14)
+
+- PicoModel now inverts ASE T coordinate
+- BSP to ASE converter now inverts T coordinate
+- Disabling 2.3.34 triangle optimization code until I find out why it crashes
+- Fixed Conscript-q3map2 to use stack_size ld flags directly on Darwin/OS X
+- Added Conscript-q3map2 to q3map2.dsp for easier Win32 edit, *nix target
+
+
+2.3.34 (2003-01-08)
+
+- Building from merged GtkRadiant 1.2 -> 1.3 merged codebase
+- IMPORTANT NEW CHANGE: Light entities are now STRIPPED from the BSP file.
+  They are re-read in by -light from the MAP file. This has two consequences:
+  + It is no longer necessary to re-BSP & re-vis a map in order to change
+    lighting. You can just change lights in the map file and run -light.
+  + Slightly smaller BSP file, due to fewer entities
+  + Faster loading time, as the game code doesn't have to deal with them
+- Added new -ne (normal epsilon) and -de (distance epsilon) for tuning precision
+  of plane snapping to correct potential AAS/BSP issues
+- Using latest PicoModel, with support for RTCW MDC models
+- Surfaces per raw lightmap are now sorted by shader name, which should give
+  slightly better lightmap efficiency and lower in-game shader counts
+- Adjusted model code to use correct m4x4_t code & angles key
+- Minor bugfix in patch color gradient calculation code
+- Silenced erroneous areaportal warning spew
+- q3map_tcGen now works on model surfaces
+- Using default radiosity subdivide of 256 again (should make radiosity faster)
+- Enabled byte-swapping code so Q3Map2 can be compiled/run on little-endian
+  architectures (Mac OS X)
+
+
+2.3.33 (2002-12-08)
+
+- Added new -bouncescale argument for radiosity scaling
+- Added -pointscale and -areascale for consistent naming
+- Radiosity patch subdivision code enhanced
+- Hint portals split the BSP first (higher priority)
+- Antiportal and areaportal faces split the BSP last, to minimize errors
+- Areaportals work internally like hint and antiportals, so they no longer need
+  to be full brushes (the other sides can be skip)
+- External lightmaps are now named "lm_NNNN.tga" in the maps/mapname dir
+- Cleaned up some of -light argument processing
+- Planar surfaces w/o lightmaps will no longer be tagged as MST_TRIANGLE_SOUP
+  (this fixes problems with Particle Studio particles dropping out of view)
+
+
+2.3.32 (2002-11-30)
+
+- GtkRadiant (1.2.11) integration
+- Added epsilon to texture plane choose code to eliminate numerical
+  inconsistencies on brush faces slanted at 45 degree angles (bug 637)
+- Fixed bug in lightmap export after lighting when map contains 0 BSP lightmaps
+- Adjusted some light tracing constants to fix certain brush/patch seam shadows
+- Tinkered with skylight code again
+- Fixed bug where lightgrid would be black if level was compiled with -nogrid
+- Fixed -approx code to work in floating-point space, using _minlight
+- Fixed bug where vertex light code was using invalid pvs data to create
+  light list for surface, leading to incorrect vertex lighting
+- Fixed related bug in anti-light-leak code that was causing brush faces to go
+  black (bug 694)
+- New: _minlight sets _minvertexlight and (new) _mingridlight automatically
+- New: _mingridlight key to set minimum grid lighting
+
+
+2.3.31 (2002-11-21)
+
+- Stitching the edges of lightmaps on patches that wrap around (cyls and cones)
+  so the seam is no longer visible
+- The -patchmeta switch works better now, the patches are still stored in the
+  BSP for collision, but are pre-tesselated into nonplanar meta surfaces for
+  more efficient rendering
+- Better, more uniform lightmap sample position finding on patch meshes
+- Moved q3map_tcMod and q3map_alphaMod processing to the final phase
+- New: q3map_skylight AMOUNT ITERATIONS to replace surfacelight on sky surfaces
+  for much faster and more uniform sky illumination
+
+
+2.3.30 (Splash Damage internal release)
+
+- Fixed bug in PicoModel ASE material parsing code
+- Fixed a few seam/lightmap precision/projection errors
+- Increased MAX_SHADER FILES to 1024 and fixed overrun error when more than that
+  number of shaders was listed in shaderlist.txt
+- Increased a few compiler maximums for larger maps
+- New: -np N switch on BSP phase, works like -shadeangle, in that it forces all
+  planar shaders to be nonplanar with the shading angle specified
+- New: -nohint switch on BSP phase, omits hint brushes from compile for testing
+- New: -debugaxis switch on light mode. Colors lightmaps based on their lightmap
+  axis (which direction the lightmap was projected on)
+- New: -debugorigin switch on light mode. Colors lightmaps based on the luxel
+  origin relative to the raw lightmap's bounding box
+- New: -debugcluster switch on light mode. Colors lightmaps based on the pvs
+  cluster the luxel falls into
+- New: -convert switch to convert BSP to ASE file (experimental)
+- New: q3map_lightmapmergable directive to allow terrain to be mapped onto a
+  single lightmap page for seamless terrain shadows
+
+
+2.3.29 (2002-11-03)
+
+- Merged with latest CVS, fixed minor issues with matrix order
+- Fixed minor Sys_FPrintf/Sys_Printf substitution typo in Q3Map2
+- Expanded debug colors to 12 for debugging surface meshes
+- PicoModel: fixed ASE loader to support > 1 texture coordinate per-vertex,
+  so more models supported correctly, also loading vertex normals
+- PicoModel: md3 shader names are now cleaned. Suffixes (such as .tga or .jpg)
+  are stripped, and \ path separators are changed to /
+- New: Add :q3map to the end of any shader name, and it will be interpreted as
+  the named shader minus :q3map. Example:
+  textures/shaderlab/concrete:q3map -> textures/shaderlab/concrete
+  One potential use is the -approx feature to collapse lightmapped  surfaces
+  into vertexlit surfaces, saving lightmap space/memory
+- New: q3map_clipModel -- does what you think it does, sort of. This code ix
+  really experimental, and should *only* be used on large models such as terrain
+  (not small decorative models). This code will be evolving. Note: the shader's
+  surfaceparms are inherited by the magic clip brush, so if you have nonsolid
+  in your model's shader that uses q3map_clipModel, then the brush will also
+  be nonsolid
+
+
+2.3.28 (2002-11-01)
+
+- Bug 654 (http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=654):
+  Fixed problem where brush faces, drawsurfaces, and surfaceparms weren't living
+  together in perfect harmony (terrain surfaceparms now inherited by brushes)
+- Nodraw fog works now, albeit when you're underneath, surfaces above don't get
+  fogged properly. Could be good for foggy water where you want the above-water
+  portions to only be occluded by the water surface
+- Bug 656 (http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=656):
+  Number of lightgrid points displayed (byte size is currently out of proportion
+  due to internal storage format) when Q3Map is called with the -info switch
+- Fixed wack surface merging bug where code would attempt to merge triangles not
+  adjacent to the current set, causing bad lightmap projections on nonplanar
+  surfaces
+- Fixed tiny 1-character bug in 2d lightmap texture allocator where adjacent
+  luxels were being checked for occlusion rather than the actual source luxel
+
+
+2.3.27 (2002-10-31) Happy Halloween!
+
+- Fixed minor bug in scriplib bugfix where the last character in a file wasn't
+  being read.
+- Fixed bug where 0-area or bogus triangles were causing crash in MapRawLightmap
+  if they used a shader with a normalmap (thanks ShadowSpawn)
+- Fixed bug where lightmaps were getting hosed levelwide on a prerelease version
+  of 2.3.27
+- Fixed bug where lightmaps were getting knackered on models and certain patches
+- Merged latest PicoModel version from seaw0lf, adding support for ASE and WF OBJ
+  models (preliminary)
+- Increased MAX_MAP_PLANES to 0x40000 (~256k)
+
+Known issues:
+- Lightmap projection and surface merging on large ASE models sometimes flakes
+- Surface to brush surfaceparm propogation doesn't work properly with large
+  metasurfaces: http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=654
+
+
+2.3.26 (2002-10-27)
+
+- Now using GtkRadiant's libpng and zlib config (linked as DLLs)
+- Fixed bug in script parser where repeat calls to GetToken() were causing
+  memory corruption
+- Fixed SOF2 -rename bug
+- When using -game sof2 or -game jk2, the -flares argument is implied
+- Added -noflares argument to disable the above behavior
+- Added support for flares on entities. Use one of the following keys:
+  "_flare" "1" -- use default flare (different for each game)
+  "_flareshader" "path/to/flareshader" -- use a specific flare shader
+  Note: This only matters in SOF2/JK2 now. Make a light targetted (a spotlight)
+  to get it to aim the correct direction, otherwise it defaults to pointing 
+  downward. You cannot have omnidirectional flares
+- Lightgrid size is automatically increased to accomodate large maps. The
+  MAX_MAP_LIGHTGRID error will never happen again
+
+
+2.3.25 (2002-10-22)
+
+- Go Giants!
+- Fixed bug where Q3Map would crash on writing the BSP after the light stage.
+  Thanks to Rap7or (#q3map) and loon8 (Q3W forums) [bug 641]
+- Fixed bug where surface lights were not affecting the light grid properly.
+  Thanks to Shadowspawn and djbob [bug 642]
+- NEW: Added -faster support to lightgrid calculations while fixing previous bug
+- NEW: Changed it so the BSP file is written to a temp file first, then renamed.
+  This should prevent BSP file corruption on crashes during writes
+
+
+2.3.24 (2002-10-20)
+
+- Fixed numerous outstanding bugs and issues.
+- Normal interpolation is now improved. It's slightly slower, but more 'correct'
+  in cases where you have 10 triangles in one plane and 1 triangle in another
+  meeting up and the 10 triangles were over-affecting the average. Only new
+  identical normals are averaged now. This change affects phong shading, meta
+  surfaces, and PicoModel
+- PicoModel up to version 0.7.6, BSD license, better 3DS model support
+- PicoModel library now fixes broken normals on MD3 and 3DS models
+- Bumpmapping code is improved. The correct tangent vectors per-triangle are
+  now calculated so the bumpmaps are consistent with regards to light direction
+- Metasurface merging code optimized. Should be about 100x as fast on complex
+  maps or maps using models with high triangle counts
+- Vertexlight code tweaked a bit
+- Triangle/winding orders now more consistent. Tesselated surfaces will have
+  a uniform triangle ordering (thanks RR2DO2)
+- NEW: "vertexDeform move" now parsed and surfaces are merged into the
+  appropriate  BSP leaves they may enter into (thanks to Bart Vrijkorte)
+- NEW: shader command: q3map_alphaMod. Currently takes a single form:
+  q3map_alphaMod dotproduct ( NX NY NZ )
+  where NX NY NZ are a unit normal (length of 1.0) specifying direction.
+  An example use would be snow in a shader's 2nd pass, using alphaFunc or
+  blendFunc:
+  q3map_alphaMod dotproduct ( 0 0 1 ) // surfaces facing upwards have snow
+  (idea contributed by RR2DO2)
+
+
+2.3.23 (2002-10-18)
+
+- In my haste to release the previous version, I neglected to give credit where
+  it was due. Seaw0lf had as much (probably more) to do with the new model
+  loading library (PicoModel). Because of his efforts, you can load 3DS models
+  and use them in misc_model entities.
+- PicoModel model library up to version 0.7. Improved 3DS support, more stable.
+- Surface models still not reenabled. Soon. :)
+- You can now remap a misc_model's shaders like this:
+  Key "_remapNN" "the/model/shader;the/real/shader"
+  This works just like TA terrain vertexRemapShader key. You can also supply a
+  * glob for the source shader if you want all your model's shaders to use the
+  specified shader:
+  "_remap" "*;models/mapobjects/tree/bark"
+
+
+2.3.22 (2002-10-16)
+
+- Moving to sensible Linux-style versioning.
+- The misc_model code has been completely rewritten, breaking surface models.
+  Surface models will reappear in the next release, once the new model API has
+  stablized.
+- New: MD3 and 3D Studio 3DS models now natively supported.
+- The misc_model "angles" key now supported. Values: "pitch yaw roll" in keeping
+  with standard Quake 3 angles order.
+- Models scaled with "modelscale_vec" now have proper normal scaling/rotation
+  (thanks SPOG).
+- Models can now be lightmapped.
+- Models can now have > 1000 vertexes per surface.
+- For best results for above, add the following to models' shaders:
+  q3map_splotchfix
+  q3map_nonplanar
+- 3DS models' MATERIAL NAMES ARE THE FINAL Q3 SHADER NAMES. YOU HAVE BEEN WARNED.
+- Models are generally 13373R. :)
+
+
+2.3.0-a21 (2002-10-02)
+
+- Fixed a stack of really stupid bugs in the lightgrid code. Should be faster
+  and more predictable now.
+- SOF2/JK2 lightgrid now compiled. This is the first version of Q3Map2 that can
+  compile full, release-worthy SOF2 and JK2 maps.
+- SOF2/JK2 damageshader and damagable brush faces should work correctly now.
+
+
+2.3.0-a20 (2002-09-26)
+
+- SOF2/JK2 worldspawn "fog" (and "_fog") shader key support for levelwide fog
+- SOF2/JK2 light "scale" key to scale light brightness
+- SOF2/JK2 -rename function for _bsp and _rmg_bsp shader renaming
+
+
+2.3.0-a19 (2002-09-24)
+
+- Shaders can now be subclassed (Q3Map relavant portions only, such as
+  surfaceparms, lighting, texture projection, etc). To subclass an existing
+  shader, add "q3map_baseshader X" where X is the name of the base shader.
+- Preliminary auto-model distribution over surfaces. You can now have things
+  like grass and tree models automatically distributed across your terrain
+  or other surfaces. To wit:
+
+  q3map_surfacemodel models/mapobjects/tree2/tree2.md3 64 0.001 0.5 4.0 0 360 1
+
+  q3map_surfacemodel <path to md3> <density in units> <odds of appearing>
+      <min scale> <max scale> <min angle> <max angle> <oriented>
+  
+  The last flag is 1 or 0, and sets whether the model gets fitted to the
+  orientation of the surface. Not functional yet. See screenshots page for
+  shots of this in action.
+
+
+2.3.0-a18 (2002-09-21)
+
+- misc_models can now be attached to any brush model entity. Just target the
+  brush entity with the misc_model (select model, then entity, hit Ctrl+K)
+- q3map_tcMod translate (or shift or offset) <s offset> <t offset>
+- q3map_tcMod rotate <degrees> (rotates around origin, not center)
+- q3map_tcMod scale <s scale> <t scale>
+- Metasurface merging now much, much better. Merges into roughly rectangular or
+  square areas wherever possible
+- q3map_terrain no longer sets Z-axis lightmap projection. It must be set in
+  the terrain layer shaders if you want previous behavior
+- Worlspawn _blocksize key now supports 3 elements for setting X Y and Z splits
+  independently of each other (use a value of 0 for no splits on that axis)
+- Misc bugfixes
+
+
+2.3.0-a1 through 2.3.0-a17 (2002-07 through 2002-09-20)
+
+- Elite Force support (via -game ef)
+- SOF2 and JK2 support (via -game sof2 or -game jk2)
+- All new image handling with PNG support
+- q3map_lightimage specifies image for radiosity and lighting
+- External lightmaps, set using q3map_lightmapsize <width> <height>. Up to
+  1024 x 1024 supported.
+- q3map_lightmapGamma <value> sets the brightness scale of a lightmap
+- q3map_lightmapsampleoffset <distance> to fix glitches in lightmapped terrain
+- Tons more features and bugfixes. See the forum threads for details/screenshots
+- Two new surfaceparms, "antiportal" and "skip," and associated shaders, for
+  allowing the mapper to more cleanly set up visibility data
+- Lightmaps will always have square texels now (no more stretching)
+- Vertex light improvements
+- Light grid improvements
+- q3map_lightrgb support for RTCW
+
+
+
+
+
+

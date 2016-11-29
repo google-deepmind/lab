@@ -1,0 +1,36 @@
+LICENSE ( last update: Wed Feb  8 17:16:40 CST 2006 )
+-----------------------------------------------------
+
+There are 3 license types used throughout GtkRadiant source code.
+
+BSD - modified Berkeley Software Distribution license
+( each BSD licensed source file starts with the appropriate header )
+LGPL - GNU Lesser General Public License v2.1
+( see LGPL at the root of the tree )
+GPL - GNU General Public License
+( see GPL at the root of the tree )
+
+How do I check which license applies to a given part of the source code?
+
+Each source file in the tree comes with a license header which explains what
+license applies. To sum up shortly:
+
+GPL: ( except some files contributed by Loki Software under BSD license )
+GtkRadiant Core
+GtkRadiant Modules
+GtkRadiant Libraries
+Quake III Tools
+Quake II Tools
+Background2D Plugin
+HydraToolz Plugin
+
+BSD:
+JPEG Library
+MD5 Library
+DDS Library
+PicoModel Library
+PrtView Plugin
+
+LGPL
+BobToolz Plugin
+GenSurf Plugin

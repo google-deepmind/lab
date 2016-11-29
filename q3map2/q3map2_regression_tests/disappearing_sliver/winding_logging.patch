@@ -1,0 +1,105 @@
+Index: tools/quake3/q3map2/brush.c
+===================================================================
+--- tools/quake3/q3map2/brush.c	(revision 391)
++++ tools/quake3/q3map2/brush.c	(working copy)
+@@ -421,10 +421,16 @@
+ 	side_t		*side;
+ 	plane_t		*plane;
+ 	
+-	
++	static	int	brushord = -1;
++	brushord++;
++
++	Sys_Printf("In CreateBrushWindings() for brush %i\n", brushord);	
++
+ 	/* walk the list of brush sides */
+ 	for( i = 0; i < brush->numsides; i++ )
+ 	{
++		Sys_Printf("    Handling side %i on the brush\n", i);
++
+ 		/* get side and plane */
+ 		side = &brush->sides[ i ];
+ 		plane = &mapplanes[ side->planenum ];
+@@ -435,7 +441,13 @@
+ #else
+ 		w = BaseWindingForPlane( plane->normal, plane->dist );
+ #endif
+-		
++
++		Sys_Printf("        Before clipping we have:\n");
++		int z;
++		for (z = 0; z < w->numpoints; z++) {
++			Sys_Printf("            (%.8f %.8f %.8f)\n", w->p[z][0], w->p[z][1], w->p[z][2]);
++		}
++
+ 		/* walk the list of brush sides */
+ 		for( j = 0; j < brush->numsides && w != NULL; j++ )
+ 		{
+@@ -451,7 +463,20 @@
+ #else
+ 			ChopWindingInPlace( &w, plane->normal, plane->dist, 0 ); // CLIP_EPSILON );
+ #endif
+-			
++
++			Sys_Printf("        After clipping w/ side %i we have:\n", j);
++			if (w)
++			{
++				for (z = 0; z < w->numpoints; z++)
++				{
++					Sys_Printf("            (%.8f %.8f %.8f)\n", w->p[z][0], w->p[z][1], w->p[z][2]);
++				}
++			}
++			else
++			{
++				Sys_Printf("            winding is NULL\n");
++			}
++
+ 			/* ydnar: fix broken windings that would generate trifans */
+ #if EXPERIMENTAL_HIGH_PRECISION_MATH_Q3MAP2_FIXES
+ 			FixWindingAccu(w);
+Index: tools/quake3/q3map2/map.c
+===================================================================
+--- tools/quake3/q3map2/map.c	(revision 391)
++++ tools/quake3/q3map2/map.c	(working copy)
+@@ -803,7 +803,11 @@
+ 	char			shader[ MAX_QPATH ];
+ 	int				flags;
+ 	
++	static	int	brushord = -1;
++	brushord++;
+ 	
++	Sys_Printf("In ParseRawBrush() for brush %i\n", brushord);
++
+ 	/* initial setup */
+ 	buildBrush->numsides = 0;
+ 	buildBrush->detail = qfalse;
+@@ -812,9 +816,12 @@
+ 	if( g_bBrushPrimit == BPRIMIT_NEWBRUSHES )
+ 		MatchToken( "{" );
+ 	
++	int sideord = -1;
++
+ 	/* parse sides */
+ 	while( 1 )
+ 	{
++		sideord++;
+ 		if( !GetToken( qtrue ) )
+ 			break;
+ 		if( !strcmp( token, "}" ) )
+@@ -917,7 +924,16 @@
+ 		}
+ 		
+ 		/* find the plane number */
++		Sys_Printf("    Side %i:\n", sideord);
++		Sys_Printf("        (%f %f %f)\n", planePoints[0][0], planePoints[0][1], planePoints[0][2]);
++		Sys_Printf("        (%f %f %f)\n", planePoints[1][0], planePoints[1][1], planePoints[1][2]);
++		Sys_Printf("        (%f %f %f)\n", planePoints[2][0], planePoints[2][1], planePoints[2][2]);
+ 		planenum = MapPlaneFromPoints( planePoints );
++		Sys_Printf("        normal: (%.10f %.10f %.10f)\n",
++				mapplanes[planenum].normal[0],
++				mapplanes[planenum].normal[1],
++				mapplanes[planenum].normal[2]);
++		Sys_Printf("        dist: %.10f\n", mapplanes[planenum].dist);
+ 		side->planenum = planenum;
+ 		
+ 		/* bp: get the texture mapping for this texturedef / plane combination */

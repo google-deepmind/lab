@@ -1,0 +1,371 @@
+Old Q3Map 1.x and Early Q3Map2 Changelog (Chronological Order)
+
+- FILE IS STATIC. IF YOU MAKE CHANGES, UPDATE CHANGELOG.Q3MAP2 -
+
+
+Date		Version					Notes
+----------------------------------------------------------------
+2001-12-03	1.2 (ydnar) Alpha		Initial version (win32)
+
+2001-12-03	1.2 (ydnar 2) Alpha		Tolerance expanded
+									(more brush faces caught)
+									
+2001-12-04	1.2 (ydnar 3) Alpha		Detail faces inside other
+									detail brushes now culled,
+									Small against large detail
+									faces also culled.
+
+2001-12-04	1.2 (ydnar 4) Alpha		djbob found a bug where
+									coincident caulk faces
+									were causing textured
+									faces to be caulked. Fixed.
+
+2001-12-04	1.2 (ydnar 7) Alpha		5 and 6 were internal test
+									versions. This version
+									takes into account extra
+									surface info, so coplanar
+									clip brushes no longer
+									cull away textured sides.
+
+2001-12-22	1.2 (ydnar 8) Alpha		Optimized light. Lighting
+									for most maps should now
+									be measurable in minutes
+									as opposed to hours.
+
+2001-12-24	1.2 (ydnar 9) Alpha		Fixed light. It is still
+									faster, but to enable
+									"blinding fast" mode,
+									you must supply the -fast
+									switch on the commandline
+									after -light. Fast mode
+									should be approximately
+									2x as fast as build 8.
+
+2001-12-24	1.2 (ydnar 10) Alpha	Grid lighting is now
+									optimized. Not as much
+									as I would like, but
+									a distance^2 cull before
+									traces on EVERY SINGLE
+									SURFACE LIGHT IN THE MAP
+									certainly speeds things
+									the fuck up. -fast not
+									necessary to see this
+									optimization. Also added
+									the -cheap switch to
+									limit light contributions
+									to a point when it exceeds
+									255 in R, G, and B. This
+									*may* cause artifacts.
+									Test away...
+
+2001-12-24	1.2 (ydnar 11) Alpha	Now using PVS data (vis).
+									Well constructed and
+									hinted maps should now
+									see a bit of a speedup.
+									Lights in the void are
+									also now removed as a
+									byproduct.
+
+2001-12-24	1.2 (ydnar 12) Alpha	Fixed bug that caused
+									vlight to crash.
+
+2001-12-27	1.2 (ydnar 13) Alpha	- Fixed broken PVS check.
+									- Cheap now supresses sun
+									Sun trace skipped if
+									sample is "cheapened."
+									- Experimental -smooth
+									option for subsampling
+									shadow edges.
+									- Experimental radiosity
+									code. Will probably crash.
+									- Other minor optimizations.
+
+2001-12-27	1.2 (ydnar 14) Alpha	Build 13 always subsampled,
+									making it slower. Fixed.
+
+2001-12-28	1.2 (ydnar 15) Alpha	Bad windings from edge- or
+									vertex- manipulated brushes
+									no longer created. Vertex
+									lighting on func_* with
+									an origin now works.
+									Radiosity should be more
+									stable (but not fully
+									correct yet). Light
+									envelopes now properly
+									calculated for entities
+									with origins.
+
+2001-12-28	1.2 (ydnar 16) Alpha	Un-vised maps will now light.
+									
+2001-12-30	1.2 (ydnar 17) Alpha	Radiosity. Use q3map_bounce
+									in shaders to specify
+									amount of light to reflect.
+									Use -bounce N after -light
+									to enable radiosity. Use
+									-dump to emit radiosity
+									lights as a prefab.
+
+2001-12-31	1.2 (ydnar 18) Alpha	Normalization release. New
+									features include -fastgrid,
+									-cheapgrid, and -fastbounce.
+									Running with -fastgrid and
+									-cheapgrid will produce
+									results identical to normal
+									q3map (with the lightgrid
+									being a little darker).
+									Also added q3map_nofast to
+									shaders to override -fast
+									switch for a surface light.
+
+2002-01-01	1.2 (ydnar 19) Alpha	Fixed an odd vertex lighting
+									bug (thanks Quakin) that was
+									causing sun to leak to brush
+									faces when using r_vertexlight
+									ingame. Changed a little bit
+									of the default behavior, so
+									test with vertex lighting
+									and with terrain. Minor
+									shader changes might be
+									necessary to get some maps to
+									look as before.
+
+2002-01-01	1.2 (ydnar 20) Alpha	Colored alpha shadows. Some
+									minor optimizations in
+									shadow tracing. Should be
+									slightly faster than 19.
+
+2002-01-02	1.2 (ydnar 21) Alpha	Set up colored shadows
+									properly to use
+									surfaceparm lightfilter.
+									Shaders must use this parm
+									to have colored shadows.
+									Can be used with alphashadow
+									as well.
+
+2002-01-04	1.2.1-y1 (nightly)		This version is all new,
+									based off the official
+									GtkRadiant tree, which has
+									all the previous enhancements.
+									New features include colored
+									lightgrid tracing through
+									lightfilter shaders, and
+									surfaceparm lightgrid, for
+									large/space maps with large
+									volumes. Also fixed are
+									potential broken brush
+									winding radiosity crashes.
+									Maybe.
+
+2002-01-05	1.2.1-y2 (nightly)		Merged latest CVS. Removed
+									bug where ambient was getting
+									calculated into the radiosity
+									solution for every pass,
+									leading to overbright maps
+									in a hurry. Also removed
+									the bad PTPFF reporting,
+									as it only caused problems
+									with radiosity in a big way.
+									Sue me.
+
+2002-01-05	1.2.1-y3 (nightly)		I really suck. Sample color
+									now properly cleared to 0
+									when bouncing.
+
+2002-01-07	1.2.1-y4 (nightly)		Particle Studio generated
+									brush faces should no longer
+									be culled. I no longer cull
+									faces that are autosprite.
+									Added -bouncegrid to have
+									radiosity add to lightgrid.
+
+2002-01-08	1.2.1-y5 (nightly)		Same as y4, but compiled with
+									full optimizations. Should
+									be 10-25% faster in all,
+									including BSP and vis
+									stages.
+
+2002-01-09	1.2.1-y6 (nightly)		Brushfaces with polygonoffset
+									in their shader will no longer
+									be faceculled.
+
+2002-01-11	1.2.1-y7 (nightly)		Increased stack size for threads
+									to 4MB on Win32 to (hopefully)
+									elminate stack overflow
+									crash with radiosity. Also
+									made subdivision use the heap
+									to lessen the stack load. Fixed
+									bug where q3map_bounce was not
+									being used in shader parsing.
+									Redid some of the divide math
+									to work in 0-255 instead of
+									0-256.
+
+2002-01-11	1.2.1-y8 (nightly)		More Win32 threading
+									crutches. Eat me, Bill.
+
+2002-01-15	1.2.1-y9				RR2DO2 noticed a stupid bug
+									in my PVS code. Fixed it,
+									so the PVS light opts work as
+									they should. Lighting is
+									faster. Also got rid of some
+									redundant square roots from
+									the raytracing, speeding up
+									lighting another ~25%.
+
+2002-01-20	1.2.1-y10				Fixed a potential crash bug
+									with maps with 0 lights. Also
+									changed how lightmaps are
+									projected onto patches that
+									lie in a single plane (bevel
+									endcaps, floors, etc). Shadows
+									now work properly on them.
+
+2002-01-22	1.2.1-y11				Fixed a divide-by-zero crash
+									with maps with no lights or
+									no tracing. Also added
+									code to make brush/patch
+									vertex lighting more closely
+									resemble lightmap, even on
+									less-than-perfect maps. And
+									-light is faster, too...about
+									25% on q3dm17. 34->25 seconds.
+
+2002-01-24	1.2.1-y12				Completely rewrote the path
+									argument handling. Should find
+									the Quake 3 dir and other
+									dirs properly now. Needs to
+									be tested on Linux though.
+									Also made lights linear by
+									default when run with -game
+									wolf. This is to match the
+									Gray Matter q3map and
+									entity definition.
+
+2002-01-28	1.2.4-y1				Merged from 1.2.4-nightly CVS
+									sources. Fog sparklies gone.
+									-nopatchfix so vlight works
+									properly again. Cleaned up
+									paths processing some more,
+									including Linux stuff. Added
+									_lightmapscale entity key.
+									Brought -game wolf lighting
+									to parity with GM tools.
+									RR2DO2's PCX loading fix. A
+									bunch of other useful fun shit.
+
+2002-01-29	1.2.4-y2				Fixed a bug in RR2DO2's PCX fix.
+									Fixed a stupid bug in lightmap
+									dimension bounds checking (thanks
+									Laerth).
+
+2002-01-29	1.2.4-y3				Now will detect (and report to
+									GtkRadiant) all degenerate patches
+									like those created by capping a
+									cone.
+
+2002-02-23	2.0.0-a1 thru a3		Rewrote about 30% of the code.
+									Lots of cool new shit.
+
+2002-02-24	2.0.0-a4 thru a8		Terrain fix (thx Pointy), patches
+									are no longer circus colored, more
+									terrain texturing fixes.
+
+2002-02-26	2.0.0-a10 thru a11		Adjacent coplanar surfaces now
+									will share lightmaps. This prevents
+									most wierd edge cases with filter
+									and speeds things up a bit. Patches
+									too.
+
+2002-02-27	2.0.0-a12				More lightmap fixes for non-planar
+									surfaces. Bugfixes in allocation/
+									compression of lightmaps as well.
+
+2002-03-02	2.0.0-a13				Fixed some surface light bugs,
+									adjusted the occluded-luxel finding
+									code, and amped the radiosity. Other
+									fixes to RTCW lighting code (better
+									angle attenuation on linear lights).
+
+2002-03-04	2.0.0-a14				Vertex light should now be near-
+									perfect on clean (and mostly on not-
+									so-clean) maps. Unlit maps will no
+									longer have tri-fanned brush faces
+									with random vertex colors. VLight is
+									now totally gone (reverts to -light).
+
+2002-03-06	2.0.0-a15				Relaxed the planar check, should now
+									classify all slightly-off plane brush
+									face metasurfaces as planar. Triangle
+									checking much more stringent as well.
+
+2002-03-11	2.0.0-a16				Vis crash gone. Lightmap allocation
+									now sorted by shader to minimize 
+									shader count (and lessen chance for
+									RTCW shader substitution bug). Hit
+									big quarter-century also.
+
+2002-03-12	2.0.0-a17				Dammit.
+
+2002-03-12	2.0.0-a18				Hunting phantom lights...
+
+2002-03-16	2.0.0-a19				Fogclip and _celshader. Check the
+									extras folder...
+
+2002-03-18	2.0.0-b1-rc1			Beta release candidate. Fixed the
+									stupid phantom light bug finally.
+									Tricked out the sun tracing a wee
+									bit as well, should be a little
+									faster + more accurate. Other little
+									bits fixed up as well. Thanks to K,
+									{wf}ShadowSpawn and RR2DO2 for their
+									help tracking these last bugs down.
+
+2002-03-19	2.0.0-b1-rc2			Increased some maximums, and got
+									rid of some cruft.
+
+2002-03-22	2.0.0-b1-rc3			Some minor optimizations.
+
+2002-03-30	2.0.0-b1-rc5			Now with fur (see extras/fur.shader).
+
+2002-04-01	2.0.0-b1-rc6			Enhanced with baby seal technology.
+
+2002-05-01	2.0.1					OK, better late than never. Fixed the
+									alphashadow = 255 = transparent bug.
+
+2002-06-24	2.1.0-b1				Added _foghull functionality. Works
+									like terrain "_shader" where
+									you don't need "textures/" prefix.
+									Also added q3map_normalmap. See
+									NVIDIA's website for Photoshop filter
+									to generate normalmaps from grayscale
+									heightmaps. This makes lightmaps
+									look bumpmapped. Currently 50% broken.
+
+2002-07-06	2.2.0-b1				Empty epairs now stripped from map,
+									fixing Wolfenstein crash bug. Func_*
+									entities are now fogged properly.
+									Sort of. This will be enhanced later.
+									Added the .srf file to store all the
+									extra crap I was hiding in the BSP.
+									It's an editable text file that
+									-light uses, so you can change the
+									samplesize w/o recompiling the map
+									(just -light'ing it). Changed color
+									normalization to clamping, because
+									it looks better. Other stuff got
+									fixed as well.
+									
+2002-07-08	2.2.0-b2 thru b11		Test versions. Thanks jer and jet!
+
+2002-07-09	2.2.0-b12 				Larger-than-life lightmaps are now
+									supported, up to 1024x1024. Add
+									q3map_lightmapSize H W to a shader
+									to use. Lightmaps are stored in
+									maps/{mapname}/_lm_NNN.tga and a
+									shader script q3map_{mapname}.shader
+									is generated. Also added
+									q3map_lightmapGamma N.N. Use a
+									value of 2.0 to simulate
+									r_overBrightBits 1 and
+									r_mapOverBrightBits 2 on external
+									lightmap images.
