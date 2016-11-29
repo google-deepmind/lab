@@ -1,0 +1,71 @@
+{
+name    Tauri
+model   crash
+aifile  bots/crash_c.c
+}
+{
+name    Centauri
+model   crash
+aifile  bots/dark_c.c
+}
+{
+name    Draconis
+model   crash
+aifile  bots/ayumi_c.c
+}
+{
+name    Epsilon
+model   crash
+aifile  bots/beret_c.c
+}
+{
+name    Leonis
+model   crash
+aifile  bots/gargoyle_c.c
+}
+{
+name    Cephei
+model   crash
+aifile  bots/liz_c.c
+}
+{
+name    Cygni
+model   crash
+aifile  bots/major_c.c
+}
+
+{
+name    TauriColor
+model   crash_color
+aifile  bots/crash_c.c
+}
+{
+name    CentauriColor
+model   crash_color
+aifile  bots/dark_c.c
+}
+{
+name    DraconisColor
+model   crash_color
+aifile  bots/ayumi_c.c
+}
+{
+name    EpsilonColor
+model   crash_color
+aifile  bots/beret_c.c
+}
+{
+name    LeonisColor
+model   crash_color
+aifile  bots/gargoyle_c.c
+}
+{
+name    CepheiColor
+model   crash_color
+aifile  bots/liz_c.c
+}
+{
+name    CygniColor
+model   crash_color
+aifile  bots/major_c.c
+}

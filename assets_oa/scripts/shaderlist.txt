@@ -1,0 +1,7 @@
+// this file lists all the separate shader files
+ammo
+character
+decals
+iconsprites
+weaponhits
+weapons
