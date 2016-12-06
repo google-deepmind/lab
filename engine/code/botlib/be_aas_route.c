@@ -1486,6 +1486,8 @@ void AAS_UpdatePortalRoutingCache(aas_routingcache_t *portalcache)
 		updateliststart = curupdate->next;
 		//current update is removed from the list
 		curupdate->inlist = qfalse;
+		// cluster 0 is a dummy, cf. be_aas_cluster.c:AAS_InitClustering.
+		if (curupdate->cluster == 0) continue;
 		//
 		cluster = &aasworld.clusters[curupdate->cluster];
 		//
@@ -1661,6 +1663,11 @@ int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, int tra
 		{
 			goalclusternum = clusternum;
 		} //end if
+	} //end if
+	// cluster 0 is a dummy, cf. be_aas_cluster.c:AAS_InitClustering.
+	else if (clusternum == 0 || goalclusternum == 0)
+	{
+		return qfalse;
 	} //end if
 	//if both areas are in the same cluster
 	//NOTE: there might be a shorter route via another cluster!!! but we don't care
