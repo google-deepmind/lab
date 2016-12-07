@@ -29,7 +29,7 @@ Tested on Debian 8.6 (Jessie) and Ubuntu 14.04 (Trusty) and newer.
 
    ```shell
    $ sudo apt-get install lua5.1 liblua5.1-0-dev libffi-dev gettext \
-       freeglut3-dev libsdl2-dev libosmesa6-dev python-dev python-numpy
+       freeglut3-dev libsdl2-dev libosmesa6-dev python-dev python-numpy realpath
    ```
 
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
