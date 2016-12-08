@@ -959,6 +959,7 @@ cc_binary(
         ":dmlab.lds",
         "//deepmind/engine:callbacks",
         "//deepmind/engine:context",
+        "@zlib_archive//:zlib",
     ],
 )
 
