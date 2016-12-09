@@ -2766,7 +2766,7 @@ void R_CreateBuiltinImages( void ) {
 		height = glConfig.vidHeight;
 
 		hdrFormat = GL_RGBA8;
-		if (r_hdr->integer && glRefConfig.framebufferObject && glRefConfig.textureFloat)
+		if (r_hdr->integer && glRefConfig.textureFloat)
 			hdrFormat = GL_RGBA16F_ARB;
 
 		rgbFormat = GL_RGBA8;

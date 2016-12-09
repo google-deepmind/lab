@@ -111,7 +111,7 @@ with those projects are best fixed upstream and then merged into *DeepMind Lab*.
 
 * *ioquake3* is taken from
   [github.com/ioquake/ioq3](https://github.com/ioquake/ioq3),
-  revision 1c1e1f61f180596c925a4ac0eddba4806d1369cd. The code contains extensive
+  revision 0672905ef1b8f6ca219341e7252044dd727753dd. The code contains extensive
   modifications and additions. We aim to merge upstream changes occasionally.
 
 We are very grateful to the maintainers of these repositories for all their hard

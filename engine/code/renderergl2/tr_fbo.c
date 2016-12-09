@@ -230,6 +230,12 @@ FBO_Bind
 */
 void FBO_Bind(FBO_t * fbo)
 {
+	if (!glRefConfig.framebufferObject)
+	{
+		ri.Printf(PRINT_WARNING, "FBO_Bind() called without framebuffers enabled!\n");
+		return;
+	}
+
 	if (glState.currentFBO == fbo)
 		return;
 		
@@ -265,7 +271,7 @@ void FBO_Init(void)
 	R_IssuePendingRenderCommands();
 
 	hdrFormat = GL_RGBA8;
-	if (r_hdr->integer && glRefConfig.framebufferObject && glRefConfig.textureFloat)
+	if (r_hdr->integer && glRefConfig.textureFloat)
 		hdrFormat = GL_RGBA16F_ARB;
 
 	if (glRefConfig.framebufferMultisample)
