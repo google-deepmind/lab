@@ -60,7 +60,7 @@ The Python module `deepmind_lab` defines the `Lab` class. For example
 usage, there is [python/dmlab_module_test.py](../python/dmlab_module_test.py)
 and [python/random_agent.py](../python/random_agent.py).
 
-### class `deepmind_lab.Lab`(*level*, *observation*, *config={}*)
+### class `deepmind_lab.Lab`(*level*, *observations*, *config={}*)
 
 Creates an environment object, loading the game script file *level*. The
 environment's `observations`() method will return the observations specified by
