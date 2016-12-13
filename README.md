@@ -37,7 +37,7 @@ Disclaimer: This is not an official Google product.
 
 If you use *DeepMind Lab* in your research and would like to cite
 the *DeepMind Lab* environment, we suggest you cite
-the [DeepMind Lab paper](https://deepmind.com/documents/deepmind_lab.pdf).
+the [DeepMind Lab paper](https://arxiv.org/abs/1612.03801).
 
 You can reach us at [lab@deepmind.com](mailto:lab@deepmind.com).
 
