@@ -537,7 +537,7 @@ cc_binary(
         "-DQDECL=",
         "-pthread",
     ],
-    linkopts = ["-pthread"],
+    linkopts = ["-pthread", "-lm"],
     visibility = ["//deepmind/level_generation:__subpackages__"],
     deps = ["@zlib_archive//:zlib"],
 )
@@ -908,7 +908,7 @@ cc_binary(
         ":non_pk3_assets",
         ":vm_pk3",
     ],
-    linkopts = ["-lGL"],
+    linkopts = ["-lGL", "-lm"],
     deps = [
         ":game_lib_sdl",
         "//deepmind/engine:callbacks",
