@@ -1,15 +1,29 @@
-FROM kaixhin/vnc
+FROM ubuntu:14.04
 
 MAINTAINER fcarey@gmail.com
 
+# Temporarily shut up warnings.
+ENV DISPLAY :0
+ENV TERM xterm
+
+# Basic Dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
     software-properties-common \
     python-software-properties && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Dependencies for vnc setup.
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    fluxbox \
+    x11vnc && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
 
 # We need to add a custom PPA to pick up JDK8, since trusty doesn't
 # have an openjdk8 backport.  openjdk-r is maintained by a reliable contributor:
@@ -18,13 +32,14 @@ RUN apt-get update && apt-get install -y \
 # finally backported to trusty; see e.g.
 #   https://bugs.launchpad.net/trusty-backports/+bug/1368094
 RUN add-apt-repository -y ppa:openjdk-r/ppa && \
-    apt-get update && \
-    apt-get install -y openjdk-8-jdk openjdk-8-jre-headless && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    which java && \
-    java -version && \
-    update-ca-certificates -f
+  apt-get update && apt-get install -y \
+    openjdk-8-jdk \
+    openjdk-8-jre-headless && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  which java && \
+  java -version && \
+  update-ca-certificates -f
 
 # Running bazel inside a `docker build` command causes trouble, cf:
 #   https://github.com/bazelbuild/bazel/issues/134
@@ -48,34 +63,44 @@ RUN mkdir /bazel && \
 
 # Install deepmind-lab dependencies
 RUN apt-get update && apt-get install -y \
-  lua5.1 \
-  liblua5.1-0-dev \
-  libffi-dev \
-  gettext \
-  freeglut3-dev \
-  libsdl2-dev \
-  libosmesa6-dev \
-  python-dev \
-  python-numpy \
-  realpath \
-  build-essential
+    lua5.1 \
+    liblua5.1-0-dev \
+    libffi-dev \
+    gettext \
+    freeglut3-dev \
+    libsdl2-dev \
+    libosmesa6-dev \
+    python-dev \
+    python-numpy \
+    realpath \
+    build-essential && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
-#Enable RANDR option for vnc server.
-COPY ./vnc.sh /opt/vnc.sh
 
 # Set the default X11 Display.
 ENV DISPLAY :1
+ENV VNC_PASSWORD=password
+ENV XVFB_RESOLUTION=800x600x16
 
+# Set up deepmind-lab folder and copy in the code.
 ENV lab_dir /lab
 RUN mkdir /$lab_dir
 COPY . /$lab_dir
 WORKDIR $lab_dir
 
-RUN bazel build :deepmind_lab.so --define headless=osmesa
+# Run an actual (headless) build since this should make subsequent builds much faster.
+# Alternative commands based on the Documentation:
+# RUN bazel run :random_agent --define headless=false
+# RUN bazel build :deepmind_lab.so --define headless=osmesa
+RUN bazel run :python_module_test --define headless=osmesa
 
-# RUN bazel run :python_module_test --define headless=osmesa
+# This port is the default for connecting to VNC display :1
+EXPOSE 5901
 
-#RUN bazel run :random_agent --define headless=false
+# Copy VNC script that handles restarts and make it executable.
+COPY ./.docker/startup.sh /opt/
+RUN chmod u+x /opt/startup.sh
 
-
-
+# Finally, start VNC using our script.
+CMD ["/opt/startup.sh"]
