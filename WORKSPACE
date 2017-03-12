@@ -70,3 +70,9 @@ new_local_repository(
     build_file = "python.BUILD",
     path = "/usr",
 )
+new_local_repository(
+    name = "python3_system",
+    build_file = "python3.BUILD",
+    path = "/usr",
+)
+
