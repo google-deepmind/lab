@@ -14,7 +14,7 @@ genrule(
         "config.h",
         "glibconfig.h",
     ],
-    cmd = "./$(location configure) --disable-fam " +
+    cmd = "./$(location configure) --disable-fam --enable-dtrace=no " +
           "&& cp --verbose -- config.h $(location config.h)" +
           "&& cp --verbose -- glib/glibconfig.h $(location glibconfig.h)",
 )
