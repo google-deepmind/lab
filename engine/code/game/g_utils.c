@@ -391,7 +391,6 @@ gentity_t *G_Spawn( void ) {
 	gentity_t	*e;
 
 	e = NULL;	// shut up warning
-	i = 0;		// shut up warning
 	for ( force = 0 ; force < 2 ; force++ ) {
 		// if we go through all entities and can't find one to free,
 		// override the normal minimum times before use
@@ -411,11 +410,11 @@ gentity_t *G_Spawn( void ) {
 			G_InitGentity( e );
 			return e;
 		}
-		if ( i != MAX_GENTITIES ) {
+		if ( level.num_entities < ENTITYNUM_MAX_NORMAL ) {
 			break;
 		}
 	}
-	if ( i == ENTITYNUM_MAX_NORMAL ) {
+	if ( level.num_entities == ENTITYNUM_MAX_NORMAL ) {
 		for (i = 0; i < MAX_GENTITIES; i++) {
 			G_Printf("%4i: %s\n", i, g_entities[i].classname);
 		}
@@ -441,6 +440,11 @@ G_EntitiesFree
 qboolean G_EntitiesFree( void ) {
 	int			i;
 	gentity_t	*e;
+
+	if ( level.num_entities < ENTITYNUM_MAX_NORMAL ) {
+		// can open a new slot if needed
+		return qtrue;
+	}
 
 	e = &g_entities[MAX_CLIENTS];
 	for ( i = MAX_CLIENTS; i < level.num_entities; i++, e++) {

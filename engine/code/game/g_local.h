@@ -435,7 +435,7 @@ char *G_NewString( const char *string );
 void Cmd_Score_f (gentity_t *ent);
 void StopFollowing( gentity_t *ent );
 void BroadcastTeamChange( gclient_t *client, int oldTeam );
-void SetTeam( gentity_t *ent, char *s );
+void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
 
 //
@@ -684,7 +684,6 @@ typedef struct bot_settings_s
 {
 	char characterfile[MAX_FILEPATH];
 	float skill;
-	char team[MAX_FILEPATH];
 } bot_settings_t;
 
 int BotAISetup( int restart );
@@ -753,6 +752,7 @@ extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
+extern	vmCvar_t	g_localTeamPref;
 extern	vmCvar_t	g_teleportBody;
 extern	vmCvar_t	g_unlimitedAmmo;
 

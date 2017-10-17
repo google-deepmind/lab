@@ -119,7 +119,7 @@ static int GametypeBits( char *string ) {
 	p = string;
 	while( 1 ) {
 		token = COM_ParseExt( &p, qfalse );
-		if( token[0] == 0 ) {
+		if ( !token[0] ) {
 			break;
 		}
 
@@ -331,6 +331,7 @@ static void StartServer_LevelshotDraw( void *self ) {
 	int				h;
 	int				n;
 	const char		*info;
+	char			mapname[ MAX_NAMELENGTH ];
 
 	b = (menubitmap_s *)self;
 
@@ -366,7 +367,9 @@ static void StartServer_LevelshotDraw( void *self ) {
 	n = s_startserver.page * MAX_MAPSPERPAGE + b->generic.id - ID_PICTURES;
 
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ n ]);
-	UI_DrawString( x, y, Info_ValueForKey( info, "map" ), UI_CENTER|UI_SMALLFONT, color_blue );
+	Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
+	Q_strupr( mapname );
+	UI_DrawString( x, y, mapname, UI_CENTER|UI_SMALLFONT, color_blue );
 
 	x = b->generic.x;
 	y = b->generic.y;
@@ -815,7 +818,11 @@ static void ServerOptions_Start( void ) {
 
 	// set player's team
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
+		// send team command for vanilla q3 game qvm
 		trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait 5; team %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
+
+		// set g_localTeamPref for ioq3 game qvm
+		trap_Cvar_Set( "g_localTeamPref", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] );
 	}
 }
 

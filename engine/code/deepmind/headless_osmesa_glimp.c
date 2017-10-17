@@ -26,6 +26,13 @@
 static OSMesaContext osmesa_ctx;
 static GLubyte* osmesa_frame_buffer;
 
+#define glGetStringi NULL
+#define GLE(ret, name, ...) name##proc * qgl##name = gl##name;
+QGL_1_1_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_3_0_PROCS;
+#undef GLE
+
 void GLimp_MakeCurrent(void) {
   if (!OSMesaMakeCurrent(osmesa_ctx, osmesa_frame_buffer, GL_UNSIGNED_BYTE,
                          glConfig.vidWidth, glConfig.vidHeight)) {
@@ -33,7 +40,7 @@ void GLimp_MakeCurrent(void) {
   }
 }
 
-void GLimp_Init(void) {
+void GLimp_Init(qboolean coreContext) {
   r_colorbits->value = 16;
   GLimp_CommonPreInit();
   /* Create an RGBA-mode context */

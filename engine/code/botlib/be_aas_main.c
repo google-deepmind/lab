@@ -220,10 +220,9 @@ void AAS_ProjectPointOntoVector( vec3_t point, vec3_t vStart, vec3_t vEnd, vec3_
 int AAS_LoadFiles(const char *mapname)
 {
 	int errnum;
-	char aasfile[MAX_PATH];
-//	char bspfile[MAX_PATH];
+	char aasfile[MAX_QPATH];
 
-	strcpy(aasworld.mapname, mapname);
+	Q_strncpyz(aasworld.mapname, mapname, sizeof(aasworld.mapname));
 	//NOTE: first reset the entity links into the AAS areas and BSP leaves
 	// the AAS link heap and BSP link heap are reset after respectively the
 	// AAS file and BSP file are loaded
@@ -232,13 +231,13 @@ int AAS_LoadFiles(const char *mapname)
 	AAS_LoadBSPFile();
 
 	//load the aas file
-	Com_sprintf(aasfile, MAX_PATH, "maps/%s.aas", mapname);
+	Com_sprintf(aasfile, sizeof(aasfile), "maps/%s.aas", mapname);
 	errnum = AAS_LoadAASFile(aasfile);
 	if (errnum != BLERR_NOERROR)
 		return errnum;
 
 	botimport.Print(PRT_MESSAGE, "loaded %s\n", aasfile);
-	strncpy(aasworld.filename, aasfile, MAX_PATH);
+	Q_strncpyz(aasworld.filename, aasfile, sizeof(aasworld.filename));
 	return BLERR_NOERROR;
 } //end of the function AAS_LoadFiles
 //===========================================================================

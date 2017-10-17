@@ -106,13 +106,11 @@ Makefile.local:
   USE_CODEC_OPUS       - enable Ogg Opus support
   USE_MUMBLE           - enable Mumble support
   USE_VOIP             - enable built-in VoIP support
+  USE_FREETYPE         - enable FreeType support for rendering fonts
   USE_INTERNAL_LIBS    - build internal libraries instead of dynamically
                          linking against system libraries; this just sets
-                         the default for USE_INTERNAL_SPEEX etc.
+                         the default for USE_INTERNAL_ZLIB etc.
                          and USE_LOCAL_HEADERS
-  USE_INTERNAL_SPEEX   - build internal speex library instead of dynamically
-                         linking against system libspeex
-  USE_FREETYPE         - enable FreeType support for rendering fonts
   USE_INTERNAL_ZLIB    - build and link against internal zlib
   USE_INTERNAL_JPEG    - build and link against internal JPEG library
   USE_INTERNAL_OGG     - build and link against internal ogg library
@@ -141,6 +139,12 @@ The defaults for these variables differ depending on the target platform.
   cl_mouseAccelStyle                - Set to 1 for QuakeLive mouse acceleration
                                       behaviour, 0 for standard q3
   cl_mouseAccelOffset               - Tuning the acceleration curve, see below
+
+  con_autochat                      - Set to 0 to disable sending console input
+                                      text as chat when there is not a slash
+                                      at the beginning
+  con_autoclear                     - Set to 0 to disable clearing console
+                                      input text when console is closed
 
   in_joystickUseAnalog              - Do not translate joystick axis events
                                       to keyboard commands
@@ -329,6 +333,8 @@ The defaults for these variables differ depending on the target platform.
 
   cvar_modified [filter]  - list modified cvars, can filter results (such as "r*"
                             for renderer cvars) like cvarlist which lists all cvars
+
+  addbot random           - the bot name "random" now selects a random bot
 ```
 
 

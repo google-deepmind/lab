@@ -185,7 +185,7 @@ static cvarTable_t		cvarTable[] = {
 
 	{ &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
 
-	{ &ui_browserMaster, "ui_browserMaster", "0", CVAR_ARCHIVE },
+	{ &ui_browserMaster, "ui_browserMaster", "1", CVAR_ARCHIVE },
 	{ &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
 	{ &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
 	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
@@ -214,7 +214,8 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
 
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
-	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM }
+	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM },
+	{ NULL, "g_localTeamPref", "", 0 }
 };
 
 static int cvarTableSize = ARRAY_LEN( cvarTable );
@@ -244,6 +245,10 @@ void UI_UpdateCvars( void ) {
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if ( !cv->vmCvar ) {
+			continue;
+		}
+
 		trap_Cvar_Update( cv->vmCvar );
 	}
 }

@@ -25,6 +25,13 @@
 #include "glimp_common.h"
 #include "third_party/GL/util/egl_util.h"
 
+#define glGetStringi NULL
+#define GLE(ret, name, ...) name##proc * qgl##name = gl##name;
+QGL_1_1_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_3_0_PROCS;
+#undef GLE
+
 #define CHECK_EGL_SUCCESS(egl_expr)                                        \
   do {                                                                     \
     (egl_expr);                                                            \
@@ -56,7 +63,7 @@ void GLimp_MakeCurrent(void) {
                                    egl_context));
 }
 
-void GLimp_Init() {
+void GLimp_Init(qboolean coreContext) {
   GLimp_CommonPreInit();
 
   cvar_t* r_gpu_device_index =

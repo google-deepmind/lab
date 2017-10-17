@@ -317,8 +317,8 @@ locals from sp
 
 int	VM_CallInterpreted( vm_t *vm, int *args ) {
 	byte		stack[OPSTACK_SIZE + 15];
-	register int		*opStack;
-	register uint8_t 	opStackOfs;
+	int		*opStack;
+	uint8_t 	opStackOfs;
 	int		programCounter;
 	int		programStack;
 	int		stackOnEntry;
@@ -436,31 +436,31 @@ nextInstruction2:
 				return 0;
 			}
 #endif
-			r0 = opStack[opStackOfs] = *(int *) &image[r0 & dataMask & ~3 ];
+			r0 = opStack[opStackOfs] = *(int *) &image[ r0 & dataMask ];
 			goto nextInstruction2;
 		case OP_LOAD2:
-			r0 = opStack[opStackOfs] = *(unsigned short *)&image[ r0&dataMask&~1 ];
+			r0 = opStack[opStackOfs] = *(unsigned short *)&image[ r0 & dataMask ];
 			goto nextInstruction2;
 		case OP_LOAD1:
-			r0 = opStack[opStackOfs] = image[ r0&dataMask ];
+			r0 = opStack[opStackOfs] = image[ r0 & dataMask ];
 			goto nextInstruction2;
 
 		case OP_STORE4:
-			*(int *)&image[ r1&(dataMask & ~3) ] = r0;
+			*(int *)&image[ r1 & dataMask ] = r0;
 			opStackOfs -= 2;
 			goto nextInstruction;
 		case OP_STORE2:
-			*(short *)&image[ r1&(dataMask & ~1) ] = r0;
+			*(short *)&image[ r1 & dataMask ] = r0;
 			opStackOfs -= 2;
 			goto nextInstruction;
 		case OP_STORE1:
-			image[ r1&dataMask ] = r0;
+			image[ r1 & dataMask ] = r0;
 			opStackOfs -= 2;
 			goto nextInstruction;
 
 		case OP_ARG:
 			// single byte offset from programStack
-			*(int *)&image[ (codeImage[programCounter] + programStack)&dataMask&~3 ] = r0;
+			*(int *)&image[ (codeImage[programCounter] + programStack) & dataMask ] = r0;
 			opStackOfs--;
 			programCounter += 1;
 			goto nextInstruction;

@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 
-#define	WAVEVALUE( table, base, amplitude, phase, freq )  ((base) + table[ ri.ftol( ( ( (phase) + tess.shaderTime * (freq) ) * FUNCTABLE_SIZE ) ) & FUNCTABLE_MASK ] * (amplitude))
+#define	WAVEVALUE( table, base, amplitude, phase, freq )  ((base) + table[ ( (int64_t) ( ( (phase) + tess.shaderTime * (freq) ) * FUNCTABLE_SIZE ) ) & FUNCTABLE_MASK ] * (amplitude))
 
 static float *TableForFunc( genFunc_t func ) 
 {
@@ -204,12 +204,12 @@ void RB_CalcBulgeVertexes( deformStage_t *ds ) {
 	const float *st = ( const float * ) tess.texCoords[0];
 	float		*xyz = ( float * ) tess.xyz;
 	int16_t	*normal = tess.normal[0];
-	float		now;
+	double		now;
 
-	now = backEnd.refdef.time * ds->bulgeSpeed * 0.001f;
+	now = backEnd.refdef.time * 0.001 * ds->bulgeSpeed;
 
 	for ( i = 0; i < tess.numVertexes; i++, xyz += 4, st += 2, normal += 4 ) {
-		int		off;
+		int64_t off;
 		float scale;
 		vec3_t fNormal;
 
@@ -776,8 +776,8 @@ void RB_CalcScaleTexMatrix( const float scale[2], float *matrix )
 */
 void RB_CalcScrollTexMatrix( const float scrollSpeed[2], float *matrix )
 {
-	float timeScale = tess.shaderTime;
-	float adjustedScrollS, adjustedScrollT;
+	double timeScale = tess.shaderTime;
+	double adjustedScrollS, adjustedScrollT;
 
 	adjustedScrollS = scrollSpeed[0] * timeScale;
 	adjustedScrollT = scrollSpeed[1] * timeScale;
@@ -805,9 +805,9 @@ void RB_CalcTransformTexMatrix( const texModInfo_t *tmi, float *matrix  )
 */
 void RB_CalcRotateTexMatrix( float degsPerSecond, float *matrix )
 {
-	float timeScale = tess.shaderTime;
-	float degs;
-	int index;
+	double timeScale = tess.shaderTime;
+	double degs;
+	int64_t index;
 	float sinValue, cosValue;
 
 	degs = -degsPerSecond * timeScale;

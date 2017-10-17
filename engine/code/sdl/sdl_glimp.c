@@ -327,7 +327,7 @@ static void GLimp_ClearProcAddresses( void ) {
 GLimp_SetMode
 ===============
 */
-static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
+static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qboolean coreContext)
 {
 	const char *glstring;
 	int perChannelColorBits;
@@ -549,7 +549,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 			glConfig.stereoEnabled = qfalse;
 			SDL_GL_SetAttribute(SDL_GL_STEREO, 0);
 		}
-		
+
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
 #if 0 // if multisampling is enabled on X11, this causes create window to fail.
@@ -590,7 +590,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 		SDL_SetWindowIcon( SDL_window, icon );
 
-		if( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
+		if (coreContext)
 		{
 			int profileMask, majorVersion, minorVersion;
 			SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profileMask);
@@ -705,7 +705,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 GLimp_StartDriverAndSetMode
 ===============
 */
-static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qboolean noborder)
+static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qboolean noborder, qboolean gl3Core)
 {
 	rserr_t err;
 
@@ -731,8 +731,8 @@ static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qbool
 		r_fullscreen->modified = qfalse;
 		fullscreen = qfalse;
 	}
-	
-	err = GLimp_SetMode(mode, fullscreen, noborder);
+
+	err = GLimp_SetMode(mode, fullscreen, noborder, gl3Core);
 
 	switch ( err )
 	{
@@ -927,7 +927,7 @@ This routine is responsible for initializing the OS specific portions
 of OpenGL
 ===============
 */
-void GLimp_Init( void )
+void GLimp_Init( qboolean coreContext)
 {
 	ri.Printf( PRINT_DEVELOPER, "Glimp_Init( )\n" );
 
@@ -947,13 +947,13 @@ void GLimp_Init( void )
 	ri.Sys_GLimpInit( );
 
 	// Create the window and set up the context
-	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, r_noborder->integer))
+	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, r_noborder->integer, coreContext))
 		goto success;
 
 	// Try again, this time in a platform specific "safe mode"
 	ri.Sys_GLimpSafeInit( );
 
-	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, qfalse))
+	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, qfalse, coreContext))
 		goto success;
 
 	// Finally, try the default screen resolution
@@ -962,7 +962,7 @@ void GLimp_Init( void )
 		ri.Printf( PRINT_ALL, "Setting r_mode %d failed, falling back on r_mode %d\n",
 				r_mode->integer, R_MODE_FALLBACK );
 
-		if(GLimp_StartDriverAndSetMode(R_MODE_FALLBACK, qfalse, qfalse))
+		if(GLimp_StartDriverAndSetMode(R_MODE_FALLBACK, qfalse, qfalse, coreContext))
 			goto success;
 	}
 

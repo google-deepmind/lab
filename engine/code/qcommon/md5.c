@@ -78,7 +78,7 @@ static void MD5Init(struct MD5Context *ctx)
 static void MD5Transform(uint32_t buf[4],
 	uint32_t const in[16])
 {
-    register uint32_t a, b, c, d;
+    uint32_t a, b, c, d;
 
     a = buf[0];
     b = buf[1];
@@ -290,7 +290,7 @@ char *Com_MD5File( const char *fn, int length, const char *prefix, int prefix_le
 		MD5Update(&md5 , (unsigned char *)prefix, prefix_len);
 
 	for(;;) {
-		r = FS_Read2(buffer, sizeof(buffer), f);
+		r = FS_Read(buffer, sizeof(buffer), f);
 		if(r < 1)
 			break;
 		if(r + total > length)

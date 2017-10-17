@@ -365,8 +365,8 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			shader = tr.defaultShader;
 			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
 				// the names have both been lowercased
-				if ( !strcmp( skin->surfaces[j]->name, surface->name ) ) {
-					shader = skin->surfaces[j]->shader;
+				if ( !strcmp( skin->surfaces[j].name, surface->name ) ) {
+					shader = skin->surfaces[j].shader;
 					break;
 				}
 			}
@@ -376,21 +376,34 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			else if (shader->defaultShader) {
 				ri.Printf( PRINT_DEVELOPER, "WARNING: shader %s in skin %s not found\n", shader->name, skin->name);
 			}
-		//} else if ( surface->numShaders <= 0 ) {
-			//shader = tr.defaultShader;
+		} else if ( surface->numShaderIndexes <= 0 ) {
+			shader = tr.defaultShader;
 		} else {
-			//md3Shader = (md3Shader_t *) ( (byte *)surface + surface->ofsShaders );
-			//md3Shader += ent->e.skinNum % surface->numShaders;
-			//shader = tr.shaders[ md3Shader->shaderIndex ];
 			shader = tr.shaders[ surface->shaderIndexes[ ent->e.skinNum % surface->numShaderIndexes ] ];
 		}
 
-		// don't add third_person objects if not viewing through a portal
-		if(!personalModel)
-		{
-			srfVaoMdvMesh_t *vaoSurface = &model->vaoSurfaces[i];
+		// we will add shadows even if the main object isn't visible in the view
 
-			R_AddDrawSurf((void *)vaoSurface, shader, fogNum, qfalse, qfalse, cubemapIndex );
+		// stencil shadows can't do personal models unless I polyhedron clip
+		if ( !personalModel
+			&& r_shadows->integer == 2 
+			&& fogNum == 0
+			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
+			&& shader->sort == SS_OPAQUE ) {
+			R_AddDrawSurf( (void *)&model->vaoSurfaces[i], tr.shadowShader, 0, qfalse, qfalse, 0 );
+		}
+
+		// projection shadows work fine with personal models
+		if ( r_shadows->integer == 3
+			&& fogNum == 0
+			&& (ent->e.renderfx & RF_SHADOW_PLANE )
+			&& shader->sort == SS_OPAQUE ) {
+			R_AddDrawSurf( (void *)&model->vaoSurfaces[i], tr.projectionShadowShader, 0, qfalse, qfalse, 0 );
+		}
+
+		// don't add third_person objects if not viewing through a portal
+		if ( !personalModel ) {
+			R_AddDrawSurf((void *)&model->vaoSurfaces[i], shader, fogNum, qfalse, qfalse, cubemapIndex );
 		}
 
 		surface++;

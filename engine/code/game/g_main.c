@@ -81,6 +81,7 @@ vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
+vmCvar_t	g_localTeamPref;
 vmCvar_t	g_teleportBody;
 vmCvar_t	g_unlimitedAmmo;
 #ifdef MISSIONPACK
@@ -180,7 +181,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
-	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse}
+	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse},
+	{ &g_localTeamPref, "g_localTeamPref", "", 0, 0, qfalse }
 
 };
 
@@ -279,7 +281,7 @@ void G_FindTeams( void ) {
 
 	c = 0;
 	c2 = 0;
-	for ( i=1, e=g_entities+i ; i < level.num_entities ; i++,e++ ){
+	for ( i=MAX_CLIENTS, e=g_entities+i ; i < level.num_entities ; i++,e++ ) {
 		if (!e->inuse)
 			continue;
 		if (!e->team)
@@ -1154,6 +1156,7 @@ void LogExit( const char *string ) {
 	gclient_t		*cl;
 #ifdef MISSIONPACK
 	qboolean won = qtrue;
+	team_t team = TEAM_RED;
 #endif
 	G_LogPrintf( "Exit: %s\n", string );
 
@@ -1190,7 +1193,10 @@ void LogExit( const char *string ) {
 
 		G_LogPrintf( "score: %i  ping: %i  client: %i %s\n", cl->ps.persistant[PERS_SCORE], ping, level.sortedClients[i],	cl->pers.netname );
 #ifdef MISSIONPACK
-		if (g_singlePlayer.integer && g_gametype.integer == GT_TOURNAMENT) {
+		if (g_singlePlayer.integer && !(g_entities[cl - level.clients].r.svFlags & SVF_BOT)) {
+			team = cl->sess.sessionTeam;
+		}
+		if (g_singlePlayer.integer && g_gametype.integer < GT_TEAM) {
 			if (g_entities[cl - level.clients].r.svFlags & SVF_BOT && cl->ps.persistant[PERS_RANK] == 0) {
 				won = qfalse;
 			}
@@ -1201,8 +1207,12 @@ void LogExit( const char *string ) {
 
 #ifdef MISSIONPACK
 	if (g_singlePlayer.integer) {
-		if (g_gametype.integer >= GT_CTF) {
-			won = level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE];
+		if (g_gametype.integer >= GT_TEAM) {
+			if (team == TEAM_BLUE) {
+				won = level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED];
+			} else {
+				won = level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE];
+			}
 		}
 		trap_SendConsoleCommand( EXEC_APPEND, (won) ? "spWin\n" : "spLose\n" );
 	}
@@ -1499,7 +1509,7 @@ void CheckTournament( void ) {
 		int		counts[TEAM_NUM_TEAMS];
 		qboolean	notEnough = qfalse;
 
-		if ( g_gametype.integer > GT_TEAM ) {
+		if ( g_gametype.integer >= GT_TEAM ) {
 			counts[TEAM_BLUE] = TeamCount( -1, TEAM_BLUE );
 			counts[TEAM_RED] = TeamCount( -1, TEAM_RED );
 

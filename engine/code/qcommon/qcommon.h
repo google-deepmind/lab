@@ -661,7 +661,6 @@ int		FS_FileIsInPAK(const char *filename, int *pChecksum );
 
 int		FS_Write( const void *buffer, int len, fileHandle_t f );
 
-int		FS_Read2( void *buffer, int len, fileHandle_t f );
 int		FS_Read( void *buffer, int len, fileHandle_t f );
 // properly handles partial reads and reads from other dlls
 
@@ -885,6 +884,9 @@ extern	cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
 extern	cvar_t	*com_legacyprotocol;
 #endif
+#ifndef DEDICATED
+extern  cvar_t  *con_autochat;
+#endif
 
 // com_speeds times
 extern	int		time_game;
@@ -1059,6 +1061,14 @@ int SV_SendQueuedPackets(void);
 qboolean UI_GameCommand( void );
 qboolean UI_usesUniqueCDKey(void);
 
+//
+// input interface
+//
+void IN_Init( void *windowData );
+void IN_Frame( void );
+void IN_Shutdown( void );
+void IN_Restart( void );
+
 /*
 ==============================================================
 
@@ -1075,6 +1085,8 @@ void	Sys_Init (void);
 void	* QDECL Sys_LoadGameDll( const char *name, intptr_t (QDECL **entryPoint)(int, ...),
 				  intptr_t (QDECL *systemcalls)(intptr_t, ...) );
 void	Sys_UnloadDll( void *dllHandle );
+
+qboolean Sys_DllExtension( const char *name );
 
 char	*Sys_GetCurrentUser( void );
 
@@ -1112,6 +1124,7 @@ char	*Sys_Cwd( void );
 void	Sys_SetDefaultInstallPath(const char *path);
 char	*Sys_DefaultInstallPath(void);
 char	*Sys_SteamPath(void);
+char	*Sys_GogPath(void);
 
 #ifdef __APPLE__
 char    *Sys_DefaultAppPath(void);
@@ -1194,9 +1207,9 @@ void	Huff_Decompress(msg_t *buf, int offset);
 void	Huff_Init(huffman_t *huff);
 void	Huff_addRef(huff_t* huff, byte ch);
 int		Huff_Receive (node_t *node, int *ch, byte *fin);
-void	Huff_transmit (huff_t *huff, int ch, byte *fout);
-void	Huff_offsetReceive (node_t *node, int *ch, byte *fin, int *offset);
-void	Huff_offsetTransmit (huff_t *huff, int ch, byte *fout, int *offset);
+void	Huff_transmit (huff_t *huff, int ch, byte *fout, int maxoffset);
+void	Huff_offsetReceive (node_t *node, int *ch, byte *fin, int *offset, int maxoffset);
+void	Huff_offsetTransmit (huff_t *huff, int ch, byte *fout, int *offset, int maxoffset);
 void	Huff_putBit( int bit, byte *fout, int *offset);
 int		Huff_getBit( byte *fout, int *offset);
 

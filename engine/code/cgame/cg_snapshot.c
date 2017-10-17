@@ -76,11 +76,8 @@ static void CG_TransitionEntity( centity_t *cent ) {
 ==================
 CG_SetInitialSnapshot
 
-This will only happen on the very first snapshot, or
-on tourney restarts.  All other times will use 
-CG_TransitionSnapshot instead.
-
-FIXME: Also called by map_restart?
+This will only happen on the very first snapshot.
+All other times will use CG_TransitionSnapshot instead.
 ==================
 */
 void CG_SetInitialSnapshot( snapshot_t *snap ) {
@@ -141,8 +138,7 @@ static void CG_TransitionSnapshot( void ) {
 	CG_ExecuteNewServerCommands( cg.nextSnap->serverCommandSequence );
 
 	// if we had a map_restart, set everthing with initial
-	if ( !cg.snap ) {
-		return;
+	if ( cg.mapRestart ) {
 	}
 
 	// clear the currentValid flag for all entities in the existing snapshot
