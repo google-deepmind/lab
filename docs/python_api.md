@@ -16,8 +16,8 @@ import deepmind_lab
 #import deepmind_lab_py3 as deepmind_lab
 
 # Construct and start the environment.
-lab = deepmind_lab.Lab('seekavoid_arena_01', ['RGB_INTERLACED'])
-lab.reset()
+env = deepmind_lab.Lab('seekavoid_arena_01', ['RGB_INTERLACED'])
+env.reset()
 
 # Create all-zeros vector for actions.
 action = np.zeros([7], dtype=np.intc)
