@@ -1227,6 +1227,9 @@ static void ParseShaderFile( const char *filename ){
 				if ( !Q_stricmp( token, "q3map_sunext" ) ) {
 					ext = qtrue;
 				}
+				else {
+					ext = qfalse;
+				}
 
 				/* allocate sun */
 				sun = safe_malloc( sizeof( *sun ) );

@@ -973,6 +973,11 @@ int LightContributionToSample( trace_t *trace ){
 
 		/* return to sender */
 		return 1;
+	} 
+
+	/* unknown light type */
+	else {
+		return -1;
 	}
 
 	/* ydnar: changed to a variable number */
@@ -1776,7 +1781,7 @@ void LightWorld( void ){
 		SetupEnvelopes( qfalse, fastbounce );
 		if ( numLights == 0 ) {
 			Sys_Printf( "No diffuse light to calculate, ending radiosity.\n" );
-			break;
+			return;
 		}
 
 		/* add to lightgrid */
@@ -1817,6 +1822,9 @@ void LightWorld( void ){
 		bounce--;
 		b++;
 	}
+	/* ydnar: store off lightmaps */
+	StoreSurfaceLightmaps();
+
 }
 
 
@@ -2304,9 +2312,6 @@ int LightMain( int argc, char **argv ){
 
 	/* light the world */
 	LightWorld();
-
-	/* ydnar: store off lightmaps */
-	StoreSurfaceLightmaps();
 
 	/* write out the bsp */
 	UnparseEntities();

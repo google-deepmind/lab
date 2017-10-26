@@ -75,6 +75,8 @@ lwEnvelope *lwGetEnvelope( picoMemStream_t *fp, int cksize ){
 		goto Fail;
 	}
 
+	key = NULL;
+
 	/* process subchunks as they're encountered */
 
 	while ( 1 ) {

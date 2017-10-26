@@ -103,7 +103,7 @@ static picoModel_t *_lwo_load( PM_PARAMS_LOAD ){
 	lwPolygon       *pol;
 	lwPolVert       *v;
 	lwVMapPt        *vm;
-	char name[ 64 ];
+	char name[ 256 ];
 	int i, j, k, numverts;
 
 	picoModel_t     *picoModel;
@@ -235,6 +235,7 @@ static picoModel_t *_lwo_load( PM_PARAMS_LOAD ){
 
 		/* detox and set shader name */
 		strncpy( name, surface->name, sizeof( name ) );
+		_pico_first_token( name );
 		_pico_setfext( name, "" );
 		_pico_unixify( name );
 		PicoSetShaderName( picoShader, name );
@@ -282,9 +283,22 @@ static picoModel_t *_lwo_load( PM_PARAMS_LOAD ){
 				xyz[ 1 ] = pt->pos[ 2 ];
 				xyz[ 2 ] = pt->pos[ 1 ];
 
+///* doom3 lwo data doesn't seem to have smoothing-angle information */
+//#if 0
+				if ( surface->smooth <= 0 ) {
+					/* use face normals */
 				normal[ 0 ] = v->norm[ 0 ];
 				normal[ 1 ] = v->norm[ 2 ];
 				normal[ 2 ] = v->norm[ 1 ];
+				}
+				else
+//#endif
+				{
+					/* smooth normals later */
+					normal[ 0 ] = 0;
+					normal[ 1 ] = 0;
+					normal[ 2 ] = 0;
+				}
 
 				st[ 0 ] = xyz[ defaultSTAxis[ 0 ] ] * defaultXYZtoSTScale[ 0 ];
 				st[ 1 ] = xyz[ defaultSTAxis[ 1 ] ] * defaultXYZtoSTScale[ 1 ];

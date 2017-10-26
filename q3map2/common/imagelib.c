@@ -755,6 +755,7 @@ void LoadBMP( const char *filename, byte **pic, byte **palette, int *width, int 
 	}
 	else {
 		Error( "%s had strange struct size", filename );
+		return;
 	}
 
 	if ( bcPlanes != 1 ) {

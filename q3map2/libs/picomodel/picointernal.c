@@ -161,35 +161,23 @@ void *_pico_realloc( void **ptr, size_t oldSize, size_t newSize ){
  *  as custom clone size (the string is cropped to fit into mem
  *  if needed). -sea
  */
-char *_pico_clone_alloc( char *str, int size ){
-	char  *cloned;
-	size_t cloneSize;
+char *_pico_clone_alloc( const char *str ) {
+	char* cloned;
 
 	/* sanity check */
 	if ( str == NULL ) {
 		return NULL;
 	}
 
-	/* set real size of cloned string */
-	cloneSize = ( size < 0 ) ? strlen( str ) : size;
-
 	/* allocate memory */
-	cloned = _pico_alloc( cloneSize + 1 ); /* bugfix! */
+	cloned = _pico_alloc(strlen(str) + 1);
 	if ( cloned == NULL ) {
 		return NULL;
 	}
 
-	/* zero out memory allocated by cloned string */
-	memset( cloned,0,cloneSize );
-
 	/* copy input string to cloned string */
-	if ( cloneSize < strlen( str ) ) {
-		memcpy( cloned,str,cloneSize );
-		cloned[ cloneSize ] = '\0';
-	}
-	else {
-		strcpy( cloned,str );
-	}
+	strcpy(cloned, str);
+
 	/* return ptr to cloned string */
 	return cloned;
 }
@@ -273,6 +261,19 @@ void _pico_printf( int level, const char *format, ... ){
 
 	/* do the actual call */
 	_pico_ptr_print( level,str );
+}
+
+/* _pico_first_token:
+* trims everything after the first whitespace-delimited token
+*/
+
+void _pico_first_token( char *str ) {
+	if ( !str || ! * str ) {
+		return;
+	}
+	while (*str && !isspace(*str))
+		str++;
+	*str = '\0';
 }
 
 /* _pico_strltrim:
@@ -542,7 +543,7 @@ float _pico_big_float( float src ){
  *  case-insensitive strstr. -sea
  */
 char *_pico_stristr( char *str, const char *substr ){
-	const int sublen = strlen( substr );
+	const size_t sublen = strlen( substr );
 	while ( *str )
 	{
 		if ( !_pico_strnicmp( str,substr,sublen ) ) {
@@ -604,24 +605,24 @@ int _pico_nofname( const char *path, char *dest, int destSize ){
  *  returns ptr to filename portion in given path or an empty
  *  string otherwise. given 'path' is not altered. -sea
  */
-char *_pico_nopath( const char *path ){
-	char *src;
-	src = (char *)path + ( strlen( path ) - 1 );
+const char *_pico_nopath( const char *path ){
+	const char *src;
 
 	if ( path == NULL ) {
-		return (char *)"";
+		return "";
 	}
-	if ( !strchr( (char *)path,'/' ) && !strchr( (char *)path,'\\' ) ) {
-		return ( (char *)path );
+	if ( !strchr( path,'/' ) && !strchr( path,'\\' ) ) {
+		return ( path );
 	}
 
+	src = path + ( strlen( path ) - 1 );
 	while ( ( src-- ) != path )
 	{
 		if ( *src == '/' || *src == '\\' ) {
 			return ( ++src );
 		}
 	}
-	return (char *)"";
+	return "";
 }
 
 /* _pico_setfext:

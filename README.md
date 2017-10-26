@@ -104,7 +104,7 @@ with those projects are best fixed upstream and then merged into *DeepMind Lab*.
 
 * *q3map2* is taken from
   [github.com/TTimo/GtkRadiant](https://github.com/TTimo/GtkRadiant),
-  revision 8557f1820f8e0c7cef9d52a78b2847fa401a4a95. A few minor local
+  revision 69972f94582f0723c9ceaabf6751a911bf1fdcc3. A few minor local
   modifications add synchronization and use C99 constructs to replace
   formerly non-portable or undefined behaviour. We also expect this code to be
   stable.

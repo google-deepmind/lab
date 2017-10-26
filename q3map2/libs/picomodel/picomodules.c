@@ -54,6 +54,7 @@ extern const picoModule_t picoModuleMDC;
 extern const picoModule_t picoModuleMD2;
 extern const picoModule_t picoModuleFM;
 extern const picoModule_t picoModuleLWO;
+extern const picoModule_t picoModuleTerrain;
 
 
 
@@ -68,6 +69,7 @@ const picoModule_t *picoModules[] =
 	&picoModuleMD2,     /* quake2 md2 */
 	&picoModuleFM,      /* heretic2 fm */
 	&picoModuleLWO,     /* lightwave object */
+	&picoModuleTerrain,	/* picoterrain object */
 	&picoModuleOBJ,     /* wavefront object */
 	NULL                /* arnold */
 };
@@ -81,7 +83,7 @@ const picoModule_t *picoModules[] =
    this param can be NULL when the count is not needed.
  */
 
-const picoModule_t **PicoModuleList( int *numModules ){
+const picoModule_t **PicoModuleList( int *numModules ) {
 	/* get module count */
 	if ( numModules != NULL ) {
 		for ( ( *numModules ) = 0; picoModules[ *numModules ] != NULL; ( *numModules )++ ) ;

@@ -350,7 +350,7 @@ static picoModel_t *_fm_load( PM_PARAMS_LOAD ){
 		texCoord->t = _pico_little_short( texCoord[i].t );
 	}
 	// set Skin Name
-	strncpy( skinname, (char *) fm.fm_skin, FM_SKINPATHSIZE );
+	strncpy( skinname, fm.fm_skin->path, FM_SKINPATHSIZE );
 
 #ifdef FM_VERBOSE_DBG
 	// Print out md2 values
@@ -425,7 +425,7 @@ static picoModel_t *_fm_load( PM_PARAMS_LOAD ){
 #endif
 				continue;
 			}
-			else if ( ( p_index_LUT[triangle->index_xyz[j]].next == NULL ) ) { // Not equal to Main entry, and no LL entry
+			else if ( p_index_LUT[triangle->index_xyz[j]].next == NULL ) { // Not equal to Main entry, and no LL entry
 				// Add first entry of LL from Main
 				p_index_LUT2 = (index_LUT_t *)_pico_alloc( sizeof( index_LUT_t ) );
 				if ( p_index_LUT2 == NULL ) {

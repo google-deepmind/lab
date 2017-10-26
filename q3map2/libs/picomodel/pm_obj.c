@@ -241,7 +241,7 @@ static int _obj_mtl_load( picoModel_t *model ){
 		return 0; \
 	}
 	/* alloc copy of model file name */
-	fileName = _pico_clone_alloc( model->fileName,-1 );
+	fileName = _pico_clone_alloc( model->fileName );
 	if ( fileName == NULL ) {
 		return 0;
 	}
@@ -863,12 +863,15 @@ static picoModel_t *_obj_load( PM_PARAMS_LOAD ){
 		else if ( !_pico_stricmp( p->token, "usemtl" ) ) {
 			char *materialName;
 			materialName = _pico_parse( p, 0 );
-			if( materialName || strlen( materialName ) ) {
+			if( materialName && strlen( materialName ) ) {
 				picoShader_t *shader;
 				shader = PicoFindShader( model, materialName, 0 );
 				if( !shader ) {
 					shader = PicoNewShader( model );
-					PicoSetShaderName( shader, materialName );
+					if( shader ) {
+						PicoSetShaderMapName( shader, materialName );
+						PicoSetShaderName( shader, materialName );
+					}
 				}
 				if( shader && curSurface ) {
 					PicoSetSurfaceShader( curSurface, shader );

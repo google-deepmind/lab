@@ -702,27 +702,31 @@ void m4_submat( m4x4_t mr, m3x3_t mb, int i, int j ){
 	idst = 0;
 	for ( ti = 0; ti < 4; ti++ )
 	{
+		if ( ti == i ) {
+			continue;
+		}
 		if ( ti < i ) {
 			idst = ti;
 		}
 		else
-		if ( ti > i ) {
+		{
 			idst = ti - 1;
 		}
 
 		for ( tj = 0; tj < 4; tj++ )
 		{
+			if ( tj == j ) {
+				continue;
+			}
 			if ( tj < j ) {
 				jdst = tj;
 			}
 			else
-			if ( tj > j ) {
+			{
 				jdst = tj - 1;
 			}
 
-			if ( ti != i && tj != j ) {
-				mb[idst * 3 + jdst] = mr[ti * 4 + tj ];
-			}
+			mb[idst * 3 + jdst] = mr[ti * 4 + tj ];
 		}
 	}
 }

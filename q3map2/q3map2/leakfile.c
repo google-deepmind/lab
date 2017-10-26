@@ -82,7 +82,7 @@ xmlNodePtr LeakFile( tree_t *tree ){
 		Error( "Couldn't open %s\n", filename );
 	}
 
-	xml_node = xmlNewNode( NULL, "polyline" );
+	xml_node = xmlNewNode( NULL, BAD_CAST "polyline" );
 
 	count = 0;
 	node = &tree->outside_node;

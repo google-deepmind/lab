@@ -8,6 +8,8 @@
    Ernie Wright  17 Sep 00
    ====================================================================== */
 
+#include <assert.h>
+
 #include "../picointernal.h"
 #include "lwo2.h"
 
@@ -244,6 +246,9 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 		goto Fail;
 	}
 
+	tex = NULL;
+	shdr = NULL;
+
 	/* process subchunks as they're encountered */
 
 	while ( 1 ) {
@@ -382,16 +387,21 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 		case ID_TFLG:
 			flags = getU2( fp );
 
+			if( tex == NULL ) {
+				break;
+			}
+			//only one of the three axis bits should be set
 			if ( flags & 1 ) {
-				i = 0;
+				tex->axis = 0;
 			}
-			if ( flags & 2 ) {
-				i = 1;
+			else if ( flags & 2 ) {
+				tex->axis = 1;
 			}
-			if ( flags & 4 ) {
-				i = 2;
+			else {
+				assert( flags & 4 );
+				tex->axis = 2;
 			}
-			tex->axis = i;
+			
 			if ( tex->type == ID_IMAP ) {
 				tex->param.imap.axis = i;
 			}
@@ -415,21 +425,33 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 			break;
 
 		case ID_TSIZ:
+			if( tex == NULL ) {
+				break;
+			}
 			for ( i = 0; i < 3; i++ )
 				tex->tmap.size.val[ i ] = getF4( fp );
 			break;
 
 		case ID_TCTR:
+			if( tex == NULL ) {
+				break;
+			}
 			for ( i = 0; i < 3; i++ )
 				tex->tmap.center.val[ i ] = getF4( fp );
 			break;
 
 		case ID_TFAL:
+			if( tex == NULL ) {
+				break;
+			}
 			for ( i = 0; i < 3; i++ )
 				tex->tmap.falloff.val[ i ] = getF4( fp );
 			break;
 
 		case ID_TVEL:
+			if( tex == NULL ) {
+				break;
+			}
 			for ( i = 0; i < 3; i++ )
 				v[ i ] = getF4( fp );
 			tex->tmap.center.eindex = add_tvel( tex->tmap.center.val, v,
@@ -437,6 +459,9 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 			break;
 
 		case ID_TCLR:
+			if( tex == NULL ) {
+				break;
+			}
 			if ( tex->type == ID_PROC ) {
 				for ( i = 0; i < 3; i++ )
 					tex->param.proc.value[ i ] = getU1( fp ) / 255.0f;
@@ -444,40 +469,64 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 			break;
 
 		case ID_TVAL:
+			if( tex == NULL ) {
+				break;
+			}
 			tex->param.proc.value[ 0 ] = getI2( fp ) / 256.0f;
 			break;
 
 		case ID_TAMP:
+			if( tex == NULL ) {
+				break;
+			}
 			if ( tex->type == ID_IMAP ) {
 				tex->param.imap.amplitude.val = getF4( fp );
 			}
 			break;
 
 		case ID_TIMG:
+			if( tex == NULL ) {
+				break;
+			}
 			s = getS0( fp );
 			tex->param.imap.cindex = add_clip( s, &obj->clip, &obj->nclips );
 			break;
 
 		case ID_TAAS:
+			if( tex == NULL ) {
+				break;
+			}
 			tex->param.imap.aa_strength = getF4( fp );
 			tex->param.imap.aas_flags = 1;
 			break;
 
 		case ID_TREF:
+			if( tex == NULL ) {
+				break;
+			}
 			tex->tmap.ref_object = getbytes( fp, sz );
 			break;
 
 		case ID_TOPC:
+			if( tex == NULL ) {
+				break;
+			}
 			tex->opacity.val = getF4( fp );
 			break;
 
 		case ID_TFP0:
+			if( tex == NULL ) {
+				break;
+			}
 			if ( tex->type == ID_IMAP ) {
 				tex->param.imap.wrapw.val = getF4( fp );
 			}
 			break;
 
 		case ID_TFP1:
+			if( tex == NULL ) {
+				break;
+			}
 			if ( tex->type == ID_IMAP ) {
 				tex->param.imap.wraph.val = getF4( fp );
 			}
@@ -494,6 +543,9 @@ lwSurface *lwGetSurface5( picoMemStream_t *fp, int cksize, lwObject *obj ){
 			break;
 
 		case ID_SDAT:
+			if ( !shdr ) {
+				goto Fail;
+			}
 			shdr->data = getbytes( fp, sz );
 			break;
 

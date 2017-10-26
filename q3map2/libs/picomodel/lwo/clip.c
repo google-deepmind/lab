@@ -22,6 +22,35 @@ void lwFreeClip( lwClip *clip ){
 	if ( clip ) {
 		lwListFree( (void*) clip->ifilter, (ListFreeFunc) lwFreePlugin );
 		lwListFree( (void*) clip->pfilter, (ListFreeFunc) lwFreePlugin );
+
+		switch ( clip->type ) {
+		case ID_STIL:
+			_pico_free( clip->source.still.name );
+			break;
+
+		case ID_ISEQ:
+			_pico_free( clip->source.seq.prefix );
+			_pico_free( clip->source.seq.suffix );
+			break;
+
+		case ID_ANIM:
+			_pico_free( clip->source.anim.name );
+			_pico_free( clip->source.anim.server );
+			_pico_free( clip->source.anim.data );
+			break;
+
+		case ID_XREF:
+			_pico_free( clip->source.xref.string );
+			break;
+
+		case ID_STCC:
+			_pico_free( clip->source.cycle.name );
+			break;
+
+		default:
+			break;
+		}
+
 		_pico_free( clip );
 	}
 }
