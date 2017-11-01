@@ -78,7 +78,10 @@ cc_binary(
         "-DMD4_Final=MD4Final",
         "-DMD4_Init=MD4Init",
         "-DMD4_Update=MD4Update",
-        "-DMD5(data,len,out)=\"{ MD5_CTX ctx; MD5Init(&ctx); MD5Update(&ctx, data, len); MD5Final(out, &ctx); }\"",
+        #"-DMD5(data,len,out)=\"{ MD5_CTX ctx; MD5Init(&ctx); MD5Update(&ctx, data, len); MD5Final(out, &ctx); }\"",
+        # NOTE: Bazel's clang_wrapper does not handle arguments with spaces correctly,
+        # see Bazel issue #3979: https://github.com/bazelbuild/bazel/issues/3979
+        "-DMD5(data,len,out)={MD5_CTX(ctx);MD5Init(&ctx);MD5Update(&ctx,data,len);MD5Final(out,&ctx);}", # workaround
     ],
     visibility = [
         "//:__pkg__",
@@ -91,9 +94,21 @@ cc_binary(
         ":picomodel",
         "//third_party/md:md4",
         "//third_party/md:md5",
-        "@glib_archive//:glib",
+    ] + select({
+        "@//:darwin": [
+            "@glib_system//:glib",
+            "@libxml_system//:libxml",
+        ],
+        "@//:darwin_x86_64": [
+            "@glib_system//:glib",
+            "@libxml_system//:libxml",
+        ],
+        "//conditions:default": [
+            "@glib_archive//:glib",
+            "@libxml_archive//:libxml",
+        ],
+    }) + [
         "@jpeg_archive//:jpeg",
-        "@libxml_archive//:libxml",
         "@png_archive//:png",
     ],
 )

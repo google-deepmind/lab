@@ -545,6 +545,37 @@ cc_binary(
     deps = ["@zlib_archive//:zlib"],
 )
 
+objc_library(
+    name = "macos_dlg_lib",
+    srcs = [
+        CODE_DIR + "/sys/sys_osx.m"
+    ],
+    hdrs = [
+        "public/dmlab.h",
+        CODE_DIR + "/deepmind/context.h",
+    ] + glob(
+        [
+            CODE_DIR + "/botlib/*.h",
+            CODE_DIR + "/client/*.h",
+            CODE_DIR + "/qcommon/*.h",
+            CODE_DIR + "/sys/*.h",
+            CODE_DIR + "/server/*.h",
+            CODE_DIR + "/renderercommon/*.h",
+            CODE_DIR + "/renderergl1/*.h",
+        ],
+        exclude = [
+            CODE_DIR + "/client/fx_*.h",
+            CODE_DIR + "/qcommon/vm_powerpc_asm.h",
+            CODE_DIR + "/qcommon/vm_sparc.h",
+            CODE_DIR + "/renderercommon/tr_types.h",
+            CODE_DIR + "/renderercommon/tr_public.h",
+            CODE_DIR + "/renderergl1/tr_local.h",
+        ],
+    ),
+    sdk_frameworks = ["Cocoa", "Carbon"],
+    copts = ["-fno-objc-arc"],
+)
+
 # To link with the SDL frontend, depend on :game_lib_sdl
 # and add "-lGL" to the linker flags.
 cc_library(
@@ -722,7 +753,11 @@ cc_library(
         "//third_party/rl_api:env_c_api",
         "@jpeg_archive//:jpeg",
         "@sdl_system//:sdl2",
-    ],
+    ] + select({
+        ":darwin": ["@osmesa_system//:osmesa"],
+        ":darwin_x86_64": ["@osmesa_system//:osmesa"],
+        "//conditions:default": [],
+    }),
 )
 
 # To link with the headless GLX frontend, depend on :game_lib_headless_glx
@@ -749,6 +784,94 @@ cc_library(
 
         ## OpenGL rendering
         CODE_DIR + "/deepmind/headless_native_glimp.c",
+        CODE_DIR + "/deepmind/glimp_common.h",
+        CODE_DIR + "/deepmind/glimp_common.c",
+    ] + glob(
+        [
+            CODE_DIR + "/botlib/*.c",
+            CODE_DIR + "/client/cl_*.c",
+            CODE_DIR + "/client/snd_*.c",
+            CODE_DIR + "/qcommon/*.c",
+            CODE_DIR + "/renderercommon/*.c",
+            CODE_DIR + "/renderergl1/*.c",
+            CODE_DIR + "/server/*.c",
+        ],
+        exclude = [
+            CODE_DIR + "/renderergl1/tr_subs.c",
+            CODE_DIR + "/server/sv_rankings.c",
+            CODE_DIR + "/qcommon/vm_none.c",
+            CODE_DIR + "/qcommon/vm_powerpc*.c",
+            CODE_DIR + "/qcommon/vm_sparc.c",
+        ],
+    ),
+    hdrs = [
+        "public/dmlab.h",
+        CODE_DIR + "/deepmind/context.h",
+    ] + glob(
+        [
+            CODE_DIR + "/botlib/*.h",
+            CODE_DIR + "/client/*.h",
+            CODE_DIR + "/qcommon/*.h",
+            CODE_DIR + "/sys/*.h",
+            CODE_DIR + "/server/*.h",
+            CODE_DIR + "/renderercommon/*.h",
+            CODE_DIR + "/renderergl1/*.h",
+        ],
+        exclude = [
+            CODE_DIR + "/client/fx_*.h",
+            CODE_DIR + "/qcommon/vm_powerpc_asm.h",
+            CODE_DIR + "/qcommon/vm_sparc.h",
+            CODE_DIR + "/renderercommon/tr_types.h",
+            CODE_DIR + "/renderercommon/tr_public.h",
+            CODE_DIR + "/renderergl1/tr_local.h",
+        ],
+    ),
+    copts = [
+        "-std=c99",
+        "-fno-strict-aliasing",
+        ARCH_VAR,
+        STANDALONE_VAR,
+    ],
+    defines = [
+        "BOTLIB",
+        "_GNU_SOURCE",
+    ],
+    textual_hdrs = [
+        CODE_DIR + "/renderercommon/tr_types.h",
+        CODE_DIR + "/renderercommon/tr_public.h",
+        CODE_DIR + "/renderergl1/tr_local.h",
+    ],
+    deps = [
+        ":qcommon_hdrs",
+        "//deepmind/include:context_headers",
+        "//third_party/rl_api:env_c_api",
+        "@jpeg_archive//:jpeg",
+        "@sdl_system//:sdl2",
+    ],
+)
+
+cc_library(
+    name = "game_lib_headless_darwin",
+    srcs = [
+        CODE_DIR + "/asm/ftola.c",
+        CODE_DIR + "/asm/qasm-inline.h",
+        CODE_DIR + "/asm/snapvector.c",
+        CODE_DIR + "/cgame/cg_public.h",
+        CODE_DIR + "/client/libmumblelink.c",
+        CODE_DIR + "/deepmind/dm_public.h",
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/game/bg_public.h",
+        CODE_DIR + "/game/g_public.h",
+        CODE_DIR + "/null/null_input.c",
+        CODE_DIR + "/null/null_snddma.c",
+        CODE_DIR + "/sys/con_log.c",
+        CODE_DIR + "/sys/con_passive.c",
+        CODE_DIR + "/sys/sys_main.c",
+        CODE_DIR + "/sys/sys_unix.c",
+        CODE_DIR + "/ui/ui_public.h",
+
+        ## OpenGL rendering
+        CODE_DIR + "/deepmind/headless_native_macos_glimp.c",
         CODE_DIR + "/deepmind/glimp_common.h",
         CODE_DIR + "/deepmind/glimp_common.c",
     ] + glob(
@@ -912,15 +1035,22 @@ cc_binary(
         ":vm_pk3",
     ],
     linkopts = [
-        "-lGL",
         "-lm",
-    ],
+    ] + select({
+        ":darwin": ["-framework OpenGL"],
+        ":darwin_x86_64": ["-framework OpenGL"],
+        "//conditions:default": ["-lGL"],
+    }),
     deps = [
         ":game_lib_sdl",
         "//deepmind/engine:callbacks",
         "//deepmind/engine:context",
         "@zlib_archive//:zlib",
-    ],
+    ] + select({
+        ":darwin": [":macos_dlg_lib"],
+        ":darwin_x86_64": [":macos_dlg_lib"],
+        "//conditions:default": [],
+    }),
 )
 
 config_setting(
@@ -929,8 +1059,28 @@ config_setting(
 )
 
 config_setting(
+    name = "dmlab_lib_sdl_darwin",
+    values = {"define": "headless=false", "cpu": "darwin"},
+)
+
+config_setting(
+    name = "dmlab_lib_sdl_darwin_x86_64",
+    values = {"define": "headless=false", "cpu": "darwin_x86_64"},
+)
+
+config_setting(
     name = "dmlab_headless_hw",
     values = {"define": "headless=glx"},
+)
+
+config_setting(
+    name = "dmlab_headless_hw_darwin",
+    values = {"define": "headless=macos", "cpu": "darwin"},
+)
+
+config_setting(
+    name = "dmlab_headless_hw_darwin_x86_64",
+    values = {"define": "headless=macos", "cpu": "darwin_x86_64"},
 )
 
 config_setting(
@@ -938,35 +1088,71 @@ config_setting(
     values = {"define": "headless=osmesa"},
 )
 
+config_setting(
+    name = "dmlab_headless_sw_darwin",
+    values = {"define": "headless=osmesa", "cpu": "darwin"},
+)
+
+config_setting(
+    name = "dmlab_headless_sw_darwin_x86_64",
+    values = {"define": "headless=osmesa", "cpu": "darwin_x86_64"},
+)
+
 cc_binary(
     name = "libdmlab.so",
     linkopts = select({
         "//conditions:default": ["-lOSMesa"],
+        ":dmlab_headless_hw_darwin": [
+            "-framework OpenGL",
+        ],
+        ":dmlab_headless_hw_darwin_x86_64": [
+            "-framework OpenGL",
+        ],
         ":dmlab_headless_hw": [
             "-lGL",
             "-lX11",
+        ],
+        ":dmlab_lib_sdl_darwin": [
+            "-framework OpenGL",
+        ],
+        ":dmlab_lib_sdl_darwin_x86_64": [
+            "-framework OpenGL",
         ],
         ":dmlab_lib_sdl": [
             "-lGL",
             "-lX11",
         ],
-    }) + [
-        "-Wl,--version-script",
-        ":dmlab.lds",
-    ],
+        ":dmlab_headless_sw_darwin": [],
+        ":dmlab_headless_sw_darwin_x86_64": [],
+    }) + select({
+        "//conditions:default": [
+            "-Wl,--version-script",
+            ":dmlab.lds",
+        ],
+        ":darwin": [],
+        ":darwin_x86_64": [],
+    }),
     linkshared = 1,
     linkstatic = 1,
     deps = select({
         "//conditions:default": [":game_lib_headless_osmesa"],
         ":dmlab_lib_sdl": [":game_lib_sdl"],
         ":dmlab_headless_hw": [":game_lib_headless_glx"],
+        ":dmlab_headless_hw_darwin": [":game_lib_headless_darwin"],
+        ":dmlab_headless_hw_darwin_x86_64": [":game_lib_headless_darwin"],
         ":dmlab_headless_sw": [":game_lib_headless_osmesa"],
+        ":dmlab_headless_sw_darwin": [":game_lib_headless_osmesa"],
+        ":dmlab_headless_sw_darwin_x86_64": [":game_lib_headless_osmesa"],
     }) + [
         ":dmlab.lds",
         "//deepmind/engine:callbacks",
         "//deepmind/engine:context",
         "@zlib_archive//:zlib",
-    ],
+    ] + select({
+        ":darwin": [":macos_dlg_lib"],
+        ":darwin_x86_64": [":macos_dlg_lib"],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -1007,6 +1193,7 @@ cc_binary(
     deps = [
         ":dmlablib",
         "@python_system//:python",
+        # "@numpy_archive//:numpy_headers",
     ],
 )
 
@@ -1037,4 +1224,16 @@ py_test(
     srcs = ["python/random_agent_test.py"],
     main = "python/random_agent_test.py",
     deps = [":random_agent"],
+)
+
+config_setting(
+    name = "darwin",
+    values = {"cpu": "darwin"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "darwin_x86_64",
+    values = {"cpu": "darwin_x86_64"},
+    visibility = ["//visibility:public"],
 )

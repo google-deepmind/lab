@@ -24,7 +24,9 @@
 
 #include <dlfcn.h>
 #include <fcntl.h>
+#ifndef __APPLE__
 #include <sys/sendfile.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -40,6 +42,44 @@
 
 #ifndef DMLAB_SO_LOCATION
 #error Must define DMLAB_SO_LOCATION dynamic library path.
+#endif
+
+#ifdef __APPLE__
+ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count)
+{
+  const int buf_size = 8192;  // 8KB
+  char buf[buf_size];
+  size_t rd, wr, total = 0;
+  off_t ofs;
+  if (offset) {
+    ofs = lseek(in_fd, 0, SEEK_CUR);
+    if (ofs == -1 || lseek(in_fd, *offset, SEEK_SET) == -1)
+      return -1;
+  }
+  while (count > 0) {
+    rd = read(in_fd, buf, sizeof(buf) <= count ? sizeof(buf) : count);
+    if (rd == -1)
+      return -1;
+    if (rd == 0)
+      break;
+    char *p = buf;
+    while(rd > 0) {
+      wr = write(out_fd, p, rd);
+      if (wr == -1)
+        return -1;
+      rd -= wr;
+      p += wr;
+      count -= wr;
+      total += wr;
+    }
+  }
+  if (offset) {
+    *offset = lseek(in_fd, 0, SEEK_CUR);
+    if (*offset == -1 || lseek(in_fd, ofs, SEEK_SET) == -1)
+      return -1;
+  }
+  return total;
+}
 #endif
 
 namespace {

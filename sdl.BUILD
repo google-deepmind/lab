@@ -4,9 +4,23 @@
 
 cc_library(
     name = "sdl2",
-    hdrs = glob(["include/SDL2/*.h"]),
+    hdrs = glob([
+        "include/SDL2/*.h",
+        "local/include/SDL2/*.h",
+        # Homebrew
+        "local/opt/sdl2/include/SDL2/*.h",
+    ]),
     defines = ["_REENTRANT"],
-    includes = ["include/SDL2"],
-    linkopts = ["-lSDL2"],
+    includes = [
+        "include/SDL2",
+        "local/include/SDL2",
+        # Homebrew
+        "local/opt/sdl2/include/SDL2",
+    ],
+    linkopts = [
+        "-lSDL2",
+        # Homebrew
+        "-L/usr/local/opt/sdl2/lib",
+    ],
     visibility = ["//visibility:public"],
 )
