@@ -16,7 +16,7 @@ cc_test(
     srcs = ["tensor_view_test.cc"],
     deps = [
         ":tensor_view",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -49,6 +49,6 @@ cc_test(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/lua:vm",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

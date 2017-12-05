@@ -36,6 +36,6 @@ cc_test(
     ],
     deps = [
         ":env_c_api",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

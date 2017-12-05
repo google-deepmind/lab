@@ -50,7 +50,7 @@ cc_test(
         ":callbacks",
         "//deepmind/include:context_headers",
         "//deepmind/support:test_srcdir",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -83,7 +83,7 @@ cc_test(
         "//deepmind/lua:n_results_or_test_util",
         "//deepmind/lua:push_script",
         "//deepmind/lua:vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -110,7 +110,7 @@ cc_test(
         "//deepmind/lua:n_results_or_test_util",
         "//deepmind/lua:push_script",
         "//deepmind/lua:vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

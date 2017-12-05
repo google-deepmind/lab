@@ -5,10 +5,12 @@ licenses(["restricted"])  # GPLv2
 
 package(default_visibility = ["//visibility:public"])
 
+LUA_VERSION = "@lua_system//:lua"
+
 cc_library(
     name = "lua",
     hdrs = ["lua.h"],
-    deps = ["@lua_system//:lua"],
+    deps = [LUA_VERSION],
 )
 
 cc_library(
@@ -25,7 +27,7 @@ cc_library(
     deps = [
         ":vm",
         "//deepmind/support:logging",
-        "@googletest//:gtest",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -43,7 +45,7 @@ cc_test(
         ":vm",
         "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -58,7 +60,7 @@ cc_library(
     hdrs = ["n_results_or_test_util.h"],
     deps = [
         ":n_results_or",
-        "@googletest//:gtest",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -80,7 +82,7 @@ cc_test(
         ":push",
         ":read",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -109,7 +111,7 @@ cc_test(
         ":push_script",
         ":read",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -126,7 +128,7 @@ cc_test(
     deps = [
         ":push",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -155,7 +157,7 @@ cc_test(
         ":push",
         ":read",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -183,7 +185,7 @@ cc_test(
         ":read",
         ":table_ref",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -211,6 +213,6 @@ cc_test(
         ":read",
         ":table_ref",
         ":vm_test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

@@ -1,10 +1,15 @@
 workspace(name = "org_deepmind_lab")
 
-new_git_repository(
-    name = "googletest",
-    build_file = "googletest.BUILD",
-    commit = "d8fe70f477d8a99745b69f7650f75eacf96866f9",
-    remote = "https://github.com/google/googletest.git",
+http_archive(
+    name = "com_google_googletest",
+    strip_prefix = "googletest-master",
+    urls = ["https://github.com/google/googletest/archive/master.zip"],
+)
+
+http_archive(
+    name = "com_google_absl",
+    strip_prefix = "abseil-cpp-master",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
 )
 
 new_http_archive(
@@ -18,8 +23,8 @@ new_http_archive(
 new_http_archive(
     name = "glib_archive",
     build_file = "glib.BUILD",
-    strip_prefix = "glib-2.38.2",
     sha256 = "056a9854c0966a0945e16146b3345b7a82562a5ba4d5516fd10398732aea5734",
+    strip_prefix = "glib-2.38.2",
     url = "http://ftp.gnome.org/pub/gnome/sources/glib/2.38/glib-2.38.2.tar.xz",
 )
 

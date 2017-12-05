@@ -22,7 +22,7 @@ cc_test(
     srcs = ["char_grid_test.cc"],
     deps = [
         ":char_grid",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -48,7 +48,7 @@ cc_test(
     srcs = ["text_maze_exporter_test.cc"],
     deps = [
         ":text_maze_exporter",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -68,7 +68,7 @@ cc_test(
     srcs = ["parse_text_level_test.cc"],
     deps = [
         ":parse_text_level",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -111,6 +111,6 @@ cc_test(
         "//deepmind/lua:call",
         "//deepmind/lua:push_script",
         "//deepmind/lua:vm",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

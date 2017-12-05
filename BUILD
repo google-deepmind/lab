@@ -2,7 +2,9 @@
 #   DeepMind Lab, a machine-learning research environment
 #   forked from ioquake/ioq3.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])  # GPLv2, code/tools/lcc is separate
+
+exports_files(["LICENSE"])
 
 CODE_DIR = "engine/code"
 

@@ -33,6 +33,6 @@ cc_test(
     deps = [
         ":map_builder",
         "//deepmind/support:stringprintf",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
