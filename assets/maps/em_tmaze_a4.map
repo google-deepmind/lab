@@ -1,0 +1,268 @@
+// entity 0
+{
+"classname" "worldspawn"
+// brush 0
+{
+( -392 216 -24 ) ( -392 88 -24 ) ( -392 88 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( 56 136 -24 ) ( -72 136 -24 ) ( -72 136 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( 328 64 -24 ) ( 328 192 -24 ) ( 328 192 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -64 56 -24 ) ( 64 56 -24 ) ( 64 56 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -64 64 104 ) ( -64 192 104 ) ( 64 192 104 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -64 192 96 ) ( -64 64 96 ) ( 64 192 96 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+}
+// brush 1
+{
+( 64 64 -8 ) ( -64 64 -8 ) ( -64 -64 -8 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( -72 -136 8 ) ( 56 -136 8 ) ( 56 -136 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( 0 -64 8 ) ( 0 64 8 ) ( 0 64 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( 64 56 8 ) ( -64 56 8 ) ( -64 56 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( -72 64 8 ) ( -72 -64 8 ) ( -72 -64 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( -64 64 0 ) ( 64 64 0 ) ( -64 -64 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+}
+// brush 2
+{
+( -64 -64 104 ) ( -64 64 104 ) ( 64 64 104 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -64 -136 -24 ) ( 64 -136 -24 ) ( 64 -136 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( 0 -64 -24 ) ( 0 64 -24 ) ( 0 64 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( 64 56 -24 ) ( -64 56 -24 ) ( -64 56 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -72 64 -24 ) ( -72 -64 -24 ) ( -72 -64 -32 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+( -64 64 96 ) ( -64 -64 96 ) ( 64 64 96 ) map/lab_games/sky/lg_sky_01 0 0 0 0.031250 0.031250 0 0 0
+}
+// brush 3
+{
+( 0 192 0 ) ( 128 192 0 ) ( 0 64 0 ) map/lab_games/lg_style_01_floor_orange -3 0 0 0.190000 0.190000 0 0 0
+( 128 192 -8 ) ( 0 192 -8 ) ( 0 64 -8 ) map/lab_games/lg_style_01_floor_orange -3 0 0 0.190000 0.190000 0 0 0
+( 0 56 8 ) ( 128 56 8 ) ( 128 56 0 ) map/lab_games/lg_style_01_floor_orange -3 0 0 0.190000 0.190000 0 0 0
+( 328 64 8 ) ( 328 192 8 ) ( 328 192 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+( 120 136 8 ) ( -8 136 8 ) ( -8 136 0 ) map/lab_games/lg_style_01_floor_orange -3 0 0 0.190000 0.190000 0 0 0
+( -392 216 8 ) ( -392 88 8 ) ( -392 88 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.190000 0.190000 0 0 0
+}
+// brush 4
+{
+( 55 64 0 ) ( -73 64 0 ) ( -73 -64 0 ) map/lab_games/lg_style_01_wall_blue 0 327 0 -0.003906 0.195312 0 0 0
+( -73 -64 96 ) ( -73 64 96 ) ( 55 64 96 ) map/lab_games/lg_style_01_wall_blue 0 327 0 -0.003906 0.195312 0 0 0
+( -73 -136 8 ) ( 55 -136 8 ) ( 55 -136 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.003906 0.093750 0 0 0
+( 56 64 8 ) ( -72 64 8 ) ( -72 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.003906 0.093750 0 0 0
+( -72 80 40 ) ( -72 -48 40 ) ( -72 -48 32 ) map/lab_games/lg_style_01_wall_blue 655 0 0 -0.097656 0.093750 0 0 0
+( -64 -136 40 ) ( -64 -8 40 ) ( -64 -136 32 ) map/lab_games/lg_style_01_wall_blue 655 0 0 -0.097656 0.093750 0 0 0
+}
+// brush 5
+{
+( -392 152 8 ) ( -392 24 8 ) ( -392 24 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.001302 0.093750 0 0 0
+( 105 136 8 ) ( -23 136 8 ) ( -23 136 0 ) map/lab_games/lg_style_01_wall_blue 2798 0 0 -0.117188 0.093750 0 0 0
+( 328 8 8 ) ( 328 136 8 ) ( 328 136 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.001302 0.093750 0 0 0
+( -64 8 96 ) ( -64 136 96 ) ( 64 136 96 ) map/lab_games/lg_style_01_wall_blue 2798 0 0 -0.117188 0.007812 0 0 0
+( 64 136 0 ) ( -64 136 0 ) ( -64 8 0 ) map/lab_games/lg_style_01_wall_blue 2798 0 0 -0.117188 0.007812 0 0 0
+( -199 128 8 ) ( -71 128 8 ) ( -199 128 0 ) map/lab_games/lg_style_01_wall_blue 2798 0 0 -0.117188 0.093750 0 0 0
+}
+// brush 6
+{
+( 7 64 0 ) ( -121 64 0 ) ( -121 -64 0 ) map/lab_games/lg_style_01_wall_blue 0 327 0 -0.003906 0.195312 0 0 0
+( -121 -64 96 ) ( -121 64 96 ) ( 7 64 96 ) map/lab_games/lg_style_01_wall_blue 0 327 0 -0.003906 0.195312 0 0 0
+( -121 -136 8 ) ( 7 -136 8 ) ( 7 -136 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.003906 0.093750 0 0 0
+( 8 -48 40 ) ( 8 80 40 ) ( 8 80 32 ) map/lab_games/lg_style_01_wall_blue 655 0 0 -0.097656 0.093750 0 0 0
+( 8 64 8 ) ( -120 64 8 ) ( -120 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.003906 0.093750 0 0 0
+( 0 0 -24 ) ( 0 -128 -24 ) ( 0 0 -32 ) map/lab_games/lg_style_01_wall_blue 655 0 0 -0.097656 0.093750 0 0 0
+}
+// brush 7
+{
+( 64 -8 0 ) ( -64 -8 0 ) ( -64 -136 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.007812 0 0 0
+( -64 -136 96 ) ( -64 -8 96 ) ( 64 -8 96 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.007812 0 0 0
+( -128 -136 8 ) ( 0 -136 8 ) ( 0 -136 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+( 0 -136 40 ) ( 0 -8 40 ) ( 0 -8 32 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( -64 -8 40 ) ( -64 -136 40 ) ( -64 -136 32 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( 65 -128 8 ) ( -63 -128 8 ) ( 65 -128 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+}
+// brush 8
+{
+( -392 208 8 ) ( -392 80 8 ) ( -392 80 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+( -135 128 8 ) ( -263 128 8 ) ( -263 128 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( -263 64 8 ) ( -135 64 8 ) ( -135 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( -264 64 96 ) ( -264 192 96 ) ( -136 192 96 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.062500 0 0 0
+( -136 192 0 ) ( -264 192 0 ) ( -264 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.062500 0 0 0
+( -384 16 -24 ) ( -384 144 -24 ) ( -384 16 -32 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+}
+// brush 9
+{
+( -392 56 136 ) ( -392 48 136 ) ( -392 48 -8 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.002604 0.093750 0 0 0
+( -199 64 136 ) ( -327 64 136 ) ( -327 64 -8 ) map/lab_games/lg_style_01_wall_blue 2380 0 0 -0.104167 0.093750 0 0 0
+( -72 -56 168 ) ( -72 -48 168 ) ( -72 -48 24 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.002604 0.093750 0 0 0
+( -136 56 136 ) ( -8 56 136 ) ( -8 56 -8 ) map/lab_games/lg_style_01_wall_blue 2380 0 0 -0.104167 0.093750 0 0 0
+( -192 56 96 ) ( -192 64 96 ) ( -64 64 96 ) map/lab_games/lg_style_01_wall_blue 2380 0 0 -0.104167 0.007812 0 0 0
+( -64 64 0 ) ( -192 64 0 ) ( -192 56 0 ) map/lab_games/lg_style_01_wall_blue 2380 0 0 -0.104167 0.007812 0 0 0
+}
+// brush 10
+{
+( 217 128 8 ) ( 89 128 8 ) ( 89 128 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( 328 64 8 ) ( 328 192 8 ) ( 328 192 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+( 89 64 8 ) ( 217 64 8 ) ( 217 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.093750 0 0 0
+( 88 64 96 ) ( 88 192 96 ) ( 216 192 96 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.062500 0 0 0
+( 216 192 0 ) ( 88 192 0 ) ( 88 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.007812 0.062500 0 0 0
+( 320 128 8 ) ( 320 0 8 ) ( 320 128 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.062500 0.093750 0 0 0
+}
+// brush 11
+{
+( 0 200 40 ) ( 0 72 40 ) ( 0 72 32 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.002604 0.093750 0 0 0
+( 328 56 8 ) ( 328 184 8 ) ( 328 184 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.002604 0.093750 0 0 0
+( 256 56 8 ) ( 384 56 8 ) ( 384 56 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.106771 0.093750 0 0 0
+( -136 56 96 ) ( -136 184 96 ) ( -8 184 96 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.106771 0.007812 0 0 0
+( -8 184 0 ) ( -136 184 0 ) ( -136 56 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.106771 0.007812 0 0 0
+( 57 64 8 ) ( -71 64 8 ) ( 57 64 0 ) map/lab_games/lg_style_01_wall_blue 0 0 0 -0.106771 0.093750 0 0 0
+}
+// brush 12
+{
+( 1048 240 -176 ) ( 528 240 -176 ) ( 528 -232 -176 ) map/lab_games/sky/lg_sky_02_dn 15 519 0 -0.507812 0.460938 0 0 0
+( 528 -232 200 ) ( 1048 -232 200 ) ( 1048 -232 184 ) map/lab_games/sky/lg_sky_02_dn 15 0 0 -0.507812 0.007812 0 0 0
+( 1048 -232 200 ) ( 1048 240 200 ) ( 1048 240 184 ) map/lab_games/sky/lg_sky_02_dn 519 0 0 -0.460938 0.007812 0 0 0
+( 1048 240 200 ) ( 528 240 200 ) ( 528 240 184 ) map/lab_games/sky/lg_sky_02_dn 15 0 0 -0.507812 0.007812 0 0 0
+( 528 240 200 ) ( 528 -232 200 ) ( 528 -232 184 ) map/lab_games/sky/lg_sky_02_dn 519 0 0 -0.460938 0.007812 0 0 0
+( 528 240 -168 ) ( 1048 240 -168 ) ( 528 -232 -168 ) map/lab_games/sky/lg_sky_02_dn 15 519 0 -0.507812 0.460938 0 0 0
+}
+// brush 13
+{
+( 528 -232 200 ) ( 528 240 200 ) ( 1048 240 200 ) map/lab_games/sky/lg_sky_02_up 15 519 0 -0.507812 0.460938 0 0 0
+( 528 -232 200 ) ( 1048 -232 200 ) ( 1048 -232 184 ) map/lab_games/sky/lg_sky_02_up 15 0 0 -0.507812 0.007812 0 0 0
+( 1048 -232 200 ) ( 1048 240 200 ) ( 1048 240 184 ) map/lab_games/sky/lg_sky_02_up 519 0 0 -0.460938 0.007812 0 0 0
+( 1048 240 200 ) ( 528 240 200 ) ( 528 240 184 ) map/lab_games/sky/lg_sky_02_up 15 0 0 -0.507812 0.007812 0 0 0
+( 528 240 200 ) ( 528 -232 200 ) ( 528 -232 184 ) map/lab_games/sky/lg_sky_02_up 519 0 0 -0.460938 0.007812 0 0 0
+( 528 240 192 ) ( 528 -232 192 ) ( 1048 240 192 ) map/lab_games/sky/lg_sky_02_up 15 519 0 -0.507812 0.460938 0 0 0
+}
+// brush 14
+{
+( 1048 240 -176 ) ( 528 240 -176 ) ( 528 -232 -176 ) map/lab_games/sky/lg_sky_02_bk 15 -1023 0 -0.507812 0.007812 0 0 0
+( 528 -232 200 ) ( 528 240 200 ) ( 1048 240 200 ) map/lab_games/sky/lg_sky_02_bk 15 -1023 0 -0.507812 0.007812 0 0 0
+( 528 -232 200 ) ( 1048 -232 200 ) ( 1048 -232 184 ) map/lab_games/sky/lg_sky_02_bk 15 544 0 -0.507812 0.367188 0 0 0
+( 1048 -232 200 ) ( 1048 240 200 ) ( 1048 240 184 ) map/lab_games/sky/lg_sky_02_bk -1023 544 0 -0.007812 0.367188 0 0 0
+( 528 240 200 ) ( 528 -232 200 ) ( 528 -232 184 ) map/lab_games/sky/lg_sky_02_bk -1023 544 0 -0.007812 0.367188 0 0 0
+( 1048 -224 200 ) ( 528 -224 200 ) ( 1048 -224 184 ) map/lab_games/sky/lg_sky_02_bk 15 544 0 -0.507812 0.367188 0 0 0
+}
+// brush 15
+{
+( 1048 240 -176 ) ( 528 240 -176 ) ( 528 -232 -176 ) map/lab_games/sky/lg_sky_02_rt -3 519 0 -0.007812 0.460938 0 0 0
+( 528 -232 200 ) ( 528 240 200 ) ( 1048 240 200 ) map/lab_games/sky/lg_sky_02_rt -3 519 0 -0.007812 0.460938 0 0 0
+( 528 -232 200 ) ( 1048 -232 200 ) ( 1048 -232 184 ) map/lab_games/sky/lg_sky_02_rt -3 544 0 -0.007812 0.367188 0 0 0
+( 1048 -232 200 ) ( 1048 240 200 ) ( 1048 240 184 ) map/lab_games/sky/lg_sky_02_rt 519 544 0 -0.460938 0.367188 0 0 0
+( 1048 240 200 ) ( 528 240 200 ) ( 528 240 184 ) map/lab_games/sky/lg_sky_02_rt -3 544 0 -0.007812 0.367188 0 0 0
+( 1040 240 200 ) ( 1040 -232 200 ) ( 1040 240 184 ) map/lab_games/sky/lg_sky_02_rt 519 544 0 -0.460938 0.367188 0 0 0
+}
+// brush 16
+{
+( 1048 240 -176 ) ( 528 240 -176 ) ( 528 -232 -176 ) map/lab_games/sky/lg_sky_02_ft 15 -1023 0 -0.507812 0.007812 0 0 0
+( 528 -232 200 ) ( 528 240 200 ) ( 1048 240 200 ) map/lab_games/sky/lg_sky_02_ft 15 -1023 0 -0.507812 0.007812 0 0 0
+( 1048 -232 200 ) ( 1048 240 200 ) ( 1048 240 184 ) map/lab_games/sky/lg_sky_02_ft -1023 544 0 -0.007812 0.367188 0 0 0
+( 1048 240 200 ) ( 528 240 200 ) ( 528 240 184 ) map/lab_games/sky/lg_sky_02_ft 15 544 0 -0.507812 0.367188 0 0 0
+( 528 240 200 ) ( 528 -232 200 ) ( 528 -232 184 ) map/lab_games/sky/lg_sky_02_ft -1023 544 0 -0.007812 0.367188 0 0 0
+( 528 232 200 ) ( 1048 232 200 ) ( 528 232 184 ) map/lab_games/sky/lg_sky_02_ft 15 544 0 -0.507812 0.367188 0 0 0
+}
+// brush 17
+{
+( 1048 240 -176 ) ( 528 240 -176 ) ( 528 -232 -176 ) map/lab_games/sky/lg_sky_02_lf -3 519 0 -0.007812 0.460938 0 0 0
+( 528 -232 200 ) ( 528 240 200 ) ( 1048 240 200 ) map/lab_games/sky/lg_sky_02_lf -3 519 0 -0.007812 0.460938 0 0 0
+( 528 -232 200 ) ( 1048 -232 200 ) ( 1048 -232 184 ) map/lab_games/sky/lg_sky_02_lf -3 544 0 -0.007812 0.367188 0 0 0
+( 1048 240 200 ) ( 528 240 200 ) ( 528 240 184 ) map/lab_games/sky/lg_sky_02_lf -3 544 0 -0.007812 0.367188 0 0 0
+( 528 240 200 ) ( 528 -232 200 ) ( 528 -232 184 ) map/lab_games/sky/lg_sky_02_lf 519 544 0 -0.460938 0.367188 0 0 0
+( 536 -232 200 ) ( 536 240 200 ) ( 536 -232 184 ) map/lab_games/sky/lg_sky_02_lf 519 544 0 -0.460938 0.367188 0 0 0
+}
+}
+// entity 1
+{
+"angle" "90"
+"origin" "-32 -96 24"
+"classname" "info_player_start"
+"spawn_orientation_segment" "20"
+}
+// entity 2
+{
+"light" "500"
+"origin" "-32 96 80"
+"classname" "light"
+}
+// entity 3
+{
+"classname" "light"
+"origin" "-192 96 80"
+"light" "500"
+}
+// entity 4
+{
+"classname" "light"
+"origin" "128 96 80"
+"light" "500"
+}
+// entity 5
+{
+"classname" "light"
+"origin" "-32 -32 80"
+"light" "500"
+}
+// entity 6
+{
+"light" "500"
+"origin" "288 96 80"
+"classname" "light"
+}
+// entity 7
+{
+"light" "500"
+"origin" "-352 96 80"
+"classname" "light"
+}
+// entity 8
+{
+"classname" "placeholder_1"
+"origin" "-360 96 16"
+}
+// entity 9
+{
+"classname" "placeholder_2"
+"origin" "296 96 16"
+}
+// entity 10
+{
+"classname" "_skybox"
+"origin" "760 0 -128"
+}
+// entity 11
+{
+"model" "models/stadium.md3"
+"origin" "760 0 -82"
+"classname" "misc_model"
+"_remap" "*;textures/map/lab_games/stadium_d"
+"angle" "90"
+}
+// entity 12
+{
+"_remap" "*;textures/map/lab_games/signal_pulse_red"
+"modelscale" "1"
+"model" "models/signal_line.md3"
+"origin" "784 -40 -80"
+"classname" "misc_model"
+"angle" "113"
+}
+// entity 13
+{
+"classname" "misc_model"
+"origin" "832 -16 -152"
+"model" "models/signal_line.md3"
+"modelscale" "1.1"
+"_remap" "*;textures/map/lab_games/signal_pulse_blue"
+"angle" "38"
+}
+// entity 14
+{
+"angle" "28"
+"classname" "misc_model"
+"origin" "792 -8 -88"
+"model" "models/signal_line.md3"
+"_remap" "*;textures/map/lab_games/signal_pulse_red"
+"modelscale" "0.61"
+}
+// entity 15
+{
+"_remap" "*;textures/map/lab_games/signal_pulse_red"
+"modelscale" "0.6"
+"model" "models/signal_line.md3"
+"origin" "736 8 -152"
+"classname" "misc_model"
+"angle" "159"
+}

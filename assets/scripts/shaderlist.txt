@@ -1,8 +1,12 @@
 ctp_tech_lava_d
+decal
 fut_objects
 ghost
 lab_games
+lab_floors
+lab_floors_placeholders
 dm_lab
 poltergeist
+psychlab
 skies
 skies_nat_lab

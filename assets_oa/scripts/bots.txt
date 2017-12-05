@@ -1,7 +1,22 @@
 {
-name    Tauri
+name    Cygni
 model   crash
-aifile  bots/crash_c.c
+aifile  bots/major_c.c
+}
+{
+name    Leonis
+model   crash
+aifile  bots/gargoyle_c.c
+}
+{
+name    Epsilon
+model   crash
+aifile  bots/beret_c.c
+}
+{
+name    Cephei
+model   crash
+aifile  bots/liz_c.c
 }
 {
 name    Centauri
@@ -14,58 +29,93 @@ model   crash
 aifile  bots/ayumi_c.c
 }
 {
-name    Epsilon
+name    Tauri
 model   crash
-aifile  bots/beret_c.c
-}
-{
-name    Leonis
-model   crash
-aifile  bots/gargoyle_c.c
-}
-{
-name    Cephei
-model   crash
-aifile  bots/liz_c.c
-}
-{
-name    Cygni
-model   crash
-aifile  bots/major_c.c
+aifile  bots/crash_c.c
 }
 
 {
-name    TauriColor
+name    CygniColor
+funname Cygni
 model   crash_color
-aifile  bots/crash_c.c
+aifile  bots/major_c.c
+}
+{
+name    LeonisColor
+funname Leonis
+model   crash_color
+aifile  bots/gargoyle_c.c
+}
+{
+name    EpsilonColor
+funname Epsilon
+model   crash_color
+aifile  bots/beret_c.c
+}
+{
+name    CepheiColor
+funname Cephei
+model   crash_color
+aifile  bots/liz_c.c
 }
 {
 name    CentauriColor
+funname Centauri
 model   crash_color
 aifile  bots/dark_c.c
 }
 {
 name    DraconisColor
+funname Draconis
 model   crash_color
 aifile  bots/ayumi_c.c
 }
 {
-name    EpsilonColor
+name    TauriColor
+funname Tauri
 model   crash_color
-aifile  bots/beret_c.c
+aifile  bots/crash_c.c
 }
 {
-name    LeonisColor
-model   crash_color
+name    CygniColorAlt
+funname Cygni
+model   crash_color/skin1
+aifile  bots/major_c.c
+}
+
+{
+name    LeonisColorAlt
+funname Leonis
+model   crash_color/skin2
 aifile  bots/gargoyle_c.c
 }
 {
-name    CepheiColor
-model   crash_color
+name    EpsilonColorAlt
+funname Epsilon
+model   crash_color/skin3
+aifile  bots/beret_c.c
+}
+{
+name    CepheiColorAlt
+funname Cephei
+model   crash_color/skin4
 aifile  bots/liz_c.c
 }
 {
-name    CygniColor
-model   crash_color
-aifile  bots/major_c.c
+name    CentauriColorAlt
+funname Centauri
+model   crash_color/skin5
+aifile  bots/dark_c.c
+}
+{
+name    DraconisColorAlt
+funname Draconis
+model   crash_color/skin6
+aifile  bots/ayumi_c.c
+}
+{
+name    TauriColorAlt
+funname Tauri
+model   crash_color/skin7
+aifile  bots/crash_c.c
 }

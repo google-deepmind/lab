@@ -30,6 +30,16 @@ gfx/damage/hole_lg_mrk //beam
     }
 }
 
+gfx/damage/plasma_mrk  //disc
+{
+    polygonOffset
+    {
+        map textures/model/circuit_decal.tga
+        blendfunc add
+        rgbgen const ( 0.00 0.58 1.00 ) //blue
+    }
+}
+
 //OTHER
 
 gfx/misc/tracer

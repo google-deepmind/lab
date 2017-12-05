@@ -2020,6 +2020,35 @@ textures/map/ghost
     }
 }
 
+textures/map/water_d
+{
+     qer_editorimage textures/map/glass_d.tga
+     surfaceparm trans
+     {
+          map textures/map/glass_d.tga
+          blendfunc blend
+     }
+     {
+          map textures/map/caustics_d.tga
+          blendfunc add
+          tcMod scale 0.7 0.7
+          tcMod stretch sin 1.0 0.02 0 0.1
+          tcMod turb 0 0.04 0 0.12
+     }
+     {
+          map textures/map/caustics_d.tga
+          blendfunc add
+          tcMod scale 0.5 0.5
+          tcMod stretch sin 1.0 0.04 0 0.2
+          tcMod turb 0 0.06 0.5 0.1
+     }
+     {
+          map textures/map/water_env.tga
+          blendfunc add
+          tcGen environment
+     }
+}
+
 // SPECIFIC OBJECTS
 
 textures/model/mothership_d

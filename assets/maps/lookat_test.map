@@ -1,0 +1,105 @@
+// entity 0
+{
+    "light" "100"
+    "worldtype" "2"
+    "classname" "worldspawn"
+    // brush 0
+    {
+        ( 0 0 1 ) ( 0 1 1 ) ( 1 0 1 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 300 0 ) ( 1 300 0 ) ( 0 300 1 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+        ( 300 0 0 ) ( 300 0 1 ) ( 300 1 0 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) map/lab_games/lg_style_01_floor_orange 0 0 0 0.062500 0.062500 0 0 0
+    }
+    // brush 1
+    {
+        ( 0 0 100 ) ( 0 1 100 ) ( 1 0 100 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 99 ) ( 1 0 99 ) ( 0 1 99 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 300 0 ) ( 1 300 0 ) ( 0 300 1 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+        ( 300 0 0 ) ( 300 0 1 ) ( 300 1 0 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+        ( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) map/lab_games/fake_sky 0 0 0 0.062500 0.062500 0 0 0
+    }
+    // brush 2
+    {
+        ( 0 0 100 ) ( 0 1 100 ) ( 1 0 100 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 1 0 ) ( 1 1 0 ) ( 0 1 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 300 0 0 ) ( 300 0 1 ) ( 300 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+    }
+    // brush 3
+    {
+        ( 0 0 100 ) ( 0 1 100 ) ( 1 0 100 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 300 0 ) ( 1 300 0 ) ( 0 300 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 299 0 ) ( 0 299 1 ) ( 1 299 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 300 0 0 ) ( 300 0 1 ) ( 300 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+    }
+    // brush 4
+    {
+        ( 0 0 100 ) ( 0 1 100 ) ( 1 0 100 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 300 0 ) ( 1 300 0 ) ( 0 300 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 1 0 0 ) ( 1 0 1 ) ( 1 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+    }
+    // brush 5
+    {
+        ( 0 0 100 ) ( 0 1 100 ) ( 1 0 100 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 300 0 ) ( 1 300 0 ) ( 0 300 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 300 0 0 ) ( 300 0 1 ) ( 300 1 0 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+        ( 299 0 0 ) ( 299 1 0 ) ( 299 0 1 ) map/lab_games/lg_style_02_wall_yellow 0 0 0 0.250000 0.250000 0 0 0
+    }
+}
+// entity 1
+{
+    "spawnflags" "0"
+    "style" "0"
+    "light" "100.000000"
+    "origin" "150.000000 150.000000 70.000000"
+    "classname" "light"
+}
+// entity 2
+{
+    "classname" "info_player_deathmatch"
+    "angle" "0.0000"
+    "randomAngleRange" "0"
+    "origin" "150.000000 150.000000 40.000000"
+}
+// entity 3
+{
+    "targetname" "balloon"
+    "classname" "misc_model"
+    "origin" "250.000 150.000 40.000"
+    "model" "models/hr_balloon.md3"
+}
+// entity 4
+{
+    "count" "1"
+    "targetname" "reward"
+    "origin" "250 150 40"
+    "classname" "target_score"
+    "max_count" "2"
+}
+// entity 5
+{
+    "classname" "trigger_lookat"
+    "wait" "0.75"
+    "target" "reward"
+    // brush 0
+    {
+        ( 288 168 24 ) ( 264 168 24 ) ( 264 136 24 ) common/caulk 0 0 0 0.500000 0.500000 0 4 0
+        ( 264 136 64 ) ( 264 168 64 ) ( 288 168 64 ) common/caulk 0 0 0 0.500000 0.500000 0 4 0
+        ( 264 136 32 ) ( 288 136 32 ) ( 288 136 24 ) common/caulk 0 -16 0 0.500000 0.500000 0 4 0
+        ( 288 136 32 ) ( 288 168 32 ) ( 288 168 24 ) common/caulk 0 -16 0 0.500000 0.500000 0 4 0
+        ( 288 168 32 ) ( 264 168 32 ) ( 264 168 24 ) common/caulk 0 -16 0 0.500000 0.500000 0 4 0
+        ( 264 168 32 ) ( 264 136 32 ) ( 264 136 24 ) common/caulk 0 -16 0 0.500000 0.500000 0 4 0
+    }
+}

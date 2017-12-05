@@ -4,7 +4,7 @@ models/players/crash/redskin
     nopicmip
     {
         map models/players/crash/redskin.tga
-        blendfunc gl_src_alpha gl_one_minus_src_alpha
+        blendfunc blend
         alphaFunc GE128
         depthwrite
     }
@@ -15,7 +15,7 @@ models/players/crash/redskin
     }
     {
         map models/players/crash/thruster_glow.tga
-        blendfunc gl_one gl_one
+        blendfunc add
     }
 }
 
@@ -25,7 +25,7 @@ models/players/crash/blueskin
     nopicmip
     {
         map models/players/crash/blueskin.tga
-        blendfunc gl_src_alpha gl_one_minus_src_alpha
+        blendfunc blend
         alphaFunc GE128
         depthwrite
     }
@@ -36,7 +36,7 @@ models/players/crash/blueskin
     }
     {
         map models/players/crash/thruster_glow.tga
-        blendfunc gl_one gl_one
+        blendfunc add
     }
 }
 
@@ -46,18 +46,18 @@ models/players/crash/skin1
     nopicmip
     {
         map models/players/crash/skin1.tga
-        blendfunc gl_src_alpha gl_one_minus_src_alpha
+        blendfunc blend
         alphaFunc GE128
         depthwrite
     }
     {
         map models/players/crash/skin1_scroll.tga
-        blendfunc gl_one gl_one
+        blendfunc add
         tcMod scroll -1.6 0
     }
     {
         map models/players/crash/thruster_glow.tga
-        blendfunc gl_one gl_one
+        blendfunc add
     }
 }
 
@@ -67,35 +67,17 @@ models/players/crash_color/skin_base //crash color shader
     nomipmaps
     {
         map models/players/crash_color/skin_base.tga
-        blendfunc gl_src_alpha gl_one_minus_src_alpha
+        blendfunc blend
         alphaFunc GE128
         depthwrite
     }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_a.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_b.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_c.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
     {
         map models/players/crash/skin1_scroll.tga
-        blendfunc gl_one gl_one
+        blendfunc add
         tcMod scroll -1.6 0
     }
     {
         map models/players/crash/thruster_glow.tga
-        blendfunc gl_one gl_one
+        blendfunc add
     }
 }
