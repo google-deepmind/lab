@@ -8,6 +8,7 @@ cc_library(
     srcs = ["tensor_view.cc"],
     hdrs = ["tensor_view.h"],
     visibility = ["//visibility:public"],
+    deps = ["@eigen_archive//:eigen"],
 )
 
 cc_test(

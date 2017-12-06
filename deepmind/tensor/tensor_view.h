@@ -20,17 +20,24 @@
 #define DML_DEEPMIND_TENSOR_TENSOR_VIEW_H_
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <numeric>
 #include <ostream>
+#include <random>
 #include <utility>
 #include <vector>
+
+#include "Eigen/Dense"
 
 namespace deepmind {
 namespace lab {
 namespace tensor {
+
+using ShapeVector = std::vector<std::size_t>;
+using StrideVector = std::vector<std::ptrdiff_t>;
 
 // Class for calculating offsets into storage for a tensor.
 // Supports functions which do not require manipulation of the storage data.
@@ -41,7 +48,7 @@ class Layout {
   // Constructs a layout with the shape and stride such that:
   // ..., shape[n - 2] * shape[n - 1], shape[n - 1], 1
   // So if shape is {3, 4, 5} - stride is {20, 5, 1}.
-  explicit Layout(std::vector<std::size_t> shape)
+  explicit Layout(ShapeVector shape)
       : shape_(std::move(shape)), offset_(0) {
     if (!shape_.empty()) {
       stride_.reserve(shape_.size());
@@ -116,15 +123,15 @@ class Layout {
     }
   }
 
-  const std::vector<std::size_t>& shape() const { return shape_; }
-  const std::vector<std::ptrdiff_t>& stride() const { return stride_; }
+  const ShapeVector& shape() const { return shape_; }
+  const StrideVector& stride() const { return stride_; }
   const std::size_t start_offset() const { return offset_; }
 
   // Returns the product of the shape.
   std::size_t num_elements() const { return num_elements(shape()); }
 
   // Returns how many elements the Layout requires for a given shape.
-  static std::size_t num_elements(const std::vector<std::size_t>& shape) {
+  static std::size_t num_elements(const ShapeVector& shape) {
     return shape.empty() ? 0 : std::accumulate(shape.begin(), shape.end(), 1,
                                                std::multiplies<std::size_t>());
   }
@@ -145,8 +152,9 @@ class Layout {
   // Visit all indexes and offsets in Layout order.
   template <typename F>
   void ForEachIndexedOffset(F&& f) const {
-    auto it = MakeIterator(true /*require_index*/);
-    for (std::size_t i = 0; i < it.num; ++i) {
+    std::size_t num = num_elements();
+    auto it = MakeIterator();
+    for (std::size_t i = 0; i < num; ++i) {
       f(it.index, it.offset);
       Next(&it);
     }
@@ -157,13 +165,38 @@ class Layout {
   // order, otherwise there is no effect.
   template <typename F>
   bool PairwiseForEachOffset(const Layout& rhs, F&& f) const {
-    auto l_iter = MakeIterator(false /*require_index*/);
-    auto r_iter = rhs.MakeIterator(false /*require_index*/);
-    if (l_iter.num != r_iter.num) { return false; }
-    for (std::size_t i = 0; i < l_iter.num; ++i) {
-      f(l_iter.offset, r_iter.offset);
-      Next(&l_iter);
-      rhs.Next(&r_iter);
+    std::size_t l_num_elements = num_elements();
+    std::size_t r_num_elements = rhs.num_elements();
+    if (l_num_elements != r_num_elements) {
+      return false;
+    }
+    std::ptrdiff_t l_contig = ContiguousStride();
+    std::ptrdiff_t r_contig = rhs.ContiguousStride();
+    if (l_contig != 0 && r_contig != 0) {
+      std::ptrdiff_t l_offset = offset_;
+      std::ptrdiff_t r_offset = rhs.offset_;
+      for (std::size_t i = 0; i < l_num_elements; ++i) {
+        f(i * l_contig + l_offset, i * r_contig + r_offset);
+      }
+    } else if (l_contig != 0) {
+      std::ptrdiff_t l_offset = offset_;
+      auto r_it = rhs.MakeIterator();
+      for (std::size_t i = 0; i < l_num_elements; ++i, rhs.Next(&r_it)) {
+        f(i * l_contig + l_offset, r_it.offset);
+      }
+    } else if (r_contig != 0) {
+      auto l_it = MakeIterator();
+      std::ptrdiff_t r_offset = rhs.offset_;
+      for (std::size_t i = 0; i < l_num_elements; ++i, Next(&l_it)) {
+        f(l_it.offset, i * r_contig + r_offset);
+      }
+    } else {
+      auto l_it = MakeIterator();
+      auto r_it = rhs.MakeIterator();
+      for (std::size_t i = 0; i < l_num_elements;
+           ++i, Next(&r_it), rhs.Next(&r_it)) {
+        f(l_it.offset, r_it.offset);
+      }
     }
     return true;
   }
@@ -174,17 +207,46 @@ class Layout {
   // If a call to 'p' returns false, no further calls to 'p' are made.
   template <typename F>
   bool AllOf(const Layout& rhs, F&& f) const {
-    auto l_iter = MakeIterator(false /*require_index*/);
-    auto r_iter = rhs.MakeIterator(false /*require_index*/);
-    if (l_iter.num != r_iter.num) {
+    std::size_t l_num_elements = num_elements();
+    std::size_t r_num_elements = rhs.num_elements();
+    if (l_num_elements != r_num_elements) {
       return false;
     }
-    for (std::size_t i = 0; i < l_iter.num; ++i) {
-      if (!f(l_iter.offset, r_iter.offset)) {
-        return false;
+    std::ptrdiff_t l_contig = ContiguousStride();
+    std::ptrdiff_t r_contig = rhs.ContiguousStride();
+    if (l_contig != 0 && r_contig != 0) {
+      std::ptrdiff_t l_offset = offset_;
+      std::ptrdiff_t r_offset = rhs.offset_;
+      for (std::size_t i = 0; i < l_num_elements; ++i) {
+        if (!f(i * l_contig + l_offset, i * r_contig + r_offset)) {
+          return false;
+        }
       }
-      Next(&l_iter);
-      rhs.Next(&r_iter);
+    } else if (l_contig != 0) {
+      std::ptrdiff_t l_offset = offset_;
+      auto r_it = rhs.MakeIterator();
+      for (std::size_t i = 0; i < l_num_elements; ++i, rhs.Next(&r_it)) {
+        if (!f(i * l_contig + l_offset, r_it.offset)) {
+          return false;
+        }
+      }
+    } else if (r_contig != 0) {
+      auto l_it = MakeIterator();
+      std::ptrdiff_t r_offset = rhs.offset_;
+      for (std::size_t i = 0; i < l_num_elements; ++i, Next(&l_it)) {
+        if (!f(l_it.offset, i * r_contig + r_offset)) {
+          return false;
+        }
+      }
+    } else {
+      auto l_it = MakeIterator();
+      auto r_it = rhs.MakeIterator();
+      for (std::size_t i = 0; i < l_num_elements;
+           ++i, Next(&r_it), rhs.Next(&r_it)) {
+        if (!f(l_it.offset, r_it.offset)) {
+          return false;
+        }
+      }
     }
     return true;
   }
@@ -192,16 +254,24 @@ class Layout {
   // Visit all offsets in Layout order.
   template <typename F>
   void ForEachOffset(F&& f) const {
-    auto it = MakeIterator(false /*require_index*/);
-    for (std::size_t i = 0; i < it.num; ++i) {
-      f(it.offset);
-      Next(&it);
+    std::size_t num = num_elements();
+    std::ptrdiff_t contig = ContiguousStride();
+    if (contig != 0) {
+      std::ptrdiff_t offset = offset_;
+      for (std::size_t i = 0; i < num; ++i) {
+        f(i * contig + offset);
+      }
+    } else {
+      auto it = MakeIterator();
+      for (std::size_t i = 0; i < num; ++i, Next(&it)) {
+        f(it.offset);
+      }
     }
   }
 
   // Returns whether an index is valid.
   // If it is valid offset is set to the position that index represents.
-  bool GetOffset(const std::vector<std::size_t>& index,
+  bool GetOffset(const ShapeVector& index,
                  std::size_t* offset) const {
     if (index.size() != stride_.size()) { return false; }
     std::size_t local_offset = offset_;
@@ -216,7 +286,7 @@ class Layout {
   // Returns whether the current Layout has a constant stride and number of
   // elements in new_shape matches num_elements(). If true the new_shape is set
   // and stride calculated. Otherwise this call has no effect.
-  bool Reshape(std::vector<std::size_t> new_shape) {
+  bool Reshape(ShapeVector new_shape) {
     std::size_t new_size =
         new_shape.empty() ? 0
                           : std::accumulate(new_shape.begin(), new_shape.end(),
@@ -260,58 +330,46 @@ class Layout {
   struct OffsetIterator {
     std::size_t offset;
     // 'index' cannot be used if is_contiguous is true.
-    std::vector<std::size_t> index;
+    ShapeVector index;
     std::size_t num;
     std::size_t pos;
     std::ptrdiff_t stride;
     bool is_contiguous;
   };
 
+  struct WindowIterator {
+    std::size_t offset;
+    std::size_t pos;
+    ShapeVector index;
+    const std::size_t back_idx;
+  };
+
   // Creates an iterator for visiting all offsets.
-  // The code has runs faster if we don't require an index and the layout has a
-  // contiguous stride.
-  OffsetIterator MakeIterator(bool require_index) const {
-    std::ptrdiff_t contigous_stride = ContiguousStride();
-    bool is_contiguous = contigous_stride != 0 && !require_index;
-    return {offset_,
-            std::vector<std::size_t>(is_contiguous ? 0 : shape_.size()),
-            num_elements(),
-            0,
-            contigous_stride,
-            is_contiguous};
+  WindowIterator MakeIterator() const {
+    return {offset_, 0, ShapeVector(shape_.size()),
+            shape_.empty() ? 0 : shape_.size() - 1};
   }
 
-  // If there is a next element this updates the offset.
-  // If the iterator requires an index that is updated to the current position
-  // too.
-  void Next(OffsetIterator* iterator) const {
-    if (iterator->pos + 1 == iterator->num) {
-      return;
+  // Updates the iterator. Must not be called more than num_elements times.
+  void Next(WindowIterator* iterator) const {
+    ++iterator->pos;
+    std::size_t back_idx = iterator->back_idx;
+    ++iterator->index[back_idx];
+    iterator->offset += stride_[back_idx];
+    for (; back_idx != 0 && iterator->index[back_idx] == shape_[back_idx];
+         --back_idx) {
+      iterator->offset -= stride_[back_idx] * shape_[back_idx];
+      iterator->index[back_idx] = 0;
+      iterator->offset += stride_[back_idx - 1];
+      ++iterator->index[back_idx - 1];
     }
-    if (iterator->is_contiguous) {
-      ++iterator->pos;
-      iterator->offset += iterator->stride;
-    } else {
-      ++iterator->pos;
-      std::size_t back_idx = shape_.size() - 1;
-      ++iterator->index[back_idx];
-      iterator->offset += stride_[back_idx];
-      for (; back_idx != 0 && iterator->index[back_idx] == shape_[back_idx];
-           --back_idx) {
-        iterator->offset -= stride_[back_idx] * shape_[back_idx];
-        iterator->index[back_idx] = 0;
-        iterator->offset += stride_[back_idx - 1];
-        ++iterator->index[back_idx - 1];
-      }
-    }
-    return;
   }
 
   // Stores the shape in row major order.
-  std::vector<std::size_t> shape_;
+  ShapeVector shape_;
 
   // Stores the stride in row major order.
-  std::vector<std::ptrdiff_t> stride_;
+  StrideVector stride_;
 
   // Stores the start offset of this layout.
   std::size_t offset_;
@@ -334,7 +392,7 @@ class TensorView : public Layout {
   void ForEachIndexedMutable(F&& f) {
     T* storage = storage_;
     ForEachIndexedOffset(
-        [&f, storage](const std::vector<std::size_t>& iterator,
+        [&f, storage](const ShapeVector& iterator,
                       std::size_t offset) { f(iterator, &storage[offset]); });
   }
 
@@ -344,7 +402,7 @@ class TensorView : public Layout {
   void ForEachIndexed(F&& f) const {
     const T* storage = storage_;
     ForEachIndexedOffset(
-        [&f, storage](const std::vector<std::size_t>& iterator,
+        [&f, storage](const ShapeVector& iterator,
                       std::size_t offset) { f(iterator, storage[offset]); });
   }
 
@@ -454,11 +512,85 @@ class TensorView : public Layout {
     return ComponentOpMutable(rhs, [](T* v_lhs, U v_rhs) { *v_lhs -= v_rhs; });
   }
 
+  // Compute the matrix product of 'lhs' and 'rhs' and store it in '*this'.
+  template <typename U>
+  bool MMul(const TensorView<U>& lhs, const TensorView<U>& rhs) {
+    const auto& lhs_shape = lhs.shape();
+    const auto& rhs_shape = rhs.shape();
+    if (lhs_shape.size() != 2 || rhs_shape.size() != 2 ||
+        lhs_shape[1] != rhs_shape[0] || shape().size() != 2 ||
+        shape()[0] != lhs_shape[0] || shape()[1] != rhs_shape[1]) {
+      return false;
+    }
+    // Map the storage used by the input tensors as Eigen matrices.
+    using MatrixXU =
+        Eigen::Matrix<U, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    using MatrixXUStride = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
+    using MatrixXUInMap = Eigen::Map<const MatrixXU, 0, MatrixXUStride>;
+    const auto& lhs_stride = lhs.stride();
+    MatrixXUInMap lhs_map(lhs.storage() + lhs.start_offset(),  //
+                          lhs_shape[0], lhs_shape[1],          //
+                          MatrixXUStride(lhs_stride[0], lhs_stride[1]));
+    const auto& rhs_stride = rhs.stride();
+    MatrixXUInMap rhs_map(rhs.storage() + rhs.start_offset(),  //
+                          rhs_shape[0], rhs_shape[1],          //
+                          MatrixXUStride(rhs_stride[0], rhs_stride[1]));
+    // Map the storage used by the output vector as an Eigen matrix.
+    using MatrixXUOutMap = Eigen::Map<MatrixXU, 0, MatrixXUStride>;
+    const auto& prod_stride = stride();
+    MatrixXUOutMap prod_map(storage_ + start_offset(),   //
+                            lhs_shape[0], rhs_shape[1],  //
+                            MatrixXUStride(prod_stride[0], prod_stride[1]));
+    if (lhs.storage() == storage_ || rhs.storage() == storage_) {
+      // If there is potential aliasing between any of the operands and the
+      // output, use eval() to compute the product on temporary storage before
+      // writing it to the output tensor.
+      prod_map = (lhs_map * rhs_map).eval();
+    } else {
+      // No aliasing is possible, compute the product directly on to the output
+      // tensor.
+      prod_map = lhs_map * rhs_map;
+    }
+    return true;
+  }
+
+  // Assigns '*this' component-wise to 'floor(rhs)'.
+  void Floor() {
+    ForEachMutable([](T* val) { *val = std::floor(*val); });
+  }
+
+  // Assigns '*this' component-wise to 'ceil(rhs)'.
+  void Ceil() {
+    ForEachMutable([](T* val) { *val = std::ceil(*val); });
+  }
+
+  // Assigns '*this' component-wise to 'round(rhs)'.
+  void Round() {
+    ForEachMutable([](T* val) { *val = std::round(*val); });
+  }
+
+  // Shuffles a rank-1 tensor.
+  // If the tensor is rank-1, it shuffles its elements using the provided random
+  // bit generator and returns true, otherwise it returns false.
+  template <typename R>
+  bool Shuffle(R* prbg) {
+    if (shape().size() == 1) {
+      for (std::size_t i = 1, e = shape()[0]; i < e; ++i) {
+        std::uniform_int_distribution<decltype(i)> d(0, e - i);
+        std::swap(storage_[start_offset() + stride()[0] * (e - i)],
+                  storage_[start_offset() + stride()[0] * d(*prbg)]);
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // All the following getters and setters return whether the index is valid
   // If the index is invalid it results in a no-op.
   //
   // Assigns 'value' in location 'index'.
-  bool Set(const std::vector<std::size_t>& index, T value) {
+  bool Set(const ShapeVector& index, T value) {
     std::size_t offset;
     if (GetOffset(index, &offset)) {
       storage_[offset] = value;
@@ -470,7 +602,7 @@ class TensorView : public Layout {
 
   // Iff the index is valid, retrieve the value at 'index' into 'value'.
   // Returns whether the index is valid.
-  bool Get(const std::vector<std::size_t>& index, T* value) const {
+  bool Get(const ShapeVector& index, T* value) const {
     std::size_t offset;
     if (GetOffset(index, &offset)) {
       *value = storage_[offset];
@@ -480,7 +612,7 @@ class TensorView : public Layout {
     }
   }
 
-  // 1D overload of Set(const std::vector<std::size_t>& index, T value).
+  // 1D overload of Set(const ShapeVector& index, T value).
   // Iff the index is valid, set the value at 'index' to 'value'.
   // Returns whether the index is valid.
   bool Set(std::size_t index, T value) {
@@ -492,7 +624,7 @@ class TensorView : public Layout {
     }
   }
 
-  // 1D overload of Get(const std::vector<std::size_t>& index, T* value).
+  // 1D overload of Get(const ShapeVector& index, T* value).
   // Iff the index is valid, retrieve the value at 'index' into 'value'.
   // Returns whether the index is valid.
   bool Get(std::size_t index, T* value) const {

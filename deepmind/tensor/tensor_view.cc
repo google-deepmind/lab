@@ -61,7 +61,7 @@ void Layout::PrintToStream(
   });
 
   ForEachIndexedOffset([os, &s, &printer, max_width](
-      const std::vector<std::size_t>& index, std::size_t offset) {
+      const ShapeVector& index, std::size_t offset) {
     int open_brackets = std::distance(
         index.rbegin(), std::find_if(index.rbegin(), index.rend(),
                                      [](std::size_t val) { return val != 0; }));

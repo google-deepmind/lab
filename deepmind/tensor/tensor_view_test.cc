@@ -18,6 +18,8 @@
 
 #include "deepmind/tensor/tensor_view.h"
 
+#include <random>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -26,6 +28,7 @@ namespace lab {
 namespace tensor {
 namespace {
 
+using ::testing::UnorderedElementsAre;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 
@@ -40,7 +43,7 @@ std::vector<T> MakeSequence(std::size_t num_elements) {
 }
 
 TEST(TensorViewTest, Layout) {
-  std::vector<std::size_t> shape = {4, 3};
+  ShapeVector shape = {4, 3};
   std::vector<unsigned char> storage(Layout::num_elements(shape));
   TensorView<unsigned char> byte_tensor_view(Layout(shape), storage.data());
   EXPECT_THAT(byte_tensor_view.stride(), ElementsAre(3, 1));
@@ -62,7 +65,7 @@ TEST(TensorViewTest, Layout) {
 }
 
 TEST(TensorViewTest, NonContiguous) {
-  std::vector<std::size_t> shape = {7, 5, 2};
+  ShapeVector shape = {7, 5, 2};
   std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
   TensorView<int> int_tensor_view(Layout(shape), storage.data());
   ASSERT_TRUE(int_tensor_view.Narrow(0, 1, 5));
@@ -81,7 +84,7 @@ TEST(TensorViewTest, NonContiguous) {
 }
 
 TEST(TensorViewTest, Reshape) {
-  std::vector<std::size_t> shape = {3, 8};
+  ShapeVector shape = {3, 8};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   EXPECT_TRUE(view.Reshape({4, 6}));
@@ -93,7 +96,7 @@ TEST(TensorViewTest, Reshape) {
 }
 
 TEST(TensorViewTest, ForEach) {
-  std::vector<std::size_t> shape = {5, 2};
+  ShapeVector shape = {5, 2};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   EXPECT_EQ(10U, view.num_elements());
@@ -115,10 +118,10 @@ TEST(TensorViewTest, ForEach) {
 }
 
 TEST(TensorViewTest, ForEachIndexed) {
-  std::vector<std::size_t> shape = {5, 2};
+  ShapeVector shape = {5, 2};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
-  view.ForEachIndexed([](const std::vector<std::size_t>& index, std::size_t v) {
+  view.ForEachIndexed([](const ShapeVector& index, std::size_t v) {
     EXPECT_EQ(2U, index.size());
     EXPECT_EQ(v / 2, index[0]);
     EXPECT_EQ(v % 2, index[1]);
@@ -126,10 +129,10 @@ TEST(TensorViewTest, ForEachIndexed) {
 }
 
 TEST(TensorViewTest, ForEachIndexedMutable) {
-  std::vector<std::size_t> shape = {5, 2};
+  ShapeVector shape = {5, 2};
   std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
   TensorView<int> view(Layout(std::move(shape)), storage.data());
-  view.ForEachIndexedMutable([](const std::vector<std::size_t>& index, int* v) {
+  view.ForEachIndexedMutable([](const ShapeVector& index, int* v) {
     EXPECT_THAT(index, ElementsAre(*v / 2, *v % 2));
     *v = index[1];
   });
@@ -137,12 +140,12 @@ TEST(TensorViewTest, ForEachIndexedMutable) {
 }
 
 TEST(TensorViewTest, TestAssign) {
-  std::vector<std::size_t> shape1 = {3, 4};
+  ShapeVector shape1 = {3, 4};
   std::vector<float> storage1(Layout::num_elements(shape1));
   TensorView<float> view1(Layout(std::move(shape1)), storage1.data());
   view1.Assign(2.0);
 
-  std::vector<std::size_t> shape2 = {2, 6};
+  ShapeVector shape2 = {2, 6};
   std::vector<float> storage2 =
       MakeSequence<float>(Layout::num_elements(shape2));
   TensorView<float> view2(Layout(std::move(shape2)), storage2.data());
@@ -151,7 +154,7 @@ TEST(TensorViewTest, TestAssign) {
 }
 
 TEST(TensorViewTest, TestAdd) {
-  std::vector<std::size_t> shape = {2, 2};
+  ShapeVector shape = {2, 2};
   std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
   TensorView<int> view(Layout(std::move(shape)), storage.data());
   view.Add(1);
@@ -161,7 +164,7 @@ TEST(TensorViewTest, TestAdd) {
 }
 
 TEST(TensorViewTest, TestMul) {
-  std::vector<std::size_t> shape = {2, 2};
+  ShapeVector shape = {2, 2};
   std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
   TensorView<int> view(Layout(std::move(shape)), storage.data());
   view.Add(1);
@@ -172,7 +175,7 @@ TEST(TensorViewTest, TestMul) {
 }
 
 TEST(TensorViewTest, TestDiv) {
-  std::vector<std::size_t> shape = {2, 2};
+  ShapeVector shape = {2, 2};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   view.Add(1);
@@ -183,7 +186,7 @@ TEST(TensorViewTest, TestDiv) {
 }
 
 TEST(TensorViewTest, TestSub) {
-  std::vector<std::size_t> shape = {2, 2};
+  ShapeVector shape = {2, 2};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   view.Sub(2);
@@ -193,7 +196,7 @@ TEST(TensorViewTest, TestSub) {
 }
 
 TEST(TensorViewTest, TestGet) {
-  std::vector<std::size_t> shape = {5, 5};
+  ShapeVector shape = {5, 5};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   float value;
@@ -208,8 +211,111 @@ TEST(TensorViewTest, TestGet) {
   ASSERT_FALSE(view.Get(5, &value));
 }
 
+TEST(TensorViewTest, TestMMulFloat) {
+  ShapeVector lhs_shape = {2, 2};
+  std::vector<float> lhs_storage =
+      MakeSequence<float>(Layout::num_elements(lhs_shape));
+  TensorView<float> lhs_view(Layout(std::move(lhs_shape)), lhs_storage.data());
+  ShapeVector rhs_shape = {2, 3};
+  std::vector<float> rhs_storage =
+      MakeSequence<float>(Layout::num_elements(rhs_shape));
+  TensorView<float> rhs_view(Layout(std::move(rhs_shape)), rhs_storage.data());
+  ShapeVector shape = {2, 3};
+  std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  ASSERT_TRUE(view.MMul(lhs_view, rhs_view));
+  EXPECT_THAT(storage, ElementsAre(3.0f, 4.0f, 5.0f, 9.0f, 14.0f, 19.0f));
+}
+
+TEST(TensorViewTest, TestMMulByte) {
+  ShapeVector lhs_shape = {2, 2};
+  std::vector<char> lhs_storage =
+      MakeSequence<char>(Layout::num_elements(lhs_shape));
+  TensorView<char> lhs_view(Layout(std::move(lhs_shape)), lhs_storage.data());
+  ShapeVector rhs_shape = {2, 3};
+  std::vector<char> rhs_storage =
+      MakeSequence<char>(Layout::num_elements(rhs_shape));
+  TensorView<char> rhs_view(Layout(std::move(rhs_shape)), rhs_storage.data());
+  ShapeVector shape = {2, 3};
+  std::vector<char> storage = MakeSequence<char>(Layout::num_elements(shape));
+  TensorView<char> view(Layout(std::move(shape)), storage.data());
+  ASSERT_TRUE(view.MMul(lhs_view, rhs_view));
+  EXPECT_THAT(storage, ElementsAre(3, 4, 5, 9, 14, 19));
+}
+
+TEST(TensorViewTest, TestMMulOverlap) {
+  ShapeVector lhs_shape = {2, 2};
+  std::vector<float> lhs_storage =
+      MakeSequence<float>(Layout::num_elements(lhs_shape));
+  TensorView<float> lhs_view(Layout(std::move(lhs_shape)), lhs_storage.data());
+  ShapeVector rhs_shape = {2, 2};
+  std::vector<float> rhs_storage =
+      MakeSequence<float>(Layout::num_elements(rhs_shape));
+  TensorView<float> rhs_view(Layout(std::move(rhs_shape)), rhs_storage.data());
+  ASSERT_TRUE(lhs_view.MMul(lhs_view, rhs_view));
+  EXPECT_THAT(lhs_storage, ElementsAre(2, 3, 6, 11));
+}
+
+TEST(TensorViewTest, TestMMulOverlapNarrow) {
+  ShapeVector lhs_shape = {2, 3};
+  std::vector<float> lhs_storage =
+      MakeSequence<float>(Layout::num_elements(lhs_shape));
+  TensorView<float> lhs_view(Layout(std::move(lhs_shape)), lhs_storage.data());
+  ASSERT_TRUE(lhs_view.Narrow(1, 1, 2));
+  ASSERT_EQ(lhs_view.shape()[0], 2);
+  ASSERT_EQ(lhs_view.shape()[1], 2);
+  ShapeVector rhs_shape = {2, 2};
+  std::vector<float> rhs_storage =
+      MakeSequence<float>(Layout::num_elements(rhs_shape));
+  TensorView<float> rhs_view(Layout(std::move(rhs_shape)), rhs_storage.data());
+  ASSERT_TRUE(lhs_view.MMul(lhs_view, rhs_view));
+  EXPECT_THAT(lhs_storage, ElementsAre(0, 4, 7, 3, 10, 19));
+}
+
+TEST(TensorViewTest, TestFloor) {
+  ShapeVector shape = {2, 2};
+  std::vector<float> storage = {-2.25, -1.75, 0.5, 1.0};
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  view.Floor();
+  EXPECT_THAT(storage, ElementsAre(-3.0, -2.0, 0.0, 1.0));
+}
+
+TEST(TensorViewTest, TestCeil) {
+  ShapeVector shape = {2, 2};
+  std::vector<float> storage = {-2.25, -1.75, 0.5, 1.0};
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  view.Ceil();
+  EXPECT_THAT(storage, ElementsAre(-2.0, -1.0, 1.0, 1.0));
+}
+
+TEST(TensorViewTest, TestRound) {
+  ShapeVector shape = {2, 2};
+  std::vector<float> storage = {-2.25, -1.75, 0.5, 1.0};
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  view.Round();
+  EXPECT_THAT(storage, ElementsAre(-2.0, -2.0, 1.0, 1.0));
+}
+
+TEST(TensorViewTest, TestShuffle) {
+  ShapeVector shape = {5};
+  std::vector<float> storage = {1.0, 2.0, 3.0, 4.0, 5.0};
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  std::mt19937_64 prbg(123);
+  EXPECT_TRUE(view.Shuffle(&prbg));
+  EXPECT_THAT(storage, UnorderedElementsAre(1.0, 2.0, 3.0, 4.0, 5.0));
+}
+
+TEST(TensorViewTest, TestShuffleEmpty) {
+  ShapeVector shape = {0};
+  std::vector<float> storage = {};
+  TensorView<float> view(Layout(std::move(shape)), storage.data());
+  std::mt19937_64 prbg(123);
+  EXPECT_TRUE(view.Shuffle(&prbg));
+  EXPECT_TRUE(storage.empty());
+}
+
 TEST(TensorViewTest, TestSet) {
-  std::vector<std::size_t> shape = {3, 3};
+  ShapeVector shape = {3, 3};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   ASSERT_TRUE(view.Set({1, 1}, 555.0f));
@@ -225,7 +331,7 @@ TEST(TensorViewTest, TestSet) {
 }
 
 TEST(TensorViewTest, TestEqual) {
-  std::vector<std::size_t> shape = {2, 8};
+  ShapeVector shape = {2, 8};
   std::vector<int> storage1 =
       MakeSequence<int>(Layout::num_elements(shape));
   TensorView<int> view1(Layout(shape), storage1.data());
@@ -243,7 +349,7 @@ TEST(TensorViewTest, TestEqual) {
 }
 
 TEST(TensorViewTest, TestStream) {
-  std::vector<std::size_t> shape = {4, 2};
+  ShapeVector shape = {4, 2};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));
   TensorView<float> view(Layout(std::move(shape)), storage.data());
   {
@@ -284,7 +390,7 @@ TEST(TensorViewTest, TestStream) {
   }
   {
     std::stringstream ss;
-    std::vector<std::size_t> shape_large = {32, 32};
+    ShapeVector shape_large = {32, 32};
     std::vector<float> storage_large =
         MakeSequence<float>(Layout::num_elements(shape_large));
     TensorView<float> view_large(Layout(std::move(shape_large)),
