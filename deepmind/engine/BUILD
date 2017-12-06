@@ -9,6 +9,7 @@ cc_library(
     hdrs = ["context.h"],
     visibility = ["//:__pkg__"],
     deps = [
+        ":lua_image",
         ":lua_maze_generation",
         ":lua_random",
         ":lua_text_level_maker",
@@ -134,5 +135,37 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
+    ],
+)
+
+cc_library(
+    name = "lua_image",
+    srcs = ["lua_image.cc"],
+    hdrs = ["lua_image.h"],
+    deps = [
+        "//deepmind/lua",
+        "//deepmind/lua:bind",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/tensor:lua_tensor",
+        "//deepmind/util:files",
+        "@com_google_absl//absl/strings",
+        "@png_archive//:png",
+    ],
+)
+
+cc_test(
+    name = "lua_image_test",
+    size = "small",
+    srcs = ["lua_image_test.cc"],
+    deps = [
+        ":lua_image",
+        "//deepmind/lua:call",
+        "//deepmind/lua:n_results_or_test_util",
+        "//deepmind/lua:push_script",
+        "//deepmind/lua:vm_test_util",
+        "//deepmind/tensor:lua_tensor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

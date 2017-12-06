@@ -20,14 +20,20 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "deepmind/support/logging.h"
-#include "deepmind/engine/lua_random.h"
+#include "deepmind/engine/lua_image.h"
 #include "deepmind/engine/lua_maze_generation.h"
+#include "deepmind/engine/lua_random.h"
 #include "deepmind/engine/lua_text_level_maker.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
@@ -408,6 +414,7 @@ int Context::Init() {
   scripts_folder += kGameScriptPath;
   lua_vm_.AddPathToSearchers(scripts_folder);
 
+  lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire);
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.tensor", tensor::LuaTensorConstructors);
   lua_vm_.AddCModuleToSearchers(
