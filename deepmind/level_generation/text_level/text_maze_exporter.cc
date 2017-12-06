@@ -18,9 +18,9 @@
 
 #include "deepmind/level_generation/text_level/text_maze_exporter.h"
 
+#include "absl/strings/str_cat.h"
 #include "deepmind/support/logging.h"
 #include "deepmind/support/stringprintf.h"
-#include "deepmind/support/str_cat.h"
 #include "Eigen/Geometry"
 #include "deepmind/level_generation/map_builder/entity.h"
 
@@ -85,8 +85,8 @@ TextMazeExporter::TextMazeExporter(
     const Settings& settings)
     : rng_(rng),
       settings_(settings) {
-  builder_.mutable_world_entity()->set_attribute("light", StrCat(100));
-  builder_.mutable_world_entity()->set_attribute("worldtype", StrCat(2));
+  builder_.mutable_world_entity()->set_attribute("light", absl::StrCat(100));
+  builder_.mutable_world_entity()->set_attribute("worldtype", absl::StrCat(2));
 
   // Shared decal textures among all themes.
   auto decal_textures = BuildTextures(
@@ -296,7 +296,7 @@ map_builder::Entity TextMazeExporter::GenerateWallModel(
   };
 
   return map_builder::Entity::CreateModel(
-      StrCat("models/", model.name),
+      absl::StrCat("models/", model.name),
       ((a + b) / 2) * settings_.cell_size + interior_direction,
       {Angle::Radians(0), Angle::Radians(0), angle(interior_direction, Eigen::Vector3d(0, 1, 0))},
       {model.scale, model.scale, model.scale});
@@ -366,8 +366,8 @@ void TextMazeExporter::AddFloor(
     Add(MakeEntityWithRealOffset(
         (a + b) / 2, Eigen::Vector3d(0, 0, 1), "misc_model",
         {{"model", "models/" + model.name},
-         {"angle", StrCat(Unbiased(360))},
-         {"modelscale", StrCat(model.scale)}}));
+         {"angle", absl::StrCat(Unbiased(360))},
+         {"modelscale", absl::StrCat(model.scale)}}));
   }
 }
 
@@ -419,7 +419,7 @@ map_builder::Entity TextMazeExporter::MakeLight(
   return MakeEntity(
       position, "light",
       // Default light brightness is 200.
-      {{"light", StrCat(intensity * 5 * settings_.light_intensity)},
+      {{"light", absl::StrCat(intensity * 5 * settings_.light_intensity)},
         {"style", "0"},
         {"spawnflags", "0"}});
 }

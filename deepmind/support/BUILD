@@ -11,30 +11,6 @@ cc_library(
 )
 
 cc_library(
-    name = "str_join",
-    hdrs = ["str_join.h"],
-)
-
-cc_library(
-    name = "str_split",
-    hdrs = ["str_split.h"],
-)
-
-cc_library(
-    name = "str_cat",
-    hdrs = ["str_cat.h"],
-    deps = [":string_view"],
-)
-
-cc_library(
-    name = "string_view",
-    hdrs = [
-        "string_view.h",
-        "string_view_utils.h",
-    ],
-)
-
-cc_library(
     name = "stringprintf",
     srcs = ["stringprintf.cc"],
     hdrs = ["stringprintf.h"],

@@ -21,18 +21,19 @@
 #include <algorithm>
 #include <functional>
 
+#include "absl/strings/str_split.h"
 #include "deepmind/support/logging.h"
-#include "deepmind/support/str_split.h"
 
 namespace deepmind {
 namespace lab {
 
 CharGrid::CharGrid(std::string text)
     : raw_data_(std::move(text)),
-      rows_(strings::Split(raw_data_, '\n', strings::SkipEmpty())) {
-  auto it = std::max_element(
-      rows_.begin(), rows_.end(),
-      [](StringPiece lhs, StringPiece rhs) { return lhs.size() < rhs.size(); });
+      rows_(absl::StrSplit(raw_data_, '\n', absl::SkipEmpty())) {
+  auto it = std::max_element(rows_.begin(), rows_.end(),
+                             [](absl::string_view lhs, absl::string_view rhs) {
+                               return lhs.size() < rhs.size();
+                             });
   CHECK(it != rows_.end());
   width_ = it->size();
 }

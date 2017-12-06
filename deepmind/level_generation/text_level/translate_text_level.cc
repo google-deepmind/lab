@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-#include "deepmind/support/str_cat.h"
-#include "deepmind/support/str_join.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "deepmind/level_generation/map_builder/entity.h"
 #include "deepmind/level_generation/text_level/grid_maze.h"
 #include "deepmind/level_generation/text_level/parse_text_level.h"
@@ -128,7 +128,7 @@ void TranslateCoreLevel(const GridMaze& maze, std::vector<std::string>* out,
 std::vector<map_builder::Entity> MakeDoor(
     double x, double y, char dir, TextMazeExporter* exporter) {
   std::vector<map_builder::Entity> door;
-  std::string target = StrCat("door_", x, "_", y);
+  std::string target = absl::StrCat("door_", x, "_", y);
 
   const double texture_scale = (1.0 + 2.0 * kDoorSurround) / 1024.0;
   if (dir == 'H') {
@@ -218,10 +218,11 @@ class MapSnippetEmitterImpl : public MapSnippetEmitter {
   }
 
   std::string AddDoor(std::size_t i, std::size_t j, char direction) const {
-    return strings::Join(
+    using abslstring = decltype(absl::StrCat());
+    return absl::StrJoin(
         MakeDoor(j, maze_.height() - i - 1, direction, exporter_), "\n\n",
-        [](string* out, const map_builder::Entity& ent) {
-          StrAppend(out, ent.ToString());
+        [](abslstring* out, const map_builder::Entity& ent) {
+          absl::StrAppend(out, ent.ToString());
         });
   }
 

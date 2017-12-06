@@ -23,8 +23,8 @@
 
 #include <string>
 
+#include "absl/strings/str_cat.h"
 #include "deepmind/support/logging.h"
-#include "deepmind/support/str_cat.h"
 
 namespace deepmind {
 namespace lab {
@@ -41,15 +41,15 @@ bool ParseStatus(int s, std::string* msg) {
       *msg = "exited successfully (return value 0)";
       return true;
     } else if (retval == 127) {
-      *msg = StrCat("system() failed to run /bin/sh.", retval);
+      *msg = absl::StrCat("system() failed to run /bin/sh.", retval);
       return false;
     } else {
-      *msg = StrCat("exited with failure, return value ", retval);
+      *msg = absl::StrCat("exited with failure, return value ", retval);
       return false;
     }
   } else if (WIFSIGNALED(s)) {
     int signum = WTERMSIG(s);
-    *msg = StrCat("exited with signal ", signum);
+    *msg = absl::StrCat("exited with signal ", signum);
     return false;
   } else {
     LOG(QFATAL) << "system() returned something implausible.";
@@ -61,7 +61,7 @@ constexpr char kScript[] = "deepmind/level_generation/compile_map.sh";
 }  // namespace
 
 bool RunMapCompileFor(const std::string& rundir, const std::string& base) {
-  std::string msg, cmd = StrCat(rundir, "/", kScript, " \"", base, "\"");
+  std::string msg, cmd = absl::StrCat(rundir, "/", kScript, " \"", base, "\"");
   LOG(INFO) << "Running map generation for map '" << base
             << "', command:\n" << cmd << "\n";
   bool res = ParseStatus(std::system(cmd.c_str()), &msg);

@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "deepmind/support/string_view.h"
+#include "absl/strings/string_view.h"
 
 namespace deepmind {
 namespace lab {
@@ -54,7 +54,7 @@ class CharGrid {
 
  private:
   std::string raw_data_;
-  std::vector<StringPiece> rows_;
+  std::vector<absl::string_view> rows_;
   std::size_t width_;
 };
 

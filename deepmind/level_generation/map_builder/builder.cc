@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include "deepmind/support/str_cat.h"
-#include "deepmind/support/str_join.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 
 namespace deepmind {
 namespace lab {
@@ -36,9 +36,9 @@ constexpr double kThickness = 1.0;
 Builder::Builder() { entities_.emplace_back(Entity::CreateWorld()); }
 
 std::string Builder::ToString() const {
-  return strings::Join(entities_, "\n\n",
-                       [](string* out, const Entity& entity) {
-                         StrAppend(out, entity.ToString());
+  return absl::StrJoin(entities_, "\n\n",
+                       [](decltype(absl::StrCat())* out, const Entity& entity) {
+                         absl::StrAppend(out, entity.ToString());
                        });
 }
 

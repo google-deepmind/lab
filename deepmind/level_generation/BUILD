@@ -23,6 +23,6 @@ cc_library(
     visibility = ["//deepmind:__subpackages__"],
     deps = [
         "//deepmind/support:logging",
-        "//deepmind/support:str_cat",
+        "@com_google_absl//absl/strings",
     ],
 )

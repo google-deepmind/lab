@@ -11,8 +11,7 @@ cc_library(
     visibility = ["//deepmind:__subpackages__"],
     deps = [
         "//deepmind/support:logging",
-        "//deepmind/support:str_split",
-        "//deepmind/support:string_view",
+        "@com_google_absl//absl/strings",
     ],
 )
 

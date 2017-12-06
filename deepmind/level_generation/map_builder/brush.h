@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "deepmind/support/string_view.h"
+#include "absl/strings/string_view.h"
 #include "Eigen/Core"
 
 namespace deepmind {
@@ -161,7 +161,7 @@ namespace brush_util {
 // }"
 //
 // would create a vector of two brushes.
-std::vector<Brush> ParseBrushes(StringPiece str);
+std::vector<Brush> ParseBrushes(absl::string_view str);
 
 // Helper function for creating a box brush from two extents.
 // All planes use the provided texture.

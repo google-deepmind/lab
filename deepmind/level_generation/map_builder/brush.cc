@@ -21,22 +21,24 @@
 #include <cstdio>
 
 #include "deepmind/support/stringprintf.h"
-#include "deepmind/support/str_cat.h"
-#include "deepmind/support/str_split.h"
-#include "deepmind/support/string_view.h"
-#include "deepmind/support/string_view_utils.h"
+#include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
 #include "Eigen/Geometry"
 
 namespace deepmind {
 namespace lab {
 namespace map_builder {
 
+using abslstring = decltype(absl::StrCat());
+
 namespace {
 
 // Helper function to parse a single brush.
-bool ParseSingleBrush(StringPiece brush_str, Brush* brush) {
-  for (StringPiece line : strings::Split(brush_str, '\n')) {
-    strings::RemoveLeadingWhitespace(&line);
+bool ParseSingleBrush(absl::string_view brush_str, Brush* brush) {
+  for (absl::string_view line : absl::StrSplit(brush_str, '\n')) {
+    line = absl::StripLeadingAsciiWhitespace(line);
     Plane p;
 
     char path[256];
@@ -80,11 +82,11 @@ std::string Plane::ToString() const {
 }
 
 std::string Brush::ToString() const {
-  string brush = "{\n";
+  abslstring brush = "{\n";
   for (const auto& plane : planes) {
-    StrAppend(&brush, "    ", plane.ToString(), "\n");
+    absl::StrAppend(&brush, "    ", plane.ToString(), "\n");
   }
-  StrAppend(&brush, "  }");
+  absl::StrAppend(&brush, "  }");
   return brush;
 }
 
@@ -95,24 +97,25 @@ std::string PatchPoint::ToString() const {
 }
 
 std::string Patch::ToString() const {
-  string patch =
-      StrCat("{\n    patchDef2\n    {\n      ", texture_.path, "\n      ( ",
-             grid_size_.x(), " ", grid_size_.y(), " 0 0 0 )\n");
-  StrAppend(&patch, "      (\n");
+  abslstring patch =
+      absl::StrCat("{\n    patchDef2\n    {\n      ", texture_.path,
+                   "\n      ( ", grid_size_.x(), " ", grid_size_.y(),
+                   " 0 0 0 )\n");
+  absl::StrAppend(&patch, "      (\n");
   for (int x = 0; x < grid_size_.x(); x++) {
-    StrAppend(&patch, "        (");
+    absl::StrAppend(&patch, "        (");
     for (int y = 0; y < grid_size_.y(); y++) {
-      StrAppend(&patch, " ", point({x, y}).ToString());
+      absl::StrAppend(&patch, " ", point({x, y}).ToString());
     }
-    StrAppend(&patch, " )\n");
+    absl::StrAppend(&patch, " )\n");
   }
-  StrAppend(&patch, "      )\n    }\n  }");
+  absl::StrAppend(&patch, "      )\n    }\n  }");
   return patch;
 }
 
 namespace brush_util {
 
-std::vector<Brush> ParseBrushes(StringPiece brushes_str) {
+std::vector<Brush> ParseBrushes(absl::string_view brushes_str) {
   std::vector<Brush> brushes;
 
   int brush_start = -1;
@@ -123,8 +126,9 @@ std::vector<Brush> ParseBrushes(StringPiece brushes_str) {
     } else if (brush_start != -1) {
       // End of current brush, parse its assets.
       Brush brush;
-      if (ParseSingleBrush(
-              brushes_str.substr(brush_start, cur - brush_start + 1), &brush)) {
+      if (ParseSingleBrush(absl::ClippedSubstr(brushes_str, brush_start,
+                                               cur - brush_start + 1),
+                           &brush)) {
         brushes.push_back(std::move(brush));
       }
       brush_start = -1;
@@ -158,8 +162,8 @@ Brush CreateBoxBrush(const Eigen::Vector3d& a, const Eigen::Vector3d& b,
 Brush CreateFittedBoxBrush(const Eigen::Vector3d& a, const Eigen::Vector3d& b,
                            const std::string& texture_name,
                            Eigen::Vector2i texture_size) {
-  Eigen::Vector3d min_pos = a.cwiseMin(b);
-  Eigen::Vector3d max_pos = a.cwiseMax(b);
+  auto min_pos = a.cwiseMin(b);
+  auto max_pos = a.cwiseMax(b);
 
   Brush brush;
 
@@ -274,33 +278,33 @@ std::vector<Brush> CreateSkybox(const Eigen::Vector3d& position,
   // Up.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
       {a.x() - thickness, a.y() - thickness, b.z()}, b + t,
-      StrCat(texture_name, "_up"), texture_size));
+      absl::StrCat(texture_name, "_up"), texture_size));
 
   // Down.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
       a - t, {b.x() + thickness, b.y() + thickness, a.z()},
-      StrCat(texture_name, "_dn"), texture_size));
+      absl::StrCat(texture_name, "_dn"), texture_size));
 
   // Left.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
       {a.x(), a.y() - thickness, a.z()},
       {a.x() - thickness, b.y() + thickness, b.z()},
-      StrCat(texture_name, "_lf"), texture_size));
+      absl::StrCat(texture_name, "_lf"), texture_size));
 
   // Right.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
       {b.x(), a.y() - thickness, a.z()},
       {b.x() + thickness, b.y() + thickness, b.z()},
-      StrCat(texture_name, "_rt"), texture_size));
+      absl::StrCat(texture_name, "_rt"), texture_size));
 
   // Front.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      a, {b.x(), a.y() - thickness, b.z()}, StrCat(texture_name, "_ft"),
+      a, {b.x(), a.y() - thickness, b.z()}, absl::StrCat(texture_name, "_ft"),
       texture_size));
 
   // Back.
   brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      {a.x(), b.y() + thickness, a.z()}, b, StrCat(texture_name, "_bk"),
+      {a.x(), b.y() + thickness, a.z()}, b, absl::StrCat(texture_name, "_bk"),
       texture_size));
 
   return brushes;
