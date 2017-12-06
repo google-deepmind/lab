@@ -214,6 +214,29 @@ TEST_F(TableRefTest, TestCopyMoveAssignTable) {
   EXPECT_TRUE(table == table2);
 }
 
+TEST_F(TableRefTest, TestCreateInsertFromStack) {
+  TableRef table = TableRef::Create(L);
+  for (int i = 0; i < 10; ++i) {
+    TableRef subtable = TableRef::Create(L);
+    subtable.Insert(i + 1, i + 1);
+    Push(L, subtable);
+    table.InsertFromStackTop(i + 1);
+  }
+
+  std::vector<TableRef> result;
+  Push(L, table);
+  Read(L, -1, &result);
+  lua_pop(L, 1);
+  ASSERT_EQ(10, result.size());
+
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_THAT(result[i].Keys<int>(), ElementsAre(i + 1));
+    int out = 0;
+    EXPECT_TRUE(result[i].LookUp(i + 1, &out));
+    EXPECT_EQ(i + 1, out);
+  }
+}
+
 TEST_F(TableRefTest, TestInsertAndReadSpan) {
   TableRef table = TableRef::Create(L);
   const int data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};

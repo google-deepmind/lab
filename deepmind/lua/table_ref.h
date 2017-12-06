@@ -185,6 +185,17 @@ class TableRef final {
     lua_pop(lua_state_, 1);
   }
 
+  // Pops the value on top of the stack and stores it into table[key].
+  // [0, -1, -] - Precondition: !this->is_unbound().
+  template <typename K>
+  void InsertFromStackTop(const K& key) const {
+    PushTable();
+    Push(lua_state_, key);
+    lua_pushvalue(lua_state_, -3);
+    lua_settable(lua_state_, -3);
+    lua_pop(lua_state_, 2);
+  }
+
   // [0, 0, -] - Precondition: !this->is_unbound().
   template <typename K>
   TableRef CreateSubTable(const K& key) {
