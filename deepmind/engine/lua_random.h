@@ -80,6 +80,14 @@ class LuaRandom : public lua::Class<LuaRandom> {
   //
   static void Register(lua_State* L);
 
+  // Returns a constructed LuaRandom object on the Lua stack. Lua's upvalue
+  // shall be a pointer to an std::mt19937_64 object that shall outlast the
+  // Lua-VM.
+  //
+  // LuaRandom must be registered first.
+  // [-0, +1, e]
+  static lua::NResultsOr Require(lua_State* L);
+
   // Sets a new seed for the PRBG. Results in an error if the first argument of
   // the call is not a number that can be represented by the seed type, which is
   // an unsigned 64-bit integer. The argument may be given either as a number or
@@ -94,6 +102,9 @@ class LuaRandom : public lua::Class<LuaRandom> {
   // [-2, 0, e]
   lua::NResultsOr UniformInt(lua_State* L);
   lua::NResultsOr UniformReal(lua_State* L);
+
+  // Returns the PRBG instance used by this class.
+  std::mt19937_64* GetPrbg() { return prbg_; }
 
  private:
   std::mt19937_64* prbg_;

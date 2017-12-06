@@ -56,6 +56,16 @@ bool ReadLargeNumber(lua_State* L, int idx, RbgNumType* num) {
 
 }  // namespace
 
+lua::NResultsOr LuaRandom::Require(lua_State* L) {
+  if (auto* prbg = static_cast<std::mt19937_64*>(
+          lua_touserdata(L, lua_upvalueindex(1)))) {
+    LuaRandom::CreateObject(L, prbg);
+    return 1;
+  } else {
+    return "Missing std::mt19937_64 pointer in up value!";
+  }
+}
+
 const char* LuaRandom::ClassName() {
   return "deepmind.lab.RandomView";
 }

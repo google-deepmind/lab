@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -302,16 +302,6 @@ lua::NResultsOr GameModule(lua_State* L) {
   }
 }
 
-lua::NResultsOr RandomModule(lua_State* L) {
-  if (auto* ctx =
-          static_cast<Context*>(lua_touserdata(L, lua_upvalueindex(1)))) {
-    LuaRandom::CreateObject(L, ctx->UserPrbg());
-    return 1;
-  } else {
-    return "Missing context!";
-  }
-}
-
 // Returns the unique value in the range [-180, 180) that is equivalent to
 // 'angle', where two values x and y are considered equivalent whenever x - y
 // is an integral multiple of 360. (Note: the result may be  meaningless if the
@@ -427,7 +417,7 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.game", &lua::Bind<GameModule>, {this});
   lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.random", &lua::Bind<RandomModule>, {this});
+      "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
 
   lua::Push(L, script_name_);
   result = lua::Call(L, 1);
