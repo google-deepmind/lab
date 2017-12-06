@@ -28,6 +28,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tensor_view",
+        "//deepmind/engine:lua_random",
         "//deepmind/lua",
         "//deepmind/lua:bind",
         "//deepmind/lua:call",
@@ -44,6 +45,7 @@ cc_test(
     srcs = ["lua_tensor_test.cc"],
     deps = [
         ":lua_tensor",
+        "//deepmind/lua:bind",
         "//deepmind/lua:call",
         "//deepmind/lua:n_results_or_test_util",
         "//deepmind/lua:push_script",

@@ -19,10 +19,12 @@
 #include "deepmind/tensor/lua_tensor.h"
 
 #include <cstdint>
+#include <fstream>
 #include <tuple>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/n_results_or_test_util.h"
 #include "deepmind/lua/push_script.h"
@@ -35,16 +37,23 @@ namespace lab {
 namespace {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
-using ::testing::HasSubstr;
+using ::deepmind::lab::lua::testing::StatusIs;
+using ::testing::AllOf;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 
 class LuaTensorTest : public ::testing::Test {
  protected:
   LuaTensorTest() : lua_vm_(lua::CreateVm()) {
-    tensor::LuaTensorRegister(lua_vm_.get());
+    auto* L = lua_vm_.get();
+    LuaRandom::Register(L);
+    lua_vm_.AddCModuleToSearchers("dmlab.system.sys_random",
+                                  &lua::Bind<LuaRandom::Require>, {&prbg_});
+    tensor::LuaTensorRegister(L);
     lua_vm_.AddCModuleToSearchers("dmlab.system.tensor",
                                   tensor::LuaTensorConstructors);
   }
+  std::mt19937_64 prbg_;
   lua::Vm lua_vm_;
 };
 
@@ -95,6 +104,47 @@ TEST_F(LuaTensorTest, CreateTensor) {
     EXPECT_DOUBLE_EQ(counter, val);
     return true;
   });
+}
+
+constexpr char kLuaTensorRange[] = R"(
+local tensor = require 'dmlab.system.tensor'
+
+local v0, v1, v2, v3, v4
+v0 = tensor.DoubleTensor{range = {5}}
+v1 = tensor.DoubleTensor{range = {2, 5}}
+v2 = tensor.DoubleTensor{range = {2, 5, 0.5}}
+v3 = tensor.DoubleTensor{range = {2, 4.9, 0.5}}
+v4 = tensor.DoubleTensor{range = {2, -1, -1}}
+assert(v0 == tensor.DoubleTensor{1, 2, 3, 4, 5})
+assert(v1 == tensor.DoubleTensor{2, 3, 4, 5})
+assert(v2 == tensor.DoubleTensor{2, 2.5, 3, 3.5, 4, 4.5, 5})
+assert(v3 == tensor.DoubleTensor{2, 2.5, 3, 3.5, 4, 4.5})
+assert(v4 == tensor.DoubleTensor{2, 1, 0, -1})
+)";
+
+TEST_F(LuaTensorTest, TensorRange) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLuaTensorRange, sizeof(kLuaTensorRange) - 1,
+                              "kLuaTensorRange"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kInvalidLuaTensorRange[] = R"(
+local tensor = require 'dmlab.system.tensor'
+
+local v0 = tensor.DoubleTensor{range={1, -5}}
+)";
+
+TEST_F(LuaTensorTest, InvalidLuaTensorRange) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kInvalidLuaTensorRange,
+                              sizeof(kInvalidLuaTensorRange) - 1,
+                              "kInvalidLuaTensorRange"),
+              IsOkAndHolds(1));
+  auto result = lua::Call(L, 0);
+  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result.error(), HasSubstr("Invalid Tensor range."));
 }
 
 constexpr char kValueOps[] = R"(
@@ -230,9 +280,9 @@ TEST_F(LuaTensorTest, Narrow) {
 constexpr char kApply[] = R"(
 local tensor = require 'dmlab.system.tensor'
 local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
-local bt_apply = bt:apply(function(val) return val + 3 end)
+local btApply = bt:apply(function(val) return val + 3 end)
 local apply = tensor.ByteTensor{{4, 5}, {6, 7}, {8, 9}}
-assert (bt_apply == apply)
+assert (btApply == apply)
 )";
 
 TEST_F(LuaTensorTest, Apply) {
@@ -245,11 +295,11 @@ TEST_F(LuaTensorTest, Apply) {
 constexpr char kApplyIndexed[] = R"(
 local tensor = require 'dmlab.system.tensor'
 local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
-local bt_apply = bt:applyIndexed(function(val, index)
+local btApply = bt:applyIndexed(function(val, index)
   return index[1] * index[2] + val
 end)
 local apply = tensor.ByteTensor{{2, 4}, {5, 8}, {8, 12}}
-assert (bt_apply == apply)
+assert (btApply == apply)
 )";
 
 TEST_F(LuaTensorTest, ApplyIndexed) {
@@ -264,15 +314,31 @@ TEST_F(LuaTensorTest, ApplyIndexed) {
 constexpr char kFill[] = R"(
 local tensor = require 'dmlab.system.tensor'
 local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
-local bt_apply = bt:fill(10)
+local btApply = bt:fill(10)
 local apply = tensor.ByteTensor{{10, 10}, {10, 10}, {10, 10}}
-assert (bt_apply == apply)
+assert (btApply == apply)
 )";
 
 TEST_F(LuaTensorTest, Fill) {
   lua_State* L = lua_vm_.get();
   ASSERT_THAT(lua::PushScript(L, kFill, sizeof(kFill) - 1, "kFill"),
               IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kFillTable[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+local btApply = bt:fill{10, 12}
+local apply = tensor.ByteTensor{{10, 12}, {10, 12}, {10, 12}}
+assert (btApply == apply)
+)";
+
+TEST_F(LuaTensorTest, FillTable) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kFillTable, sizeof(kFillTable) - 1, "kFillTable"),
+      IsOkAndHolds(1));
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
 }
 
@@ -303,6 +369,23 @@ assert (bt:sub(2) == tensor.ByteTensor{{0, 1}, {2, 3}, {4, 5}})
 TEST_F(LuaTensorTest, kScalarOp) {
   lua_State* L = lua_vm_.get();
   ASSERT_THAT(lua::PushScript(L, kScalarOp, sizeof(kScalarOp) - 1, "kScalarOp"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kScalarOpTable[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+assert (bt:mul{2, 4} == tensor.ByteTensor{{2, 8}, {6, 16}, {10, 24}}, "1")
+assert (bt:add{2, 4} == tensor.ByteTensor{{4, 12}, {8, 20}, {12, 28}}, "2")
+assert (bt:div{2, 4} == tensor.ByteTensor{{2, 3}, {4, 5}, {6, 7}}, "3")
+assert (bt:sub{2, 3} == tensor.ByteTensor{{0, 0}, {2, 2}, {4, 4}}, "4")
+)";
+
+TEST_F(LuaTensorTest, kScalarOpTable) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kScalarOpTable, sizeof(kScalarOpTable) - 1,
+                              "kScalarOpTable"),
               IsOkAndHolds(1));
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
 }
@@ -423,6 +506,399 @@ TEST_F(LuaTensorTest, kTestToString) {
   EXPECT_EQ(0, bt_alt->tensor_view().num_elements());
 }
 
+constexpr char kMMulOpLHSNonMatrix[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local at = tensor.FloatTensor(2, 2, 2)
+local bt = tensor.FloatTensor(2, 3)
+return at:mmul(bt)
+)";
+
+TEST_F(LuaTensorTest, kMMulOpLHSNonMatrix) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kMMulOpLHSNonMatrix, sizeof(kMMulOpLHSNonMatrix) - 1,
+                      "kMMulOpLHSNonMatrix"),
+      IsOkAndHolds(1));
+  auto result = lua::Call(L, 0);
+  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result.error(), HasSubstr("LHS is not a matrix"));
+}
+
+constexpr char kMMulOpRHSNonMatrix[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local at = tensor.FloatTensor(2, 2, 2)
+local bt = tensor.FloatTensor(2, 3)
+return bt:mmul(at)
+)";
+
+TEST_F(LuaTensorTest, kMMulOpRHSNonMatrix) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kMMulOpRHSNonMatrix, sizeof(kMMulOpRHSNonMatrix) - 1,
+                      "kMMulOpRHSNonMatrix"),
+      IsOkAndHolds(1));
+  auto result = lua::Call(L, 0);
+  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result.error(), HasSubstr("RHS is not a matrix"));
+}
+
+constexpr char kMMulOpIncompatibleDims[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local at = tensor.FloatTensor(2, 3)
+local bt = tensor.FloatTensor(2, 2)
+return at:mmul(bt)
+)";
+
+TEST_F(LuaTensorTest, kMMulOpIncompatibleDims) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kMMulOpIncompatibleDims,
+                              sizeof(kMMulOpIncompatibleDims) - 1,
+                              "kMMulOpIncompatibleDims"),
+              IsOkAndHolds(1));
+  auto result = lua::Call(L, 0);
+  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result.error(), HasSubstr("incorrect matrix dimensions"));
+}
+
+constexpr char kMMulOpIncompatibleType[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local at = tensor.FloatTensor(2, 2)
+local bt = tensor.ByteTensor(2, 2)
+return at:mmul(bt)
+)";
+
+TEST_F(LuaTensorTest, kMMulOpIncompatibleType) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kMMulOpIncompatibleType,
+                              sizeof(kMMulOpIncompatibleType) - 1,
+                              "kMMulOpIncompatibleType"),
+              IsOkAndHolds(1));
+  auto result = lua::Call(L, 0);
+  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(
+      result.error(),
+      HasSubstr(
+          "Must contain 1 RHS tensor of type deepmind.lab.tensor.FloatTensor"));
+}
+
+constexpr char kRoundingOps[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.DoubleTensor{{-2.25, -1.75}, {0.5, 1.0}}
+assert (bt:clone():floor() == tensor.DoubleTensor{{-3.0, -2.0}, {0.0, 1.0}})
+assert (bt:clone():ceil() == tensor.DoubleTensor{{-2.0, -1.0}, {1.0, 1.0}})
+assert (bt:clone():round() == tensor.DoubleTensor{{-2.0, -2.0}, {1.0, 1.0}})
+)";
+
+TEST_F(LuaTensorTest, kRoundingOps) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kRoundingOps, sizeof(kRoundingOps) - 1,
+                              "kRoundingOps"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kShuffle[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local tensor = require 'dmlab.system.tensor'
+
+sys_random:seed(123)
+local at = tensor.Int64Tensor{range={5}}:shuffle(sys_random)
+local bt = tensor.Tensor{0, 0, 0, 0, 0}
+for i = 1,5 do
+  local j = at(i):val()
+  bt(j):val(1)
+end
+assert (bt == tensor.Tensor{1, 1, 1, 1, 1})
+local ct = tensor.Tensor{0}:narrow(1, 1, 0):shuffle(sys_random)
+assert (ct:shape()[1] == 0)
+)";
+
+TEST_F(LuaTensorTest, kShuffle) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kShuffle, sizeof(kShuffle) - 1, "kShuffle"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kReshape[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+assert(bt:reshape{6} == tensor.ByteTensor{1, 2, 3, 4, 5, 6})
+assert(bt:reshape{2, 3} == tensor.ByteTensor{{1, 2, 3}, {4, 5, 6}})
+assert(bt:reshape{6, 1} == tensor.ByteTensor{{1}, {2}, {3}, {4}, {5}, {6}})
+assert(bt:reshape{1, 6} == tensor.ByteTensor{{1, 2, 3, 4, 5, 6}})
+)";
+
+TEST_F(LuaTensorTest, Reshape) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kReshape, sizeof(kReshape) - 1, "kReshape"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kValTableRead[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+local asTable = bt:val()
+for i = 1, 3 do
+  for j = 1, 2 do
+    assert(asTable[i][j] == (i - 1) * 2 + j)
+  end
+end
+)";
+
+TEST_F(LuaTensorTest, kValTableRead) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kValTableRead, sizeof(kValTableRead) - 1,
+                              "kValTableRead"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kValTableWrite[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+bt(1):val{1, 1}
+bt(2):val{2, 2}
+bt(3):val{3, 3}
+for i = 1, 3 do
+  for j = 1, 2 do
+    assert(bt(i, j):val() == i)
+  end
+end
+)";
+
+TEST_F(LuaTensorTest, kValTableWrite) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kValTableWrite, sizeof(kValTableWrite) - 1,
+                              "kValTableWrite"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+template <typename T>
+void CreateFileWith64IncrementingValues(const std::string& filename) {
+  std::ofstream ofs(filename, std::ios::binary);
+  for (T val = 0; val < 64; ++val) {
+    ofs.write(reinterpret_cast<const char*>(&val), sizeof val);
+  }
+}
+
+std::string CreateFourRawFiles() {
+  std::string temp_dir = testing::TempDir() + "/";
+  CreateFileWith64IncrementingValues<unsigned char>(temp_dir + "bytes.bin");
+  CreateFileWith64IncrementingValues<double>(temp_dir + "doubles.bin");
+  CreateFileWith64IncrementingValues<std::int64_t>(temp_dir + "int64s.bin");
+  CreateFileWith64IncrementingValues<float>(temp_dir + "floats.bin");
+  return temp_dir;
+}
+
+std::string CreateBytesRawFile() {
+  std::string temp_dir = testing::TempDir() + "/";
+  CreateFileWith64IncrementingValues<unsigned char>(temp_dir + "bytes.bin");
+  return temp_dir;
+}
+
+constexpr char kLoadWholeFile[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+assert(tensor.ByteTensor{file = {name = path .. 'bytes.bin'}}
+       == tensor.ByteTensor{range = {0, 63}})
+assert(tensor.DoubleTensor{file = {name = path .. 'doubles.bin'}}
+       == tensor.DoubleTensor{range = {0, 63}})
+assert(tensor.Int64Tensor{file = {name = path .. 'int64s.bin'}}
+       == tensor.Int64Tensor{range = {0, 63}})
+assert(tensor.FloatTensor{file = {name = path .. 'floats.bin'}}
+       == tensor.FloatTensor{range = {0, 63}})
+)";
+
+TEST_F(LuaTensorTest, kLoadWholeFile) {
+  lua_State* L = lua_vm_.get();
+
+  ASSERT_THAT(lua::PushScript(L, kLoadWholeFile, sizeof(kLoadWholeFile) - 1,
+                              "kLoadWholeFile"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateFourRawFiles());
+  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+}
+
+constexpr char kLoadStartFile[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+assert(tensor.ByteTensor{file =
+           {name = path .. 'bytes.bin', numElements = 10}
+       } == tensor.ByteTensor{range = {0, 9}})
+assert(tensor.DoubleTensor{file =
+           {name = path .. 'doubles.bin', numElements = 10}
+       } == tensor.DoubleTensor{range = {0, 9}})
+assert(tensor.Int64Tensor{file =
+           {name = path .. 'int64s.bin', numElements = 10}
+       } == tensor.Int64Tensor{range = {0, 9}})
+assert(tensor.FloatTensor{file =
+           {name = path .. 'floats.bin', numElements = 10}
+       } == tensor.FloatTensor{range = {0, 9}})
+)";
+
+TEST_F(LuaTensorTest, kLoadStartFile) {
+  lua_State* L = lua_vm_.get();
+
+  ASSERT_THAT(lua::PushScript(L, kLoadStartFile, sizeof(kLoadStartFile) - 1,
+                              "kLoadStartFile"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateFourRawFiles());
+  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+}
+
+constexpr char kLoadEndFile[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+assert(tensor.ByteTensor{file =
+           {name = path .. 'bytes.bin', byteOffset = 40 * 1}
+       } == tensor.ByteTensor{range = {40, 63}})
+assert(tensor.DoubleTensor{file =
+           {name = path .. 'doubles.bin', byteOffset = 40 * 8}
+       } == tensor.DoubleTensor{range = {40, 63}})
+assert(tensor.Int64Tensor{file =
+           {name = path .. 'int64s.bin', byteOffset = 40 * 8}
+       } == tensor.Int64Tensor{range = {40, 63}})
+assert(tensor.FloatTensor{file =
+           {name = path .. 'floats.bin', byteOffset = 40 * 4}
+       } == tensor.FloatTensor{range = {40, 63}})
+)";
+
+TEST_F(LuaTensorTest, kLoadEndFile) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLoadEndFile, sizeof(kLoadEndFile) - 1,
+                              "kLoadEndFile"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateFourRawFiles());
+  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+}
+
+constexpr char kLoadMiddleFile[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+assert(tensor.ByteTensor{file =
+           {name = path .. 'bytes.bin', byteOffset = 40 * 1, numElements = 6}
+       } == tensor.ByteTensor{range = {40, 45}})
+assert(tensor.DoubleTensor{file =
+           {name = path .. 'doubles.bin', byteOffset = 40 * 8, numElements = 6}
+       } == tensor.DoubleTensor{range = {40, 45}})
+assert(tensor.Int64Tensor{file =
+           {name = path .. 'int64s.bin', byteOffset = 40 * 8, numElements = 6}
+       } == tensor.Int64Tensor{range = {40, 45}})
+assert(tensor.FloatTensor{file =
+           {name = path .. 'floats.bin', byteOffset = 40 * 4, numElements = 6}
+       } == tensor.FloatTensor{range = {40, 45}})
+)";
+
+TEST_F(LuaTensorTest, kLoadMiddleFile) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLoadMiddleFile, sizeof(kLoadMiddleFile) - 1,
+                              "kLoadMiddleFile"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateFourRawFiles());
+  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+}
+
+constexpr char kBadFileName[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{file = {name = path .. 'bad_file.bin'}}
+)";
+
+TEST_F(LuaTensorTest, kBadFileName) {
+  std::string temp_dir = testing::TempDir() + "/";
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadFileName, sizeof(kBadFileName) - 1,
+                              "kBadFileName"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1), StatusIs(HasSubstr("bad_file.bin")));
+}
+
+constexpr char kBadNumElements[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{file = {name = path .. 'bytes.bin', numElements = 65}}
+)";
+
+TEST_F(LuaTensorTest, kBadNumElements) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadNumElements, sizeof(kBadNumElements) - 1,
+                              "kBadNumElements"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1),
+              StatusIs(AllOf(HasSubstr("numElements"), HasSubstr("65"))));
+}
+
+constexpr char kBadNumElementsOffset[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{
+    file = {name = path .. 'bytes.bin', byteOffset = 1, numElements = 64}
+}
+)";
+
+TEST_F(LuaTensorTest, kBadNumElementsOffset) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadNumElementsOffset,
+                              sizeof(kBadNumElementsOffset) - 1,
+                              "kBadNumElementsOffset"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1),
+              StatusIs(AllOf(HasSubstr("numElements"), HasSubstr("63"))));
+}
+
+constexpr char kBadNumElementsNegative[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{file = {name = path .. 'bytes.bin', numElements = -1}}
+)";
+
+TEST_F(LuaTensorTest, kBadNumElementsNegative) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadNumElementsNegative,
+                              sizeof(kBadNumElementsNegative) - 1,
+                              "kBadNumElementsNegative"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1),
+              StatusIs(AllOf(HasSubstr("numElements"), HasSubstr("-1"))));
+}
+
+constexpr char kBadByteOffset[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{file = {name = path .. 'bytes.bin', byteOffset = 65}}
+)";
+
+TEST_F(LuaTensorTest, kBadByteOffset) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadByteOffset, sizeof(kBadByteOffset) - 1,
+                              "kBadByteOffset"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1), StatusIs(HasSubstr("byteOffset")));
+}
+
+constexpr char kBadByteOffsetNegative[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local path = ...
+return tensor.ByteTensor{file = {name = path .. 'bytes.bin', byteOffset = -1}}
+)";
+
+TEST_F(LuaTensorTest, kBadByteOffsetNegative) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kBadByteOffsetNegative,
+                              sizeof(kBadByteOffsetNegative) - 1,
+                              "kBadByteOffsetNegative"),
+              IsOkAndHolds(1));
+  lua::Push(L, CreateBytesRawFile());
+  ASSERT_THAT(lua::Call(L, 1), StatusIs(HasSubstr("byteOffset")));
+}
 }  // namespace
 }  // namespace lab
 }  // namespace deepmind
