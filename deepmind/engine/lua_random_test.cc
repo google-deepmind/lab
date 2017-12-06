@@ -18,11 +18,13 @@
 
 #include "deepmind/engine/lua_random.h"
 
+#include <random>
 #include <sstream>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/n_results_or_test_util.h"
@@ -37,6 +39,8 @@ class LuaRandomTest : public lua::testing::TestWithVm {
  protected:
   LuaRandomTest() {
     LuaRandom::Register(L);
+    vm()->AddCModuleToSearchers("dmlab.system.sys_random",
+                                &lua::Bind<LuaRandom::Require>, {&prbg_});
   }
 
   std::mt19937_64 prbg_;
@@ -51,13 +55,12 @@ TEST_F(LuaRandomTest, SeedWithNumber) {
   prbg_.seed(0);
 
   const char kSeed[] = R"(
-    r = ...
-    r:seed(999)
+    local sys_random = require 'dmlab.system.sys_random'
+    sys_random:seed(999)
   )";
 
   ASSERT_THAT(lua::PushScript(L, kSeed, "kSeed"), IsOkAndHolds(1));
-  LuaRandom::CreateObject(L, &prbg_);
-  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
   actual_state << prbg_;
 
   EXPECT_EQ(expected_state.str(), actual_state.str());
@@ -72,13 +75,12 @@ TEST_F(LuaRandomTest, SeedWithString) {
   prbg_.seed(0);
 
   const char kSeed[] = R"(
-    r = ...
-    r:seed("888")
+    local sys_random = require 'dmlab.system.sys_random'
+    sys_random:seed("888")
   )";
 
   ASSERT_THAT(lua::PushScript(L, kSeed, "kSeed"), IsOkAndHolds(1));
-  LuaRandom::CreateObject(L, &prbg_);
-  ASSERT_THAT(lua::Call(L, 1), IsOkAndHolds(0));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
   actual_state << prbg_;
 
   EXPECT_EQ(expected_state.str(), actual_state.str());

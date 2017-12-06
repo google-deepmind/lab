@@ -78,6 +78,20 @@ class LuaRandom : public lua::Class<LuaRandom> {
   //   is not true, or if "b - a" exceeds the largest representable number.
   //   (This disallows either value being "not-a-number" or "infinity".)
   //
+  // * normalDistribution(mean, stddev):   [-2, 0, -]
+  //
+  //   Returns a real number sampled from a normal distribution centered around
+  //   mean with standard deviation stddev.  It is an error if the two
+  //   arguments are not both numbers.
+  //
+  //
+  // * discreteDistribution(listOfWeights):   [-1, 0, -]
+  //
+  //   Returns an integer in the range [1, n] where the probability of each
+  //   integer i is the value of the ith weight divided by the sum of all n
+  //   weights.  It is an error if the argument is not a list of 1 or more
+  //   numbers.
+  //
   static void Register(lua_State* L);
 
   // Returns a constructed LuaRandom object on the Lua stack. Lua's upvalue
@@ -102,6 +116,8 @@ class LuaRandom : public lua::Class<LuaRandom> {
   // [-2, 0, e]
   lua::NResultsOr UniformInt(lua_State* L);
   lua::NResultsOr UniformReal(lua_State* L);
+  lua::NResultsOr NormalDistribution(lua_State* L);
+  lua::NResultsOr DiscreteDistribution(lua_State* L);
 
   // Returns the PRBG instance used by this class.
   std::mt19937_64* GetPrbg() { return prbg_; }

@@ -23,6 +23,7 @@
 #include <limits>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
@@ -72,6 +73,8 @@ const char* LuaRandom::ClassName() {
 
 void LuaRandom::Register(lua_State* L) {
   const Class::Reg methods[] = {
+    {"discreteDistribution", &Class::Member<&LuaRandom::DiscreteDistribution>},
+    {"normalDistribution", &Class::Member<&LuaRandom::NormalDistribution>},
     {"seed", &Class::Member<&LuaRandom::Seed>},
     {"uniformInt", &Class::Member<&LuaRandom::UniformInt>},
     {"uniformReal", &Class::Member<&LuaRandom::UniformReal>},
@@ -119,6 +122,26 @@ lua::NResultsOr LuaRandom::UniformReal(lua_State* L) {
     return "Arguments do not form a valid range.";
   }
   lua::Push(L, std::uniform_real_distribution<lua_Number>(a, b)(*prbg_));
+  return 1;
+}
+
+lua::NResultsOr LuaRandom::NormalDistribution(lua_State* L) {
+  lua_Number mean, stddev;
+  if (!lua::Read(L, -2, &mean) || !lua::Read(L, -1, &stddev)) {
+    return "Invalid arguments - 2 numbers expected..";
+  }
+  lua::Push(L, std::normal_distribution<lua_Number>(mean, stddev)(*prbg_));
+  return 1;
+}
+
+lua::NResultsOr LuaRandom::DiscreteDistribution(lua_State* L) {
+  std::vector<double> weights;
+
+  if (!lua::Read(L, -1, &weights) || weights.empty()) {
+    return "Invalid arguments - non empty list of numeric weights expected.";
+  }
+  lua::Push(L, std::discrete_distribution<lua_Integer>(
+      weights.begin(), weights.end())(*prbg_) + 1);
   return 1;
 }
 
