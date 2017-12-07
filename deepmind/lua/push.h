@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
+#include "absl/types/span.h"
 #include "deepmind/lua/lua.h"
 
 namespace deepmind {
@@ -88,29 +90,39 @@ void Push(lua_State* L, const std::array<T, N>& values);
 template <typename K, typename T, typename H, typename C, typename A>
 void Push(lua_State* L, const std::unordered_map<K, T, H, C, A>& values);
 
+// [0, +1, -]
+template <typename T, size_t N, typename A>
+void Push(lua_State* L, const absl::InlinedVector<T, N, A>& values);
+
+// [0, +1, -]
+template <typename T>
+void Push(lua_State* L, absl::Span<T> values);
 
 // End of public header, implementation details follow.
 
-namespace internal {
-template <typename T, typename C>
-void PushRange(lua_State* L, const C& c) {
-  lua_createtable(L, c.size(), 0);
-  for (std::size_t i = 0; i < c.size(); ++i) {
+template <typename T>
+void Push(lua_State* L, absl::Span<T> values) {
+  lua_createtable(L, values.size(), 0);
+  for (std::size_t i = 0; i < values.size(); ++i) {
     Push(L, i + 1);
-    Push(L, c[i]);
+    Push(L, values[i]);
     lua_settable(L, -3);
   }
 }
-}  // namespace internal
 
 template <typename T, typename A>
 void Push(lua_State* L, const std::vector<T, A>& values) {
-  internal::PushRange<T>(L, values);
+  Push(L, absl::MakeConstSpan(values));
 }
 
 template <typename T, std::size_t N>
 void Push(lua_State* L, const std::array<T, N>& values) {
-  internal::PushRange<T>(L, values);
+  Push(L, absl::MakeConstSpan(values));
+}
+
+template <typename T, size_t N, typename A>
+void Push(lua_State* L, const absl::InlinedVector<T, N, A>& values) {
+  Push(L, absl::MakeConstSpan(values));
 }
 
 template <typename K, typename T, typename H, typename C, typename A>

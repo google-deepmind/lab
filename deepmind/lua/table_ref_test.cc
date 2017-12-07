@@ -96,10 +96,12 @@ TEST_F(TableRefTest, TestPushMemberFunction) {
   Foo::Register(L);
   Push(L, "Hello");
   ASSERT_FALSE(Read(L, -1, &table));
+  ASSERT_NE(L, table.LuaState());
 
   Foo::CreateFoo(L);
 
   ASSERT_TRUE(Read(L, -1, &table));
+  ASSERT_EQ(L, table.LuaState());
 
   // Also has keys "__gc" and "__index" but may have more in the future.
   EXPECT_GE(table.KeyCount(), 4);
@@ -162,7 +164,7 @@ TEST_F(TableRefTest, TestCreateTable) {
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(i + 1, result[i]);
     int out = 0;
-    table.LookUp(i + 1, &out);
+    EXPECT_TRUE(table.LookUp(i + 1, &out));
     EXPECT_EQ(i + 1, out);
   }
 }
@@ -183,7 +185,7 @@ TEST_F(TableRefTest, TestCreateSubTable) {
   for (int i = 0; i < 10; ++i) {
     EXPECT_THAT(result[i].Keys<int>(), ElementsAre(i + 1));
     int out = 0;
-    result[i].LookUp(i + 1, &out);
+    EXPECT_TRUE(result[i].LookUp(i + 1, &out));
     EXPECT_EQ(i + 1, out);
   }
 }
@@ -210,6 +212,15 @@ TEST_F(TableRefTest, TestCopyMoveAssignTable) {
 
   table2 = std::move(table_alt);
   EXPECT_TRUE(table == table2);
+}
+
+TEST_F(TableRefTest, TestInsertAndReadSpan) {
+  TableRef table = TableRef::Create(L);
+  const int data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  table.Insert("array", absl::MakeConstSpan(data));
+  int result[10] = {};
+  table.LookUp("array", absl::MakeSpan(result));
+  EXPECT_EQ(absl::MakeConstSpan(data), absl::MakeConstSpan(result));
 }
 
 }  // namespace

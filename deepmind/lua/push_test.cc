@@ -21,6 +21,8 @@
 #include <set>
 
 #include "gtest/gtest.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/types/span.h"
 #include "deepmind/lua/vm_test_util.h"
 
 namespace deepmind {
@@ -101,6 +103,38 @@ TEST_F(PushTest, PushVector) {
     ASSERT_EQ(LUA_TNUMBER, lua_type(L, -1));
     double value = lua_tonumber(L, -1);
     EXPECT_EQ(test[i], value);
+    lua_pop(L, 1);
+  }
+}
+
+TEST_F(PushTest, PushInlinedVector) {
+  absl::InlinedVector<double, 5> test = {1, 2, 3, 4, 5};
+  Push(L, test);
+  ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
+
+  std::size_t count = ArrayLength(L, 1);
+  ASSERT_EQ(test.size(), count);
+  for (std::size_t i = 0; i < count; ++i) {
+    lua_rawgeti(L, 1, i + 1);
+    ASSERT_EQ(LUA_TNUMBER, lua_type(L, -1));
+    double value = lua_tonumber(L, -1);
+    EXPECT_EQ(test[i], value);
+    lua_pop(L, 1);
+  }
+}
+
+TEST_F(PushTest, PushSpan) {
+  const double data[] = {1.0, 2.0, 3.0, 4.0};
+  Push(L, absl::MakeConstSpan(data));
+  ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
+  const std::size_t count = ArrayLength(L, 1);
+  ASSERT_EQ(count, 4);
+
+  for (std::size_t i = 0; i < count; ++i) {
+    lua_rawgeti(L, 1, i + 1);
+    ASSERT_EQ(LUA_TNUMBER, lua_type(L, -1));
+    const double value = lua_tonumber(L, -1);
+    EXPECT_EQ(data[i], value);
     lua_pop(L, 1);
   }
 }

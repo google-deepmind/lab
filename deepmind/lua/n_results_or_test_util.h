@@ -80,9 +80,9 @@ class IsOkAndHoldsImpl : public ::testing::MatcherInterface<const NResultsOr&> {
     const std::string explanation = listener.str();
 
     if (explanation != "") {
-        *result_listener << "which contains value "
-                         << ::testing::PrintToString(actual_value.n_results())
-                         << ", " << explanation;
+      *result_listener << "which contains value "
+                       << ::testing::PrintToString(actual_value.n_results())
+                       << ", " << explanation;
     }
 
     return matches;

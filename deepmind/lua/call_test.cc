@@ -33,6 +33,7 @@ namespace lua {
 namespace {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
+using ::deepmind::lab::lua::testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
 using ::testing::Not;
@@ -72,12 +73,10 @@ TEST_F(CallTest, FunctionErrors) {
 
   Push(L, false);
 
-  n_or = Call(L, 1);
-  ASSERT_FALSE(n_or.ok());
-  EXPECT_THAT(n_or.error(), AllOf(
+  EXPECT_THAT(Call(L, 1), StatusIs(AllOf(
       HasSubstr("Random Error Message!"),
       HasSubstr("TestFunction"),
-      HasSubstr("kTestAssert")));
+      HasSubstr("kTestAssert"))));
 
   EXPECT_EQ(lua_gettop(L), top);
 }
@@ -90,11 +89,9 @@ TEST_F(CallTest, FunctionErrorsNoStack) {
 
   Push(L, false);
 
-  NResultsOr call_result = Call(L, 1, false);
-  ASSERT_FALSE(call_result.ok());
-  EXPECT_THAT(call_result.error(), AllOf(
+  EXPECT_THAT(Call(L, 1, false), StatusIs(AllOf(
       HasSubstr("Random Error Message!"),
-      Not(HasSubstr("TestFunction"))));
+      Not(HasSubstr("TestFunction")))));
 
   EXPECT_EQ(lua_gettop(L), top);
 }
@@ -116,9 +113,8 @@ TEST_F(CallTest, FunctionBindErrors) {
   EXPECT_EQ(lua_gettop(L), top + 1);
   Push(L, false);
 
-  NResultsOr call_result = Call(L, 1);
-  EXPECT_FALSE(call_result.ok());
-  EXPECT_THAT(call_result.error(), HasSubstr("My error message!"));
+  auto call_result = Call(L, 1);
+  EXPECT_THAT(call_result, StatusIs(HasSubstr("My error message!")));
 
   EXPECT_EQ(lua_gettop(L), top + call_result.n_results());
 }

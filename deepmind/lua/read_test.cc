@@ -23,6 +23,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/types/span.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/vm_test_util.h"
 
@@ -122,6 +124,19 @@ TEST_F(ReadTest, ReadArray) {
   EXPECT_EQ(3, lua_gettop(L));
 }
 
+TEST_F(ReadTest, ReadInlinedVector) {
+  absl::InlinedVector<double, 5> test{{1, 2, 3, 4, 5}};
+  Push(L, "Junk");
+  Push(L, test);
+  Push(L, "Junk");
+  absl::InlinedVector<double, 5> result;
+  ASSERT_TRUE(Read(L, 2, &result));
+  EXPECT_EQ(result, test);
+  ASSERT_TRUE(Read(L, -2, &result));
+  EXPECT_EQ(result, test);
+  EXPECT_EQ(3, lua_gettop(L));
+}
+
 TEST_F(ReadTest, ReadArrayFloat) {
   std::array<float, 5> test{{1, 2, 3, 4, 5}};
   Push(L, "Junk");
@@ -133,6 +148,15 @@ TEST_F(ReadTest, ReadArrayFloat) {
   ASSERT_TRUE(Read(L, -2, &result));
   EXPECT_EQ(result, test);
   EXPECT_EQ(3, lua_gettop(L));
+}
+
+TEST_F(ReadTest, ReadSpan) {
+  const std::array<const float, 5> test{{1, 2, 3, 4, 5}};
+  Push(L, test);
+  float result[] = {0, 0, 0, 0, 0};
+  ASSERT_TRUE(Read(L, 1, absl::MakeSpan(result)));
+  EXPECT_EQ(absl::MakeSpan(result), test);
+  EXPECT_EQ(1, lua_gettop(L));
 }
 
 TEST_F(ReadTest, ReadTable) {

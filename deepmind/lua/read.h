@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
+#include "absl/types/span.h"
 #include "deepmind/lua/lua.h"
 
 namespace deepmind {
@@ -56,7 +58,6 @@ Type* ReadUDT(lua_State* L, int idx, const char* tname) {
 // In all Read overloads, '*result' is filled in if value at the stack
 // location 'idx' is valid for the given type. The return value indicates
 // whether the read was valid. If the read fails, '*result' is unmodified.
-
 inline bool Read(lua_State* L, int idx, std::string* result) {
   if (lua_type(L, idx) == LUA_TSTRING) {
     std::size_t length = 0;
@@ -160,11 +161,23 @@ bool Read(lua_State* L, int idx, T** result) {
 template <typename T, typename A>
 bool Read(lua_State* L, int idx, std::vector<T, A>* result);
 
-// Reads a Lua array into '*result'. The failure conditions are the same as in
-// the previous function, but '*result' may be modified even if this function
+// Reads a Lua array into 'values'. The failure conditions are the same as in
+// the previous function, but 'values' may be modified even if this function
+// fails.
+template <typename T>
+bool Read(lua_State* L, int idx, absl::Span<T> values);
+
+// Reads a Lua array into '*values'. The failure conditions are the same as in
+// the previous function, but '*values' may be modified even if this function
 // fails.
 template <typename T, std::size_t N>
 bool Read(lua_State* L, int idx, std::array<T, N>* values);
+
+// Reads a Lua array into '*values'. The failure conditions are the same as in
+// the previous function and '*values' may be modified even if this function
+// fails.
+template <typename T, std::size_t N, typename A>
+bool Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values);
 
 // Reads a table from the Lua stack. On success, the table is stored in
 // '*result'; on failure, '*result' is unmodified. Returns whether the function
@@ -176,14 +189,14 @@ bool Read(lua_State* L, int idx, std::array<T, N>* values);
 template <typename K, typename T, typename H, typename C, typename A>
 bool Read(lua_State* L, int idx, std::unordered_map<K, T, H, C, A>* result);
 
-template <typename T, std::size_t N>
-bool Read(lua_State* L, int idx, std::array<T, N>* values) {
+template <typename T>
+bool Read(lua_State* L, int idx, absl::Span<T> values) {
   if (lua_type(L, idx) == LUA_TTABLE) {
-    std::size_t count = ArrayLength(L, idx);
-    if (count >= values->size()) {
-      for (std::size_t i = 0; i < values->size(); ++i) {
+    const std::size_t count = ArrayLength(L, idx);
+    if (count >= values.size()) {
+      for (std::size_t i = 0; i < values.size(); ++i) {
         lua_rawgeti(L, idx, i + 1);
-        if (!Read(L, -1, &(*values)[i])) {
+        if (!Read(L, -1, &values[i])) {
           lua_pop(L, 1);
           return false;
         }
@@ -191,6 +204,33 @@ bool Read(lua_State* L, int idx, std::array<T, N>* values) {
       }
       return true;
     }
+  }
+  return false;
+}
+
+template <typename T, std::size_t N>
+bool Read(lua_State* L, int idx, std::array<T, N>* values) {
+  return Read(L, idx, absl::MakeSpan(*values));
+}
+
+template <typename T, std::size_t N, typename A>
+bool Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values) {
+  values->clear();
+  if (lua_type(L, idx) == LUA_TTABLE) {
+    std::size_t count = ArrayLength(L, idx);
+    values->reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+      lua_rawgeti(L, idx, i + 1);
+      T value;
+      if (Read(L, -1, &value)) {
+        values->push_back(std::move(value));
+        lua_pop(L, 1);
+      } else {
+        lua_pop(L, 1);
+        return false;
+      }
+    }
+    return true;
   }
   return false;
 }

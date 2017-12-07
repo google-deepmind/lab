@@ -99,15 +99,13 @@ TEST(VmTest, TestEmbedCClosure) {
   int val1 = 55;
   int val2 = 5;
   vm.AddCModuleToSearchers("test.module", CModuleUpValue, {&val1, &val2});
+
   auto* L = vm.get();
-  auto script_result = PushScript(L, kUseModule, "kUseModule");
-  ASSERT_TRUE(script_result.ok()) << script_result.error();
-  ASSERT_EQ(1, script_result.n_results()) << "Missing script";
-  auto call_result = lua::Call(L, 0);
-  ASSERT_TRUE(call_result.ok()) << call_result.error();
-  ASSERT_EQ(1, call_result.n_results()) << "Missing result";
-  int val = 0;
-  EXPECT_TRUE(lua::Read(L, -1, &val));
+  ASSERT_THAT(PushScript(L, kUseModule, "kUseModule"), IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(1));
+
+  int val;
+  ASSERT_TRUE(lua::Read(L, -1, &val));
   EXPECT_EQ(11, val);
 }
 

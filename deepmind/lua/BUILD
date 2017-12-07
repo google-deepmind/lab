@@ -118,7 +118,11 @@ cc_test(
 cc_library(
     name = "push",
     hdrs = ["push.h"],
-    deps = [":lua"],
+    deps = [
+        ":lua",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/types:span",
+    ],
 )
 
 cc_test(
@@ -128,6 +132,8 @@ cc_test(
     deps = [
         ":push",
         ":vm_test_util",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -146,7 +152,11 @@ cc_library(
 cc_library(
     name = "read",
     hdrs = ["read.h"],
-    deps = [":lua"],
+    deps = [
+        ":lua",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/types:span",
+    ],
 )
 
 cc_test(
@@ -157,6 +167,8 @@ cc_test(
         ":push",
         ":read",
         ":vm_test_util",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )

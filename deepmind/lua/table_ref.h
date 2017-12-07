@@ -129,12 +129,12 @@ class TableRef final {
     return result;
   }
 
-  // Sets value to table[key] only if the table contains the key and the value
-  // at that location is of type T.
-  // Returns true on success.
+  // If the table contains an entry of type T for index key, sets *value to
+  // table[key] and returns true; otherwise returns false and does not access
+  // *value.
   // [0, 0, -] - Precondition: !this->is_unbound().
   template <typename K, typename T>
-  bool LookUp(const K& key, T* value) const {
+  bool LookUp(const K& key, T value) const {
     PushTable();
     Push(lua_state_, key);
     lua_gettable(lua_state_, -2);
@@ -192,6 +192,9 @@ class TableRef final {
     Insert(key, subtable);
     return subtable;
   }
+
+  // Gets the internal Lua state.
+  lua_State* LuaState() { return lua_state_; }
 
  private:
   friend bool Read(lua_State* L, int idx, TableRef* table);
