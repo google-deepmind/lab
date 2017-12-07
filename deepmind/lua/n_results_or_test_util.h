@@ -28,6 +28,7 @@
 #define DML_DEEPMIND_LUA_N_RESULTS_OR_TEST_UTIL_H_
 
 #include <ostream>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "deepmind/lua/n_results_or.h"
@@ -90,6 +91,49 @@ class IsOkAndHoldsImpl : public ::testing::MatcherInterface<const NResultsOr&> {
   const ::testing::Matcher<int> matcher_;
 };
 
+class StatusIsImpl : public ::testing::MatcherInterface<const NResultsOr&> {
+ public:
+  template <typename M>
+  explicit StatusIsImpl(M matcher)
+      : matcher_(::testing::SafeMatcherCast<std::string>(matcher)) {}
+
+ private:
+  void DescribeTo(std::ostream* os) const override {
+    *os << "is in error state with error value that ";
+    matcher_.DescribeTo(os);
+  }
+
+  void DescribeNegationTo(std::ostream* os) const override {
+    *os << "isn't in error state or has an error value that ";
+    matcher_.DescribeNegationTo(os);
+  }
+
+  bool MatchAndExplain(
+      const NResultsOr& actual_value,
+      ::testing::MatchResultListener* result_listener) const override {
+    if (actual_value.ok()) {
+      *result_listener << "which is OK (with " << actual_value.n_results()
+                       << " arguments)";
+      return false;
+    }
+
+    ::testing::StringMatchResultListener listener;
+
+    const bool matches = matcher_.MatchAndExplain(actual_value.error(),
+                                                  &listener);
+    const std::string explanation = listener.str();
+
+    if (explanation != "") {
+      *result_listener << "which contains error value "
+                       << actual_value.error() << ", " << explanation;
+    }
+
+    return matches;
+  }
+
+  const ::testing::Matcher<std::string> matcher_;
+};
+
 template <typename M>
 class IsOkAndHoldsMatcher {
  public:
@@ -103,11 +147,29 @@ class IsOkAndHoldsMatcher {
   M matcher_;
 };
 
+template <typename M>
+class StatusIsMatcher {
+ public:
+  explicit StatusIsMatcher(M matcher) : matcher_(matcher) {}
+
+  operator ::testing::Matcher<const NResultsOr&>() const {
+    return ::testing::MakeMatcher(new StatusIsImpl(matcher_));
+  }
+
+ private:
+  M matcher_;
+};
+
 }  // namespace internal
 
 template <typename M>
 internal::IsOkAndHoldsMatcher<M> IsOkAndHolds(M matcher) {
   return internal::IsOkAndHoldsMatcher<M>(matcher);
+}
+
+template <typename M>
+internal::StatusIsMatcher<M> StatusIs(M matcher) {
+  return internal::StatusIsMatcher<M>(matcher);
 }
 
 }  // namespace testing
