@@ -59,6 +59,14 @@ new_http_archive(
     url = "http://bazel-mirror.storage.googleapis.com/zlib.net/zlib-1.2.8.tar.gz",
 )
 
+new_http_archive(
+    name = "numpy_archive",
+    build_file = "numpy.BUILD",
+    sha256 = "4c6b4eef790528bebb7ec9590d74cc193868940fe68e4109a91c196df72d8094",
+    strip_prefix = "numpy-1.13.3",
+    url = "https://github.com/numpy/numpy/releases/download/v1.13.3/numpy-1.13.3.tar.gz",
+)
+
 # TODO: Replace with hermetic build
 new_local_repository(
     name = "lua_system",
@@ -74,4 +82,19 @@ new_local_repository(
     name = "python_system",
     build_file = "python.BUILD",
     path = "/usr",
+)
+new_local_repository(
+    name = "libxml_system",
+    build_file = "libxml_system.BUILD",
+    path = "/usr",
+)
+new_local_repository(
+    name = "glib_system",
+    build_file = "glib_system.BUILD",
+    path = "/usr",
+)
+new_local_repository(
+    name = "osmesa_system",
+    build_file = "osmesa.BUILD",
+    path = "/opt",
 )

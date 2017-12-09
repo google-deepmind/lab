@@ -86,7 +86,12 @@ bool LuaCustomEntityCallback(
     lua_pop(L, res.n_results());
     return false;
   } else {
-    auto is_empty = std::mem_fn(&std::string::empty);
+    // auto is_empty = std::mem_fn(&std::string::empty);
+    // NOTE: on macOS clang, the above definition of is_empty causes "ld: 32-bit RIP relative reference out of range" error
+    // See:
+    // http://blog.quasardb.net/weird-pie-related-linker-errors-on-os-x/
+    // http://www.cocoabuilder.com/archive/xcode/317778-os-constant-cause-32-bit-rip-relative-reference-out-of-range-linker-error-on-x64.html#319148
+    auto is_empty = [](std::string& s){ return s.empty(); };
     data.erase(std::remove_if(data.begin(), data.end(), is_empty), data.end());
 
     VLOG(1) << "User callback(" << i << ", " << j << ", '" << ent
