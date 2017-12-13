@@ -4,7 +4,7 @@
 licenses(["restricted"])  # GPLv2
 
 cc_library(
-    name = "context_headers",
+    name = "context_hdrs",
     hdrs = [
         "deepmind_calls.h",
         "deepmind_context.h",

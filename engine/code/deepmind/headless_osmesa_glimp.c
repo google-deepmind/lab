@@ -24,9 +24,9 @@
 #include "glimp_common.h"
 
 static OSMesaContext osmesa_ctx;
-static GLubyte *osmesa_frame_buffer;
+static GLubyte* osmesa_frame_buffer;
 
-void GLimp_MakeCurrent( void ) {
+void GLimp_MakeCurrent(void) {
   if (!OSMesaMakeCurrent(osmesa_ctx, osmesa_frame_buffer, GL_UNSIGNED_BYTE,
                          glConfig.vidWidth, glConfig.vidHeight)) {
     Sys_Error("GLimp_MakeCurrent - Failed!");
@@ -45,12 +45,20 @@ void GLimp_Init(void) {
 
   /* Allocate the image buffer */
   osmesa_frame_buffer =
-      malloc(glConfig.vidWidth * glConfig.vidHeight * 4 * sizeof(GLubyte));
+      calloc(glConfig.vidWidth * glConfig.vidHeight * 4, sizeof(GLubyte));
   if (!osmesa_frame_buffer) {
     Sys_Error("Alloc image buffer failed!");
   }
 
+  // Force draw buffer to GL_FRONT, as OSMesa doesn't have a back buffer to
+  // render to.
+  ri.Cvar_Set("r_drawBuffer", "GL_FRONT");
+
   GLimp_CommonPostInit();
+}
+
+void* GLimp_GetProcAddress(const char* func) {
+  return OSMesaGetProcAddress(func);
 }
 
 void GLimp_Shutdown(void) {

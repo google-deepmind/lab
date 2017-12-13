@@ -547,275 +547,83 @@ cc_binary(
     deps = ["@zlib_archive//:zlib"],
 )
 
-# To link with the SDL frontend, depend on :game_lib_sdl
-# and add "-lGL" to the linker flags.
-cc_library(
-    name = "game_lib_sdl",
-    srcs = [
-        CODE_DIR + "/asm/ftola.c",
-        CODE_DIR + "/asm/qasm-inline.h",
-        CODE_DIR + "/asm/snapvector.c",
-        CODE_DIR + "/cgame/cg_public.h",
-        CODE_DIR + "/client/libmumblelink.c",
-        CODE_DIR + "/deepmind/dm_public.h",
-        CODE_DIR + "/deepmind/dmlab_connect.c",
-        CODE_DIR + "/game/bg_public.h",
-        CODE_DIR + "/game/g_public.h",
-        CODE_DIR + "/sdl/sdl_icon.h",
-        CODE_DIR + "/sdl/sdl_input.c",
-        CODE_DIR + "/sdl/sdl_snd.c",
-        CODE_DIR + "/sys/con_log.c",
-        CODE_DIR + "/sys/con_passive.c",
-        CODE_DIR + "/sys/sys_main.c",
-        CODE_DIR + "/sys/sys_unix.c",
-        CODE_DIR + "/ui/ui_public.h",
-
-        ## OpenGL rendering
-        CODE_DIR + "/sdl/sdl_gamma.c",
-        CODE_DIR + "/sdl/sdl_glimp.c",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.c",
-            CODE_DIR + "/client/cl_*.c",
-            CODE_DIR + "/client/snd_*.c",
-            CODE_DIR + "/qcommon/*.c",
-            CODE_DIR + "/renderercommon/*.c",
-            CODE_DIR + "/renderergl1/*.c",
-            CODE_DIR + "/server/*.c",
-        ],
-        exclude = [
-            CODE_DIR + "/renderergl1/tr_subs.c",
-            CODE_DIR + "/server/sv_rankings.c",
-            CODE_DIR + "/qcommon/vm_none.c",
-            CODE_DIR + "/qcommon/vm_powerpc*.c",
-            CODE_DIR + "/qcommon/vm_sparc.c",
-        ],
-    ),
-    hdrs = [
-        "public/dmlab.h",
-        CODE_DIR + "/deepmind/context.h",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.h",
-            CODE_DIR + "/client/*.h",
-            CODE_DIR + "/qcommon/*.h",
-            CODE_DIR + "/sys/*.h",
-            CODE_DIR + "/server/*.h",
-            CODE_DIR + "/renderercommon/*.h",
-            CODE_DIR + "/renderergl1/*.h",
-        ],
-        exclude = [
-            CODE_DIR + "/client/fx_*.h",
-            CODE_DIR + "/qcommon/vm_powerpc_asm.h",
-            CODE_DIR + "/qcommon/vm_sparc.h",
-            CODE_DIR + "/renderercommon/tr_types.h",
-            CODE_DIR + "/renderercommon/tr_public.h",
-            CODE_DIR + "/renderergl1/tr_local.h",
-        ],
-    ),
-    copts = [
-        "-std=c99",
-        "-fno-strict-aliasing",
-        ARCH_VAR,
-        STANDALONE_VAR,
+IOQ3_COMMON_SRCS = [
+    CODE_DIR + "/asm/ftola.c",
+    CODE_DIR + "/asm/qasm-inline.h",
+    CODE_DIR + "/asm/snapvector.c",
+    CODE_DIR + "/cgame/cg_public.h",
+    CODE_DIR + "/client/libmumblelink.c",
+    CODE_DIR + "/deepmind/context.h",
+    CODE_DIR + "/deepmind/dm_public.h",
+    CODE_DIR + "/game/bg_public.h",
+    CODE_DIR + "/game/g_public.h",
+    CODE_DIR + "/renderergl2/tr_image_dds.c",
+    CODE_DIR + "/sys/con_log.c",
+    CODE_DIR + "/sys/con_passive.c",
+    CODE_DIR + "/sys/sys_main.c",
+    CODE_DIR + "/sys/sys_unix.c",
+    CODE_DIR + "/ui/ui_public.h",
+] + glob(
+    include = [
+        CODE_DIR + "/botlib/*.c",
+        CODE_DIR + "/botlib/*.h",
+        CODE_DIR + "/client/*.h",
+        CODE_DIR + "/client/cl_*.c",
+        CODE_DIR + "/client/snd_*.c",
+        CODE_DIR + "/qcommon/*.c",
+        CODE_DIR + "/qcommon/*.h",
+        CODE_DIR + "/renderercommon/*.c",
+        CODE_DIR + "/renderercommon/*.h",
+        CODE_DIR + "/renderergl1/*.c",
+        CODE_DIR + "/renderergl1/*.h",
+        CODE_DIR + "/server/*.c",
+        CODE_DIR + "/server/*.h",
+        CODE_DIR + "/sys/*.h",
     ],
-    defines = [
-        "BOTLIB",
-        "_GNU_SOURCE",
-    ],
-    textual_hdrs = [
+    exclude = [
+        CODE_DIR + "/client/fx_*.h",
         CODE_DIR + "/renderercommon/tr_types.h",
         CODE_DIR + "/renderercommon/tr_public.h",
         CODE_DIR + "/renderergl1/tr_local.h",
-    ],
-    deps = [
-        ":qcommon_hdrs",
-        "//deepmind/include:context_headers",
-        "//third_party/rl_api:env_c_api",
-        "@jpeg_archive//:jpeg",
-        "@sdl_system//:sdl2",
-    ],
-)
-
-# To link with the headless OSMesa frontend, depend on :game_lib_headless_osmesa
-# and add "-lGL -lOSMesa" to the linker flags.
-cc_library(
-    name = "game_lib_headless_osmesa",
-    srcs = [
-        CODE_DIR + "/asm/ftola.c",
-        CODE_DIR + "/asm/qasm-inline.h",
-        CODE_DIR + "/asm/snapvector.c",
-        CODE_DIR + "/cgame/cg_public.h",
-        CODE_DIR + "/client/libmumblelink.c",
-        CODE_DIR + "/deepmind/dm_public.h",
-        CODE_DIR + "/deepmind/dmlab_connect.c",
-        CODE_DIR + "/game/bg_public.h",
-        CODE_DIR + "/game/g_public.h",
-        CODE_DIR + "/null/null_input.c",
-        CODE_DIR + "/null/null_snddma.c",
-        CODE_DIR + "/sys/con_log.c",
-        CODE_DIR + "/sys/con_passive.c",
-        CODE_DIR + "/sys/sys_main.c",
-        CODE_DIR + "/sys/sys_unix.c",
-        CODE_DIR + "/ui/ui_public.h",
-
-        ## OpenGL rendering
-        CODE_DIR + "/deepmind/headless_osmesa_glimp.c",
-        CODE_DIR + "/deepmind/glimp_common.h",
-        CODE_DIR + "/deepmind/glimp_common.c",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.c",
-            CODE_DIR + "/client/cl_*.c",
-            CODE_DIR + "/client/snd_*.c",
-            CODE_DIR + "/qcommon/*.c",
-            CODE_DIR + "/renderercommon/*.c",
-            CODE_DIR + "/renderergl1/*.c",
-            CODE_DIR + "/server/*.c",
-        ],
-        exclude = [
-            CODE_DIR + "/renderergl1/tr_subs.c",
-            CODE_DIR + "/server/sv_rankings.c",
-            CODE_DIR + "/qcommon/vm_none.c",
-            CODE_DIR + "/qcommon/vm_powerpc*.c",
-            CODE_DIR + "/qcommon/vm_sparc.c",
-        ],
-    ),
-    hdrs = [
-        "public/dmlab.h",
-        CODE_DIR + "/deepmind/context.h",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.h",
-            CODE_DIR + "/client/*.h",
-            CODE_DIR + "/qcommon/*.h",
-            CODE_DIR + "/sys/*.h",
-            CODE_DIR + "/server/*.h",
-            CODE_DIR + "/renderercommon/*.h",
-            CODE_DIR + "/renderergl1/*.h",
-        ],
-        exclude = [
-            CODE_DIR + "/client/fx_*.h",
-            CODE_DIR + "/qcommon/vm_powerpc_asm.h",
-            CODE_DIR + "/qcommon/vm_sparc.h",
-            CODE_DIR + "/renderercommon/tr_types.h",
-            CODE_DIR + "/renderercommon/tr_public.h",
-            CODE_DIR + "/renderergl1/tr_local.h",
-        ],
-    ),
-    copts = [
-        "-std=c99",
-        "-fno-strict-aliasing",
-        ARCH_VAR,
-        STANDALONE_VAR,
-    ],
-    defines = [
-        "BOTLIB",
-        "_GNU_SOURCE",
-    ],
-    textual_hdrs = [
-        CODE_DIR + "/renderercommon/tr_types.h",
-        CODE_DIR + "/renderercommon/tr_public.h",
-        CODE_DIR + "/renderergl1/tr_local.h",
-    ],
-    deps = [
-        ":qcommon_hdrs",
-        "//deepmind/include:context_headers",
-        "//third_party/rl_api:env_c_api",
-        "@jpeg_archive//:jpeg",
-        "@sdl_system//:sdl2",
+        CODE_DIR + "/renderergl1/tr_subs.c",
+        CODE_DIR + "/server/sv_rankings.c",
+        CODE_DIR + "/qcommon/vm_armv7l.c",
+        CODE_DIR + "/qcommon/vm_none.c",
+        CODE_DIR + "/qcommon/vm_powerpc*.c",
+        CODE_DIR + "/qcommon/vm_powerpc_asm.h",
+        CODE_DIR + "/qcommon/vm_sparc.c",
+        CODE_DIR + "/qcommon/vm_sparc.h",
     ],
 )
 
-# To link with the headless GLX frontend, depend on :game_lib_headless_glx
-# and add "-lGL -lX11" to the linker flags.
-cc_library(
-    name = "game_lib_headless_glx",
-    srcs = [
-        CODE_DIR + "/asm/ftola.c",
-        CODE_DIR + "/asm/qasm-inline.h",
-        CODE_DIR + "/asm/snapvector.c",
-        CODE_DIR + "/cgame/cg_public.h",
-        CODE_DIR + "/client/libmumblelink.c",
-        CODE_DIR + "/deepmind/dm_public.h",
-        CODE_DIR + "/deepmind/dmlab_connect.c",
-        CODE_DIR + "/game/bg_public.h",
-        CODE_DIR + "/game/g_public.h",
-        CODE_DIR + "/null/null_input.c",
-        CODE_DIR + "/null/null_snddma.c",
-        CODE_DIR + "/sys/con_log.c",
-        CODE_DIR + "/sys/con_passive.c",
-        CODE_DIR + "/sys/sys_main.c",
-        CODE_DIR + "/sys/sys_unix.c",
-        CODE_DIR + "/ui/ui_public.h",
+IOQ3_COMMON_DEPS = [
+    ":qcommon_hdrs",
+    "//deepmind/engine:callbacks",
+    "//deepmind/engine:context",
+    "//deepmind/include:context_hdrs",
+    "//third_party/rl_api:env_c_api",
+    "@jpeg_archive//:jpeg",
+    "@sdl_system//:sdl2",
+    "@zlib_archive//:zlib",
+]
 
-        ## OpenGL rendering
-        CODE_DIR + "/deepmind/headless_native_glimp.c",
-        CODE_DIR + "/deepmind/glimp_common.h",
-        CODE_DIR + "/deepmind/glimp_common.c",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.c",
-            CODE_DIR + "/client/cl_*.c",
-            CODE_DIR + "/client/snd_*.c",
-            CODE_DIR + "/qcommon/*.c",
-            CODE_DIR + "/renderercommon/*.c",
-            CODE_DIR + "/renderergl1/*.c",
-            CODE_DIR + "/server/*.c",
-        ],
-        exclude = [
-            CODE_DIR + "/renderergl1/tr_subs.c",
-            CODE_DIR + "/server/sv_rankings.c",
-            CODE_DIR + "/qcommon/vm_none.c",
-            CODE_DIR + "/qcommon/vm_powerpc*.c",
-            CODE_DIR + "/qcommon/vm_sparc.c",
-        ],
-    ),
-    hdrs = [
-        "public/dmlab.h",
-        CODE_DIR + "/deepmind/context.h",
-    ] + glob(
-        [
-            CODE_DIR + "/botlib/*.h",
-            CODE_DIR + "/client/*.h",
-            CODE_DIR + "/qcommon/*.h",
-            CODE_DIR + "/sys/*.h",
-            CODE_DIR + "/server/*.h",
-            CODE_DIR + "/renderercommon/*.h",
-            CODE_DIR + "/renderergl1/*.h",
-        ],
-        exclude = [
-            CODE_DIR + "/client/fx_*.h",
-            CODE_DIR + "/qcommon/vm_powerpc_asm.h",
-            CODE_DIR + "/qcommon/vm_sparc.h",
-            CODE_DIR + "/renderercommon/tr_types.h",
-            CODE_DIR + "/renderercommon/tr_public.h",
-            CODE_DIR + "/renderergl1/tr_local.h",
-        ],
-    ),
-    copts = [
-        "-std=c99",
-        "-fno-strict-aliasing",
-        ARCH_VAR,
-        STANDALONE_VAR,
-    ],
-    defines = [
-        "BOTLIB",
-        "_GNU_SOURCE",
-    ],
-    textual_hdrs = [
-        CODE_DIR + "/renderercommon/tr_types.h",
-        CODE_DIR + "/renderercommon/tr_public.h",
-        CODE_DIR + "/renderergl1/tr_local.h",
-    ],
-    deps = [
-        ":qcommon_hdrs",
-        "//deepmind/include:context_headers",
-        "//third_party/rl_api:env_c_api",
-        "@jpeg_archive//:jpeg",
-        "@sdl_system//:sdl2",
-    ],
-)
+IOQ3_COMMON_TEXTUAL_HDRS = [
+    CODE_DIR + "/renderercommon/tr_types.h",
+    CODE_DIR + "/renderercommon/tr_public.h",
+    CODE_DIR + "/renderergl1/tr_local.h",
+]
+
+IOQ3_COMMON_COPTS = [
+    "-std=c99",
+    "-fno-strict-aliasing",
+    ARCH_VAR,
+    STANDALONE_VAR,
+]
+
+IOQ3_COMMON_DEFINES = [
+    "BOTLIB",
+    "_GNU_SOURCE",
+]
 
 ASSETS = [
     "assets/default.cfg",
@@ -899,90 +707,173 @@ genrule(
     ],
     outs = ["baselab/vm.pk3"],
     cmd = "A=$$(pwd); mkdir $(@D)/vm; ln -s -r -t $(@D)/vm -- $(SRCS); (cd $(@D); zip -r $${A}/$(OUTS) -- vm)",
+    visibility = ["//testing:__subpackages__"],
+)
+
+GAME_ASSETS = [
+    ":assets_bots_pk3",
+    ":assets_oa_pk3",
+    ":assets_pk3",
+    ":map_assets",
+    ":non_pk3_assets",
+    ":vm_pk3",
+    "//deepmind/level_generation:compile_map_sh",
+]
+
+cc_library(
+    name = "game_lib_sdl",
+    srcs = IOQ3_COMMON_SRCS + [
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/sdl/sdl_icon.h",
+        CODE_DIR + "/sdl/sdl_input.c",
+        CODE_DIR + "/sdl/sdl_snd.c",
+
+        ## OpenGL rendering
+        CODE_DIR + "/sdl/sdl_gamma.c",
+        CODE_DIR + "/sdl/sdl_glimp.c",
+    ],
+    hdrs = ["public/dmlab.h"],
+    copts = IOQ3_COMMON_COPTS,
+    defines = IOQ3_COMMON_DEFINES,
+    linkopts = [
+        "-lGL",
+        "-lrt",
+    ],
+    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
+    deps = IOQ3_COMMON_DEPS,
+)
+
+cc_library(
+    name = "game_lib_headless_osmesa",
+    srcs = IOQ3_COMMON_SRCS + [
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/null/null_input.c",
+        CODE_DIR + "/null/null_snddma.c",
+
+        ## OpenGL rendering
+        CODE_DIR + "/deepmind/headless_osmesa_glimp.c",
+        CODE_DIR + "/deepmind/glimp_common.h",
+        CODE_DIR + "/deepmind/glimp_common.c",
+    ],
+    hdrs = ["public/dmlab.h"],
+    copts = IOQ3_COMMON_COPTS,
+    defines = IOQ3_COMMON_DEFINES,
+    linkopts = ["-lOSMesa"],
+    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
+    deps = IOQ3_COMMON_DEPS,
+)
+
+cc_library(
+    name = "game_lib_headless_glx",
+    srcs = IOQ3_COMMON_SRCS + [
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/null/null_input.c",
+        CODE_DIR + "/null/null_snddma.c",
+
+        ## OpenGL rendering
+        CODE_DIR + "/deepmind/headless_native_glimp.c",
+        CODE_DIR + "/deepmind/glimp_common.h",
+        CODE_DIR + "/deepmind/glimp_common.c",
+    ],
+    hdrs = ["public/dmlab.h"],
+    copts = IOQ3_COMMON_COPTS,
+    defines = IOQ3_COMMON_DEFINES,
+    linkopts = [
+        "-lGL",
+        "-lX11",
+    ],
+    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
+    deps = IOQ3_COMMON_DEPS,
+)
+
+cc_library(
+    name = "game_lib_headless_egl",
+    srcs = IOQ3_COMMON_SRCS + [
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/null/null_input.c",
+        CODE_DIR + "/null/null_snddma.c",
+
+        ## OpenGL rendering
+        CODE_DIR + "/deepmind/headless_egl_glimp.c",
+        CODE_DIR + "/deepmind/glimp_common.h",
+        CODE_DIR + "/deepmind/glimp_common.c",
+    ],
+    hdrs = ["public/dmlab.h"],
+    copts = IOQ3_COMMON_COPTS,
+    defines = IOQ3_COMMON_DEFINES,
+    linkopts = [
+        "-lEGL",
+        "-lGL",
+    ],
+    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
+    deps = IOQ3_COMMON_DEPS + ["//third_party/GL/util:egl_util"],
 )
 
 cc_binary(
     name = "game",
     srcs = ["examples/game_main.c"],
     copts = ["-std=c99"],
-    data = [
-        ":assets_bots_pk3",
-        ":assets_oa_pk3",
-        ":assets_pk3",
-        ":map_assets",
-        ":non_pk3_assets",
-        ":vm_pk3",
-    ],
-    linkopts = [
-        "-lGL",
-        "-lm",
-    ],
-    deps = [
-        ":game_lib_sdl",
-        "//deepmind/engine:callbacks",
-        "//deepmind/engine:context",
-        "@zlib_archive//:zlib",
-    ],
+    data = GAME_ASSETS,
+    deps = [":game_lib_sdl"],
 )
 
 config_setting(
-    name = "dmlab_lib_sdl",
-    values = {"define": "headless=false"},
+    name = "dmlab_graphics_sdl",
+    define_values = {"headless": "false"},
 )
 
 config_setting(
-    name = "dmlab_headless_hw",
-    values = {"define": "headless=glx"},
+    name = "dmlab_graphics_osmesa",
+    define_values = {"headless": "osmesa"},
 )
 
 config_setting(
-    name = "dmlab_headless_sw",
-    values = {"define": "headless=osmesa"},
+    name = "dmlab_graphics_glx",
+    define_values = {"headless": "glx"},
+)
+
+config_setting(
+    name = "dmlab_graphics_egl",
+    define_values = {"headless": "egl"},
 )
 
 cc_binary(
-    name = "libdmlab.so",
-    linkopts = select({
-        "//conditions:default": ["-lOSMesa"],
-        ":dmlab_headless_hw": [
-            "-lGL",
-            "-lX11",
-        ],
-        ":dmlab_lib_sdl": [
-            "-lGL",
-            "-lX11",
-        ],
-    }) + [
+    name = "libdmlab_headless.so",
+    linkopts = [
         "-Wl,--version-script",
         ":dmlab.lds",
     ],
     linkshared = 1,
     linkstatic = 1,
-    deps = select({
+    visibility = ["//testing:__subpackages__"],
+    deps = [":dmlab.lds"] + select({
+        "dmlab_graphics_osmesa": [":game_lib_headless_osmesa"],
+        "dmlab_graphics_glx": [":game_lib_headless_glx"],
+        "dmlab_graphics_egl": [":game_lib_headless_egl"],
         "//conditions:default": [":game_lib_headless_osmesa"],
-        ":dmlab_lib_sdl": [":game_lib_sdl"],
-        ":dmlab_headless_hw": [":game_lib_headless_glx"],
-        ":dmlab_headless_sw": [":game_lib_headless_osmesa"],
-    }) + [
-        ":dmlab.lds",
-        "//deepmind/engine:callbacks",
-        "//deepmind/engine:context",
-        "@zlib_archive//:zlib",
-    ],
+    }),
+)
+
+cc_library(
+    name = "dmlab_so_loader",
+    srcs = ["public/dmlab_so_loader.cc"],
+    hdrs = ["public/dmlab.h"],
+    copts = ["-DDMLAB_SO_LOCATION=\\\"libdmlab_headless.so\\\""],
+    data = [":libdmlab_headless.so"],
+    linkopts = ["-ldl"],
+    visibility = ["//testing:__subpackages__"],
+    deps = ["//third_party/rl_api:env_c_api"],
 )
 
 cc_library(
     name = "dmlablib",
-    srcs = ["public/dmlab_so_loader.cc"],
     hdrs = ["public/dmlab.h"],
-    copts = ["-DDMLAB_SO_LOCATION=\\\"libdmlab.so\\\""],
-    data = [
-        ":assets",
-        ":libdmlab.so",
-        "//deepmind/level_generation:compile_map_sh",
-    ],
-    linkopts = ["-ldl"],
-    deps = ["//third_party/rl_api:env_c_api"],
+    data = GAME_ASSETS,
+    visibility = ["//testing:__subpackages__"],
+    deps = ["//third_party/rl_api:env_c_api"] + select({
+        "dmlab_graphics_sdl": [":game_lib_sdl"],
+        "//conditions:default": [":dmlab_so_loader"],
+    }),
 )
 
 cc_binary(
@@ -995,14 +886,6 @@ cc_binary(
         "-fno-strict-aliasing",  ## ick ick ick
         "-std=c99",
         "-DDEEPMIND_LAB_MODULE_RUNFILES_DIR",
-    ],
-    data = [
-        ":assets_bots_pk3",
-        ":assets_oa_pk3",
-        ":assets_pk3",
-        ":map_assets",
-        ":non_pk3_assets",
-        ":vm_pk3",
     ],
     linkshared = 1,
     linkstatic = 1,

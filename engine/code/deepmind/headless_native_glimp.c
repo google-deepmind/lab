@@ -20,7 +20,6 @@
 #include "../renderercommon/tr_common.h"
 // Must include tr_common.h before opengl.
 #include <GL/glext.h>
-#include <GL/glut.h>
 #include <GL/glx.h>
 #include "../sys/sys_local.h"
 #include "glimp_common.h"
@@ -34,7 +33,7 @@ static Display* glx_display;
 
 void GLimp_MakeCurrent(void) {
   if (!glXMakeCurrent(glx_display, glx_pbuffer, glx_context)) {
-    Sys_Error( "GLimp_MakeCurrent - Failed!");
+    Sys_Error("GLimp_MakeCurrent - Failed!");
   }
 }
 
@@ -70,6 +69,10 @@ void GLimp_Init(void) {
       glXChooseFBConfig(glx_display, DefaultScreen(glx_display), visual_attribs,
                         &number_of_fb_config);
 
+  if (fb_configs == NULL || number_of_fb_config == 0) {
+    Sys_Error("glXChooseFBConfig failed!");
+  }
+
   glx_context = glXCreateContextAttribsARB(glx_display, fb_configs[0], 0, True,
                                            context_attribs);
 
@@ -90,6 +93,8 @@ void GLimp_Init(void) {
 
   GLimp_CommonPostInit();
 }
+
+void* GLimp_GetProcAddress(const char* func) { return glXGetProcAddress(func); }
 
 void GLimp_Shutdown(void) {
   glXMakeCurrent(glx_display, 0, NULL);

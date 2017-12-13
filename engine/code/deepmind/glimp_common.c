@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <string.h>
+
 #include "../renderercommon/tr_common.h"
 #include "../sys/sys_local.h"
 
@@ -33,6 +35,14 @@ void (*qglActiveTextureARB)(GLenum texture);
 void (*qglClientActiveTextureARB)(GLenum texture);
 void (*qglLockArraysEXT)(int, int);
 void (*qglUnlockArraysEXT)(void);
+
+#define GLE(ret, name, ...) name##proc *qgl##name;
+QGL_1_1_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_3_0_PROCS;
+#undef GLE
+
+int qglMajorVersion, qglMinorVersion;
 
 void GLimp_EndFrame(void) {}
 
@@ -53,10 +63,55 @@ void GLimp_CommonPreInit(void) {
 }
 
 void GLimp_CommonPostInit(void) {
+#define GLE(ret, name, ...)                                     \
+  qgl##name = (name##proc *)GLimp_GetProcAddress("gl" #name);
+
   GLimp_MakeCurrent();
+
+  // OpenGL 1.0
+  GLE(const GLubyte *, GetString, GLenum name)
+
+  const char *version = (const char *)qglGetString(GL_VERSION);
+
+  if (!version) {
+    Com_Error(ERR_FATAL, "Failed to get GL_VERSION string.\n");
+  } else if (sscanf(version, "%d.%d", &qglMajorVersion, &qglMinorVersion) <
+             2) {
+    Com_Error(ERR_FATAL, "Failed to read GL Version: %s\n", version);
+  }
+
+  if (QGL_VERSION_ATLEAST(1, 1)) {
+    QGL_1_1_PROCS;
+    QGL_DESKTOP_1_1_PROCS;
+  } else {
+    Com_Error(ERR_FATAL, "Unsupported OpenGL Version: %s\n", version);
+  }
+
+  if (QGL_VERSION_ATLEAST(3, 0)) {
+    QGL_3_0_PROCS;
+  }
+
   glConfig.colorBits = r_colorbits->value;
-  glGetIntegerv(GL_DEPTH_BITS, &glConfig.depthBits);
-  glGetIntegerv(GL_STENCIL_BITS, &glConfig.stencilBits);
+  qglGetIntegerv(GL_DEPTH_BITS, &glConfig.depthBits);
+  qglGetIntegerv(GL_STENCIL_BITS, &glConfig.stencilBits);
+
+  Q_strncpyz(
+      glConfig.vendor_string, (const char *)qglGetString(GL_VENDOR),
+      sizeof(glConfig.vendor_string));
+  Q_strncpyz(
+      glConfig.version_string, version, sizeof(glConfig.version_string));
+  Q_strncpyz(
+      glConfig.renderer_string, (const char *)qglGetString(GL_RENDERER),
+      sizeof(glConfig.renderer_string));
+
+  if (glConfig.renderer_string[0] != '\0') {
+    size_t n = strlen(glConfig.renderer_string);
+    if (glConfig.renderer_string[n - 1] == '\n') {
+      glConfig.renderer_string[n - 1] = 0;
+    }
+  }
+
+#undef GLE
 }
 
 void GLimp_Minimize(void) {}

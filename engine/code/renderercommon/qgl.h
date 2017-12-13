@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -42,355 +42,95 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 
 //===========================================================================
 
-#define qglAccum glAccum
-#define qglAlphaFunc glAlphaFunc
-#define qglAreTexturesResident glAreTexturesResident
-#define qglArrayElement glArrayElement
-#define qglBegin glBegin
-#define qglBindTexture glBindTexture
-#define qglBitmap glBitmap
-#define qglBlendFunc glBlendFunc
-#define qglCallList glCallList
-#define qglCallLists glCallLists
-#define qglClear glClear
-#define qglClearAccum glClearAccum
-#define qglClearColor glClearColor
-#define qglClearDepth glClearDepth
-#define qglClearIndex glClearIndex
-#define qglClearStencil glClearStencil
-#define qglClipPlane glClipPlane
-#define qglColor3b glColor3b
-#define qglColor3bv glColor3bv
-#define qglColor3d glColor3d
-#define qglColor3dv glColor3dv
-#define qglColor3f glColor3f
-#define qglColor3fv glColor3fv
-#define qglColor3i glColor3i
-#define qglColor3iv glColor3iv
-#define qglColor3s glColor3s
-#define qglColor3sv glColor3sv
-#define qglColor3ub glColor3ub
-#define qglColor3ubv glColor3ubv
-#define qglColor3ui glColor3ui
-#define qglColor3uiv glColor3uiv
-#define qglColor3us glColor3us
-#define qglColor3usv glColor3usv
-#define qglColor4b glColor4b
-#define qglColor4bv glColor4bv
-#define qglColor4d glColor4d
-#define qglColor4dv glColor4dv
-#define qglColor4f glColor4f
-#define qglColor4fv glColor4fv
-#define qglColor4i glColor4i
-#define qglColor4iv glColor4iv
-#define qglColor4s glColor4s
-#define qglColor4sv glColor4sv
-#define qglColor4ub glColor4ub
-#define qglColor4ubv glColor4ubv
-#define qglColor4ui glColor4ui
-#define qglColor4uiv glColor4uiv
-#define qglColor4us glColor4us
-#define qglColor4usv glColor4usv
-#define qglColorMask glColorMask
-#define qglColorMaterial glColorMaterial
-#define qglColorPointer glColorPointer
-#define qglCopyPixels glCopyPixels
-#define qglCopyTexImage1D glCopyTexImage1D
-#define qglCopyTexImage2D glCopyTexImage2D
-#define qglCopyTexSubImage1D glCopyTexSubImage1D
-#define qglCopyTexSubImage2D glCopyTexSubImage2D
-#define qglCullFace glCullFace
-#define qglDeleteLists glDeleteLists
-#define qglDeleteTextures glDeleteTextures
-#define qglDepthFunc glDepthFunc
-#define qglDepthMask glDepthMask
-#define qglDepthRange glDepthRange
-#define qglDisable glDisable
-#define qglDisableClientState glDisableClientState
-#define qglDrawArrays glDrawArrays
-#define qglDrawBuffer glDrawBuffer
-#define qglDrawElements glDrawElements
-#define qglDrawPixels glDrawPixels
-#define qglEdgeFlag glEdgeFlag
-#define qglEdgeFlagPointer glEdgeFlagPointer
-#define qglEdgeFlagv glEdgeFlagv
-#define qglEnable glEnable
-#define qglEnableClientState glEnableClientState
-#define qglEnd glEnd
-#define qglEndList glEndList
-#define qglEvalCoord1d glEvalCoord1d
-#define qglEvalCoord1dv glEvalCoord1dv
-#define qglEvalCoord1f glEvalCoord1f
-#define qglEvalCoord1fv glEvalCoord1fv
-#define qglEvalCoord2d glEvalCoord2d
-#define qglEvalCoord2dv glEvalCoord2dv
-#define qglEvalCoord2f glEvalCoord2f
-#define qglEvalCoord2fv glEvalCoord2fv
-#define qglEvalMesh1 glEvalMesh1
-#define qglEvalMesh2 glEvalMesh2
-#define qglEvalPoint1 glEvalPoint1
-#define qglEvalPoint2 glEvalPoint2
-#define qglFeedbackBuffer glFeedbackBuffer
-#define qglFinish glFinish
-#define qglFlush glFlush
-#define qglFogf glFogf
-#define qglFogfv glFogfv
-#define qglFogi glFogi
-#define qglFogiv glFogiv
-#define qglFrontFace glFrontFace
-#define qglFrustum glFrustum
-#define qglGenLists glGenLists
-#define qglGenTextures glGenTextures
-#define qglGetBooleanv glGetBooleanv
-#define qglGetClipPlane glGetClipPlane
-#define qglGetDoublev glGetDoublev
-#define qglGetError glGetError
-#define qglGetFloatv glGetFloatv
-#define qglGetIntegerv glGetIntegerv
-#define qglGetLightfv glGetLightfv
-#define qglGetLightiv glGetLightiv
-#define qglGetMapdv glGetMapdv
-#define qglGetMapfv glGetMapfv
-#define qglGetMapiv glGetMapiv
-#define qglGetMaterialfv glGetMaterialfv
-#define qglGetMaterialiv glGetMaterialiv
-#define qglGetPixelMapfv glGetPixelMapfv
-#define qglGetPixelMapuiv glGetPixelMapuiv
-#define qglGetPixelMapusv glGetPixelMapusv
-#define qglGetPointerv glGetPointerv
-#define qglGetPolygonStipple glGetPolygonStipple
-#define qglGetString glGetString
-#define qglGetTexGendv glGetTexGendv
-#define qglGetTexGenfv glGetTexGenfv
-#define qglGetTexGeniv glGetTexGeniv
-#define qglGetTexImage glGetTexImage
-#define qglGetTexLevelParameterfv glGetTexLevelParameterfv
-#define qglGetTexLevelParameteriv glGetTexLevelParameteriv
-#define qglGetTexParameterfv glGetTexParameterfv
-#define qglGetTexParameteriv glGetTexParameteriv
-#define qglHint glHint
-#define qglIndexMask glIndexMask
-#define qglIndexPointer glIndexPointer
-#define qglIndexd glIndexd
-#define qglIndexdv glIndexdv
-#define qglIndexf glIndexf
-#define qglIndexfv glIndexfv
-#define qglIndexi glIndexi
-#define qglIndexiv glIndexiv
-#define qglIndexs glIndexs
-#define qglIndexsv glIndexsv
-#define qglIndexub glIndexub
-#define qglIndexubv glIndexubv
-#define qglInitNames glInitNames
-#define qglInterleavedArrays glInterleavedArrays
-#define qglIsEnabled glIsEnabled
-#define qglIsList glIsList
-#define qglIsTexture glIsTexture
-#define qglLightModelf glLightModelf
-#define qglLightModelfv glLightModelfv
-#define qglLightModeli glLightModeli
-#define qglLightModeliv glLightModeliv
-#define qglLightf glLightf
-#define qglLightfv glLightfv
-#define qglLighti glLighti
-#define qglLightiv glLightiv
-#define qglLineStipple glLineStipple
-#define qglLineWidth glLineWidth
-#define qglListBase glListBase
-#define qglLoadIdentity glLoadIdentity
-#define qglLoadMatrixd glLoadMatrixd
-#define qglLoadMatrixf glLoadMatrixf
-#define qglLoadName glLoadName
-#define qglLogicOp glLogicOp
-#define qglMap1d glMap1d
-#define qglMap1f glMap1f
-#define qglMap2d glMap2d
-#define qglMap2f glMap2f
-#define qglMapGrid1d glMapGrid1d
-#define qglMapGrid1f glMapGrid1f
-#define qglMapGrid2d glMapGrid2d
-#define qglMapGrid2f glMapGrid2f
-#define qglMaterialf glMaterialf
-#define qglMaterialfv glMaterialfv
-#define qglMateriali glMateriali
-#define qglMaterialiv glMaterialiv
-#define qglMatrixMode glMatrixMode
-#define qglMultMatrixd glMultMatrixd
-#define qglMultMatrixf glMultMatrixf
-#define qglNewList glNewList
-#define qglNormal3b glNormal3b
-#define qglNormal3bv glNormal3bv
-#define qglNormal3d glNormal3d
-#define qglNormal3dv glNormal3dv
-#define qglNormal3f glNormal3f
-#define qglNormal3fv glNormal3fv
-#define qglNormal3i glNormal3i
-#define qglNormal3iv glNormal3iv
-#define qglNormal3s glNormal3s
-#define qglNormal3sv glNormal3sv
-#define qglNormalPointer glNormalPointer
-#define qglOrtho glOrtho
-#define qglPassThrough glPassThrough
-#define qglPixelMapfv glPixelMapfv
-#define qglPixelMapuiv glPixelMapuiv
-#define qglPixelMapusv glPixelMapusv
-#define qglPixelStoref glPixelStoref
-#define qglPixelStorei glPixelStorei
-#define qglPixelTransferf glPixelTransferf
-#define qglPixelTransferi glPixelTransferi
-#define qglPixelZoom glPixelZoom
-#define qglPointSize glPointSize
-#define qglPolygonMode glPolygonMode
-#define qglPolygonOffset glPolygonOffset
-#define qglPolygonStipple glPolygonStipple
-#define qglPopAttrib glPopAttrib
-#define qglPopClientAttrib glPopClientAttrib
-#define qglPopMatrix glPopMatrix
-#define qglPopName glPopName
-#define qglPrioritizeTextures glPrioritizeTextures
-#define qglPushAttrib glPushAttrib
-#define qglPushClientAttrib glPushClientAttrib
-#define qglPushMatrix glPushMatrix
-#define qglPushName glPushName
-#define qglRasterPos2d glRasterPos2d
-#define qglRasterPos2dv glRasterPos2dv
-#define qglRasterPos2f glRasterPos2f
-#define qglRasterPos2fv glRasterPos2fv
-#define qglRasterPos2i glRasterPos2i
-#define qglRasterPos2iv glRasterPos2iv
-#define qglRasterPos2s glRasterPos2s
-#define qglRasterPos2sv glRasterPos2sv
-#define qglRasterPos3d glRasterPos3d
-#define qglRasterPos3dv glRasterPos3dv
-#define qglRasterPos3f glRasterPos3f
-#define qglRasterPos3fv glRasterPos3fv
-#define qglRasterPos3i glRasterPos3i
-#define qglRasterPos3iv glRasterPos3iv
-#define qglRasterPos3s glRasterPos3s
-#define qglRasterPos3sv glRasterPos3sv
-#define qglRasterPos4d glRasterPos4d
-#define qglRasterPos4dv glRasterPos4dv
-#define qglRasterPos4f glRasterPos4f
-#define qglRasterPos4fv glRasterPos4fv
-#define qglRasterPos4i glRasterPos4i
-#define qglRasterPos4iv glRasterPos4iv
-#define qglRasterPos4s glRasterPos4s
-#define qglRasterPos4sv glRasterPos4sv
-#define qglReadBuffer glReadBuffer
-#define qglReadPixels glReadPixels
-#define qglRectd glRectd
-#define qglRectdv glRectdv
-#define qglRectf glRectf
-#define qglRectfv glRectfv
-#define qglRecti glRecti
-#define qglRectiv glRectiv
-#define qglRects glRects
-#define qglRectsv glRectsv
-#define qglRenderMode glRenderMode
-#define qglRotated glRotated
-#define qglRotatef glRotatef
-#define qglScaled glScaled
-#define qglScalef glScalef
-#define qglScissor glScissor
-#define qglSelectBuffer glSelectBuffer
-#define qglShadeModel glShadeModel
-#define qglStencilFunc glStencilFunc
-#define qglStencilMask glStencilMask
-#define qglStencilOp glStencilOp
-#define qglTexCoord1d glTexCoord1d
-#define qglTexCoord1dv glTexCoord1dv
-#define qglTexCoord1f glTexCoord1f
-#define qglTexCoord1fv glTexCoord1fv
-#define qglTexCoord1i glTexCoord1i
-#define qglTexCoord1iv glTexCoord1iv
-#define qglTexCoord1s glTexCoord1s
-#define qglTexCoord1sv glTexCoord1sv
-#define qglTexCoord2d glTexCoord2d
-#define qglTexCoord2dv glTexCoord2dv
-#define qglTexCoord2f glTexCoord2f
-#define qglTexCoord2fv glTexCoord2fv
-#define qglTexCoord2i glTexCoord2i
-#define qglTexCoord2iv glTexCoord2iv
-#define qglTexCoord2s glTexCoord2s
-#define qglTexCoord2sv glTexCoord2sv
-#define qglTexCoord3d glTexCoord3d
-#define qglTexCoord3dv glTexCoord3dv
-#define qglTexCoord3f glTexCoord3f
-#define qglTexCoord3fv glTexCoord3fv
-#define qglTexCoord3i glTexCoord3i
-#define qglTexCoord3iv glTexCoord3iv
-#define qglTexCoord3s glTexCoord3s
-#define qglTexCoord3sv glTexCoord3sv
-#define qglTexCoord4d glTexCoord4d
-#define qglTexCoord4dv glTexCoord4dv
-#define qglTexCoord4f glTexCoord4f
-#define qglTexCoord4fv glTexCoord4fv
-#define qglTexCoord4i glTexCoord4i
-#define qglTexCoord4iv glTexCoord4iv
-#define qglTexCoord4s glTexCoord4s
-#define qglTexCoord4sv glTexCoord4sv
-#define qglTexCoordPointer glTexCoordPointer
-#define qglTexEnvf glTexEnvf
-#define qglTexEnvfv glTexEnvfv
-#define qglTexEnvi glTexEnvi
-#define qglTexEnviv glTexEnviv
-#define qglTexGend glTexGend
-#define qglTexGendv glTexGendv
-#define qglTexGenf glTexGenf
-#define qglTexGenfv glTexGenfv
-#define qglTexGeni glTexGeni
-#define qglTexGeniv glTexGeniv
-#define qglTexImage1D glTexImage1D
-#define qglTexImage2D glTexImage2D
-#define qglTexParameterf glTexParameterf
-#define qglTexParameterfv glTexParameterfv
-#define qglTexParameteri glTexParameteri
-#define qglTexParameteriv glTexParameteriv
-#define qglTexSubImage1D glTexSubImage1D
-#define qglTexSubImage2D glTexSubImage2D
-#define qglTranslated glTranslated
-#define qglTranslatef glTranslatef
-#define qglVertex2d glVertex2d
-#define qglVertex2dv glVertex2dv
-#define qglVertex2f glVertex2f
-#define qglVertex2fv glVertex2fv
-#define qglVertex2i glVertex2i
-#define qglVertex2iv glVertex2iv
-#define qglVertex2s glVertex2s
-#define qglVertex2sv glVertex2sv
-#define qglVertex3d glVertex3d
-#define qglVertex3dv glVertex3dv
-#define qglVertex3f glVertex3f
-#define qglVertex3fv glVertex3fv
-#define qglVertex3i glVertex3i
-#define qglVertex3iv glVertex3iv
-#define qglVertex3s glVertex3s
-#define qglVertex3sv glVertex3sv
-#define qglVertex4d glVertex4d
-#define qglVertex4dv glVertex4dv
-#define qglVertex4f glVertex4f
-#define qglVertex4fv glVertex4fv
-#define qglVertex4i glVertex4i
-#define qglVertex4iv glVertex4iv
-#define qglVertex4s glVertex4s
-#define qglVertex4sv glVertex4sv
-#define qglVertexPointer glVertexPointer
-#define qglViewport glViewport
-
 // GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
+// get missing functions from code/SDL2/include/SDL_opengl.h
 
-// OpenGL 1.2, was GL_EXT_draw_range_elements
-#define QGL_1_2_PROCS \
-	GLE(void, DrawRangeElements, GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices) \
+// OpenGL 1.0/1.1 and OpenGL ES 1.0
+#define QGL_1_1_PROCS \
+	GLE(void, AlphaFunc, GLenum func, GLclampf ref) \
+	GLE(void, BindTexture, GLenum target, GLuint texture) \
+	GLE(void, BlendFunc, GLenum sfactor, GLenum dfactor) \
+	GLE(void, ClearColor, GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) \
+	GLE(void, Clear, GLbitfield mask) \
+	GLE(void, ClearStencil, GLint s) \
+	GLE(void, Color4f, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) \
+	GLE(void, ColorMask, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) \
+	GLE(void, ColorPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
+	GLE(void, CopyTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) \
+	GLE(void, CullFace, GLenum mode) \
+	GLE(void, DeleteTextures, GLsizei n, const GLuint *textures) \
+	GLE(void, DepthFunc, GLenum func) \
+	GLE(void, DepthMask, GLboolean flag) \
+	GLE(void, DisableClientState, GLenum cap) \
+	GLE(void, Disable, GLenum cap) \
+	GLE(void, DrawArrays, GLenum mode, GLint first, GLsizei count) \
+	GLE(void, DrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) \
+	GLE(void, EnableClientState, GLenum cap) \
+	GLE(void, Enable, GLenum cap) \
+	GLE(void, Finish, void) \
+	GLE(void, Flush, void) \
+	GLE(void, GenTextures, GLsizei n, GLuint *textures ) \
+	GLE(void, GetBooleanv, GLenum pname, GLboolean *params) \
+	GLE(GLenum, GetError, void) \
+	GLE(void, GetFloatv, GLenum pname, GLfloat *params) \
+	GLE(void, GetIntegerv, GLenum pname, GLint *params) \
+	GLE(const GLubyte *, GetString, GLenum name) \
+	GLE(void, LineWidth, GLfloat width) \
+	GLE(void, LoadIdentity, void) \
+	GLE(void, LoadMatrixf, const GLfloat *m) \
+	GLE(void, MatrixMode, GLenum mode) \
+	GLE(void, PolygonOffset, GLfloat factor, GLfloat units) \
+	GLE(void, PopMatrix, void) \
+	GLE(void, PushMatrix, void) \
+	GLE(void, ReadPixels, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) \
+	GLE(void, Scissor, GLint x, GLint y, GLsizei width, GLsizei height) \
+	GLE(void, ShadeModel, GLenum mode) \
+	GLE(void, StencilFunc, GLenum func, GLint ref, GLuint mask) \
+	GLE(void, StencilMask, GLuint mask) \
+	GLE(void, StencilOp, GLenum fail, GLenum zfail, GLenum zpass) \
+	GLE(void, TexCoordPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
+	GLE(void, TexEnvf, GLenum target, GLenum pname, GLfloat param) \
+	GLE(void, TexImage2D, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) \
+	GLE(void, TexParameterf, GLenum target, GLenum pname, GLfloat param) \
+	GLE(void, TexParameteri, GLenum target, GLenum pname, GLint param) \
+	GLE(void, TexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) \
+	GLE(void, Translatef, GLfloat x, GLfloat y, GLfloat z) \
+	GLE(void, VertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
+	GLE(void, Viewport, GLint x, GLint y, GLsizei width, GLsizei height) \
+
+// OpenGL 1.0/1.1 but not OpenGL ES 1.x
+#define QGL_DESKTOP_1_1_PROCS \
+	GLE(void, ArrayElement, GLint i) \
+	GLE(void, Begin, GLenum mode) \
+	GLE(void, ClearDepth, GLclampd depth) \
+	GLE(void, ClipPlane, GLenum plane, const GLdouble *equation) \
+	GLE(void, Color3f, GLfloat red, GLfloat green, GLfloat blue) \
+	GLE(void, Color4ubv, const GLubyte *v) \
+	GLE(void, DepthRange, GLclampd near_val, GLclampd far_val) \
+	GLE(void, DrawBuffer, GLenum mode) \
+	GLE(void, End, void) \
+	GLE(void, Frustum, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
+	GLE(void, Ortho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
+	GLE(void, PolygonMode, GLenum face, GLenum mode) \
+	GLE(void, TexCoord2f, GLfloat s, GLfloat t) \
+	GLE(void, TexCoord2fv, const GLfloat *v) \
+	GLE(void, Vertex2f, GLfloat x, GLfloat y) \
+	GLE(void, Vertex3f, GLfloat x, GLfloat y, GLfloat z) \
+	GLE(void, Vertex3fv, const GLfloat *v) \
+
+// OpenGL ES 1.1 but not desktop OpenGL 1.x
+#define QGL_ES_1_1_PROCS \
+	GLE(void, ClearDepthf, GLclampf depth) \
+	GLE(void, ClipPlanef, GLenum plane, const GLfloat *equation) \
+	GLE(void, DepthRangef, GLclampf near_val, GLclampf far_val) \
+	GLE(void, Frustumf, GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat near_val, GLfloat far_val) \
+	GLE(void, Orthof, GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat near_val, GLfloat far_val) \
 
 // OpenGL 1.3, was GL_ARB_texture_compression
 #define QGL_1_3_PROCS \
+	GLE(void, ActiveTexture, GLenum texture) \
 	GLE(void, CompressedTexImage2D, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void *data) \
 	GLE(void, CompressedTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data) \
-
-// OpenGL 1.4, was GL_EXT_multi_draw_arrays
-#define QGL_1_4_PROCS \
-	GLE(void, MultiDrawElements, GLenum mode, const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) \
 
 // OpenGL 1.5, was GL_ARB_vertex_buffer_object and GL_ARB_occlusion_query
 #define QGL_1_5_PROCS \
@@ -405,6 +145,8 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 	GLE(void, GenBuffers, GLsizei n, GLuint *buffers) \
 	GLE(void, BufferData, GLenum target, GLsizeiptr size, const void *data, GLenum usage) \
 	GLE(void, BufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const void *data) \
+	GLE(void*, MapBuffer, GLenum target, GLenum access) \
+	GLE(GLboolean, UnmapBuffer, GLenum target) \
 
 // OpenGL 2.0, was GL_ARB_shading_language_100, GL_ARB_vertex_program, GL_ARB_shader_objects, and GL_ARB_vertex_shader
 #define QGL_2_0_PROCS \
@@ -486,97 +228,31 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 #define GL_HALF_FLOAT_ARB                   0x140B
 #endif
 
-// GL_EXT_framebuffer_object
-#define QGL_EXT_framebuffer_object_PROCS \
-	GLE(void, BindRenderbufferEXT, GLenum target, GLuint renderbuffer) \
-	GLE(void, DeleteRenderbuffersEXT, GLsizei n, const GLuint *renderbuffers) \
-	GLE(void, GenRenderbuffersEXT, GLsizei n, GLuint *renderbuffers) \
-	GLE(void, RenderbufferStorageEXT, GLenum target, GLenum internalformat, GLsizei width, GLsizei height) \
-	GLE(void, BindFramebufferEXT, GLenum target, GLuint framebuffer) \
-	GLE(void, DeleteFramebuffersEXT, GLsizei n, const GLuint *framebuffers) \
-	GLE(void, GenFramebuffersEXT, GLsizei n, GLuint *framebuffers) \
-	GLE(GLenum, CheckFramebufferStatusEXT, GLenum target) \
-	GLE(void, FramebufferTexture2DEXT, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) \
-	GLE(void, FramebufferRenderbufferEXT, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) \
-	GLE(void, GenerateMipmapEXT, GLenum target) \
+// OpenGL 3.0 specific
+#define QGL_3_0_PROCS \
+	GLE(const GLubyte *, GetStringi, GLenum name, GLuint index) \
 
-#ifndef GL_EXT_framebuffer_object
-#define GL_EXT_framebuffer_object
-#define GL_FRAMEBUFFER_EXT                     0x8D40
-#define GL_RENDERBUFFER_EXT                    0x8D41
-#define GL_STENCIL_INDEX1_EXT                  0x8D46
-#define GL_STENCIL_INDEX4_EXT                  0x8D47
-#define GL_STENCIL_INDEX8_EXT                  0x8D48
-#define GL_STENCIL_INDEX16_EXT                 0x8D49
-#define GL_RENDERBUFFER_WIDTH_EXT              0x8D42
-#define GL_RENDERBUFFER_HEIGHT_EXT             0x8D43
-#define GL_RENDERBUFFER_INTERNAL_FORMAT_EXT    0x8D44
-#define GL_RENDERBUFFER_RED_SIZE_EXT           0x8D50
-#define GL_RENDERBUFFER_GREEN_SIZE_EXT         0x8D51
-#define GL_RENDERBUFFER_BLUE_SIZE_EXT          0x8D52
-#define GL_RENDERBUFFER_ALPHA_SIZE_EXT         0x8D53
-#define GL_RENDERBUFFER_DEPTH_SIZE_EXT         0x8D54
-#define GL_RENDERBUFFER_STENCIL_SIZE_EXT       0x8D55
-#define GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE_EXT            0x8CD0
-#define GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME_EXT            0x8CD1
-#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL_EXT          0x8CD2
-#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE_EXT  0x8CD3
-#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_3D_ZOFFSET_EXT     0x8CD4
-#define GL_COLOR_ATTACHMENT0_EXT                0x8CE0
-#define GL_COLOR_ATTACHMENT1_EXT                0x8CE1
-#define GL_COLOR_ATTACHMENT2_EXT                0x8CE2
-#define GL_COLOR_ATTACHMENT3_EXT                0x8CE3
-#define GL_COLOR_ATTACHMENT4_EXT                0x8CE4
-#define GL_COLOR_ATTACHMENT5_EXT                0x8CE5
-#define GL_COLOR_ATTACHMENT6_EXT                0x8CE6
-#define GL_COLOR_ATTACHMENT7_EXT                0x8CE7
-#define GL_COLOR_ATTACHMENT8_EXT                0x8CE8
-#define GL_COLOR_ATTACHMENT9_EXT                0x8CE9
-#define GL_COLOR_ATTACHMENT10_EXT               0x8CEA
-#define GL_COLOR_ATTACHMENT11_EXT               0x8CEB
-#define GL_COLOR_ATTACHMENT12_EXT               0x8CEC
-#define GL_COLOR_ATTACHMENT13_EXT               0x8CED
-#define GL_COLOR_ATTACHMENT14_EXT               0x8CEE
-#define GL_COLOR_ATTACHMENT15_EXT               0x8CEF
-#define GL_DEPTH_ATTACHMENT_EXT                 0x8D00
-#define GL_STENCIL_ATTACHMENT_EXT               0x8D20
-#define GL_FRAMEBUFFER_COMPLETE_EXT                          0x8CD5
-#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT             0x8CD6
-#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT     0x8CD7
-#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT             0x8CD9
-#define GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT                0x8CDA
-#define GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT            0x8CDB
-#define GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT            0x8CDC
-#define GL_FRAMEBUFFER_UNSUPPORTED_EXT                       0x8CDD
-#define GL_FRAMEBUFFER_BINDING_EXT             0x8CA6
-#define GL_RENDERBUFFER_BINDING_EXT            0x8CA7
-#define GL_MAX_COLOR_ATTACHMENTS_EXT           0x8CDF
-#define GL_MAX_RENDERBUFFER_SIZE_EXT           0x84E8
-#define GL_INVALID_FRAMEBUFFER_OPERATION_EXT   0x0506
-#endif
+// GL_ARB_framebuffer_object, built-in to OpenGL 3.0
+#define QGL_ARB_framebuffer_object_PROCS \
+	GLE(void, BindRenderbuffer, GLenum target, GLuint renderbuffer) \
+	GLE(void, DeleteRenderbuffers, GLsizei n, const GLuint *renderbuffers) \
+	GLE(void, GenRenderbuffers, GLsizei n, GLuint *renderbuffers) \
+	GLE(void, RenderbufferStorage, GLenum target, GLenum internalformat, GLsizei width, GLsizei height) \
+	GLE(void, BindFramebuffer, GLenum target, GLuint framebuffer) \
+	GLE(void, DeleteFramebuffers, GLsizei n, const GLuint *framebuffers) \
+	GLE(void, GenFramebuffers, GLsizei n, GLuint *framebuffers) \
+	GLE(GLenum, CheckFramebufferStatus, GLenum target) \
+	GLE(void, FramebufferTexture2D, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) \
+	GLE(void, FramebufferRenderbuffer, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) \
+	GLE(void, GenerateMipmap, GLenum target) \
+	GLE(void, BlitFramebuffer, GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) \
+	GLE(void, RenderbufferStorageMultisample, GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) \
 
-// GL_EXT_framebuffer_blit
-#define QGL_EXT_framebuffer_blit_PROCS \
-	GLE(void, BlitFramebufferEXT, GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) \
-
-#ifndef GL_EXT_framebuffer_blit
-#define GL_EXT_framebuffer_blit
-#define GL_READ_FRAMEBUFFER_EXT                0x8CA8
-#define GL_DRAW_FRAMEBUFFER_EXT                0x8CA9
-#define GL_DRAW_FRAMEBUFFER_BINDING_EXT        0x8CA6
-#define GL_READ_FRAMEBUFFER_BINDING_EXT        0x8CAA
-#endif
-
-// GL_EXT_framebuffer_multisample
-#define QGL_EXT_framebuffer_multisample_PROCS \
-	GLE(void, RenderbufferStorageMultisampleEXT, GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) \
-
-#ifndef GL_EXT_framebuffer_multisample
-#define GL_EXT_framebuffer_multisample
-#define GL_RENDERBUFFER_SAMPLES_EXT                0x8CAB
-#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT  0x8D56
-#define GL_MAX_SAMPLES_EXT                         0x8D57
-#endif
+// GL_ARB_vertex_array_object, built-in to OpenGL 3.0
+#define QGL_ARB_vertex_array_object_PROCS \
+	GLE(void, BindVertexArray, GLuint array) \
+	GLE(void, DeleteVertexArrays, GLsizei n, const GLuint *arrays) \
+	GLE(void, GenVertexArrays, GLsizei n, GLuint *arrays) \
 
 #ifndef GL_ARB_texture_compression_rgtc
 #define GL_ARB_texture_compression_rgtc
@@ -604,17 +280,6 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 #define GL_TEXTURE_CUBE_MAP_SEAMLESS               0x884F
 #endif
 
-// GL_ARB_vertex_array_object
-#define QGL_ARB_vertex_array_object_PROCS \
-	GLE(void, BindVertexArray, GLuint array) \
-	GLE(void, DeleteVertexArrays, GLsizei n, const GLuint *arrays) \
-	GLE(void, GenVertexArrays, GLsizei n, GLuint *arrays) \
-
-#ifndef GL_ARB_vertex_array_object
-#define GL_ARB_vertex_array_object
-#define GL_VERTEX_ARRAY_BINDING_ARB                0x85B5
-#endif
-
 // GL_EXT_direct_state_access
 #define QGL_EXT_direct_state_access_PROCS \
 	GLE(GLvoid, BindMultiTextureEXT, GLenum texunit, GLenum target, GLuint texture) \
@@ -640,16 +305,21 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 	GLE(GLvoid, NamedFramebufferRenderbufferEXT, GLuint framebuffer, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) \
 
 #define GLE(ret, name, ...) typedef ret APIENTRY name##proc(__VA_ARGS__); extern name##proc * qgl##name;
-QGL_1_2_PROCS;
+QGL_1_1_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_ES_1_1_PROCS;
 QGL_1_3_PROCS;
-QGL_1_4_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
-QGL_EXT_framebuffer_object_PROCS;
-QGL_EXT_framebuffer_blit_PROCS;
-QGL_EXT_framebuffer_multisample_PROCS;
+QGL_3_0_PROCS;
+QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_array_object_PROCS;
 QGL_EXT_direct_state_access_PROCS;
 #undef GLE
+
+extern int qglMajorVersion, qglMinorVersion;
+extern int qglesMajorVersion, qglesMinorVersion;
+#define QGL_VERSION_ATLEAST( major, minor ) ( qglMajorVersion > major || ( qglMajorVersion == major && qglMinorVersion >= minor ) )
+#define QGLES_VERSION_ATLEAST( major, minor ) ( qglesMajorVersion > major || ( qglesMajorVersion == major && qglesMinorVersion >= minor ) )
 
 #endif
