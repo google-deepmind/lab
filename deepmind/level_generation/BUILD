@@ -7,9 +7,9 @@ sh_binary(
     name = "compile_map_sh",
     srcs = ["compile_map.sh"],
     data = [
+        "//:assets_oa_pk3",
         "//:assets_pk3",
         "//:bspc",
-        "//:non_pk3_assets",
         "//q3map2",
     ],
     visibility = ["//visibility:public"],

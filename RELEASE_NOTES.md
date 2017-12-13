@@ -9,5 +9,9 @@
 
 ### Minor Improvements:
 
+1.  Remove unnecessary dependency of map assets on Lua scripts, preventing
+    time-consuming rebuilding of maps when scripts are modified.
+
+### Bug Fixes:
 
 ## release-2016-12-06 Initial release
