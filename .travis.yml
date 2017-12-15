@@ -1,0 +1,34 @@
+# Runs Bazel tests for DeepMind Lab
+
+env:
+  - BUILD_TYPE=osmesa
+
+sudo: true
+
+language: c++
+
+addons:
+  apt:
+    packages:
+      - lua5.1
+      - liblua5.1-0-dev
+      - libffi-dev
+      - gettext
+      - freeglut3-dev
+      - libsdl2-dev
+      - libosmesa6-dev
+      - python-dev
+      - python-numpy
+      - realpath
+
+before_install:
+  - curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+  - echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+  - sudo add-apt-repository -y ppa:webupd8team/java
+  - sudo apt-get update
+  - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+  - echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+  - sudo apt-get install bazel
+
+script:
+  - bazel test -c opt --show_progress_rate_limit 300 //... --define headless=osmesa
