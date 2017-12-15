@@ -639,7 +639,12 @@ genrule(
     cmd = "cp -t $(@D)/baselab $(SRCS); " +
           "for s in $(SRCS); do " +
           "  BM=$$(basename $${s}); M=$${BM/.map/}; " +
-          "  $(location //deepmind/level_generation:compile_map_sh).runfiles/org_deepmind_lab/deepmind/level_generation/compile_map_sh $(@D)/baselab/$${M}; " +
+          "  if $(location //deepmind/level_generation:compile_map_sh).runfiles/org_deepmind_lab/deepmind/level_generation/compile_map_sh" +
+          "      $(@D)/baselab/$${M} > $(@D)/out.tmp 2> $(@D)/err.tmp; then " +
+          "    echo \"Built map $${M}\"; " +
+          "  else " +
+          "    echo -e \"Error building map $${M}:\n$$(<$(@D)/out.tmp)\n$$(<$(@D)/err.tmp)\"; " +
+          "  fi; " +
           "done",
     tools = [
         "//:bspc",
