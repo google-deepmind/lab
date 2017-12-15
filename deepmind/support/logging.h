@@ -118,6 +118,10 @@ enum class LogLevel {
 LogMessage LogStream(std::integral_constant<LogLevel, LogLevel::kNonFatal>);
 LogMessageFatal LogStream(std::integral_constant<LogLevel, LogLevel::kFatal>);
 
+struct Voidify {
+  void operator&(std::ostream&) {}
+};
+
 }  // namespace internal
 }  // namespace deepmind
 
@@ -164,5 +168,13 @@ LogMessageFatal LogStream(std::integral_constant<LogLevel, LogLevel::kFatal>);
   (__FILE__, __LINE__).stream()
 
 #define VLOG(level) ::deepmind::internal::NullStream()
+
+#define LOG_IF(level, condition)                                               \
+  !(condition)                                                                 \
+      ? static_cast<void>(0)                                                   \
+      : ::deepmind::internal::Voidify() &                                      \
+        decltype(::deepmind::internal::LogStream(                              \
+            std::integral_constant<::deepmind::internal::LogLevel, level>()))  \
+            (__FILE__, __LINE__).stream()
 
 #endif  // DEEPMIND_SUPPORT_LOGGING_H
