@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -280,10 +280,15 @@ int main (int argc, char **argv)
 	myargv = argv;
 
 	start_time = I_FloatTime();
-
-	Log_Open("bspc.log");		//open a log file
-	Log_Print("BSPC version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
-
+	for (i = 1; i < argc; i++)
+	{
+		if (!stricmp(argv[i], "-logFile"))
+		{
+			if (i + 1 >= argc) { break; }
+			Log_Open(argv[i + 1]);		//open a log file
+			Log_Print("BSPC version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
+		} //end if
+	}
 	DefaultCfg();
 	for (i = 1; i < argc; i++)
 	{
@@ -292,6 +297,11 @@ int main (int argc, char **argv)
 			if (i + 1 >= argc) {i = 0; break;}
 			numthreads = atoi(argv[++i]);
 			Log_Print("threads = %d\n", numthreads);
+		} //end if
+		else if (!stricmp(argv[i], "-logFile"))
+		{
+			if (i + 1 >= argc) {i = 0; break;}
+			++i;  // Already processed.
 		} //end if
 		else if (!stricmp(argv[i], "-noverbose"))
 		{
