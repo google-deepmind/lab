@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -684,8 +684,13 @@ qboolean AAS_GetPlane(vec3_t normal, vec_t dist, int *planenum)
 {
 	aas_plane_t *plane, temp;
 
-	//if (AAS_FindPlane(normal, dist, planenum)) return true;
-	if (AAS_FindHashedPlane(normal, dist, planenum)) return true;
+	// NOTE: DeepMind change: re-enabled linear search over hashed search.
+	// Rationale: we found that the hashed search is broken in some
+	// circumstances, and that instead of offering any speedup, it is
+	// actually slightly slowing us down. It's possible that our grid-like
+	// maps cause numerous collisions in the hash table.
+	if (AAS_FindPlane(normal, dist, planenum)) return true;
+	// if (AAS_FindHashedPlane(normal, dist, planenum)) return true;
 
 	if (aasworld.numplanes >= max_aas.max_planes-1)
 	{
