@@ -76,10 +76,11 @@ woven in by Terry Thorsen 1/2003.
 #define SIZECENTRALDIRITEM (0x2e)
 #define SIZEZIPLOCALHEADER (0x1e)
 
+/* The callers never check for CRC errors, so the crc32 doesn't need to be calculated: */
+// #define CHECK_CRC32_HASH
 
 
-
-const char unz_copyright[] =
+static const char unz_copyright[] =
    " unzip 1.01 Copyright 1998-2004 Gilles Vollant - http://www.winimage.com/zLibDll";
 
 
@@ -1272,9 +1273,12 @@ extern int ZEXPORT unzReadCurrentFile  (file, buf, len)
                 *(pfile_in_zip_read_info->stream.next_out+i) =
                         *(pfile_in_zip_read_info->stream.next_in+i);
 
+#ifdef CHECK_CRC32_HASH
             pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32,
                                 pfile_in_zip_read_info->stream.next_out,
                                 uDoCopy);
+#endif
+
             pfile_in_zip_read_info->rest_read_uncompressed-=uDoCopy;
             pfile_in_zip_read_info->stream.avail_in -= uDoCopy;
             pfile_in_zip_read_info->stream.avail_out -= uDoCopy;
@@ -1307,9 +1311,13 @@ extern int ZEXPORT unzReadCurrentFile  (file, buf, len)
             uTotalOutAfter = pfile_in_zip_read_info->stream.total_out;
             uOutThis = uTotalOutAfter-uTotalOutBefore;
 
+#ifdef CHECK_CRC32_HASH
             pfile_in_zip_read_info->crc32 =
                 crc32(pfile_in_zip_read_info->crc32,bufBefore,
                         (uInt)(uOutThis));
+#else
+            (void)bufBefore;
+#endif
 
             pfile_in_zip_read_info->rest_read_uncompressed -=
                 uOutThis;
@@ -1451,14 +1459,14 @@ extern int ZEXPORT unzCloseCurrentFile (file)
     if (pfile_in_zip_read_info==NULL)
         return UNZ_PARAMERROR;
 
-
+#ifdef CHECK_CRC32_HASH
     if ((pfile_in_zip_read_info->rest_read_uncompressed == 0) &&
         (!pfile_in_zip_read_info->raw))
     {
         if (pfile_in_zip_read_info->crc32 != pfile_in_zip_read_info->crc32_wait)
             err=UNZ_CRCERROR;
     }
-
+#endif
 
     TRYFREE(pfile_in_zip_read_info->read_buffer);
     pfile_in_zip_read_info->read_buffer = NULL;
