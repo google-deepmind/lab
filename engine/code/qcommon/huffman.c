@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -424,6 +424,13 @@ void Huff_Compress(msg_t *mbuf, int offset) {
 		ch = buffer[i];
 		Huff_transmit(&huff, ch, seq, size<<3);						/* Transmit symbol */
 		Huff_addRef(&huff, (byte)ch);								/* Do update */
+	}
+
+	// When encoding finishes at a byte boundary, the final memcpy is actually
+	// sending an extra byte of junk data. We need to manually set this byte,
+	// otherwise we are sending uninitialized data.
+	if (bloc % 8 == 0) {
+		seq[bloc / 8] = 0;
 	}
 
 	bloc += 8;												// next byte

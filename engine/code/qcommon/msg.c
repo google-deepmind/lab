@@ -169,6 +169,9 @@ void MSG_WriteBits( msg_t *msg, int value, int bits ) {
 			}
 		}
 		msg->cursize = (msg->bit >> 3) + 1;
+		if (msg->bit % 8 == 0) {
+			msg->data[msg->bit / 8] = 0;
+		}
 	}
 }
 
