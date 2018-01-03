@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------------
 
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -343,6 +343,9 @@ int CopyLump( bspHeader_t *header, int lump, void *dest, int size ){
 
 void AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, int length ){
 	bspLump_t   *lump;
+	char pad[3] = {'\0', '\0', '\0'};
+	unsigned int lengthU = length;
+	unsigned int padLength = ((lengthU + 3) / 4) * 4 - lengthU;
 
 
 	/* add lump to bsp file header */
@@ -351,7 +354,10 @@ void AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, in
 	lump->length = LittleLong( length );
 
 	/* write lump to file */
-	SafeWrite( file, data, ( length + 3 ) & ~3 );
+	SafeWrite( file, data, length );
+	if ( padLength != 0 ) {
+		SafeWrite( file, pad, padLength );
+	}
 }
 
 

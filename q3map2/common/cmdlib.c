@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -54,7 +54,7 @@
 void *safe_malloc( size_t size ){
 	void *p;
 
-	p = malloc( size );
+	p = calloc( size, 1 );
 	if ( !p ) {
 		Error( "safe_malloc failed on allocation of %i bytes", size );
 	}
@@ -65,7 +65,7 @@ void *safe_malloc( size_t size ){
 void *safe_malloc_info( size_t size, char* info ){
 	void *p;
 
-	p = malloc( size );
+	p = calloc( size, 1 );
 	if ( !p ) {
 		Error( "%s: safe_malloc failed on allocation of %i bytes", info, size );
 	}

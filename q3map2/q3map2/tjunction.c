@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------------
 
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -400,6 +400,7 @@ void FixSurfaceJunctions( mapDrawSurface_t *ds ) {
 				if ( numVerts == MAX_SURFACE_VERTS ) {
 					Error( "MAX_SURFACE_VERTS" );
 				}
+				memset(&verts[ numVerts ], 0, sizeof(verts[ numVerts ]));
 
 				/* take the exact intercept point */
 				VectorCopy( p->xyz, verts[ numVerts ].xyz );

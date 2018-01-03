@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -18,6 +18,8 @@
    along with GtkRadiant; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <stdint.h>
 
 #ifndef _WIN32
 // The below define is necessary to use
@@ -551,7 +553,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 		for ( i = 0 ; i < numthreads ; i++ )
 		{
 			/* Default pthread attributes: joinable & non-realtime scheduling */
-			if ( pthread_create( &work_threads[i], NULL, (void*)func, (void*)i ) != 0 ) {
+			if ( pthread_create( &work_threads[i], NULL, (void*)func, (void*)(uintptr_t)i ) != 0 ) {
 				Error( "pthread_create failed" );
 			}
 		}
