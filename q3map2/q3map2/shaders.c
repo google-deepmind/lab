@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------------
 
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -657,9 +657,10 @@ static shaderInfo_t *AllocShaderInfo( void ){
 
 void FinishShader( shaderInfo_t *si ){
 	int x, y;
-	float st[ 2 ], o[ 2 ], dist, bestDist;
-	vec4_t color, bestColor, delta;
-
+	float dist, bestDist;
+	vec4_t color, bestColor, delta, average;
+	int image_width, image_height;
+	byte *current_pixel;
 
 	/* don't double-dip */
 	if ( si->finished ) {
@@ -680,26 +681,33 @@ void FinishShader( shaderInfo_t *si ){
 		VectorSet( si->vecs[ 1 ], 0, ( 1.0f / ( si->shaderHeight * 0.5f ) ), 0 );
 	}
 
+	current_pixel = si->shaderImage->pixels;
+	image_width = si->shaderImage->width;
+	image_height = si->shaderImage->height;
+
 	/* find pixel coordinates best matching the average color of the image */
 	bestDist = 99999999;
-	o[ 0 ] = 1.0f / si->shaderImage->width;
-	o[ 1 ] = 1.0f / si->shaderImage->height;
-	for ( y = 0, st[ 1 ] = 0.0f; y < si->shaderImage->height; y++, st[ 1 ] += o[ 1 ] )
+	VectorCopy( si->averageColor, average );
+	average[ 3 ] = si->averageColor[ 3 ];
+
+	for ( y = 0; y < image_height; y++ )
 	{
-		for ( x = 0, st[ 0 ] = 0.0f; x < si->shaderImage->width; x++, st[ 0 ] += o[ 0 ] )
+		for ( x = 0; x < image_width; x++ )
 		{
 			/* sample the shader image */
-			RadSampleImage( si->shaderImage->pixels, si->shaderImage->width, si->shaderImage->height, st, color );
+			VectorCopy( current_pixel, color );
+			color[ 3 ] = current_pixel[ 3 ];
+			current_pixel += 4;
 
 			/* determine error squared */
-			VectorSubtract( color, si->averageColor, delta );
-			delta[ 3 ] = color[ 3 ] - si->averageColor[ 3 ];
+			VectorSubtract( color, average, delta );
+			delta[ 3 ] = color[ 3 ] - average[ 3 ];
 			dist = delta[ 0 ] * delta[ 0 ] + delta[ 1 ] * delta[ 1 ] + delta[ 2 ] * delta[ 2 ] + delta[ 3 ] * delta[ 3 ];
 			if ( dist < bestDist ) {
 				VectorCopy( color, bestColor );
 				bestColor[ 3 ] = color[ 3 ];
-				si->stFlat[ 0 ] = st[ 0 ];
-				si->stFlat[ 1 ] = st[ 1 ];
+				si->stFlat[ 0 ] = (float) x / image_width;
+				si->stFlat[ 1 ] = (float) y / image_height;
 			}
 		}
 	}
