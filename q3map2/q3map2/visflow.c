@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------------
 
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2017 Google Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -116,16 +116,15 @@ fixedWinding_t *AllocStackWinding( pstack_t *stack ){
 void FreeStackWinding( fixedWinding_t *w, pstack_t *stack ){
 	int i;
 
-	i = w - stack->windings;
-
-	if ( i < 0 || i > 2 ) {
-		return;     // not from local
-
+	for (i = 0; i < sizeof(stack->windings) / sizeof(stack->windings[0]); i++) {
+		if (w == &stack->windings[i]) {
+			if ( stack->freewindings[i] ) {
+				Error( "FreeStackWinding: already free" );
+			}
+			stack->freewindings[i] = 1;
+			break;
+		}
 	}
-	if ( stack->freewindings[i] ) {
-		Error( "FreeStackWinding: allready free" );
-	}
-	stack->freewindings[i] = 1;
 }
 
 /*
