@@ -15,4 +15,6 @@
 
 ### Bug Fixes:
 
+1.  Increase current score storage from short to long.
+
 ## release-2016-12-06 Initial release
