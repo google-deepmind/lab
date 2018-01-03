@@ -1,5 +1,6 @@
 local pickups = {}
 
+-- Must match itemType_t in engine/code/game/bg_public.h.
 pickups.type = {
     kInvalid = 0,
     kWeapon = 1,
@@ -12,6 +13,12 @@ pickups.type = {
     kTeam = 8,
     kReward = 9,
     kGoal = 10
+}
+
+-- Must match reward_mv_t in engine/code/game/bg_public.h.
+pickups.move_type = {
+    kBob = 0,
+    kStatic = 1
 }
 
 pickups.defaults = {

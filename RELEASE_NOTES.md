@@ -11,6 +11,7 @@
 
 1.  Remove unnecessary dependency of map assets on Lua scripts, preventing
     time-consuming rebuilding of maps when scripts are modified.
+2.  Add ability to disable bobbing of reward and goal pickups.
 
 ### Bug Fixes:
 

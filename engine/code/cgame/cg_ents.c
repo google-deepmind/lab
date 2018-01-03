@@ -232,6 +232,7 @@ static void CG_Item( centity_t *cent ) {
 	float			frac;
 	float			scale;
 	weaponInfo_t	*wi;
+	it_reward_mv_t	movementType;
 
 	es = &cent->currentState;
 	if ( es->modelindex >= bg_numItems ) {
@@ -258,19 +259,28 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-	// items bob up and down continuously
-	scale = 0.005 + cent->currentState.number * 0.00001;
-	cent->lerpOrigin[2] += 4 + cos( ( cg.time + 1000 ) *  scale ) * 4;
+	movementType = REWARD_MV_BOB;
+	if ( item->giType == IT_REWARD || item->giType == IT_GOAL ) {
+		movementType = cent->currentState.generic1;
+	}
 
-	memset (&ent, 0, sizeof(ent));
+	memset( &ent, 0, sizeof( ent ) );
 
-	// autorotate at one of two speeds
-	if ( item->giType == IT_HEALTH ) {
-		VectorCopy( cg.autoAnglesFast, cent->lerpAngles );
-		AxisCopy( cg.autoAxisFast, ent.axis );
+	if ( movementType == REWARD_MV_BOB ) {
+		// items bob up and down continuously
+		scale = 0.005 + cent->currentState.number * 0.00001;
+		cent->lerpOrigin[2] += 4 + cos( ( cg.time + 1000 ) *  scale ) * 4;
+		// autorotate at one of two speeds
+		if ( item->giType == IT_HEALTH ) {
+			VectorCopy( cg.autoAnglesFast, cent->lerpAngles );
+			AxisCopy( cg.autoAxisFast, ent.axis );
+		} else {
+			VectorCopy( cg.autoAngles, cent->lerpAngles );
+			AxisCopy( cg.autoAxis, ent.axis );
+		}
 	} else {
-		VectorCopy( cg.autoAngles, cent->lerpAngles );
-		AxisCopy( cg.autoAxis, ent.axis );
+		cent->lerpOrigin[2] += 4;
+		AnglesToAxis( es->angles, ent.axis );
 	}
 
 	wi = NULL;

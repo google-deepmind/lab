@@ -623,6 +623,11 @@ typedef enum {
 	IT_GOAL
 } itemType_t;
 
+typedef enum {
+	REWARD_MV_BOB,			// bob 4 units above ground
+	REWARD_MV_STATIC		// stay still
+} it_reward_mv_t;
+
 #define MAX_ITEM_MODELS 4
 
 typedef struct gitem_s {
