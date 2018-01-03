@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------------
 
-   Copyright (C) 1999-2007 id Software, Inc. and contributors.
+   Copyright (C) 1999-2007 id Software, Inc., 2016 Google Inc. and contributors
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
    This file is part of GtkRadiant.
@@ -529,7 +529,6 @@ void LoadIBSPFile( const char *filename ){
 void WriteIBSPFile( const char *filename ){
 	ibspHeader_t outheader, *header;
 	FILE            *file;
-	time_t t;
 	char marker[ 1024 ];
 	int size;
 
@@ -549,8 +548,7 @@ void WriteIBSPFile( const char *filename ){
 	SafeWrite( file, (bspHeader_t*) header, sizeof( *header ) );    /* overwritten later */
 
 	/* add marker lump */
-	time( &t );
-	sprintf( marker, "I LOVE MY Q3MAP2 %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
+	sprintf( marker, "I LOVE MY Q3MAP2 %s)", Q3MAP_VERSION );
 	AddLump( file, (bspHeader_t*) header, 0, marker, strlen( marker ) + 1 );
 
 	/* add lumps */
