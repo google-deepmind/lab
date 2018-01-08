@@ -1086,7 +1086,7 @@ static void ParseRawBrush( qboolean onlyLights ){
 		side->planenum = planenum;
 
 		/* bp: get the texture mapping for this texturedef / plane combination */
-		if ( g_bBrushPrimit == BPRIMIT_OLDBRUSHES ) {
+		if ( g_bBrushPrimit == BPRIMIT_OLDBRUSHES && planenum != -1 ) {
 			QuakeTextureVecs( &mapplanes[ planenum ], shift, rotate, scale, side->vecs );
 		}
 	}
