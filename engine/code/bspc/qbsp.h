@@ -140,7 +140,7 @@ typedef struct bspbrush_s
 	int			side, testside;		// side of node during construction
 	mapbrush_t	*original;
 	int			numsides;
-	side_t		sides[6];			// variably sized
+	side_t		sides[];
 } bspbrush_t;	//sizeof(bspbrush_t) = 44 + numsides * sizeof(side_t)
 //bsp node
 typedef struct node_s

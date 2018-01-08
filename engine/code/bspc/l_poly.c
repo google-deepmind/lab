@@ -71,7 +71,7 @@ winding_t *AllocWinding (int points)
 	winding_t	*w;
 	int			s;
 
-	s = sizeof(*w) + (points > 4 ? sizeof(vec3_t)*(points-4) : 0);
+	s = sizeof(*w) + sizeof(*w->p) * points;
 	w = GetMemory(s);
 	memset(w, 0, s);
 
@@ -157,7 +157,7 @@ void RemoveColinearPoints (winding_t *w)
 	if (numthreads == 1)
 		c_removed += w->numpoints - nump;
 	w->numpoints = nump;
-	memcpy (w->p, p, nump*sizeof(p[0]));
+	memcpy (w->p, p, nump * sizeof(*w->p));
 }
 
 /*
@@ -325,7 +325,7 @@ winding_t *CopyWinding (winding_t *w)
 	winding_t	*c;
 
 	c = AllocWinding (w->numpoints);
-	size = sizeof(*w) + (w->numpoints > 4 ? sizeof(vec3_t)*(w->numpoints-4) : 0);
+	size = sizeof(*w) + sizeof(*w->p) * w->numpoints;
 	memcpy (c, w, size);
 	return c;
 }
