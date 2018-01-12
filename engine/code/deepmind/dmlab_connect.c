@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../../../deepmind/include/deepmind_context.h"
 #include "../../../public/dmlab.h"
@@ -154,7 +155,7 @@ static int total_engine_time_msec(void* context) {
 }
 
 // Return 0 iff successful.
-static int parse_int(const char* s, long int* out) {
+static int parse_int(const char* s, long int* out, DeepmindContext* ctx) {
   errno = 0;
   char* e;
   long int val = strtol(s, &e, 0);
@@ -162,12 +163,14 @@ static int parse_int(const char* s, long int* out) {
     *out = val;
     return 0;
   } else {
+    ctx->hooks.set_error_message(ctx->userdata,
+                                 va("Invalid int setting %s\n", s));
     return -1;
   }
 }
 
 // Return 0 iff successful.
-static int parse_double(const char* s, double* out) {
+static int parse_double(const char* s, double* out, DeepmindContext* ctx) {
   errno = 0;
   char* e;
   long int val = strtod(s, &e);
@@ -175,6 +178,25 @@ static int parse_double(const char* s, double* out) {
     *out = val;
     return 0;
   } else {
+    ctx->hooks.set_error_message(ctx->userdata,
+                                 va("Invalid double arg %s\n", s));
+    return -1;
+  }
+}
+
+// Return 0 iff successful.
+static int parse_bool(const char* s, bool* out, DeepmindContext* ctx) {
+  if (strcmp(s, "true") == 0) {
+    *out = true;
+    return 0;
+  } else if (strcmp(s, "false") == 0) {
+    *out = false;
+    return 0;
+  } else {
+    ctx->hooks.set_error_message(ctx->userdata,
+                                 va("Invalid boolean arg must be either "
+                                    "\"true\" or \"false\"; actual \"%s\"\n",
+                                    s));
     return -1;
   }
 }
@@ -209,48 +231,55 @@ DeepmindContext* dmlab_context(void) {
 
 // **** RL Environment implementation **** //
 
+static const char* dmlab_error_message(void* context) {
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return ctx->hooks.error_message(ctx->userdata);
+}
+
 static int dmlab_setting(void* context, const char* key, const char* value) {
   GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
 
   if (gc->init_called) {
-    fputs(
-        "'init' has already been called. No further settings can be applied.\n",
-        stderr);
+    ctx->hooks.set_error_message(ctx->userdata,
+                                 "'init' has already been called. No further "
+                                 "settings can be applied.\n");
+
     return 1;
   }
 
-  DeepmindContext* ctx = gc->dm_ctx;
   long int v;
   double v_double;
+  bool v_bool;
 
   if (strcmp(key, "levelName") == 0) {
     return ctx->hooks.set_script_name(ctx->userdata, value);
   } else if (strcmp(key, "width") == 0) {
-    int res = parse_int(value, &v);
+    int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
     gc->width = v;
   } else if (strcmp(key, "height") == 0) {
-    int res = parse_int(value, &v);
+    int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
     gc->height = v;
   } else if (strcmp(key, "fps") == 0) {
-    int res = parse_double(value, &v_double);
+    int res = parse_double(value, &v_double, ctx);
     if (res != 0) return res;
     if (v_double > 0) {
       gc->engine_frame_period_msec =
           (int)((kEngineTimePerExternalTime * 1000.0 / v_double) + 0.5);
     }
   } else if(strcmp(key, "logToStdErr") == 0) {
-    if (strcmp(value, "true") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    if (v_bool) {
       fputs("logToStdErr: \"true\"\n", stderr);
       Q_strcat(gc->command_line, sizeof(gc->command_line),
                " +set com_logToStdErr 1");
-    } else if (strcmp(value, "false") == 0) {
+    } else {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
                " +set com_logToStdErr 0");
-    } else {
-      fputs("logToStdErr must be either \"true\" or \"false\"\n", stderr);
-      return 1;
     }
   } else if (strcmp(key, "controls") == 0) {
     if (strcmp(value, "internal") == 0) {
@@ -645,6 +674,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->setting = dmlab_setting;
   env_c_api->init = dmlab_init;
   env_c_api->start = dmlab_start;
+  env_c_api->error_message = dmlab_error_message;
   env_c_api->environment_name = dmlab_environment_name;
   env_c_api->action_discrete_count = dmlab_action_discrete_count;
   env_c_api->action_discrete_name = dmlab_action_discrete_name;

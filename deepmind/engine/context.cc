@@ -61,6 +61,14 @@ static int start(void* userdata, int episode, int seed) {
   return static_cast<Context*>(userdata)->Start(episode, seed);
 }
 
+static const char* error_message(void* userdata) {
+  return static_cast<Context*>(userdata)->ErrorMessage();
+}
+
+static void set_error_message(void* userdata, const char* error_message) {
+  static_cast<Context*>(userdata)->SetErrorMessage(error_message);
+}
+
 static const char* replace_command_line(void* userdata,
                                         const char* old_commandline) {
   return static_cast<Context*>(userdata)->GetCommandLine(old_commandline);
@@ -334,6 +342,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_script_name = set_script_name;
   hooks->start = start;
   hooks->init = init;
+  hooks->error_message = error_message;
+  hooks->set_error_message = set_error_message;
   hooks->replace_command_line = replace_command_line;
   hooks->next_map = next_map;
   hooks->run_lua_snippet = run_lua_snippet;

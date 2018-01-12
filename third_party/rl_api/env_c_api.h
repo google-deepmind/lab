@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2016-2017 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@
 #define DEEPMIND_ENV_C_API_H_
 
 #define DEEPMIND_ENV_C_API_VERSION_MAJOR 1
-#define DEEPMIND_ENV_C_API_VERSION_MINOR 0
+#define DEEPMIND_ENV_C_API_VERSION_MINOR 2
 
 #include <stdbool.h>
 
@@ -77,13 +77,13 @@ typedef struct EnvCApi_Observation_s EnvCApi_Observation;
 typedef struct EnvCApi_Event_s EnvCApi_Event;
 
 // The status of an environment. This status changes as the environment evolves.
-// If the status is not 'EnvCApi_EnvironmentStatus_Running' or
-// 'EnvCApi_EnvironmentStatus_Interrupted' the environment has to be reset
-// before further use, or destroyed.
+// The meaning of the status values is as follows, but see also the "Run loop"
+// section below for details.
 //
-// If the status is 'EnvCApi_EnvironmentStatus_Interrupted' 'act' and 'advance'
-// can no longer be called.
-// See below for details.
+// * Running:     An episode is currently running. Actions can be taken.
+// * Terminated:  An episode has reached a terminal state and has thus ended.
+// * Interrupted: A running episode has ended without reaching a terminal state.
+// * Error:       An error has occurred, the episode is no longer active.
 enum EnvCApi_EnvironmentStatus_enum {
   EnvCApi_EnvironmentStatus_Running,
   EnvCApi_EnvironmentStatus_Interrupted,
@@ -95,14 +95,17 @@ typedef enum EnvCApi_EnvironmentStatus_enum EnvCApi_EnvironmentStatus;
 // The fundamental data type of an observation; part of the observation spec.
 enum EnvCApi_ObservationType_enum {
   EnvCApi_ObservationDoubles,
-  EnvCApi_ObservationBytes
+  EnvCApi_ObservationBytes,
+  EnvCApi_ObservationString
 };
 typedef enum EnvCApi_ObservationType_enum EnvCApi_ObservationType;
 
-// An observation is a multidimensional array of numbers. The data type of the
-// numbers is described by "type" (int or double). The data is serialized as a
+// An observation is either a string or a multidimensional array of numbers. The
+// data type of the numbers is described by "type". The data is serialized as a
 // flat array of size shape[0] * shape[1] * ... * shape[dims - 1], laid out in
-// strides in row-major (C-style) order.
+// strides in row-major (C-style) order. If the "type" is
+// "EnvCApi_ObservationString" then the "dims" shall be 1 and "shape[0]" the
+// length of the string.
 struct EnvCApi_ObservationSpec_s {
   EnvCApi_ObservationType type;
   int dims;
@@ -115,6 +118,7 @@ struct EnvCApi_Observation_s {
   union {
     const double* doubles;
     const unsigned char* bytes;
+    const char* string;
   } payload;
 };
 
@@ -156,20 +160,25 @@ struct EnvCApi_s {
 
   // Applies a setting to the environment. Can be called multiple times. If the
   // same key is used more than once, the last key-value pair is used. This
-  // function shall only be called before init, and it shall return zero
-  // on success and non-zero on failure.
+  // function shall only be called before 'init', and it shall return zero
+  // on success and non-zero on failure. On failure an associated error message
+  // maybe retrieved by calling 'error_message'.
   int (*setting)(void* context, const char* key, const char* value);
 
-  // Shall be called after all calls to setting and before init. It shall return
-  // zero on success and non-zero on failure. Most functions from this API shall
-  // only be called after a successful call of init; see their individual
-  // documentation.
+  // Shall be called after all calls of 'setting' and before 'start'. It shall
+  // return zero on success and non-zero on failure. Most functions from this
+  // API shall only be called after a successful call of 'init'; see their
+  // individual documentation. On failure an associated error message
+  // maybe retrieved by calling 'error_message'.
   int (*init)(void* context);
 
-  // Launches an episode using 'episode_id' and 'seed'. Returns zero on success
-  // and non-zero on failure. Some functions from this API shall only be called
-  // after a successful call of start; see their individual documentation.
-  // This function shall only be called after a successful call of init.
+  // Launches an episode using 'episode_id' and 'seed'. Returns zero on success,
+  // or EAGAIN (from <errno.h>), or any other non-zero value on failure. If
+  // EAGAIN is returned, this function may be called again until successful.
+  // Some functions from this API shall only be called after a successful call
+  // of 'start'; see their individual documentation. On failure an associated
+  // error message maybe retrieved by calling 'error_message'.
+  // This function shall only be called after a successful call of 'init'.
   int (*start)(void* context, int episode_id, int seed);
 
   // Releases the resources associated with 'context', which shall not be used
@@ -177,12 +186,17 @@ struct EnvCApi_s {
   // is created, only how it is destroyed.)
   void (*release_context)(void* context);
 
+  // Returns an error message associated with a failed call.
+  // Shall only be called immediately a failed call to 'setting', 'init',
+  // 'start' or 'advance'.
+  const char* (*error_message)(void* context);
+
   // Meta data querying
   /////////////////////
   //
   // Functions in this section shall only be called after a successful call of
-  // init, but beyond that they may be called at any time, regardless of whether
-  // start has been called or whether the episode has terminated.
+  // 'init', but beyond that they may be called at any time, regardless of
+  // whether 'start' has been called or whether the episode has terminated.
 
   // Name of the environment.
   const char* (*environment_name)(void* context);
@@ -251,7 +265,7 @@ struct EnvCApi_s {
   ///////////
   //
   // Functions in this section shall only be called after a successful call of
-  // start. Moreover, if 'advance' is called, no further function from this
+  // 'start'. Moreover, if 'advance' is called, no further function from this
   // section shall be called unless the returned status was "Running".
 
   // Writes the observation at the given index to '*obs'
@@ -288,7 +302,8 @@ struct EnvCApi_s {
   // The reward accrued during this call shall be stored in '*reward' (even if
   // it is zero). The return value describes the new status of the environment.
   // If it is anything other than "Running", the episode is over, and 'start'
-  // needs to be called to start a new episode.
+  // needs to be called to start a new episode. If the returned status was
+  // Error, an associated message maybe retrieved by calling 'error_message'.
   EnvCApi_EnvironmentStatus (*advance)(void* context, int num_steps,
                                        double* reward);
 };

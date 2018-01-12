@@ -3,10 +3,19 @@
 
 licenses(["notice"])  # Apache 2.0 (Google-authored)
 
+exports_files(["LICENSE"])
+
 cc_library(
     name = "env_c_api",
     hdrs = ["env_c_api.h"],
     visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "env_c_api_bind",
+    hdrs = ["env_c_api_bind.h"],
+    visibility = ["//visibility:public"],
+    deps = [":env_c_api"],
 )
 
 cc_binary(
@@ -19,9 +28,9 @@ cc_binary(
     ],
     linkshared = 1,
     linkstatic = 1,
-    visibility = ["//visibility:public"],
     deps = [
         ":env_c_api",
+        ":env_c_api_bind",
         ":env_c_api_example.lds",
     ],
 )

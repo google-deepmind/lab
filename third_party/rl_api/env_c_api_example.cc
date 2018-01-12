@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2016-2017 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,14 @@
 #include <cassert>
 #include <cstdlib>
 #include <functional>
+#include <memory>
+#include <string>
 
 #include "third_party/rl_api/env_c_api.h"
+#include "third_party/rl_api/env_c_api_bind.h"
 
 namespace {
+
 const int kDiscreteActionCount = 2;
 const char* const kDiscreteActionNames[] = {"PADX", "PADY"};
 
@@ -37,28 +41,36 @@ const struct {
   double max_value;
 } kContinuousActionBounds[] = {{-1.0, 1.0}};
 
-const int kObservationCount = 2;
-enum ObservationTypes { ObservationTypes_Bytes, ObservationTypes_Doubles };
-const char* const kObservationNames[] = {"BYTES", "DOUBLES"};
+const int kObservationCount = 3;
+enum ObservationTypes {
+  ObservationTypes_Bytes,
+  ObservationTypes_Doubles,
+  ObservationTypes_String
+};
+
+const char* const kObservationNames[] = {"BYTES", "DOUBLES", "STRING"};
 
 const int kObservationBytesDim[] = {10, 2};
 const int kObservationDoublesDim[] = {7};
+const int kObservationStringDim[] = {0};
 
 const EnvCApi_ObservationSpec kObservationSpecs[] = {
     {EnvCApi_ObservationBytes, 2, kObservationBytesDim},
-    {EnvCApi_ObservationDoubles, 1, kObservationDoublesDim}};
+    {EnvCApi_ObservationDoubles, 1, kObservationDoublesDim},
+    {EnvCApi_ObservationString, 1, kObservationStringDim}};
 
 class MyGame {
  public:
-  int setting(const char* key, const char* value) {
+  int Setting(const char* key, const char* value) {
     // Doesn't accept any settings.
     return 1;
   }
 
-  int init() { return 0; }
+  int Init() { return 0; }
 
   // Launch level using episode id and seed.
-  int start(int episode_id, int seed) {
+  int Start(int episode_id, int seed) {
+    steps_ = 0;
     episode_id_ = episode_id;
     seed_ = seed;
     for (auto& byte_ref : observation_bytes_) {
@@ -67,63 +79,66 @@ class MyGame {
     for (auto& double_ref : observation_doubles_) {
       double_ref = 127;
     }
+    string_ = std::to_string(episode_id) + ":" + std::to_string(steps_);
     return 0;
   }
 
-  const char* environment_name() const { return "example_environment"; }
+  const char* ErrorMessage() const { return "No error message."; }
+
+  const char* EnvironmentName() const { return "example_environment"; }
 
   // The number of discrete actions.
-  int action_discrete_count() const { return kDiscreteActionCount; }
+  int ActionDiscreteCount() const { return kDiscreteActionCount; }
 
   // Discrete action name. 'discrete_idx' < action_discrete_count().
-  const char* action_discrete_name(int discrete_idx) const {
+  const char* ActionDiscreteName(int discrete_idx) const {
     assert(discrete_idx < kDiscreteActionCount);
     return kDiscreteActionNames[discrete_idx];
   }
 
   // The discrete action inclusive range.
-  void action_discrete_bounds(int discrete_idx, int* min_value,
-                              int* max_value) const {
+  void ActionDiscreteBounds(int discrete_idx, int* min_value,
+                            int* max_value) const {
     *min_value = kDiscreteActionBounds[discrete_idx].min_value;
     *max_value = kDiscreteActionBounds[discrete_idx].max_value;
   }
 
   // The number of continuous actions.
-  int action_continuous_count() const { return kContinuousActionCount; }
+  int ActionContinuousCount() const { return kContinuousActionCount; }
 
   // Continuous action name. 'continuous_idx' < action_continuous_count().
-  const char* action_continuous_name(int continuous_idx) const {
+  const char* ActionContinuousName(int continuous_idx) const {
     assert(continuous_idx < kContinuousActionCount);
     return kContinuousActionNames[continuous_idx];
   }
 
   // The continuous action inclusive range.
-  void action_continuous_bounds(int continuous_idx, double* min_value_out,
-                                double* max_value_out) const {
+  void ActionContinuousBounds(int continuous_idx, double* min_value_out,
+                              double* max_value_out) const {
     *min_value_out = kContinuousActionBounds[continuous_idx].min_value;
     *max_value_out = kContinuousActionBounds[continuous_idx].max_value;
   }
 
-  int observation_count() const { return kObservationCount; }
-  const char* observation_name(int observation_idx) {
+  int ObservationCount() const { return kObservationCount; }
+  const char* ObservationName(int observation_idx) {
     assert(observation_idx < kObservationCount);
     return kObservationNames[observation_idx];
   }
 
   // The shape of the observation parameter.
-  void observation_spec(int observation_idx,
-                        EnvCApi_ObservationSpec* spec) const {
+  void ObservationSpec(int observation_idx,
+                       EnvCApi_ObservationSpec* spec) const {
     assert(observation_idx < kObservationCount);
     *spec = kObservationSpecs[observation_idx];
   }
 
-  int event_type_count() const { return 0; }
-  const char* event_type_name(int event_type_idx) const { std::abort(); }
+  int EventTypeCount() const { return 0; }
+  const char* EventTypeName(int event_type_idx) const { std::abort(); }
 
-  int fps() { return 60; }
+  int Fps() { return 60; }
 
-  void observation(int observation_idx, EnvCApi_Observation* observation) {
-    observation_spec(observation_idx, &observation->spec);
+  void Observation(int observation_idx, EnvCApi_Observation* observation) {
+    ObservationSpec(observation_idx, &observation->spec);
     switch (observation_idx) {
       case ObservationTypes_Bytes:
         observation->payload.bytes = observation_bytes_;
@@ -131,19 +146,25 @@ class MyGame {
       case ObservationTypes_Doubles:
         observation->payload.doubles = observation_doubles_;
         break;
+      case ObservationTypes_String:
+        string_shape_[0] = string_.size();
+        observation->payload.string = string_.c_str();
+        observation->spec.shape = string_shape_;
+        break;
     }
   }
 
-  int event_count() { return 0; }
+  int EventCount() { return 0; }
 
-  void event(int event_idx, EnvCApi_Event* event) {}
+  void Event(int event_idx, EnvCApi_Event* event) {}
 
-  void act(const int actions_discrete[], const double actions_continuous[]) {}
+  void Act(const int actions_discrete[], const double actions_continuous[]) {}
 
-  EnvCApi_EnvironmentStatus advance(int num_steps, double* reward) {
+  EnvCApi_EnvironmentStatus Advance(int num_steps, double* reward) {
     steps_ += num_steps;
     *reward = reward_;
     reward_ = 0;
+    string_ = std::to_string(episode_id_) + ":" + std::to_string(steps_);
     return EnvCApi_EnvironmentStatus_Running;
   }
 
@@ -154,77 +175,14 @@ class MyGame {
   double reward_;
   unsigned char observation_bytes_[10 * 2];
   double observation_doubles_[7];
+  int string_shape_[1];
+  std::string string_;
 };
-
-// Memory cleanup.
-static void release_context(void* context) {
-  delete static_cast<MyGame*>(context);
-}
-
-template <typename T, typename Ret, typename... Args>
-struct CtxBinder {
-  template <Ret (T::*MemFunc)(Args...)>
-  static Ret Func(void* context, Args... args) {
-    assert(context != nullptr);
-    return (static_cast<T*>(context)->*MemFunc)(args...);
-  }
-
-  template <Ret (T::*MemFunc)(Args...) const>
-  static Ret Func(void* context, Args... args) {
-    assert(context != nullptr);
-    return (static_cast<T*>(context)->*MemFunc)(args...);
-  }
-};
-
-template <typename T, typename Ret, typename... Args>
-CtxBinder<T, Ret, Args...> CtxBind(Ret (T::*MemFunc)(Args...));
-
-template <typename T, typename Ret, typename... Args>
-CtxBinder<T, Ret, Args...> CtxBind(Ret (T::*MemFunc)(Args...) const);
 
 }  // namespace
 
-// An example for isolating global symbols: This translation unit may be linked
-// in such a way that global symbols like the following two do not clash with
-// symbols in the client application. This kind of isolation is valuable when
-// the environment is built from code that was not designed with reusablity in
-// mind.
-extern "C" {
-int odr_example;
-int violate_odr_maybe() { return ++odr_example; }
-}
-
-// Portability note. This has not got C-language linkage but seems to work.
-#define BIND_C(class_member) \
-  decltype(CtxBind(&class_member))::Func<&class_member>
-
 extern "C" int env_c_api_example_connect(EnvCApi* env_c_api, void** context) {
-  violate_odr_maybe();
-
-  *context = new MyGame();
-  env_c_api->setting = BIND_C(MyGame::setting);
-  env_c_api->init = BIND_C(MyGame::init);
-  env_c_api->start = BIND_C(MyGame::start);
-  env_c_api->environment_name = BIND_C(MyGame::environment_name);
-  env_c_api->action_discrete_count = BIND_C(MyGame::action_discrete_count);
-  env_c_api->action_discrete_name = BIND_C(MyGame::action_discrete_name);
-  env_c_api->action_discrete_bounds = BIND_C(MyGame::action_discrete_bounds);
-  env_c_api->action_continuous_count = BIND_C(MyGame::action_continuous_count);
-  env_c_api->action_continuous_name = BIND_C(MyGame::action_continuous_name);
-  env_c_api->action_continuous_bounds =
-      BIND_C(MyGame::action_continuous_bounds);
-  env_c_api->observation_count = BIND_C(MyGame::observation_count);
-  env_c_api->observation_name = BIND_C(MyGame::observation_name);
-  env_c_api->observation_spec = BIND_C(MyGame::observation_spec);
-  env_c_api->event_type_count = BIND_C(MyGame::event_type_count);
-  env_c_api->event_type_name = BIND_C(MyGame::event_type_name);
-  env_c_api->fps = BIND_C(MyGame::fps);
-  env_c_api->observation = BIND_C(MyGame::observation);
-  env_c_api->event_count = BIND_C(MyGame::event_count);
-  env_c_api->event = BIND_C(MyGame::event);
-  env_c_api->act = BIND_C(MyGame::act);
-  env_c_api->advance = BIND_C(MyGame::advance);
-  env_c_api->release_context = release_context;
+  auto game = std::unique_ptr<MyGame>(new MyGame());
+  deepmind::rl_api::Bind(std::move(game), env_c_api, context);
   return 0;
 }
-#undef BIND_C

@@ -6,6 +6,7 @@
 
 1.  Extended functionality of the built-in Tensor Lua library.
 2.  Add Image Lua library for loading and scaling PNGs.
+3.  Add error handling to the env_c_api.
 
 ### Minor Improvements:
 

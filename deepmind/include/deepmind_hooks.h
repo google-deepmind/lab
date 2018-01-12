@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -191,6 +191,8 @@ struct DeepmindHooks_s {
 
   void (*get_screen_message)(void* userdata, int message_id, char* buffer,
                              int* x, int* y, int* align_l0_r1_c2);
+  void (*set_error_message)(void* userdata, const char* error_message);
+  const char* (*error_message)(void* userdata);
 };
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -272,6 +272,12 @@ class Context {
   // '1' for right and '2' for center.
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                         int* align_l0_r1_c2) const;
+  const char* ErrorMessage() const { return error_message_.c_str(); }
+
+  // Sets current error message. 'message' shall be a null terminated string.
+  void SetErrorMessage(const char* message) {
+    error_message_ = std::string(message);
+  }
 
  private:
   // Message to be placed on screen.
@@ -378,6 +384,9 @@ class Context {
 
   // A list of screen messages to display this frame.
   std::vector<ScreenMessage> screen_messages_;
+  // Last error message.
+  std::string error_message_;
+
 };
 
 }  // namespace lab
