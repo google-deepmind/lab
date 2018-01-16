@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -558,7 +558,7 @@ CL_FinishMove
 void CL_FinishMove( vec3_t old_angles, usercmd_t *cmd ) {
 	DeepmindContext* ctx = dmlab_context();
 	int		i;
-	int eng_frame_msec = ctx->calls.engine_frame_period_msec( ctx->context );
+	int eng_frame_msec = ctx->calls.engine_frame_period_msec();
 	if ( eng_frame_msec == 0 ) {
 		eng_frame_msec = frame_msec;
 	}
@@ -575,20 +575,26 @@ void CL_FinishMove( vec3_t old_angles, usercmd_t *cmd ) {
 				AngleDelta( cl.viewangles[PITCH], old_angles[PITCH] ) / eng_frame_msec,
 				AngleDelta( cl.viewangles[YAW], old_angles[YAW] ) / eng_frame_msec,
 				cmd->forwardmove, cmd->rightmove, cmd->upmove, cmd->buttons );
-    cl.viewangles[YAW] = old_angles[YAW];
 	}
 
 	double pitch = 0;
 	double yaw = 0;
-	ctx->hooks.get_actions(
-			ctx->userdata,
-			&pitch, &yaw,
-			&cmd->forwardmove, &cmd->rightmove, &cmd->upmove,
-			&cmd->buttons);
-	cl.viewangles[PITCH] += pitch * eng_frame_msec;
-  cl.viewangles[PITCH] = AngleNormalize360( cl.viewangles[PITCH] );
-	cl.viewangles[YAW] += yaw * eng_frame_msec;
-	cl.viewangles[YAW] = AngleNormalize360( cl.viewangles[YAW] );
+  if (!ctx->calls.is_map_loading()) {
+		ctx->hooks.get_actions(
+				ctx->userdata,
+				&pitch, &yaw,
+				&cmd->forwardmove, &cmd->rightmove, &cmd->upmove,
+				&cmd->buttons);
+	} else {
+		cmd->forwardmove = 0;
+		cmd->rightmove = 0;
+		cmd->upmove = 0;
+		cmd->buttons = 0;
+	}
+
+	cl.viewangles[ROLL] = 0;
+	cl.viewangles[PITCH] = AngleNormalize360( old_angles[PITCH] + pitch * eng_frame_msec );
+	cl.viewangles[YAW] = AngleNormalize360( old_angles[YAW] + yaw * eng_frame_msec );
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -622,13 +628,6 @@ usercmd_t CL_CreateCmd( void ) {
 
 	// get basic movement from joystick
 	CL_JoystickMove( &cmd );
-
-	// check to make sure the angles haven't wrapped
-	if ( cl.viewangles[PITCH] - oldAngles[PITCH] > 90 ) {
-		cl.viewangles[PITCH] = oldAngles[PITCH] + 90;
-	} else if ( oldAngles[PITCH] - cl.viewangles[PITCH] > 90 ) {
-		cl.viewangles[PITCH] = oldAngles[PITCH] - 90;
-	}
 
 	// store out the final values
 	CL_FinishMove( oldAngles, &cmd );

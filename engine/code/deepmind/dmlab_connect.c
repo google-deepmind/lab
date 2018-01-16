@@ -94,17 +94,28 @@ typedef struct GameContext_s {
   int image_shape[3];
   unsigned char* image_buffer;
   unsigned char* temp_buffer;  // Holds result from glReadPixels.
-  char script_name[MAX_STRING_CHARS];
   char command_line[MAX_STRING_CHARS];
   char runfiles_path[MAX_STRING_CHARS];
   bool first_start;
   bool init_called;
+  bool map_loaded;
   int engine_frame_period_msec;   // This is the number of milliseconds to
                                   // advance the engine each frame. If set to
                                   // zero the wall clock is used.
   int step;
+  int map_start_frame;            // First frame after warm-up.
   double total_engine_time_msec;  // This is step * engine_frame_period_msec.
   double score;
+  bool is_connecting;     // Whether the environment is connecting to a client
+                          // or server.
+  bool use_local_level_cache;
+  bool use_global_level_cache;
+
+  DeepMindLabLevelCacheParams level_cache_params;
+
+  int map_frame_number_shape[1];
+  double map_frame_number_observation;
+  bool is_map_loading;
 } GameContext;
 
 
@@ -118,6 +129,12 @@ static int first_start(GameContext* gc) {
   Sys_PlatformInit();
   Sys_Milliseconds();
 
+  const char* dynamic_path = ctx->hooks.get_temporary_folder(ctx->userdata);
+  Q_strcat(gc->command_line, sizeof(gc->command_line),
+           va(" +set fs_temporarypath \"%s\"", dynamic_path));
+  Q_strcat(gc->command_line, sizeof(gc->command_line),
+           va(" +set fs_homepath \"%s\"", dynamic_path));
+
   const char* modifiedCommandLine =
       ctx->hooks.replace_command_line(ctx->userdata, gc->command_line);
 
@@ -129,29 +146,90 @@ static int first_start(GameContext* gc) {
   return 0;
 }
 
-static void load_map(GameContext* gc) {
+static bool make_map(GameContext* gc, const char* next_map) {
   DeepmindContext* ctx = gc->dm_ctx;
-  const char* next_map = ctx->hooks.next_map(ctx->userdata);
-  Cmd_ExecuteString(va("devmap %s", next_map));
+  char fullPath[MAX_QPATH];
+  fileHandle_t f;
+  int len;
+  // See if <next_map> already exists.
+  FS_Restart(0);
+  Com_sprintf(fullPath, sizeof(fullPath), "maps/%s.bsp", next_map);
+  len = FS_FOpenFileRead(fullPath, &f, qfalse);
+  FS_FCloseFile(f);
+  if (len > 0) {
+    return true;
+  }
+
+  // Look for a source map for generating bsp.
+  bool gen_aas = true;
+  Com_sprintf(fullPath, sizeof(fullPath), BASEGAME "/maps/%s.map", next_map);
+  len = FS_SV_FOpenFileRead(fullPath, &f);
+
+  if (len <= 0) {
+    // Try maps_no_ai instead.
+    gen_aas = false;
+    FS_FCloseFile(f);
+    Com_sprintf(fullPath, sizeof(fullPath), BASEGAME "/maps_no_ai/%s.map",
+                next_map);
+    len = FS_SV_FOpenFileRead(fullPath, &f);
+  }
+  FS_FCloseFile(f);
+
+  if (len <= 0) {
+    // Not found!
+    return false;
+  }
+
+  // Successfully found a map file.
+
+  // Generate a BSP (and AAS file if requested) and wrap in a PK3.
+  ctx->hooks.make_pk3_from_map(ctx->userdata, fullPath, next_map, gen_aas);
+
+  // File sytem needs to know about the new map file.
+  FS_Restart(0);
+  return true;
+}
+
+static void dev_map(GameContext* gc) {
+  DeepmindContext* ctx = gc->dm_ctx;
   Cvar_Set("fixedtime", va("%d", gc->engine_frame_period_msec));
+  const char* next_map = ctx->hooks.next_map(ctx->userdata);
+  if (next_map[0] == '\0') {
+    Cmd_ExecuteString("map_restart 0");
+    Cmd_ExecuteString("updatecustomitems");
+    Com_Frame();
+  } else {
+    if (!make_map(gc, next_map)) {
+      perror(va("Didn't find map '%s'\n", next_map));
+      exit(1);
+    }
+    Cmd_ExecuteString(va("devmap \"%s\"", next_map));
+    Com_Frame();
+    ctx->hooks.add_bots(ctx->userdata);
+  }
+}
+
+static int connecting(GameContext* gc) {
+  int err = clc.state < CA_ACTIVE ? EAGAIN : 0;
+  IN_Frame();
   Com_Frame();
-  while (clc.state < CA_ACTIVE) {
+  return err;
+}
+
+static bool load_map(GameContext* gc) {
+  gc->is_map_loading = true;
+  dev_map(gc);
+  while (connecting(gc) == EAGAIN) {
+  }
+  // Players join team games in spectator mode. Leave 3 frames for player to
+  // join the correct team.
+  for (int i = 0; i < 3; ++i) {
     IN_Frame();
     Com_Frame();
   }
-  ctx->hooks.add_bots(ctx->userdata);
-  printf("Map loaded: '%s'\n", next_map);
+  gc->map_start_frame = cls.framecount;
   fflush(stdout);
-}
-
-static int engine_frame_period_msec(void* context) {
-  GameContext* gc = context;
-  return gc->engine_frame_period_msec;
-}
-
-static int total_engine_time_msec(void* context) {
-  GameContext* gc = context;
-  return gc->total_engine_time_msec;
+  return true;
 }
 
 // Return 0 iff successful.
@@ -263,6 +341,14 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
     gc->height = v;
+  } else if (strcmp(key, "localLevelCache") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    gc->use_local_level_cache = v_bool;
+  } else if (strcmp(key, "globalLevelCache") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    gc->use_global_level_cache = v_bool;
   } else if (strcmp(key, "fps") == 0) {
     int res = parse_double(value, &v_double, ctx);
     if (res != 0) return res;
@@ -307,10 +393,14 @@ static int dmlab_init(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
   if (gc->init_called) {
-    fputs("'init' has already been called previously.\n", stderr);
+    ctx->hooks.set_error_message(
+        ctx->userdata, "'init' has already been called previously.\n");
     return 1;
   }
   gc->init_called = true;
+  ctx->hooks.set_level_cache_settings(ctx->userdata, gc->use_local_level_cache,
+                                      gc->use_global_level_cache,
+                                      gc->level_cache_params);
   return ctx->hooks.init(ctx->userdata);
 }
 
@@ -319,6 +409,15 @@ static int dmlab_start(void* context, int episode_id, int seed) {
   seed = (seed < 0) ? seed + 1 + INT_MAX : seed;
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  if (gc->is_connecting) {
+    re.MakeCurrent();
+    int err = connecting(gc);
+    if (err == 0 && !gc->map_loaded) {
+      err = ctx->hooks.map_loaded(ctx->userdata);
+      gc->map_loaded = true;
+    }
+    return err;
+  }
   gc->step = 0;
   gc->total_engine_time_msec = 0.0;
   gc->score = 0.0;
@@ -583,7 +682,13 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
     if (ctx->hooks.map_finished(ctx->userdata)) {
       // Capture any rewards given during map_finished().
       double final_reward_score = get_engine_score();
-      load_map(gc);
+
+      if (!load_map(gc)) {
+        return EnvCApi_EnvironmentStatus_Terminated;
+      }
+      if (ctx->hooks.map_loaded(ctx->userdata) != 0) {
+        return EnvCApi_EnvironmentStatus_Error;
+      }
       ctx->hooks.set_map_finished(ctx->userdata, false);
       // TODO: Update player score to keep from previous map.
       double start_reward = get_engine_score();
@@ -606,10 +711,18 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
     episode_ended = ctx->hooks.has_episode_finished(
         ctx->userdata,
         gc->total_engine_time_msec / (kEngineTimePerExternalTime * 1000.0));
-    double reward_after = get_engine_score();
-    double delta_score = reward_after - reward_before;
-    gc->score += delta_score;
-    *reward += delta_score;
+    // The last frame of demos wipe the game state, effectively erasing the
+    // score. By checking the state for active we only accumulate the score if
+    // it has not been wiped. This is a workaround for an issue where server
+    // game script methods are not invoked during demos (i.e. set_map_finished
+    // is not triggered.)
+    if (clc.state == CA_ACTIVE) {
+      double reward_after = get_engine_score();
+      double delta_score = reward_after - reward_before;
+      gc->score += delta_score;
+      *reward += delta_score;
+    }
+    gc->is_map_loading = false;
   }
 
   return episode_ended ? EnvCApi_EnvironmentStatus_Terminated
@@ -641,6 +754,30 @@ static void add_bot(const char* name, double skill,  const char* team) {
   Cbuf_AddText(va("addbot %s %f %s\n", name, skill, team));
 }
 
+static int engine_frame_period_msec() {
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+  return gc->engine_frame_period_msec;
+}
+
+static int total_engine_time_msec() {
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+  return gc->total_engine_time_msec;
+}
+
+static double total_time_seconds() {
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+  return gc->total_engine_time_msec / (kEngineTimePerExternalTime * 1000.0);
+}
+
+static bool dmlab_is_map_loading(void* context) {
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+  return gc->is_map_loading;
+}
+
 int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
                   void** context) {
   DeepmindContext* dm_ctx = get_context_once();
@@ -665,9 +802,16 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
 
   Q_strncpyz(gc->runfiles_path, params->runfiles_path,
              sizeof(gc->runfiles_path));
+
+  // Disable local level cache by default.
+  gc->use_local_level_cache = false;
+  gc->use_global_level_cache = true;
+  gc->level_cache_params = params->level_cache_params;
   gc->width = 320;
   gc->height = 240;
   gc->dm_ctx = dm_ctx;
+  gc->map_frame_number_shape[0] = 1;
+  gc->map_frame_number_observation = 0;
 
   memset(env_c_api, 0, sizeof(EnvCApi));
 
@@ -701,7 +845,9 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.add_bot = add_bot;
   gc->dm_ctx->calls.engine_frame_period_msec = engine_frame_period_msec;
   gc->dm_ctx->calls.total_engine_time_msec = total_engine_time_msec;
+  gc->dm_ctx->calls.total_time_seconds = total_time_seconds;
+  gc->dm_ctx->calls.is_map_loading = dmlab_is_map_loading;
   gc->dm_ctx->context = gc;
-
-  return dmlab_create_context(gc->runfiles_path, gc->dm_ctx);
+  return dmlab_create_context(gc->runfiles_path, gc->dm_ctx,
+                              params->file_reader_override);
 }

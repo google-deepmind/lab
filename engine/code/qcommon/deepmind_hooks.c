@@ -53,7 +53,7 @@ int dmlab_callback(
       return ctx->hooks.external_reward(ctx->userdata, a1);
     case DEEPMIND_SET_PREDICTED_PLAYER_STATE: {
       const playerState_t* ps = VM_ArgPtr(a1);
-      int timestamp_msec = ctx->calls.total_engine_time_msec(ctx->context);
+      int timestamp_msec = ctx->calls.total_engine_time_msec();
       ctx->hooks.predicted_player_state(ctx->userdata, ps->origin, ps->velocity,
                                         ps->viewangles, ps->viewheight,
                                         timestamp_msec);

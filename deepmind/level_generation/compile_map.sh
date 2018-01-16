@@ -24,7 +24,7 @@
 # You may replace this script with a different implementation as long as
 # it has the same interface, which is as follows:
 #
-# compile_map.sh /path/to/mymap
+# compile_map.sh [-a] /path/to/mymap
 #
 # This expects:
 #   * A file /path/to/mymap.map.
@@ -32,12 +32,32 @@
 #
 # Effects:
 #   * Creates a package file /path/to/mymap.pk3 which contains the files
-#     maps/mymap.bsp and maps/mymap.aas.
+#     maps/mymap.bsp and, if -a is specified, maps/mymap.aas.
 #
 # This implementation uses Bash and requires the bspc and q3map2 tools to exist
 # in fixed locations relative to this script, and the "zip" command must work.
 
 set -e
+
+function usage() {
+  echo "Usage: ${0} [-a] [-m map_path] path/to/mymap"
+  echo "  -a: Generate AAS data."
+  echo "  -m: Path to map location."
+  exit 1
+}
+
+GENERATE_AAS=false
+MAP_LOCATION=
+
+while getopts ":am:" opt; do
+  case $opt in
+    a ) GENERATE_AAS=true ;;
+    m ) MAP_LOCATION="${OPTARG}" ;;
+    \? ) usage ;;
+  esac
+done
+
+shift $((OPTIND - 1))
 
 readonly MAPBASE="${1}"
 
@@ -45,9 +65,15 @@ readonly BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly Q3MP="${BASE}/../../q3map2/q3map2"
 readonly BSPC="${BASE}/../../bspc"
 
-readonly DIR="$(dirname ${MAPBASE})"
-readonly MPF="$(basename ${MAPBASE})"
+readonly DIR="$(dirname "${MAPBASE}")"
+readonly MPF="$(basename "${MAPBASE}")"
 readonly MPB="${MPF/.map/}"
+
+if [[ -n $MAP_LOCATION ]]; then
+  mkdir --parents -- "${DIR}"
+  cp --force -- "${MAP_LOCATION}" "${MAPBASE}.map"
+  chmod 660 -- "${MAPBASE}.map"
+fi
 
 function die {
   echo "Error: ${1}"
@@ -56,7 +82,6 @@ function die {
 
 function check_exe {
   [[ -x "${1}" ]] || die "could not find ${2} tool"
-  echo "${2} tool found at '$(realpath -- "${1}")'."
 }
 
 ## Sanity checking
@@ -68,9 +93,12 @@ check_exe "${BSPC}" "bspc"
 
 ## Main logic
 
-# Step 1: q3map2 to generate the BSP
+function clean_up {
+  rm --force -- "${DIR}/${MPB}."{bsp,map,prt,srf}
+}
 
-${Q3MP} -fs_basepath "${BASE}/../.." -fs_game baselab -meta -patchmeta -threads 8 "${MAPBASE}"
+# Step 1: q3map2 to generate the BSP
+${Q3MP} -fs_basepath "${BASE}/../.." -fs_game baselab -meta -patchmeta -threads 1 "${MAPBASE}"
 ${Q3MP} -fs_basepath "${BASE}/../.." -fs_game baselab -vis -threads 8 "${MAPBASE}"
 ${Q3MP} -fs_basepath "${BASE}/../.." -fs_game baselab -light -threads 8 -fast \
         -patchshadows -samples 2 -bounce 3 -gamma 2 -compensate 4 -dirty \
@@ -78,15 +106,31 @@ ${Q3MP} -fs_basepath "${BASE}/../.." -fs_game baselab -light -threads 8 -fast \
 
 # Step 2: bscp to generate the AAS
 
-${BSPC} -optimize -forcesidesvisible -bsp2aas "${MAPBASE}.map" -output "${DIR}"
+if [[ $GENERATE_AAS = true ]]
+then
+  ${BSPC} -optimize -forcesidesvisible -bsp2aas "${MAPBASE}.map" -output "${DIR}"
+fi
 
 # Step 3: Zip .bsp and .aas into a .pk3 archive.
 
-mkdir -p -- "${DIR}/maps"
-cp -t "${DIR}/maps" -- "${DIR}/${MPB}.bsp" "${DIR}/${MPB}.aas"
+mkdir --parents -- "${DIR}/maps"
+if [[ $GENERATE_AAS = true ]]; then
+  mv --target-directory="${DIR}/maps" -- "${DIR}/${MPB}.bsp" "${DIR}/${MPB}.aas"
+else
+  mv --target-directory="${DIR}/maps" -- "${DIR}/${MPB}.bsp"
+fi
 
 rm -f -- "${DIR}/${MPB}.pk3"
-(cd -- "${DIR}" && zip "${MPB}.pk3" -- "maps/${MPB}.bsp" "maps/${MPB}.aas")
+if [[ $GENERATE_AAS = true ]]; then
+  (cd -- "${DIR}" && zip "${MPB}.pk3" -- "maps/${MPB}.bsp" "maps/${MPB}.aas")
+  rm -- "${DIR}/maps/${MPB}.bsp" "${DIR}/maps/${MPB}.aas"
+else
+  (cd -- "${DIR}" && zip "${MPB}.pk3" -- "maps/${MPB}.bsp")
+  rm -- "${DIR}/maps/${MPB}.bsp"
+fi
+
+rmdir -- "${DIR}/maps"
+clean_up
 
 # Done!
 

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -33,7 +33,7 @@ int forceModelModificationCount = -1;
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
-
+void CG_UpdateCustomItems( void );
 
 /*
 ================
@@ -73,6 +73,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return 0;
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
+		return 0;
+	case CG_UPDATE_CUSTOM_ITEMS:
+		CG_UpdateCustomItems();
 		return 0;
 	default:
 		CG_Error( "vmMain: unknown command %i", command );
@@ -1971,6 +1974,30 @@ void CG_Shutdown( void ) {
 	// like closing files or archiving session data
 }
 
+
+/*
+=================
+CG_UpdateCustomItems
+
+Called on restart to get custom items from gameplay (bg_itemlist) in sync with
+custom items in rendering (cg_items).
+=================
+*/
+void CG_UpdateCustomItems( void ) {
+	int i;
+
+	// Pull all the custom items back down.
+	BG_InitItemList();
+	BG_UpdateItems();
+
+	// Associate each custom item with its rendering data.
+	for ( i = bg_defaultNumItems ; i < bg_numItems ; i++ ) {
+		itemInfo_t *itemInfo = &cg_items[ i ];
+		itemInfo->registered = qfalse;
+
+		CG_RegisterItemVisuals( i );
+	}
+}
 
 /*
 ==================

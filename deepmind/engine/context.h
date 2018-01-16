@@ -68,18 +68,25 @@ class Context {
   // 'executable_runfiles' path to where DeepMind Lab assets are stored.
   // 'calls' allow the context to call into the engine. (Owned by engine.)
   // 'hooks' allow the engine to call into the context.
+  // 'file_reader_override' an optional function for reading from the file
+  // system. If set, a call returns whether the file 'file_name' was read
+  // successfully and if so 'buff' points to the content and 'size' contains the
+  // size of the file and after use 'buff' must be freed with 'free'. Otherwise
+  // returns false.
   Context(lua::Vm lua_vm, const char* executable_runfiles,
-          const DeepmindCalls* calls, DeepmindHooks* hooks);
+          const DeepmindCalls* calls, DeepmindHooks* hooks,
+          bool (*file_reader_override)(const char* file_name, char** buff,
+                                       size_t* size));
 
   // Inserts 'key' 'value' into settings_.
   // Must be called before Init.
   void AddSetting(const char* key, const char* value);
 
-  // 'script_name': name of a Lua file; this script is ran during first call to
+  // 'script_name': name of a Lua file; this script is run during first call to
   // Init.
   // Must be called before Init.
   // Returns zero if successful and non-zero on error.
-  int SetScriptName(const char* script_name);
+  int SetScriptName(std::string script_name);
 
   // Runs the script named script_name_ and stores the result in
   // script_table_ref_.
@@ -92,6 +99,10 @@ class Context {
   // Returns zero if successful and non-zero on error.
   int Start(int episode, int seed);
 
+  // Calls "mapLoaded" member function on the script_table_ref_ .
+  // Returns zero if successful and non-zero on error.
+  int MapLoaded();
+
   // The return value is only valid until the next call to GetCommandLine().
   // Must be called after Init.
   const char* GetCommandLine(const char* old_commandline);
@@ -100,7 +111,7 @@ class Context {
   // Must be called after Init.
   const char* NextMap();
 
-  // The script is called with the script_table_ref pushed on the the stack.
+  // The script is called with the script_table_ref pushed on the stack.
   // Runs the contents in the lua_vm_. If the script returns an integer this
   // function will return it too, else it returns 0.
   int RunLuaSnippet(const char* buf, std::size_t buf_len);
@@ -259,19 +270,40 @@ class Context {
   // from the script shall be strictly smaller than buffer_size, since the
   // buffer needs space for the null padding. 'screen_width' and 'screen_height'
   // are the size of the screen.
-  int MakeScreenMesages(int screen_width, int screen_height, int line_height,
-                        int string_buffer_size);
+  int MakeScreenMessages(int screen_width, int screen_height, int line_height,
+                         int string_buffer_size);
 
   // Retrieve screen message. 'buffer' is filled with a null terminated string.
   // The room in the buffer is 'string_buffer_size' from the MakeScreenMessage
   // command. 'x' and 'y' are the screen coordinates in terms of the screen
-  // 'height' and 'width' also in from the MakeScreenMesages.
-  // 'message_id' shall be greater than or equal to zero and less then what
+  // 'height' and 'width' also from the MakeScreenMesages.
+  // 'message_id' shall be greater than or equal to zero and less than what
   // was returned by the last call of MakeScreenMesages.
   // 'align_l0_r1_c2' is how the text is horizontally aligned. '0' for left,
   // '1' for right and '2' for center.
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                         int* align_l0_r1_c2) const;
+
+  // Generates a pk3 from the map in `map_path` named `map_name`.
+  // `gen_aas` should be set if bots are used with level.
+  void MakePk3FromMap(const char* map_path, const char* map_name, bool gen_aas);
+
+  const std::string& TempDirectory() { return temp_directory_; }
+
+  // Sets which level caches to use. See MapCompileSettings in compile_map.h.
+  void SetLevelCacheSetting(bool local, bool global,
+                            DeepMindLabLevelCacheParams level_cache_params) {
+    use_local_level_cache_ = local;
+    use_global_level_cache_ = global;
+    level_cache_params_ = level_cache_params;
+  }
+
+  bool UseLocalLevelCache() const { return use_local_level_cache_; }
+  bool UseGlobalLevelCache() const { return use_global_level_cache_; }
+  DeepMindLabLevelCacheParams LevelCacheParams() const {
+    return level_cache_params_;
+  }
+
   const char* ErrorMessage() const { return error_message_.c_str(); }
 
   // Sets current error message. 'message' shall be a null terminated string.
@@ -328,8 +360,10 @@ class Context {
   // The settings to run the script with.
   std::unordered_map<std::string, std::string> settings_;
 
-  // The name of the script ran on first Init.
-  std::string script_name_;
+  // The name of the script to run on first Init.
+  std::string script_path_;
+
+  std::string temp_directory_;
 
   // The result of the script that was run when Init was first called.
   lua::TableRef script_table_ref_;
@@ -381,6 +415,11 @@ class Context {
   lua::TableRef observation_tensor_;
 
   PlayerView predicted_player_view_;
+
+  // Callbacks for fetching/writing levels to cache.
+  DeepMindLabLevelCacheParams level_cache_params_;
+  bool use_local_level_cache_;
+  bool use_global_level_cache_;
 
   // A list of screen messages to display this frame.
   std::vector<ScreenMessage> screen_messages_;

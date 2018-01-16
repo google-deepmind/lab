@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #ifndef DML_DEEPMIND_INCLUDE_DEEPMIND_CALLS_H_
 #define DML_DEEPMIND_INCLUDE_DEEPMIND_CALLS_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,10 +41,13 @@ struct DeepmindCalls_s {
   void (*screen_shape)(void* context, int* width, int* height);
 
   // Engine time between the start of two consecutive frames, in milliseconds.
-  int (*engine_frame_period_msec)(void* context);
+  int (*engine_frame_period_msec)(void);
 
   // Get time stamp for current episode.
-  int (*total_engine_time_msec)(void* context);
+  int (*total_engine_time_msec)(void);
+
+  // Get time in seconds for current episode.
+  double (*total_time_seconds)(void);
 
   // Adds a bot to game.
   // 'name' - Name of bot. Must be one named in bots.txt.
@@ -52,6 +57,8 @@ struct DeepmindCalls_s {
 
   // Get the player score.
   int (*player_score)(void* context);
+
+  bool (*is_map_loading)();
 };
 
 #ifdef __cplusplus

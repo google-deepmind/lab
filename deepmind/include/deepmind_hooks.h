@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 
+#include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
 #ifdef __cplusplus
@@ -37,6 +38,11 @@ struct DeepmindHooks_s {
   // Calls after first call of init will be ignored.
   void (*add_setting)(void* userdata, const char* key, const char* value);
 
+  // Sets which level caches to use when building levels.
+  void (*set_level_cache_settings)(
+      void* userdata, bool local, bool global,
+      DeepMindLabLevelCacheParams level_cache_params);
+
   // Sets the name of the script that is ran during the first init.
   // Must be called before the first init.
   // Returns zero if successful and non-zero on error.
@@ -46,6 +52,9 @@ struct DeepmindHooks_s {
   void (*set_executable_runfiles)(void* userdata,
                                   const char* executable_runfiles);
 
+  // Gets the path to the temporary folder where dynamic maps are generated.
+  const char* (*get_temporary_folder)(void* userdata);
+
   // Called after all settings have been applied.
   // Returns zero if successful and non-zero on error.
   int (*init)(void* userdata);
@@ -53,6 +62,10 @@ struct DeepmindHooks_s {
   // Called at the start of each episode.
   // Returns zero if successful and non-zero on error.
   int (*start)(void* userdata, int episode, int random_seed);
+
+  // Called when the map has finished loading.
+  // Returns zero if successful and non-zero on error.
+  int (*map_loaded)(void* userdata);
 
   // The Quake3 engine makes heavy use of the command line. This function allows
   // us to intercept and replace it.
@@ -106,10 +119,10 @@ struct DeepmindHooks_s {
   // found item to *index.
   bool (*find_item)(void* userdata, const char* class_name, int* index);
 
-  // Get the current number of registered items.
+  // Gets the current number of registered items.
   int (*item_count)(void* userdata);
 
-  // Gets an item at a partiucular index, and fills in the various buffers.
+  // Gets an item at a particular index, and fills in the various buffers.
   // Returns whether the operation succeeded.
   bool (*item)(void* userdata, int index, char* item_name, int max_item_name,
                char* class_name, int max_class_name,
@@ -186,11 +199,20 @@ struct DeepmindHooks_s {
                                  const float viewangles[3], float height,
                                  int timestamp_msec);
 
+  // See MakeScreenMessages in deepmind/engine/context.h.
   int (*make_screen_messages)(void* userdata, int width, int height,
                               int line_height, int string_buffer_size);
 
+  // See GetScreenMessage in deepmind/engine/context.h.
   void (*get_screen_message)(void* userdata, int message_id, char* buffer,
                              int* x, int* y, int* align_l0_r1_c2);
+
+  // See MakePk3FromMap in deepmind/engine/context.h.
+  void (*make_pk3_from_map)(void* userdata, const char* map_path,
+                            const char* map_name, bool gen_aas);
+
+  // Set and retrieve error message. 'error_message' shall be a null terminated
+  // string.
   void (*set_error_message)(void* userdata, const char* error_message);
   const char* (*error_message)(void* userdata);
 };

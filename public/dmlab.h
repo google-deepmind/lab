@@ -21,6 +21,9 @@
 #ifndef DML_PUBLIC_DMLAB_H_
 #define DML_PUBLIC_DMLAB_H_
 
+#include <stddef.h>
+
+#include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
 #ifdef __cplusplus
@@ -32,6 +35,14 @@ typedef struct DeepMindLabLaunchParams_s DeepMindLabLaunchParams;
 struct DeepMindLabLaunchParams_s {
   // Path to where DeepMind Lab assets are stored.
   const char* runfiles_path;
+  DeepMindLabLevelCacheParams level_cache_params;
+
+  // Optional function for reading from the file system. If set, a call returns
+  // whether the file 'file_name' was read successfully and if so 'buff' points
+  // to the content and 'size' contains the size of the file and after use
+  // 'buff' must be freed with 'free'. Otherwise returns false.
+  bool (*file_reader_override)(const char* file_name, char** buff,
+                               size_t* size);
 };
 
 // Starts an instance of DeepMind Lab and exports the single-player RL

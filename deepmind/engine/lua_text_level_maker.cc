@@ -27,6 +27,7 @@
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
+#include "deepmind/util/files.h"
 
 namespace deepmind {
 namespace lab {
@@ -40,9 +41,15 @@ bool NoOp(std::size_t, std::size_t, char,
 
 }  // namespace
 
-LuaTextLevelMaker::LuaTextLevelMaker(const std::string& self)
-    : prng_(0),
-      rundir_(self) {}
+LuaTextLevelMaker::LuaTextLevelMaker(
+    const std::string& self, const std::string& output_folder,
+    bool use_local_level_cache, bool use_global_level_cache,
+    DeepMindLabLevelCacheParams level_cache_params)
+    : prng_(0), settings_{}, rundir_(self), output_folder_(output_folder) {
+  settings_.use_local_level_cache = use_local_level_cache;
+  settings_.use_global_level_cache = use_global_level_cache;
+  settings_.level_cache_params = level_cache_params;
+}
 
 const char* LuaTextLevelMaker::ClassName() {
   return "deepmind.lab.TextLevelMaker";
@@ -57,31 +64,34 @@ void LuaTextLevelMaker::Register(lua_State* L) {
 }
 
 lua::NResultsOr LuaTextLevelMaker::MapFromTextLevel(lua_State* L) {
+  MapCompileSettings settings = settings_;
   lua::TableRef args;
 
   if (lua_gettop(L) != 2 || !lua::Read(L, 2, &args)) {
     return "Bad invocation, need exactly one (table) argument.";
   }
 
-  std::string ents, vars, odir, mapstr, map_name;
+  std::string ents, vars, mapstr, map_name, theme;
 
   if (!args.LookUp("entityLayer", &ents))
     return "Bad or missing arg 'entityLayer'";
-  if (!args.LookUp("outputDir", &odir))
-    return "Bad or missing arg 'outputDir'";
   args.LookUp("variationsLayer", &vars);  // optional, no error if missing
   if (!args.LookUp("mapName", &map_name))
     map_name = "luamap";
+  // optional, no error if missing
 
-  const std::string base = odir + "/" + map_name;
+  std::string game_dir = output_folder_ + "/baselab";
+  if (!util::MakeDirectory(game_dir)) {
+    return "Failed to create output directory: " + game_dir;
+  }
+
+  const std::string base = game_dir + "/" + map_name;
 
   args.LookUpToStack("callback");
 
   if (lua_isnil(L, -1)) {
-    LOG(INFO) << "No custom entity handler provided, using defaults.";
     mapstr = TranslateTextLevel(ents, vars, &prng_, NoOp);
   } else {
-    LOG(INFO) << "Using custom entity handler.";
     using namespace std::placeholders;
     auto user_cb = std::bind(LuaCustomEntityCallback, L, -1, _1, _2, _3, _4, _5);
     mapstr = TranslateTextLevel(ents, vars, &prng_, user_cb);
@@ -91,8 +101,18 @@ lua::NResultsOr LuaTextLevelMaker::MapFromTextLevel(lua_State* L) {
     return "Failed to create output file.";
   }
 
-  if (!RunMapCompileFor(rundir_, base)) {
-    return "Failed to compile map.";
+  settings.generate_aas = false;
+  args.LookUp("allowBots", &settings.generate_aas);
+
+  if (!RunMapCompileFor(rundir_, base, settings)) {
+    std::string error_message = "Failed to compile map.\n";
+    error_message += "Map Name:\n";
+    error_message += map_name;
+    error_message += "Entity Layer:\n";
+    error_message += ents;
+    error_message += "Variations Layer:\n";
+    error_message += vars;
+    return error_message;
   }
 
   lua::Push(L, base + ".pk3");

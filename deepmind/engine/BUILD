@@ -51,6 +51,7 @@ cc_test(
     deps = [
         ":callbacks",
         "//deepmind/include:context_hdrs",
+        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "@com_google_googletest//:gtest_main",
     ],
@@ -128,14 +129,18 @@ cc_library(
     visibility = ["//deepmind:__subpackages__"],
     deps = [
         ":lua_random",
+        "//:level_cache_types",
         "//deepmind/level_generation:compile_map",
         "//deepmind/level_generation/text_level:lua_bindings",
         "//deepmind/lua",
+        "//deepmind/lua:call",
         "//deepmind/lua:class",
         "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
+        "//deepmind/util:files",
+        "@com_google_absl//absl/strings",
     ],
 )
 

@@ -547,6 +547,12 @@ cc_binary(
     deps = ["@zlib_archive//:zlib"],
 )
 
+cc_library(
+    name = "level_cache_types",
+    hdrs = ["public/level_cache_types.h"],
+    visibility = ["//visibility:public"],
+)
+
 IOQ3_COMMON_SRCS = [
     CODE_DIR + "/asm/ftola.c",
     CODE_DIR + "/asm/qasm-inline.h",
@@ -597,6 +603,7 @@ IOQ3_COMMON_SRCS = [
 )
 
 IOQ3_COMMON_DEPS = [
+    ":level_cache_types",
     ":qcommon_hdrs",
     "//deepmind/engine:callbacks",
     "//deepmind/engine:context",
@@ -640,7 +647,7 @@ genrule(
           "for s in $(SRCS); do " +
           "  BM=$$(basename $${s}); M=$${BM/.map/}; " +
           "  if $(location //deepmind/level_generation:compile_map_sh).runfiles/org_deepmind_lab/deepmind/level_generation/compile_map_sh" +
-          "      $(@D)/baselab/$${M} > $(@D)/out.tmp 2> $(@D)/err.tmp; then " +
+          "      -a $(@D)/baselab/$${M} > $(@D)/out.tmp 2> $(@D)/err.tmp; then " +
           "    echo \"Built map $${M}\"; " +
           "  else " +
           "    echo -e \"Error building map $${M}:\n$$(<$(@D)/out.tmp)\n$$(<$(@D)/err.tmp)\"; " +
@@ -867,7 +874,10 @@ cc_library(
     data = [":libdmlab_headless.so"],
     linkopts = ["-ldl"],
     visibility = ["//testing:__subpackages__"],
-    deps = ["//third_party/rl_api:env_c_api"],
+    deps = [
+        ":level_cache_types",
+        "//third_party/rl_api:env_c_api",
+    ],
 )
 
 cc_library(
@@ -875,7 +885,10 @@ cc_library(
     hdrs = ["public/dmlab.h"],
     data = GAME_ASSETS,
     visibility = ["//testing:__subpackages__"],
-    deps = ["//third_party/rl_api:env_c_api"] + select({
+    deps = [
+        ":level_cache_types",
+        "//third_party/rl_api:env_c_api",
+    ] + select({
         "dmlab_graphics_sdl": [":game_lib_sdl"],
         "//conditions:default": [":dmlab_so_loader"],
     }),

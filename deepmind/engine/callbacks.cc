@@ -16,6 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <stddef.h>
+
 #include <algorithm>
 #include <cstring>
 #include <iostream>
@@ -40,7 +42,10 @@ using deepmind::lab::LuaTextLevelMaker;
 
 extern "C" {
 
-int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx) {
+int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx,
+                         bool (*file_reader_override)(const char* file_name,
+                                                      char** buff,
+                                                      size_t* size)) {
   lua::Vm lua_vm = lua::CreateVm();
   lua_State* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
@@ -49,8 +54,8 @@ int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx) {
   LuaTextLevelMaker::Register(L);
   LuaSnippetEmitter::Register(L);
 
-  ctx->userdata =
-      new Context(std::move(lua_vm), runfiles_path, &ctx->calls, &ctx->hooks);
+  ctx->userdata = new Context(std::move(lua_vm), runfiles_path, &ctx->calls,
+                              &ctx->hooks, file_reader_override);
   return 0;
 }
 

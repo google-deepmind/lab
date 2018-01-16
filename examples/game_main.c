@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   strcpy(runfiles_path, argv[0]);
   strcat(runfiles_path, kRunfiles);
 
-  DeepMindLabLaunchParams params;
+  DeepMindLabLaunchParams params = {};
   params.runfiles_path = runfiles_path;
   if (dmlab_connect(&params, &env_c_api, &context) != 0) {
     sys_error("Failed to connect RL API");

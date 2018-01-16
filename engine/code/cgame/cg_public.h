@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -233,8 +233,11 @@ typedef enum {
 
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int dx, int dy );
-	CG_EVENT_HANDLING
+	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(int type);
+
+	CG_UPDATE_CUSTOM_ITEMS,
+//	void	(*CG_UpdateCustomItems)( void );
 } cgameExport_t;
 
 //----------------------------------------------

@@ -31,22 +31,34 @@
 #include <utility>
 
 #include "deepmind/support/logging.h"
+#include "absl/strings/str_cat.h"
 #include "deepmind/engine/lua_image.h"
 #include "deepmind/engine/lua_maze_generation.h"
 #include "deepmind/engine/lua_random.h"
 #include "deepmind/engine/lua_text_level_maker.h"
+#include "deepmind/level_generation/compile_map.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "deepmind/util/files.h"
+#include "public/level_cache_types.h"
+#include "third_party/rl_api/env_c_api.h"
 
 using deepmind::lab::Context;
 
 extern "C" {
 static void add_setting(void* userdata, const char* key, const char* value) {
   return static_cast<Context*>(userdata)->AddSetting(key, value);
+}
+
+static void set_level_cache_settings(
+    void* userdata, bool local, bool global,
+    DeepMindLabLevelCacheParams level_cache_params) {
+  return static_cast<Context*>(userdata)->SetLevelCacheSetting(
+      local, global, level_cache_params);
 }
 
 static int set_script_name(void* userdata, const char* script_name) {
@@ -69,9 +81,17 @@ static void set_error_message(void* userdata, const char* error_message) {
   static_cast<Context*>(userdata)->SetErrorMessage(error_message);
 }
 
+static int map_loaded(void* userdata) {
+  return static_cast<Context*>(userdata)->MapLoaded();
+}
+
 static const char* replace_command_line(void* userdata,
                                         const char* old_commandline) {
   return static_cast<Context*>(userdata)->GetCommandLine(old_commandline);
+}
+
+static const char* get_temporary_folder(void* userdata) {
+  return static_cast<Context*>(userdata)->TempDirectory().c_str();
 }
 
 static const char* next_map(void* userdata) {
@@ -208,7 +228,7 @@ void predicted_player_state(void* userdata, const float origin[3],
 
 int make_screen_messages(void* userdata, int screen_width, int screen_height,
                          int line_height, int string_buffer_size) {
-  return static_cast<Context*>(userdata)->MakeScreenMesages(
+  return static_cast<Context*>(userdata)->MakeScreenMessages(
       screen_width, screen_height, line_height, string_buffer_size);
 }
 
@@ -216,6 +236,11 @@ void get_screen_message(void* userdata, int message_id, char* buffer, int* x,
                         int* y, int* align_l0_r1_c2) {
   static_cast<Context*>(userdata)->GetScreenMessage(message_id, buffer, x, y,
                                                     align_l0_r1_c2);
+}
+
+static void make_pk3_from_map(void* userdata, const char* map_path,
+                              const char* map_name, bool gen_aas) {
+  static_cast<Context*>(userdata)->MakePk3FromMap(map_path, map_name, gen_aas);
 }
 
 }  // extern "C"
@@ -298,7 +323,10 @@ bool StringCopy(const std::string& arg, char* dest, std::size_t max_size) {
 lua::NResultsOr MapMakerModule(lua_State* L) {
   if (auto* ctx =
           static_cast<Context*>(lua_touserdata(L, lua_upvalueindex(1)))) {
-    LuaTextLevelMaker::CreateObject(L, ctx->ExecutableRunfiles());
+    LuaTextLevelMaker::CreateObject(
+        L, ctx->ExecutableRunfiles(), ctx->TempDirectory(),
+        ctx->UseLocalLevelCache(), ctx->UseGlobalLevelCache(),
+        ctx->LevelCacheParams());
     return 1;
   } else {
     return "Missing context!";
@@ -328,7 +356,9 @@ double CanonicalAngle360(double angle) {
 }  // namespace
 
 Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
-                 const DeepmindCalls* calls, DeepmindHooks* hooks)
+                 const DeepmindCalls* calls, DeepmindHooks* hooks,
+                 bool (*file_reader_override)(const char* file_name,
+                                              char** buff, size_t* size))
     : lua_vm_(std::move(lua_vm)),
       executable_runfiles_(executable_runfiles),
       deepmind_calls_(calls),
@@ -336,11 +366,16 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
       actions_{},
       map_finished_(false),
       random_seed_(0),
-      predicted_player_view_{} {
+      predicted_player_view_{},
+      level_cache_params_{},
+      use_local_level_cache_(false),
+      use_global_level_cache_(false) {
   CHECK(lua_vm_ != nullptr);
   hooks->add_setting = add_setting;
+  hooks->set_level_cache_settings = set_level_cache_settings;
   hooks->set_script_name = set_script_name;
   hooks->start = start;
+  hooks->map_loaded = map_loaded;
   hooks->init = init;
   hooks->error_message = error_message;
   hooks->set_error_message = set_error_message;
@@ -373,6 +408,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->predicted_player_state = predicted_player_state;
   hooks->make_screen_messages = make_screen_messages;
   hooks->get_screen_message = get_screen_message;
+  hooks->get_temporary_folder = get_temporary_folder;
+  hooks->make_pk3_from_map = make_pk3_from_map;
 }
 
 void Context::AddSetting(const char* key, const char* value) {
@@ -381,32 +418,28 @@ void Context::AddSetting(const char* key, const char* value) {
 
 lua::NResultsOr Context::PushScript() {
   lua_State* L = lua_vm_.get();
-  if (script_name_.empty()) {
+  if (script_path_.empty()) {
     return "Must have level script!";
   }
-  if (script_name_.length() > 4 &&
-      // size_t pos, size_t len, const char* s, size_t n
-      script_name_.compare(script_name_.length() - 4, 4, ".lua", 4) == 0) {
-    return lua::PushScriptFile(L, script_name_);
-  } else {
-    std::string script_path = executable_runfiles_;
-    script_path += kGameScriptPath;
-    script_path += "/";
-    script_path += script_name_;
-    script_path += ".lua";
-    return lua::PushScriptFile(L, script_path);
-  }
+  return lua::PushScriptFile(L, script_path_);
 }
 
-int Context::SetScriptName(const char* script_name) {
-  script_name_ = script_name;
+int Context::SetScriptName(std::string script_name) {
+  if (script_name.length() > 4 &&
+    // size_t pos, size_t len, const char* s, size_t n
+    script_name.compare(script_name.length() - 4, 4, ".lua", 4) == 0) {
+    script_path_ = std::move(script_name);
+  } else if (!script_name.empty()) {
+    script_path_ = absl::StrCat(ExecutableRunfiles(), kGameScriptPath, "/",
+                                script_name, ".lua");
+  }
   auto result = PushScript();
   lua_State* L = lua_vm_.get();
   if (result.ok()) {
     lua_pop(L, result.n_results());
     return 0;
   } else {
-    std::cerr << "Level not found: " << result.error() << std::endl;
+    error_message_ = absl::StrCat("Level not found: ", result.error());
     return 1;
   }
 }
@@ -416,13 +449,28 @@ int Context::Init() {
   auto result = PushScript();
 
   if (!result.ok()) {
-    std::cerr << result.error() << std::endl;
+    error_message_ = result.error();
     return 1;
   }
 
-  std::string scripts_folder = executable_runfiles_;
-  scripts_folder += kGameScriptPath;
+  temp_directory_ = util::GetTempDirectory() + "/dmlab_temp_folder_XXXXXX";
+  char* temp_folder_result = mkdtemp(&temp_directory_[0]);
+  if (temp_folder_result == nullptr) {
+    error_message_ = "Failed to create temp folder\n";
+    return 1;
+  }
+
+  std::string scripts_folder =
+      absl::StrCat(ExecutableRunfiles(), kGameScriptPath);
+
   lua_vm_.AddPathToSearchers(scripts_folder);
+
+  // Add the current running script to the search path.
+  auto last_slash_pos = script_path_.find_last_of('/');
+  if (last_slash_pos != std::string::npos) {
+    auto running_script_folder = script_path_.substr(0, last_slash_pos);
+    lua_vm_.AddPathToSearchers(running_script_folder);
+  }
 
   lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire);
   lua_vm_.AddCModuleToSearchers(
@@ -436,23 +484,23 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
 
-  lua::Push(L, script_name_);
+  lua::Push(L, script_path_);
   result = lua::Call(L, 1);
   if (!result.ok()) {
-    std::cerr << result.error() << std::endl;
+    error_message_ = result.error();
     return 1;
   }
   if (result.n_results() != 1) {
-    std::cerr
-        << "Lua script must return only a table or userdata with metatable.";
+    error_message_ =
+        "Lua script must return only a table or userdata with metatable.";
     lua_pop(L, result.n_results());
     return 1;
   }
   if (!lua::Read(L, -1, &script_table_ref_)) {
-    auto actual = lua::ToString(L, -1);
-    std::cerr << "Lua script must return a table or userdata with metatable. "
-                 "Actually returned : '"
-              << actual << "'" << std::endl;
+    error_message_ = absl::StrCat(
+        "Lua script must return a table or userdata with metatable. Actually "
+        "returned : '",
+        lua::ToString(L, -1), "'");
     lua_pop(L, result.n_results());
     return 1;
   }
@@ -473,7 +521,23 @@ int Context::Start(int episode, int seed) {
     lua::Push(L, static_cast<double>(seed));
     auto result = lua::Call(L, 3);
     if (!result.ok()) {
-      std::cerr << result.error() << std::endl;
+      error_message_ = result.error();
+      return 1;
+    }
+    lua_pop(L, result.n_results());
+  } else {
+    lua_pop(L, 2);
+  }
+  return 0;
+}
+
+int Context::MapLoaded() {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("mapLoaded");
+  if (!lua_isnil(L, -2)) {
+    auto result = lua::Call(L, 1);
+    if (!result.ok()) {
+      error_message_ = result.error();
       return 1;
     }
     lua_pop(L, result.n_results());
@@ -520,10 +584,10 @@ const char* Context::GetCommandLine(const char* old_commandline) {
   }
 }
 
-int Context::RunLuaSnippet(const char* buff, std::size_t buff_len) {
+int Context::RunLuaSnippet(const char* buf, std::size_t buf_len) {
   lua_State* L = lua_vm_.get();
   int out = 0;
-  lua::NResultsOr result = lua::PushScript(L, buff, buff_len, "snippet");
+  lua::NResultsOr result = lua::PushScript(L, buf, buf_len, "snippet");
   if (result.ok()) {
     lua::Push(L, script_table_ref_);
     result = lua::Call(L, 1);
@@ -753,10 +817,7 @@ int Context::ExternalReward(int player_id) {
   CHECK_GE(player_id, 0) << "Invalid player Id!";
   double reward = 0;
   if (static_cast<std::size_t>(player_id) < player_rewards_.size()) {
-    if (player_rewards_[player_id] >= 1.0) {
-      player_rewards_[player_id] =
-          std::modf(player_rewards_[player_id], &reward);
-    }
+    player_rewards_[player_id] = std::modf(player_rewards_[player_id], &reward);
   }
   return reward;
 }
@@ -979,7 +1040,7 @@ void Context::SetPredictPlayerState(const float pos[3], const float vel[3],
   }
 }
 
-int Context::MakeScreenMesages(int screen_width, int screen_height,
+int Context::MakeScreenMessages(int screen_width, int screen_height,
                                int line_height,  int string_buffer_size) {
   screen_messages_.clear();
   lua_State* L = lua_vm_.get();
@@ -1003,7 +1064,7 @@ int Context::MakeScreenMesages(int screen_width, int screen_height,
       << "[screenMessages] - Must return an array of messages";
   lua::TableRef messages_array;
   lua::Read(L, -1, &messages_array);
-  for (std::size_t i = 0, e = messages_array.ArraySize(); i != e; ++i) {
+  for (std::size_t i = 0, size = messages_array.ArraySize(); i != size; ++i) {
     lua::TableRef message_table;
     CHECK(messages_array.LookUp(i + 1, &message_table))
         << "[screenMessages] - Each message must be a table";
@@ -1027,12 +1088,26 @@ void Context::GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                                int* align_l0_r1_c2) const {
   const auto& screen_message = screen_messages_[message_id];
   const std::string& msg_text = screen_message.text;
-  // MakeScreenMesages guarantees message is smaller than string_buffer_size.
+  // MakeScreenMessages guarantees message is smaller than string_buffer_size.
   std::copy_n(msg_text.c_str(), msg_text.size() + 1, buffer);
   *x = screen_message.x;
   *y = screen_message.y;
   *align_l0_r1_c2 = screen_message.align_l0_r1_c2;
 }
 
+void Context::MakePk3FromMap(const char* map_path, const char* map_name,
+                             bool gen_aas) {
+  MapCompileSettings compile_settings = {};
+  compile_settings.generate_aas = gen_aas;
+  compile_settings.map_source_location =
+      absl::StrCat(ExecutableRunfiles(), "/", map_path);
+  compile_settings.use_local_level_cache = use_local_level_cache_;
+  compile_settings.use_global_level_cache = use_global_level_cache_;
+  compile_settings.level_cache_params = level_cache_params_;
+  std::string target = absl::StrCat(TempDirectory(), "/baselab/", map_name);
+  CHECK(RunMapCompileFor(ExecutableRunfiles(), target, compile_settings));
+}
+
 }  // namespace lab
 }  // namespace deepmind
+

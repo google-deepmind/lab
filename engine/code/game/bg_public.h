@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -650,6 +650,7 @@ typedef struct gitem_s {
 // included in both the game dll and the client
 extern	gitem_t	bg_itemlist[];
 extern	int		bg_numItems;
+extern	int		bg_defaultNumItems;
 
 void BG_InitItemList( void );
 void BG_UpdateItems( void );

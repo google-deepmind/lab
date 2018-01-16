@@ -79,7 +79,7 @@ static PyObject* LabObject_new(PyTypeObject* type, PyObject* args,
       return NULL;
     }
 
-    DeepMindLabLaunchParams params;
+    DeepMindLabLaunchParams params = {};
     params.runfiles_path = runfiles_path;
 
     if (dmlab_connect(&params, self->env_c_api, &self->context) != 0) {

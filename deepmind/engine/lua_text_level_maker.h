@@ -25,9 +25,11 @@
 #include <random>
 #include <string>
 
+#include "deepmind/level_generation/compile_map.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
+#include "public/level_cache_types.h"
 
 namespace deepmind {
 namespace lab {
@@ -38,7 +40,14 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
 
  public:
   // Constructed with path to where DeepMind Lab assets are stored.
-  explicit LuaTextLevelMaker(const std::string& self);
+  // And the `output_folder` contains the name of an existing, writable
+  // directory into which files can be stored. This directory will also contain
+  // the final .pk3 file.
+  explicit LuaTextLevelMaker(const std::string& self,
+                             const std::string& output_folder,
+                             bool use_local_level_cache,
+                             bool use_global_level_cache,
+                             DeepMindLabLevelCacheParams level_cache_params);
 
   // Registers MapFromTextLevel as "mapFromTextLevel".
   static void Register(lua_State* L);
@@ -57,9 +66,7 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
   //   * callback [optional]
   //
   // The fields entityLayer and variationsLayer contain the text map strings as
-  // described in the text level generation documentation. The outputDir field
-  // contains the name of an existing, writable directory into which temporary
-  // files can be stored. This directory will also contain the final .pk3 file.
+  // described in the text level generation documentation.
   // The name of the generated map file will either be the value of mapName, if
   // that field was provided, or otherwise 'luamap'.
   //
@@ -78,7 +85,9 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
 
  private:
   std::mt19937_64 prng_;
+  MapCompileSettings settings_;
   const std::string rundir_;
+  const std::string output_folder_;
 };
 
 }  // namespace lab
