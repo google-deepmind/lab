@@ -14,7 +14,7 @@ genrule(
         "config.h",
         "glibconfig.h",
     ],
-    cmd = "./$(location configure) --disable-fam --enable-dtrace=no " +
+    cmd = "./$(location configure) --disable-fam --disable-libmount --enable-dtrace=no " +
           "&& cp --verbose -- config.h $(location config.h)" +
           "&& cp --verbose -- glib/glibconfig.h $(location glibconfig.h)",
 )
@@ -70,6 +70,7 @@ cc_library(
         "glib/giochannel.c",
         "glib/giounix.c",
         "glib/gkeyfile.c",
+        "glib/glib-autocleanups.h",
         "glib/glib-init.c",
         "glib/glib-init.h",
         "glib/glib-private.c",
@@ -81,7 +82,6 @@ cc_library(
         "glib/gmarkup.c",
         "glib/gmem.c",
         "glib/gmessages.c",
-        "glib/gmessages-private.h",
         "glib/gnode.c",
         "glib/goption.c",
         "glib/gpattern.c",
@@ -100,6 +100,7 @@ cc_library(
         "glib/gslist.c",
         "glib/gspawn.c",
         "glib/gstdio.c",
+        "glib/gstdioprivate.h",
         "glib/gstrfuncs.c",
         "glib/gstring.c",
         "glib/gstringchunk.c",
@@ -122,6 +123,7 @@ cc_library(
         "glib/gurifuncs.c",
         "glib/gutf8.c",
         "glib/gutils.c",
+        "glib/guuid.h",
         "glib/gvariant.c",
         "glib/gvariant-core.c",
         "glib/gvariant-core.h",
