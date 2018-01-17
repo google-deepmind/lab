@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -261,7 +261,6 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 gentity_t *SelectRandomSpawnPoint(vec3_t origin, vec3_t angles, qboolean isbot) {
 	float spot_count = 0;
 	gentity_t * spot = NULL;
-	float best_spot_count = 0;
 	gentity_t * best_spot = NULL;
 	const char* classname = "info_player_deathmatch";
 	while ( ( spot = G_Find( spot, FOFS(classname), classname ) ) != NULL ) {
@@ -279,7 +278,6 @@ gentity_t *SelectRandomSpawnPoint(vec3_t origin, vec3_t angles, qboolean isbot) 
 		spot_count += 1.0f;
 		if ( random() * spot_count <= 1.0f ) {
 			best_spot = spot;
-			best_spot_count = spot_count;
 		}
 	}
 	if ( best_spot ) {
