@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstring>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -17,35 +19,40 @@ std::string TestName() {
   return ::testing::UnitTest::GetInstance()->current_test_info()->name();
 }
 
+// Wrapper expectations for Posix calls that return -1 on error and set errno.
+#define EXPECT_POSIX_OK(e) EXPECT_NE(-1, e) << std::strerror(errno)
+#define EXPECT_POSIX_ERROR(e) EXPECT_EQ(-1, e)
+
 TEST(FilesTest, RemovesDirectory) {
   // Ensures RemoveDirectory removes directories.
   std::string root_path(GetTempDirectory() + "/" + TestName());
-  mkdir(root_path.c_str(), 0666);
+  EXPECT_POSIX_OK(mkdir(root_path.c_str(), S_IRWXU)) << ": " << root_path;
   std::string new_path(root_path + "/b");
-  mkdir(new_path.c_str(), 0666);
+  EXPECT_POSIX_OK(mkdir(new_path.c_str(), S_IRWXU)) << ": " << new_path;
   new_path += "/c";
-  creat(new_path.c_str(), 0666);
+  EXPECT_POSIX_OK(creat(new_path.c_str(), 0)) << ": " << new_path;
 
-  EXPECT_EQ(access(root_path.c_str(), F_OK), 0);
+  EXPECT_POSIX_OK(access(root_path.c_str(), F_OK)) << ": " << root_path;
 
   RemoveDirectory(root_path);
 
-  EXPECT_EQ(access(root_path.c_str(), F_OK), -1);
+  EXPECT_POSIX_ERROR(access(root_path.c_str(), F_OK)) << ": " << root_path;
 }
 
 TEST(FilesTest, RemovesDirectoryNoSymlink) {
   // Ensures RemoveDirectory does not follow symlinks.
   std::string temp_directory = GetTempDirectory();
   std::string root_path(GetTempDirectory() + "/" + TestName());
-  mkdir(root_path.c_str(), 0666);
+  EXPECT_POSIX_OK(mkdir(root_path.c_str(), S_IRWXU)) << ": " << root_path;
   std::string new_path(root_path + "/b");
-  mkdir(new_path.c_str(), 0666);
+  EXPECT_POSIX_OK(mkdir(new_path.c_str(), S_IRWXU)) << ": " << new_path;
   new_path += "/c";
-  creat(new_path.c_str(), 0666);
+  EXPECT_POSIX_OK(creat(new_path.c_str(), 0)) << ": " << new_path;
   std::string link_path(temp_directory + "/l");
-  symlink(root_path.c_str(), link_path.c_str());
+  EXPECT_POSIX_OK(symlink(root_path.c_str(), link_path.c_str()))
+      << ": " << root_path << ", " << link_path;
   RemoveDirectory(link_path);
-  EXPECT_EQ(access(root_path.c_str(), F_OK), 0);
+  EXPECT_POSIX_OK(access(root_path.c_str(), F_OK)) << ": " << root_path;
   RemoveDirectory(root_path);
 }
 
