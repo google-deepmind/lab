@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -3487,6 +3487,17 @@ void CL_Sayto_f( void ) {
 }
 
 /*
+=================
+CL_UpdateCustomItems_f
+
+Ensures the rendering state is in sync with the gameplay state.
+=================
+*/
+void CL_UpdateCustomItems_f( void ) {
+	VM_Call( cgvm, CG_UPDATE_CUSTOM_ITEMS );
+}
+
+/*
 ====================
 CL_Init
 ====================
@@ -3688,6 +3699,7 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("model", CL_SetModel_f );
 	Cmd_AddCommand ("video", CL_Video_f );
 	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
+	Cmd_AddCommand ("updatecustomitems", CL_UpdateCustomItems_f );
 	if( !com_dedicated->integer ) {
 		Cmd_AddCommand ("sayto", CL_Sayto_f );
 		Cmd_SetCommandCompletionFunc( "sayto", CL_CompletePlayerName );
