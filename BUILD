@@ -553,6 +553,18 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+IOQ3_RENDERERGL1_SRCS = [
+    CODE_DIR + "/renderergl2/tr_image_dds.c",
+] + glob(
+    include = [
+        CODE_DIR + "/renderergl1/*.c",
+        CODE_DIR + "/renderergl1/*.h",
+    ],
+    exclude = [
+        CODE_DIR + "/renderergl1/tr_subs.c",
+    ],
+)
+
 IOQ3_COMMON_SRCS = [
     CODE_DIR + "/asm/ftola.c",
     CODE_DIR + "/asm/qasm-inline.h",
@@ -563,7 +575,6 @@ IOQ3_COMMON_SRCS = [
     CODE_DIR + "/deepmind/dm_public.h",
     CODE_DIR + "/game/bg_public.h",
     CODE_DIR + "/game/g_public.h",
-    CODE_DIR + "/renderergl2/tr_image_dds.c",
     CODE_DIR + "/sys/con_log.c",
     CODE_DIR + "/sys/con_passive.c",
     CODE_DIR + "/sys/sys_main.c",
@@ -580,18 +591,12 @@ IOQ3_COMMON_SRCS = [
         CODE_DIR + "/qcommon/*.h",
         CODE_DIR + "/renderercommon/*.c",
         CODE_DIR + "/renderercommon/*.h",
-        CODE_DIR + "/renderergl1/*.c",
-        CODE_DIR + "/renderergl1/*.h",
         CODE_DIR + "/server/*.c",
         CODE_DIR + "/server/*.h",
         CODE_DIR + "/sys/*.h",
     ],
     exclude = [
         CODE_DIR + "/client/fx_*.h",
-        CODE_DIR + "/renderercommon/tr_types.h",
-        CODE_DIR + "/renderercommon/tr_public.h",
-        CODE_DIR + "/renderergl1/tr_local.h",
-        CODE_DIR + "/renderergl1/tr_subs.c",
         CODE_DIR + "/server/sv_rankings.c",
         CODE_DIR + "/qcommon/vm_armv7l.c",
         CODE_DIR + "/qcommon/vm_none.c",
@@ -600,7 +605,7 @@ IOQ3_COMMON_SRCS = [
         CODE_DIR + "/qcommon/vm_sparc.c",
         CODE_DIR + "/qcommon/vm_sparc.h",
     ],
-)
+) + IOQ3_RENDERERGL1_SRCS
 
 IOQ3_COMMON_DEPS = [
     ":level_cache_types",
@@ -612,12 +617,6 @@ IOQ3_COMMON_DEPS = [
     "@jpeg_archive//:jpeg",
     "@sdl_system//:sdl2",
     "@zlib_archive//:zlib",
-]
-
-IOQ3_COMMON_TEXTUAL_HDRS = [
-    CODE_DIR + "/renderercommon/tr_types.h",
-    CODE_DIR + "/renderercommon/tr_public.h",
-    CODE_DIR + "/renderergl1/tr_local.h",
 ]
 
 IOQ3_COMMON_COPTS = [
@@ -658,6 +657,7 @@ genrule(
         "//deepmind/level_generation:compile_map_sh",
         "//q3map2",
     ],
+    visibility = ["//testing:__subpackages__"],
 )
 
 genrule(
@@ -751,7 +751,6 @@ cc_library(
         "-lGL",
         "-lrt",
     ],
-    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
     deps = IOQ3_COMMON_DEPS,
 )
 
@@ -771,7 +770,6 @@ cc_library(
     copts = IOQ3_COMMON_COPTS,
     defines = IOQ3_COMMON_DEFINES,
     linkopts = ["-lOSMesa"],
-    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
     deps = IOQ3_COMMON_DEPS,
 )
 
@@ -794,7 +792,6 @@ cc_library(
         "-lGL",
         "-lX11",
     ],
-    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
     deps = IOQ3_COMMON_DEPS,
 )
 
@@ -817,7 +814,6 @@ cc_library(
         "-lEGL",
         "-lGL",
     ],
-    textual_hdrs = IOQ3_COMMON_TEXTUAL_HDRS,
     deps = IOQ3_COMMON_DEPS + ["//third_party/GL/util:egl_util"],
 )
 
