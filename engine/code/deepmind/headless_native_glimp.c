@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -101,7 +101,9 @@ void GLimp_Init(qboolean coreContext) {
   GLimp_CommonPostInit();
 }
 
-void* GLimp_GetProcAddress(const char* func) { return glXGetProcAddress(func); }
+void* GLimp_GetProcAddress(const char* func) {
+  return glXGetProcAddress((const GLubyte*)func);
+}
 
 void GLimp_Shutdown(void) {
   glXMakeCurrent(glx_display, 0, NULL);
