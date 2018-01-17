@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -923,7 +923,7 @@ Only in One Flag CTF games
 
 // Simple string buffer for storing new item strings. This is required as
 // bg_misc.c is used by several QVM's, so cannot use any existing memory pool.
-#define BG_BUFFERSIZE (4 * 1024)
+#define BG_BUFFERSIZE (8 * 1024)
 char bg_string_buffer[BG_BUFFERSIZE];
 int bg_buffer_idx = 0;
 
