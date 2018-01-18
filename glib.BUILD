@@ -111,6 +111,8 @@ cc_library(
         "glib/gthreadprivate.h",
         "glib/gtimer.c",
         "glib/gtimezone.c",
+        "glib/gtranslit.c",
+        "glib/gtranslit-data.h",
         "glib/gtrashstack.c",
         "glib/gtree.c",
         "glib/gunibreak.c",
