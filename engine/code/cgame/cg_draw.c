@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -732,24 +732,32 @@ static float CG_DrawSnapshot( float y ) {
 
 static void CG_DrawScriptMessage( void ) {
 	char s[80];
-	int c = dmlab_make_screen_messages(
-			640, 480, BIGCHAR_HEIGHT + 4, 80 );
-	int i, w, x = 0, y = 0, align_l0_r1_c2 = 0;
+	int c = 0;
+	int i, x = 0, y = 0, align_l0_r1_c2 = 0;
+	int shadow = 1;
+	vec4_t rgba = {1.0f, 1.0f, 1.0f, 1.0f};
+	c = dmlab_make_screen_messages(
+			SCREEN_WIDTH, SCREEN_HEIGHT, BIGCHAR_HEIGHT + 4, 80 );
 	for (i = 0; i < c; ++i) {
-		dmlab_get_screen_message( i, s, &x, &y, &align_l0_r1_c2 );
+		dmlab_get_screen_message( i, s, &x, &y, &align_l0_r1_c2, &shadow, rgba );
+		y = y + 2;
 		switch (align_l0_r1_c2) {
 			case 0:  // Left
-				CG_DrawBigString( x, y + 2, s, 1.0F );
 				break;
 			case 1:  // Right
-				w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-				CG_DrawBigString( x - w, y + 2, s, 1.0F );
+				x -= CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 				break;
 			case 2:  // Center
 			default:
-				w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-				CG_DrawBigString( x - w / 2, y + 2, s, 1.0F ); break;
+				x -= CG_DrawStrlen( s ) * BIGCHAR_WIDTH / 2;
+				break;
 		}
+		CG_DrawStringExt(
+				x, y, s, rgba,
+				/*forceColor=*/qfalse,
+				/*shadow=*/shadow != 0,
+				BIGCHAR_WIDTH, BIGCHAR_HEIGHT,
+				/*maxChars=*/0 );
 	}
 }
 

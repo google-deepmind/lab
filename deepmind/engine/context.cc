@@ -226,16 +226,18 @@ void predicted_player_state(void* userdata, const float origin[3],
       origin, velocity, viewangles, height, timestamp_msec);
 }
 
-int make_screen_messages(void* userdata, int screen_width, int screen_height,
-                         int line_height, int string_buffer_size) {
+static int make_screen_messages(void* userdata, int screen_width,
+                                int screen_height, int line_height,
+                                int string_buffer_size) {
   return static_cast<Context*>(userdata)->MakeScreenMessages(
       screen_width, screen_height, line_height, string_buffer_size);
 }
 
-void get_screen_message(void* userdata, int message_id, char* buffer, int* x,
-                        int* y, int* align_l0_r1_c2) {
-  static_cast<Context*>(userdata)->GetScreenMessage(message_id, buffer, x, y,
-                                                    align_l0_r1_c2);
+static void get_screen_message(void* userdata, int message_id, char* buffer,
+                               int* x, int* y, int* align_l0_r1_c2,
+                               int* shadow, float rgba[4]) {
+  static_cast<Context*>(userdata)->GetScreenMessage(
+      message_id, buffer, x, y, align_l0_r1_c2, shadow, rgba);
 }
 
 static void make_pk3_from_map(void* userdata, const char* map_path,
@@ -1041,7 +1043,7 @@ void Context::SetPredictPlayerState(const float pos[3], const float vel[3],
 }
 
 int Context::MakeScreenMessages(int screen_width, int screen_height,
-                               int line_height,  int string_buffer_size) {
+                                int line_height, int string_buffer_size) {
   screen_messages_.clear();
   lua_State* L = lua_vm_.get();
   script_table_ref_.PushMemberFunction("screenMessages");
@@ -1077,6 +1079,10 @@ int Context::MakeScreenMessages(int screen_width, int screen_height,
     message_table.LookUp("x", &message.x);
     message_table.LookUp("y", &message.y);
     message_table.LookUp("alignment", &message.align_l0_r1_c2);
+    std::fill(message.rgba.begin(), message.rgba.end(), 1.0);
+    message_table.LookUp("rgba", &message.rgba);
+    message.shadow = true;
+    message_table.LookUp("shadow", &message.shadow);
     screen_messages_.push_back(std::move(message));
   }
 
@@ -1085,7 +1091,8 @@ int Context::MakeScreenMessages(int screen_width, int screen_height,
 }
 
 void Context::GetScreenMessage(int message_id, char* buffer, int* x, int* y,
-                               int* align_l0_r1_c2) const {
+                               int* align_l0_r1_c2, int* shadow,
+                               float rgba[4]) const {
   const auto& screen_message = screen_messages_[message_id];
   const std::string& msg_text = screen_message.text;
   // MakeScreenMessages guarantees message is smaller than string_buffer_size.
@@ -1093,11 +1100,13 @@ void Context::GetScreenMessage(int message_id, char* buffer, int* x, int* y,
   *x = screen_message.x;
   *y = screen_message.y;
   *align_l0_r1_c2 = screen_message.align_l0_r1_c2;
+  *shadow = screen_message.shadow ? 1 : 0;
+  std::copy_n(screen_message.rgba.data(), screen_message.rgba.size(), rgba);
 }
 
 void Context::MakePk3FromMap(const char* map_path, const char* map_name,
                              bool gen_aas) {
-  MapCompileSettings compile_settings = {};
+  MapCompileSettings compile_settings;
   compile_settings.generate_aas = gen_aas;
   compile_settings.map_source_location =
       absl::StrCat(ExecutableRunfiles(), "/", map_path);

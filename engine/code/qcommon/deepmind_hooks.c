@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,25 +28,33 @@ int dmlab_callback(
   DeepmindContext* ctx = dmlab_context();
   switch (dm_callnum) {
     case DEEPMIND_UPDATE_SPAWN_VARS:
-      return ctx->hooks.update_spawn_vars(ctx->userdata, VM_ArgPtr(a1),
-                                          VM_ArgPtr(a2), VM_ArgPtr(a3),
-                                          VM_ArgPtr(a4));
+      return ctx->hooks.update_spawn_vars(ctx->userdata,
+                                          /*spawn_var_chars=*/VM_ArgPtr(a1),
+                                          /*num_spawn_var_chars=*/VM_ArgPtr(a2),
+                                          /*spawn_vars_offsets=*/VM_ArgPtr(a3),
+                                          /*num_spawn_vars=*/VM_ArgPtr(a4));
+
     case DEEPMIND_FIND_ITEM:
-      return ctx->hooks.find_item(ctx->userdata, VM_ArgPtr(a1), VM_ArgPtr(a2));
+      return ctx->hooks.find_item(ctx->userdata, /*class_name=*/VM_ArgPtr(a1),
+                                  /*index=*/VM_ArgPtr(a2));
     case DEEPMIND_ITEM_COUNT:
       return ctx->hooks.item_count(ctx->userdata);
     case DEEPMIND_ITEM:
-      return ctx->hooks.item(ctx->userdata, a1, VM_ArgPtr(a2), a3,
-                             VM_ArgPtr(a4), a5, VM_ArgPtr(a6), a7,
-                             VM_ArgPtr(a8), VM_ArgPtr(a9), VM_ArgPtr(a10));
+      return ctx->hooks.item(
+          ctx->userdata, /*index=*/a1, /*item_name=*/VM_ArgPtr(a2),
+          /*max_item_name=*/a3,
+          /*class_name=*/VM_ArgPtr(a4), /*max_class_name=*/a5,
+          /*model_name=*/VM_ArgPtr(a6), /*max_model_name=*/a7,
+          /*quantity=*/VM_ArgPtr(a8), /*type=*/VM_ArgPtr(a9),
+          /*tag=*/VM_ArgPtr(a10));
     case DEEPMIND_CLEAR_ITEMS:
       ctx->hooks.clear_items(ctx->userdata);
       return 1;
     case DEEPMIND_FINISH_MAP:
-      ctx->hooks.set_map_finished(ctx->userdata, a1);
+      ctx->hooks.set_map_finished(ctx->userdata, /*map_finished=*/a1);
       return 1;
     case DEEPMIND_CAN_PICKUP:
-      return ctx->hooks.can_pickup(ctx->userdata, a1);
+      return ctx->hooks.can_pickup(ctx->userdata, /*entity_id=*/a1);
     case DEEPMIND_OVERRIDE_PICKUP:
       return ctx->hooks.override_pickup(ctx->userdata, a1, VM_ArgPtr(a2));
     case DEEPMIND_EXTERNAL_REWARD:
@@ -60,11 +68,17 @@ int dmlab_callback(
       break;
     }
     case DEEPMIND_MAKE_SCREEN_MESSAGES:
-      return ctx->hooks.make_screen_messages(ctx->userdata, a1, a2, a3, a4);
+      return ctx->hooks.make_screen_messages(ctx->userdata, /*width=*/a1,
+                                             /*height=*/a2, /*line_height=*/a3,
+                                             /*string_buffer_size=*/a4);
     case DEEPMIND_GET_SCREEN_MESSAGE:
-      ctx->hooks.get_screen_message(ctx->userdata, a1, VM_ArgPtr(a2),
-                                    VM_ArgPtr(a3), VM_ArgPtr(a4),
-                                    VM_ArgPtr(a5));
+      ctx->hooks.get_screen_message(
+          ctx->userdata, /*message_id=*/a1, /*buffer=*/VM_ArgPtr(a2),
+          /*x=*/VM_ArgPtr(a3),
+          /*y=*/VM_ArgPtr(a4), /*shadow=*/VM_ArgPtr(a5),
+          /*align_l0_r1_c2=*/VM_ArgPtr(a6),
+          /*rgba=*/VM_ArgPtr(a7));
+      break;
       break;
     case DEEPMIND_PLAYER_SCORE:
       return ctx->calls.player_score(ctx->context);

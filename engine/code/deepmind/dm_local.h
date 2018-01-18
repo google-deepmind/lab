@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -93,8 +93,9 @@ int dmlab_make_screen_messages(int screen_width, int screen_height,
 // Coordinates 'x' and 'y' are in screen space where top left is 0, 0 and
 // bottom right is width, height from dmlab_make_screen_messages.
 // 'buffer' must be large enough to hold string_buffer_size characters including
-// null terminator.
+// null terminator. 'shadow' is whether to render a black offset drop shadow.
+// 'rgba' is the color and alpha of the text.
 void dmlab_get_screen_message(int message_id, char* buffer, int* x, int* y,
-                              int* align_l0_r1_c2);
+                              int* align_l0_r1_c2, int* shadow, float rgba[4]);
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_

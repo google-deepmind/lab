@@ -207,7 +207,8 @@ struct DeepmindHooks_s {
 
   // See GetScreenMessage in deepmind/engine/context.h.
   void (*get_screen_message)(void* userdata, int message_id, char* buffer,
-                             int* x, int* y, int* align_l0_r1_c2);
+                             int* x, int* y, int* shadow, int* align_l0_r1_c2,
+                             float rgba[4]);
 
   // See MakePk3FromMap in deepmind/engine/context.h.
   void (*make_pk3_from_map)(void* userdata, const char* map_path,

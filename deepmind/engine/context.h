@@ -282,9 +282,11 @@ class Context {
   // 'message_id' shall be greater than or equal to zero and less than what
   // was returned by the last call of MakeScreenMesages.
   // 'align_l0_r1_c2' is how the text is horizontally aligned. '0' for left,
-  // '1' for right and '2' for center.
+  // '1' for right and '2' for center.  'shadow' is whether to render a black
+  // offset drop shadow. 'rgba' is the color and alpha of the text.
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
-                        int* align_l0_r1_c2) const;
+                        int* align_l0_r1_c2, int* shadow, float rgba[4]) const;
+
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.
@@ -320,6 +322,8 @@ class Context {
     int x;
     int y;
     int align_l0_r1_c2;
+    std::array<float, 4> rgba;
+    bool shadow;
   };
 
   // Current action state.

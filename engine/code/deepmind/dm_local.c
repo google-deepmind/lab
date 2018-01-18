@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -93,10 +93,11 @@ int dmlab_make_screen_messages(int screen_width, int screen_height,
 }
 
 void dmlab_get_screen_message(int message_id, char* buffer, int* x, int* y,
-                              int* align_l0_r1_c2) {
+                              int* align_l0_r1_c2, int* shadow, float rgba[4]) {
   trap_DeepmindCallback(DEEPMIND_GET_SCREEN_MESSAGE, (intptr_t)message_id,
                         (intptr_t)buffer, (intptr_t)x, (intptr_t)y,
-                        (intptr_t)align_l0_r1_c2, 0, 0, 0, 0, 0, 0, 0);
+                        (intptr_t)align_l0_r1_c2, (intptr_t)shadow,
+                        (intptr_t)rgba, 0, 0, 0, 0, 0);
 }
 
 int dmlab_player_score(void) {
