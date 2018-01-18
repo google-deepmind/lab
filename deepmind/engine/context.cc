@@ -98,6 +98,15 @@ static const char* next_map(void* userdata) {
   return static_cast<Context*>(userdata)->NextMap();
 }
 
+static int game_type(void* userdata) {
+  return static_cast<Context*>(userdata)->GameType();
+}
+
+static char team_select(void* userdata, int player_id,
+                        const char* player_name) {
+  return static_cast<Context*>(userdata)->TeamSelect(player_id, player_name);
+}
+
 static int run_lua_snippet(void* userdata, const char* command) {
   std::size_t command_len = std::strlen(command);
   return static_cast<Context*>(userdata)->RunLuaSnippet(command, command_len);
@@ -322,6 +331,13 @@ bool StringCopy(const std::string& arg, char* dest, std::size_t max_size) {
   }
 }
 
+constexpr const char* const kTeamNames[] = {
+  "free",
+  "red",
+  "blue",
+  "spectator"
+};
+
 lua::NResultsOr MapMakerModule(lua_State* L) {
   if (auto* ctx =
           static_cast<Context*>(lua_touserdata(L, lua_upvalueindex(1)))) {
@@ -383,6 +399,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_error_message = set_error_message;
   hooks->replace_command_line = replace_command_line;
   hooks->next_map = next_map;
+  hooks->game_type = game_type;
+  hooks->team_select = team_select;
   hooks->run_lua_snippet = run_lua_snippet;
   hooks->set_native_app = set_native_app;
   hooks->get_native_app = get_native_app;
@@ -616,6 +634,64 @@ const char* Context::NextMap() {
   predicted_player_view_.timestamp_msec = 0;
   lua_pop(L, result.n_results());
   return map_name_.c_str();
+}
+
+int Context::GameType() {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("gameType");
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return 0;  // GT_FFA from bg_public.
+  } else {
+    auto result = lua::Call(L, 1);
+    CHECK(result.ok()) << "[gameType] - " << result.error();
+    int game_type = 0;
+    CHECK(lua::Read(L, -1, &game_type))
+        << "[gameType] - must return integer; actual \"" << lua::ToString(L, -1)
+        << "\"";
+    CHECK_LT(game_type, 8)
+        << "[gameType] - must return integer less than 8; actual \""
+        << game_type << "\"";
+    return game_type;
+  }
+}
+
+char Context::TeamSelect(int player_id, const char* player_name) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("team");
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return '\0';
+  }
+
+  lua::Push(L, player_id + 1);
+  lua::Push(L, player_name);
+
+  auto result = lua::Call(L, 3);
+  CHECK(result.ok()) << result.error();
+  if (result.n_results() == 0 || lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return '\0';
+  }
+  CHECK_EQ(1, result.n_results()) << "[team] - must return one string.";
+  std::string team;
+  CHECK(lua::Read(L, -1, &team)) << "[team] - must return one string: Found \""
+                                 << lua::ToString(L, -1) << "\"";
+
+  lua_pop(L, result.n_results());
+  CHECK(!team.empty()) << "[team] - must return one character or nil: Found \""
+                       << lua::ToString(L, -1) << "\"";
+
+  const char kTeam[] = "pbrs";
+  auto ret = std::find_if(std::begin(kTeam), std::end(kTeam),
+                          [&team](char t) { return team[0] == t; });
+  if (ret != std::end(kTeam)) {
+    return *ret;
+  }
+
+  LOG(FATAL) << "[team] - must return one of 'r', 'b', 'p' and 's'; actual"
+             << lua::ToString(L, -1);
+  return '\0';
 }
 
 void Context::SetActions(double look_down_up, double look_left_right,

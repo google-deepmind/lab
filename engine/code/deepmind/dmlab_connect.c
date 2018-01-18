@@ -106,8 +106,15 @@ typedef struct GameContext_s {
   int map_start_frame;            // First frame after warm-up.
   double total_engine_time_msec;  // This is step * engine_frame_period_msec.
   double score;
+  vmInterpret_t vm_mode;  // Selected VM mode for the game, ui, and client.
+  bool is_server;         // Whether this environment acts as a server.
+  bool is_client_only;    // Whether this environment is attached to an external
+                          // server.
   bool is_connecting;     // Whether the environment is connecting to a client
                           // or server.
+  int server_port;        // The port a client will attach to on the server.
+  int port;               // The port that this environment advertises on.
+
   bool use_local_level_cache;
   bool use_global_level_cache;
 
@@ -134,6 +141,9 @@ static int first_start(GameContext* gc) {
            va(" +set fs_temporarypath \"%s\"", dynamic_path));
   Q_strcat(gc->command_line, sizeof(gc->command_line),
            va(" +set fs_homepath \"%s\"", dynamic_path));
+
+  Q_strcat(gc->command_line, sizeof(gc->command_line),
+           va(" +set g_gametype \"%d\"", ctx->hooks.game_type(ctx->userdata)));
 
   const char* modifiedCommandLine =
       ctx->hooks.replace_command_line(ctx->userdata, gc->command_line);
@@ -210,7 +220,7 @@ static void dev_map(GameContext* gc) {
 }
 
 static int connecting(GameContext* gc) {
-  int err = clc.state < CA_ACTIVE ? EAGAIN : 0;
+  int err = !gc->is_server && clc.state < CA_ACTIVE ? EAGAIN : 0;
   IN_Frame();
   Com_Frame();
   return err;
@@ -341,6 +351,14 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
     gc->height = v;
+  } else if (strcmp(key, "server") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    gc->is_server = v_bool;
+  } else if (strcmp(key, "client") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    gc->is_client_only = v_bool;
   } else if (strcmp(key, "localLevelCache") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
@@ -349,6 +367,33 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
     gc->use_global_level_cache = v_bool;
+  } else if (strcmp(key, "serverPort") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    gc->server_port = v;
+    return 0;
+  } else if (strcmp(key, "port") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    gc->port = v;
+    Q_strcat(gc->command_line, sizeof(gc->command_line),
+             va(" +set net_port %ld", v));
+    return 0;
+  } else if (strcmp(key, "vmMode") == 0) {
+    if (strcmp(value, "interpreted") == 0) {
+      gc->vm_mode = VMI_BYTECODE;
+    } else if (strcmp(value, "compiled") == 0) {
+      gc->vm_mode = VMI_COMPILED;
+    } else if (strcmp(value, "native") == 0) {
+      gc->vm_mode = VMI_NATIVE;
+    } else {
+      ctx->hooks.set_error_message(
+          ctx->userdata,
+          va("vmMode must be either: "
+             "\"interpreted\",  \"compiled\", or \"native\"; actual: \"%s\"\n",
+             value));
+      return 1;
+    }
   } else if (strcmp(key, "fps") == 0) {
     int res = parse_double(value, &v_double, ctx);
     if (res != 0) return res;
@@ -384,6 +429,21 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
 static int dmlab_init(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  if (gc->vm_mode != VMI_NATIVE) {
+    Q_strcat(gc->command_line, sizeof(gc->command_line),
+             va(" +set vm_cgame \"%d\""
+                " +set vm_game \"%d\""
+                " +set vm_ui \"%d\"",
+                gc->vm_mode, gc->vm_mode, gc->vm_mode));
+  }
+  if (gc->is_server) {
+    Q_strcat(gc->command_line, sizeof(gc->command_line),
+             " +set sv_hostname \"server\""
+             " +set sv_fps 20"
+             " +set dedicated 1"
+             " +set sv_host server"
+             " +set sv_allowDownload 1");
+  }
   if (gc->init_called) {
     ctx->hooks.set_error_message(
         ctx->userdata, "'init' has already been called previously.\n");
@@ -394,6 +454,20 @@ static int dmlab_init(void* context) {
                                       gc->use_global_level_cache,
                                       gc->level_cache_params);
   return ctx->hooks.init(ctx->userdata);
+}
+
+static void connect_client(GameContext* gc) {
+  Cmd_ExecuteString(va("connect 127.0.0.1:%d\n", gc->server_port));
+  Cvar_Set("fixedtime", va("%d", gc->engine_frame_period_msec));
+  Com_Frame();
+  gc->is_connecting = true;
+  gc->map_loaded = false;
+}
+
+static void start_server(GameContext* gc) {
+  dev_map(gc);
+  gc->is_connecting = true;
+  gc->map_loaded = false;
 }
 
 static int dmlab_start(void* context, int episode_id, int seed) {
@@ -427,7 +501,22 @@ static int dmlab_start(void* context, int episode_id, int seed) {
     gc->first_start = true;
   }
 
-  load_map(gc);
+  re.MakeCurrent();
+  if (gc->is_client_only) {
+    connect_client(gc);
+  } else if (gc->is_server) {
+    start_server(gc);
+  } else {
+    load_map(gc);
+    if (ctx->hooks.map_loaded(ctx->userdata) != 0) {
+      return 1;
+    }
+  }
+
+  gc->is_map_loading = false;
+  if (gc->is_client_only) {
+    return clc.state < CA_ACTIVE ? EAGAIN : 0;
+  }
   return 0;
 }
 
@@ -436,7 +525,7 @@ static const char* dmlab_environment_name(void* context) {
 }
 
 static int dmlab_action_discrete_count(void* context) {
-  return ARRAY_LEN(kActionNames);
+  return ((GameContext*)context)->is_server ? 0 : ARRAY_LEN(kActionNames);
 }
 
 static const char* dmlab_action_discrete_name(void* context, int discrete_idx) {
@@ -639,6 +728,8 @@ static void dmlab_event(void* context, int event_idx, EnvCApi_Event* event) {}
 
 static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
   GameContext* gc = context;
+  gc->is_connecting = false;
+  if (gc->is_server) return;
   DeepmindContext* ctx = gc->dm_ctx;
   int rightmove = act_d[kActions_StrafeLeftRight] * 127;
   int forwardmove = act_d[kActions_MoveBackForward] * 127;
@@ -742,7 +833,7 @@ static void screen_shape(void* context, int* width, int* height) {
   *height = gc->height;
 }
 
-static void add_bot(const char* name, double skill,  const char* team) {
+static void add_bot(const char* name, double skill, const char* team) {
   Cbuf_AddText(va("addbot %s %f %s\n", name, skill, team));
 }
 

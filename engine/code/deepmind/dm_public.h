@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ typedef enum deepmindImport_enum {
   DEEPMIND_MAKE_SCREEN_MESSAGES,
   DEEPMIND_GET_SCREEN_MESSAGE,
   DEEPMIND_PLAYER_SCORE,
+  DEEPMIND_TEAM_SELECT,
 } deepmindImport_t;
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_PUBLIC_H_

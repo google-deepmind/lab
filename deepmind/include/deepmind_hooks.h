@@ -77,6 +77,10 @@ struct DeepmindHooks_s {
   // Must return name of map discoverable by the engine.
   const char* (*next_map)(void* userdata);
 
+  // Called when game starts to establish game type. See gametype_t from
+  // bg_public.h
+  int (*game_type)(void* userdata);
+
   // Runs a Lua snippet, using the Lua VM of the userdata.
   // If the script returns an integer, then this function
   // will return that value; otherwise it returns 0.
@@ -213,6 +217,9 @@ struct DeepmindHooks_s {
   // See MakePk3FromMap in deepmind/engine/context.h.
   void (*make_pk3_from_map)(void* userdata, const char* map_path,
                             const char* map_name, bool gen_aas);
+
+  // See TeamSelect in deepmind/engine/context.h.
+  char (*team_select)(void* userdata, int player_id, const char* player_name);
 
   // Set and retrieve error message. 'error_message' shall be a null terminated
   // string.

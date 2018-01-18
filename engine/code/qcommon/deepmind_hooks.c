@@ -82,6 +82,11 @@ int dmlab_callback(
       break;
     case DEEPMIND_PLAYER_SCORE:
       return ctx->calls.player_score(ctx->context);
+    case DEEPMIND_TEAM_SELECT:
+      return ctx->hooks.team_select(ctx->userdata,
+                                    /*player_id=*/a1,
+                                    /*player_name=*/VM_ArgPtr(a2));
+      break;
     default:
       Com_Error(ERR_DROP, "DeepMind system call %d not implemented\n",
                 dm_callnum);

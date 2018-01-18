@@ -111,9 +111,23 @@ class Context {
   // Must be called after Init.
   const char* NextMap();
 
+  // Returns the game mode from script. The return value must be a valid value
+  // of the gametype_t enum (see code/game/bg_public.h). If no matching callback
+  // is implemented in Lua, returns GT_FFA ("free for all").
+  int GameType();
+
+  // Returns the team selection for a player.
+  // '\0' - No selection.
+  // 'p' - Free.
+  // 'r' - Red Team.
+  // 'b' - Blue Team.
+  // 's' - Spectator.
+  // Called by the engine with each player's chosen ID and name.
+  char TeamSelect(int player_id, const char* player_name);
+
   // The script is called with the script_table_ref pushed on the stack.
   // Runs the contents in the lua_vm_. If the script returns an integer this
-  // function will return it too, else it returns 0.
+  // function will return it, too, else it returns 0.
   int RunLuaSnippet(const char* buf, std::size_t buf_len);
 
   // Sets the current actions applied from the controller.

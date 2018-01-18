@@ -104,3 +104,9 @@ int dmlab_player_score(void) {
   return trap_DeepmindCallback(DEEPMIND_PLAYER_SCORE, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0);
 }
+char dmlab_select_team(int player_id, const char* player_name) {
+  return (char)trap_DeepmindCallback(DEEPMIND_TEAM_SELECT, (intptr_t)player_id,
+                                     (intptr_t)player_name, 0, 0, 0, 0, 0, 0, 0,
+                                     0, 0, 0);
+}
+
