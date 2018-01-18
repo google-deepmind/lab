@@ -139,7 +139,13 @@ class Context {
       signed char crouch_jump,        //
       int buttons_down);
 
-  // Retrieves the current actions applied by the controller.
+  // Retrieves the current actions applied by the controller. These values are
+  // initially those set by SetActions, but they may be modified by the user
+  // if a Lua callback named "modifyControl" is provided. If provided, the
+  // callback is called with a single argument table containing six key-value
+  // pairs for the six actions ("lookDownUp", "lookLeftRight", ...). It is
+  // expected to return a table with the same keys containing the (new) values
+  // of the six actions.
   void GetActions(                     //
       double* look_down_up,            //
       double* look_left_right,         //

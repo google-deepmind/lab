@@ -710,6 +710,36 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
                          signed char* move_back_forward,
                          signed char* strafe_left_right,
                          signed char* crouch_jump, int* buttons_down) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("modifyControl");
+  // Check function exists.
+  if (!lua_isnil(L, -2)) {
+    auto table = lua::TableRef::Create(L);
+    table.Insert("lookDownUp", actions_.look_down_up);
+    table.Insert("lookLeftRight", actions_.look_left_right);
+    table.Insert("moveBackForward", actions_.move_back_forward);
+    table.Insert("strafeLeftRight", actions_.strafe_left_right);
+    table.Insert("crouchJump", actions_.crouch_jump);
+    table.Insert("buttonsDown", actions_.buttons_down);
+    lua::Push(L, table);
+    auto result = lua::Call(L, 2);
+    CHECK(result.ok()) << result.error();
+
+    if (result.n_results() >= 1) {
+      lua::Read(L, -1, &table);
+      CHECK(table.LookUp("lookDownUp", look_down_up));
+      CHECK(table.LookUp("lookLeftRight", look_left_right));
+      CHECK(table.LookUp("moveBackForward", move_back_forward));
+      CHECK(table.LookUp("strafeLeftRight", strafe_left_right));
+      CHECK(table.LookUp("crouchJump", crouch_jump));
+      CHECK(table.LookUp("buttonsDown", buttons_down));
+      lua_pop(L, result.n_results());
+      return;
+    }
+  } else {
+    lua_pop(L, 2);
+  }
+
   *look_down_up = actions_.look_down_up;
   *look_left_right = actions_.look_left_right;
   *move_back_forward = actions_.move_back_forward;
