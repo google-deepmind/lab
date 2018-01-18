@@ -569,7 +569,7 @@ void CL_FinishMove( vec3_t old_angles, usercmd_t *cmd ) {
 	// can be determined without allowing cheating
 	cmd->serverTime = cl.serverTime;
 
-	if (ctx->hooks.get_use_internal_controls( ctx->userdata ) != 0) {
+	if (ctx->hooks.get_native_app( ctx->userdata ) != 0) {
 		ctx->hooks.set_actions(
 				ctx->userdata,
 				AngleDelta( cl.viewangles[PITCH], old_angles[PITCH] ) / eng_frame_msec,

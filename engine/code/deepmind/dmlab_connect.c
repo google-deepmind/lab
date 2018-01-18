@@ -17,8 +17,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
-#include <math.h>
 #include <limits.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -356,7 +356,7 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
       gc->engine_frame_period_msec =
           (int)((kEngineTimePerExternalTime * 1000.0 / v_double) + 0.5);
     }
-  } else if(strcmp(key, "logToStdErr") == 0) {
+  } else if (strcmp(key, "logToStdErr") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
     if (v_bool) {
@@ -367,21 +367,13 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
                " +set com_logToStdErr 0");
     }
-  } else if (strcmp(key, "controls") == 0) {
-    if (strcmp(value, "internal") == 0) {
-      ctx->hooks.set_use_internal_controls(ctx->userdata, true);
-    } else if (strcmp(value, "external") == 0) {
-      ctx->hooks.set_use_internal_controls(ctx->userdata, false);
-    }
+  } else if (strcmp(key, "nativeApp") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    ctx->hooks.set_native_app(ctx->userdata, v_bool);
   } else if (strcmp(key, "appendCommand") == 0) {
-    bool quote = strchr(value, '0') != NULL;
-    if (quote) {
-      Q_strcat(gc->command_line, sizeof(gc->command_line), "\"");
-    }
+    Q_strcat(gc->command_line, sizeof(gc->command_line), " ");
     Q_strcat(gc->command_line, sizeof(gc->command_line), value);
-    if (quote) {
-      Q_strcat(gc->command_line, sizeof(gc->command_line), "\"");
-    }
   } else {
     ctx->hooks.add_setting(ctx->userdata, key, value);
   }

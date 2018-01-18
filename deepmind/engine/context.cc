@@ -103,12 +103,12 @@ static int run_lua_snippet(void* userdata, const char* command) {
   return static_cast<Context*>(userdata)->RunLuaSnippet(command, command_len);
 }
 
-static void set_use_internal_controls(void* userdata, bool v) {
-  return static_cast<Context*>(userdata)->SetUseInternalControls(v);
+static void set_native_app(void* userdata, bool v) {
+  return static_cast<Context*>(userdata)->SetNativeApp(v);
 }
 
-static bool get_use_internal_controls(void* userdata) {
-  return static_cast<Context*>(userdata)->UseInternalControls();
+static bool get_native_app(void* userdata) {
+  return static_cast<Context*>(userdata)->NativeApp();
 }
 
 static void set_actions(void* userdata, double look_down_up,
@@ -362,7 +362,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
     : lua_vm_(std::move(lua_vm)),
       executable_runfiles_(executable_runfiles),
       deepmind_calls_(calls),
-      use_internal_controls_(false),
+      native_app_(false),
       actions_{},
       map_finished_(false),
       random_seed_(0),
@@ -382,8 +382,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->replace_command_line = replace_command_line;
   hooks->next_map = next_map;
   hooks->run_lua_snippet = run_lua_snippet;
-  hooks->set_use_internal_controls = set_use_internal_controls;
-  hooks->get_use_internal_controls = get_use_internal_controls;
+  hooks->set_native_app = set_native_app;
+  hooks->get_native_app = get_native_app;
   hooks->set_actions = set_actions;
   hooks->get_actions = get_actions;
   hooks->update_spawn_vars = update_spawn_vars;

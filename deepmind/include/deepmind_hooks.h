@@ -82,11 +82,13 @@ struct DeepmindHooks_s {
   // will return that value; otherwise it returns 0.
   int (*run_lua_snippet)(void* userdata, const char* command);
 
-  // This is set if internal controller is allowed to set actions.
-  void (*set_use_internal_controls)(void* userdata, bool v);
+  // This is set if we are running a native app and the internal controller is
+  // allowed to set actions.
+  void (*set_native_app)(void* userdata, bool v);
 
-  // Returns whether internal controller is allowed to set actions.
-  bool (*get_use_internal_controls)(void* userdata);
+  // Returns whether we are running a native app and the internal controller is
+  // allowed to set actions.
+  bool (*get_native_app)(void* userdata);
 
   // Sets the actions of the player.
   void (*set_actions)(void* userdata,                 //

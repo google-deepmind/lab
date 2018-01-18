@@ -88,7 +88,8 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
         exit(EXIT_SUCCESS);
       case 'l':
         if (env_c_api->setting(context, "levelName", optarg) != 0) {
-          sys_error("Invalid levelName flag '%s'.", optarg);
+          sys_error("Invalid level_script '%s'. Internal error: %s", optarg,
+                    env_c_api->error_message(context));
         }
         break;
       case 's':
@@ -100,7 +101,8 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
         value[0] = '\0';
         ++value;
         if (env_c_api->setting(context, key, value) != 0) {
-          sys_error("Failed to apply setting '%s = %s'.", key, value);
+          sys_error("Invalid level_setting '%s=%s'. Internal error: %s",
+                    key, value, env_c_api->error_message(context));
         }
         break;
       case 'e':
@@ -135,25 +137,30 @@ int main(int argc, char** argv) {
 
   DeepMindLabLaunchParams params = {};
   params.runfiles_path = runfiles_path;
+
   if (dmlab_connect(&params, &env_c_api, &context) != 0) {
     sys_error("Failed to connect RL API");
   }
 
   if (env_c_api.setting(context, "width", "640") != 0) {
-    sys_error("Failed to apply default 'width' setting.");
+    sys_error("Failed to apply default 'width' setting. Internal error: %s",
+              env_c_api.error_message(context));
   }
 
   if (env_c_api.setting(context, "height", "480") != 0) {
-    sys_error("Failed to apply default 'height' setting.");
+    sys_error("Failed to apply default 'height' setting. Internal error: %s",
+              env_c_api.error_message(context));
   }
 
-  if (env_c_api.setting(context, "controls", "internal") != 0) {
-    sys_error("Failed to apply 'controls' setting.");
+  if (env_c_api.setting(context, "nativeApp", "true") != 0) {
+    sys_error("Failed to apply 'nativeApp' setting. Internal error: %s",
+              env_c_api.error_message(context));
   }
 
   if (env_c_api.setting(context, "appendCommand", " +set com_maxfps \"250\"")
       != 0) {
-    sys_error("Failed to apply 'appendCommand' setting.");
+    sys_error("Failed to apply 'appendCommand' setting. Internal error: %s",
+              env_c_api.error_message(context));
   }
 
   int num_episodes = 1;
@@ -161,12 +168,16 @@ int main(int argc, char** argv) {
   process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed);
 
   if (env_c_api.init(context) != 0) {
-    sys_error("Failed to init RL API");
+    sys_error("Failed to init RL API: %s", env_c_api.error_message(context));
   }
 
-  for (int episode = 0; episode < num_episodes; ++episode, ++seed) {
+  EnvCApi_EnvironmentStatus status = EnvCApi_EnvironmentStatus_Running;
+  for (int episode = 0;
+       episode < num_episodes && status != EnvCApi_EnvironmentStatus_Error;
+       ++episode, ++seed) {
     if (env_c_api.start(context, episode, seed) != 0) {
-      sys_error("Failed to start environment.");
+      sys_error("Failed to start environment. Internal error: %s",
+                env_c_api.error_message(context));
     }
     printf("Episode: %d\n", episode);
     double score = 0;
@@ -179,6 +190,9 @@ int main(int argc, char** argv) {
         fflush(stdout);
       }
     }
+  }
+  if (status == EnvCApi_EnvironmentStatus_Error) {
+    sys_error("%s", env_c_api.error_message(context));
   }
 
   env_c_api.release_context(context);

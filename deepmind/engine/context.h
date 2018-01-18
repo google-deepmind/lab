@@ -134,11 +134,10 @@ class Context {
       signed char* crouch_jump,        //
       int* buttons_down);
 
-  // This returns whether the internal controller will call SetActions.
-  bool UseInternalControls() { return use_internal_controls_; }
+  // This returns whether we are running a native app and the internal
+  // controller will call SetActions.
+  bool NativeApp() { return native_app_; }
 
-  // Sets whether the internal controller will call SetActions.
-  void SetUseInternalControls(bool v) { use_internal_controls_ = v; }
 
   // Allows Lua to replace contents of this c-style dictionary.
   // 'spawn_var_chars' is pointing at the memory holding the strings.
@@ -166,6 +165,9 @@ class Context {
   // Returns whether the item was found, and if so, writes the index at which
   // the item now resides to *index.
   bool FindItem(const char* class_name, int* index);
+  // Sets whether we are running a native app and the internal controller will
+  // call SetActions.
+  void SetNativeApp(bool v) { native_app_ = v; }
 
   // Adds all the bots specified in the script. Called on each map load.
   void AddBots();
@@ -377,8 +379,9 @@ class Context {
   // Cached map name to enable returning a pointer to its contents.
   std::string map_name_;
 
-  // Stores whether the internal controller will call SetActions.
-  bool use_internal_controls_;
+  // Stores whether we are running a native app and the internal controller will
+  // call SetActions.
+  bool native_app_;
 
   // Current actions to apply when lab is advanced.
   Actions actions_;
