@@ -199,11 +199,11 @@ struct DeepmindHooks_s {
   void (*custom_observation)(void* userdata, int idx,
                              EnvCApi_Observation* observation);
 
-  // Called from client game with current players predicted state.
-  void (*predicted_player_state)(void* userdata, const float origin[3],
-                                 const float velocity[3],
-                                 const float viewangles[3], float height,
-                                 int timestamp_msec);
+  // Called from client game with current players state.
+  void (*player_state)(void* userdata, const float origin[3],
+                       const float velocity[3], const float viewangles[3],
+                       float height, int team_score, int other_team_score,
+                       int player_id, int timestamp_msec);
 
   // See MakeScreenMessages in deepmind/engine/context.h.
   int (*make_screen_messages)(void* userdata, int width, int height,

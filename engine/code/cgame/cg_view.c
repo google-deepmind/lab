@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -755,6 +755,7 @@ Generates and draws a game scene and status information at the given time.
 */
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
+	int		team = -1;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -797,11 +798,18 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// update cg.predictedPlayerState
 	CG_PredictPlayerState();
 
-	// Inform context of latest player state prediction.
-	dmlab_predicted_player_state( &cg.predictedPlayerState );
+	// Inform context of latest player state.
+	team = cg.snap->ps.persistant[PERS_TEAM];
+	if ( team == TEAM_RED ) {
+		dmlab_player_state( &cg.predictedPlayerState, cgs.scores1, cgs.scores2 );
+	} else if ( team == TEAM_BLUE ) {
+		dmlab_player_state( &cg.predictedPlayerState, cgs.scores2, cgs.scores1 );
+	} else {
+		dmlab_player_state( &cg.predictedPlayerState, 0, 0 );
+	}
 
 	// decide on third person view
-	cg.renderingThirdPerson = cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR
+	cg.renderingThirdPerson = team != TEAM_SPECTATOR
 							&& (cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0));
 
 	// build cg.refdef

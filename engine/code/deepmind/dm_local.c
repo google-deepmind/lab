@@ -78,9 +78,11 @@ int dmlab_external_reward(int player_id) {
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-void dmlab_predicted_player_state(const playerState_t* ps) {
-  trap_DeepmindCallback(DEEPMIND_SET_PREDICTED_PLAYER_STATE, (intptr_t)ps, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0);
+void dmlab_player_state(const playerState_t* ps, int team_score,
+                        int other_team_score) {
+  trap_DeepmindCallback(DEEPMIND_SET_PLAYER_STATE, (intptr_t)ps,
+                        (intptr_t)team_score, (intptr_t)other_team_score, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0);
 }
 
 int dmlab_make_screen_messages(int screen_width, int screen_height,

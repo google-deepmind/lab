@@ -43,6 +43,7 @@ struct DeepMindLabLaunchParams_s {
   // 'buff' must be freed with 'free'. Otherwise returns false.
   bool (*file_reader_override)(const char* file_name, char** buff,
                                size_t* size);
+  const char* optional_temp_folder;
 };
 
 // Starts an instance of DeepMind Lab and exports the single-player RL

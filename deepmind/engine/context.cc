@@ -40,10 +40,13 @@
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
+#include "deepmind/lua/lua.h"
+#include "deepmind/lua/push.h"
 #include "deepmind/lua/push_script.h"
+#include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
-#include "deepmind/util/files.h"
+#include "deepmind/tensor/tensor_view.h"
 #include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
@@ -141,16 +144,17 @@ static void get_actions(void* userdata, double* look_down_up,
 static int update_spawn_vars(void* userdata, char* spawn_var_chars,
                              int* num_spawn_var_chars,
                              int spawn_var_offsets[][2], int* num_spawn_vars) {
-  return static_cast<Context*>(userdata)->UpdateSpawnVars(
+  return static_cast<Context*>(userdata)->MutablePickups()->UpdateSpawnVars(
       spawn_var_chars, num_spawn_var_chars, spawn_var_offsets, num_spawn_vars);
 }
 
 static bool find_item(void* userdata, const char* class_name, int* index) {
-  return static_cast<Context*>(userdata)->FindItem(class_name, index);
+  return static_cast<Context*>(userdata)->MutablePickups()->FindItem(class_name,
+                                                                     index);
 }
 
 static int item_count(void* userdata) {
-  return static_cast<Context*>(userdata)->ItemCount();
+  return static_cast<const Context*>(userdata)->Pickups().ItemCount();
 }
 
 static bool item(void* userdata, int index,
@@ -158,29 +162,31 @@ static bool item(void* userdata, int index,
                  char* class_name, int max_class_name,
                  char* model_name, int max_model_name,
                  int* quantity, int* type, int* tag) {
-  return static_cast<Context*>(userdata)->GetItem(
+  return static_cast<const Context*>(userdata)->Pickups().GetItem(
       index, item_name, max_item_name, class_name, max_class_name, model_name,
       max_model_name, quantity, type, tag);
 }
 
 static void clear_items(void* userdata) {
-  static_cast<Context*>(userdata)->ClearItems();
+  static_cast<Context*>(userdata)->MutablePickups()->ClearItems();
 }
 
 static bool map_finished(void* userdata) {
-  return static_cast<Context*>(userdata)->MapFinished();
+  return static_cast<Context*>(userdata)->Game().MapFinished();
 }
 
 static void set_map_finished(void* userdata, bool map_finished) {
-  static_cast<Context*>(userdata)->SetMapFinished(map_finished);
+  static_cast<Context*>(userdata)->MutableGame()->SetMapFinished(map_finished);
 }
 
 static bool can_pickup(void* userdata, int entity_id) {
-  return static_cast<Context*>(userdata)->CanPickup(entity_id);
+  return static_cast<Context*>(userdata)->MutablePickups()->CanPickup(
+      entity_id);
 }
 
 static bool override_pickup(void* userdata, int entity_id, int* respawn) {
-  return static_cast<Context*>(userdata)->OverridePickup(entity_id, respawn);
+  return static_cast<Context*>(userdata)->MutablePickups()->OverridePickup(
+      entity_id, respawn);
 }
 
 static int external_reward(void* userdata, int player_id) {
@@ -211,28 +217,31 @@ static void modify_rgba_texture(void* userdata, const char* name,
 }
 
 static int custom_observation_count(void* userdata) {
-  return static_cast<const Context*>(userdata)->CustomObservationCount();
+  return static_cast<const Context*>(userdata)->Observations().Count();
 }
 
 static const char* custom_observation_name(void* userdata, int idx) {
-  return static_cast<const Context*>(userdata)->CustomObservationName(idx);
+  return static_cast<const Context*>(userdata)->Observations().Name(idx);
 }
 
 static void custom_observation_spec(void* userdata, int idx,
                                     EnvCApi_ObservationSpec* spec) {
-  static_cast<const Context*>(userdata)->CustomObservationSpec(idx, spec);
+  static_cast<const Context*>(userdata)->Observations().Spec(idx, spec);
 }
 
 static void custom_observation(void* userdata, int idx,
                                EnvCApi_Observation* observation) {
-  return static_cast<Context*>(userdata)->CustomObservation(idx, observation);
+  return static_cast<Context*>(userdata)->MutableObservations()->Observation(
+      idx, observation);
 }
 
-void predicted_player_state(void* userdata, const float origin[3],
-                            const float velocity[3], const float viewangles[3],
-                            float height, int timestamp_msec) {
-  return static_cast<Context*>(userdata)->SetPredictPlayerState(
-      origin, velocity, viewangles, height, timestamp_msec);
+static void player_state(void* userdata, const float origin[3],
+                         const float velocity[3], const float viewangles[3],
+                         float height, int team_score, int other_team_score,
+                         int player_id, int timestamp_msec) {
+  return static_cast<Context*>(userdata)->MutableGame()->SetPlayerState(
+      origin, velocity, viewangles, height, team_score, other_team_score,
+      player_id, timestamp_msec);
 }
 
 static int make_screen_messages(void* userdata, int screen_width,
@@ -260,76 +269,8 @@ namespace deepmind {
 namespace lab {
 namespace {
 
-class LuaGameModule : public lua::Class<LuaGameModule> {
-  friend class Class;
-  static const char* ClassName() { return "deepmind.lab.Game"; }
-
- public:
-  // '*ctx' owned by the caller and should out-live this object.
-  explicit LuaGameModule(Context* ctx) : ctx_(ctx) {}
-
-  static void Register(lua_State* L) {
-    const Class::Reg methods[] = {
-        {"addScore", Member<&LuaGameModule::AddScore>},
-        {"finishMap", Member<&LuaGameModule::FinishMap>},
-        {"playerInfo", Member<&LuaGameModule::PlayerInfo>},
-    };
-    Class::Register(L, methods);
-  }
-
- private:
-  lua::NResultsOr AddScore(lua_State* L) {
-    int player_id = 0;
-    double score = 0;
-    if (lua::Read(L, 2, &player_id) && lua::Read(L, 3, &score) &&
-        0 <= player_id && player_id < 64) {
-      ctx_->Calls()->add_score(player_id, score);
-      return 0;
-    }
-    std::string error = "Invalid arguments player_id: ";
-    error += lua::ToString(L, 2);
-    error += " or reward: ";
-    error += lua::ToString(L, 3);
-    return std::move(error);
-  }
-
-  lua::NResultsOr FinishMap(lua_State* L) {
-    ctx_->SetMapFinished(true);
-    return 0;
-  }
-
-  lua::NResultsOr PlayerInfo(lua_State* L) {
-    const auto& pv = ctx_->GetPredictPlayerView();
-    auto table = lua::TableRef::Create(L);
-    table.Insert("pos", pv.pos);
-    table.Insert("vel", pv.vel);
-    table.Insert("angles", pv.angles);
-    table.Insert("anglesVel", pv.anglesVel);
-    table.Insert("height", pv.height);
-    lua::Push(L, table);
-    return 1;
-  }
-
-  Context* ctx_;
-};
-
 constexpr char kGameScriptPath[] = "/baselab/game_scripts";
-constexpr int kMaxSpawnVars = 64;
-constexpr int kMaxSpawnVarChars = 4096;
 constexpr double kDefaultEpisodeLengthSeconds = 5 * 30.0;
-
-// If the string "arg" fits into the array pointed to by "dest" (including the
-// null terminator), copies the string into the array and returns true;
-// otherwise returns false.
-bool StringCopy(const std::string& arg, char* dest, std::size_t max_size) {
-  auto len = arg.length() + 1;
-  if (len <= max_size) {
-    std::copy_n(arg.c_str(), len, dest);
-    return true;
-  } else {
-    return false;
-  }
-}
 
 constexpr const char* const kTeamNames[] = {
   "free",
@@ -351,43 +292,19 @@ lua::NResultsOr MapMakerModule(lua_State* L) {
   }
 }
 
-lua::NResultsOr GameModule(lua_State* L) {
-  if (auto* ctx =
-          static_cast<Context*>(lua_touserdata(L, lua_upvalueindex(1)))) {
-    LuaGameModule::Register(L);
-    LuaGameModule::CreateObject(L, ctx);
-    return 1;
-  } else {
-    return "Missing context!";
-  }
-}
-
-// Returns the unique value in the range [-180, 180) that is equivalent to
-// 'angle', where two values x and y are considered equivalent whenever x - y
-// is an integral multiple of 360. (Note: the result may be  meaningless if the
-// magnitude of 'angle' is very large.)
-double CanonicalAngle360(double angle) {
-  const double n = std::floor((angle + 180.0) / 360.0);
-  return angle - n * 360.0;
-}
-
 }  // namespace
 
 Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
                  const DeepmindCalls* calls, DeepmindHooks* hooks,
                  bool (*file_reader_override)(const char* file_name,
-                                              char** buff, size_t* size))
+                                              char** buff, size_t* size),
+                 const char* temp_folder)
     : lua_vm_(std::move(lua_vm)),
-      executable_runfiles_(executable_runfiles),
-      deepmind_calls_(calls),
       native_app_(false),
       actions_{},
-      map_finished_(false),
-      random_seed_(0),
-      predicted_player_view_{},
       level_cache_params_{},
-      use_local_level_cache_(false),
-      use_global_level_cache_(false) {
+      game_(executable_runfiles, calls, file_reader_override,
+            temp_folder != nullptr ? temp_folder : "") {
   CHECK(lua_vm_ != nullptr);
   hooks->add_setting = add_setting;
   hooks->set_level_cache_settings = set_level_cache_settings;
@@ -425,7 +342,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->custom_observation_name = custom_observation_name;
   hooks->custom_observation_spec = custom_observation_spec;
   hooks->custom_observation = custom_observation;
-  hooks->predicted_player_state = predicted_player_state;
+  hooks->player_state = player_state;
   hooks->make_screen_messages = make_screen_messages;
   hooks->get_screen_message = get_screen_message;
   hooks->get_temporary_folder = get_temporary_folder;
@@ -465,18 +382,17 @@ int Context::SetScriptName(std::string script_name) {
 }
 
 int Context::Init() {
+  // Clear texture handles from previous levels and initialise temp folder.
+  int init_code = MutableGame()->Init();
+  if (init_code != 0) {
+    return init_code;
+  }
+
   lua_State* L = lua_vm_.get();
   auto result = PushScript();
 
   if (!result.ok()) {
     error_message_ = result.error();
-    return 1;
-  }
-
-  temp_directory_ = util::GetTempDirectory() + "/dmlab_temp_folder_XXXXXX";
-  char* temp_folder_result = mkdtemp(&temp_directory_[0]);
-  if (temp_folder_result == nullptr) {
-    error_message_ = "Failed to create temp folder\n";
     return 1;
   }
 
@@ -500,7 +416,7 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.map_maker", &lua::Bind<MapMakerModule>, {this});
   lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.game", &lua::Bind<GameModule>, {this});
+      "dmlab.system.game", &lua::Bind<ContextGame::Module>, {MutableGame()});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
 
@@ -527,18 +443,19 @@ int Context::Init() {
   lua_pop(L, result.n_results());
   int err = CallInit();
   if (err != 0) return err;
-  return CallObservationSpec();
+
+  MutablePickups()->SetScriptTableRef(script_table_ref_);
+  return MutableObservations()->ReadSpec(script_table_ref_);
 }
 
 int Context::Start(int episode, int seed) {
-  predicted_player_view_.timestamp_msec = 0;
-  random_seed_ = seed;
   EnginePrbg()->seed(seed);
+  MutableGame()->NextMap();
   lua_State* L = lua_vm_.get();
   script_table_ref_.PushMemberFunction("start");
   if (!lua_isnil(L, -2)) {
     lua::Push(L, episode);
-    lua::Push(L, static_cast<double>(seed));
+    lua::Push(L, static_cast<double>(MakeRandomSeed()));
     auto result = lua::Call(L, 3);
     if (!result.ok()) {
       error_message_ = result.error();
@@ -631,7 +548,7 @@ const char* Context::NextMap() {
   CHECK_EQ(1, result.n_results()) << "'nextMap' must return one string.";
   CHECK(lua::Read(L, -1, &map_name_))
       << "'nextMap' must return one string: Found " << lua::ToString(L, -1);
-  predicted_player_view_.timestamp_msec = 0;
+  MutableGame()->NextMap();
   lua_pop(L, result.n_results());
   return map_name_.c_str();
 }
@@ -753,174 +670,6 @@ int Context::MakeRandomSeed() {
       1, std::numeric_limits<int>::max())(*EnginePrbg());
 }
 
-bool Context::UpdateSpawnVars(char* spawn_var_chars, int* num_spawn_var_chars,
-                              int spawn_var_offsets[][2], int* num_spawn_vars) {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("updateSpawnVars");
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-    return true;
-  }
-
-  auto table = lua::TableRef::Create(L);
-  for (int i = 0; i < *num_spawn_vars; ++i) {
-    table.Insert(std::string(spawn_var_chars + spawn_var_offsets[i][0]),
-                 std::string(spawn_var_chars + spawn_var_offsets[i][1]));
-  }
-  lua::Push(L, table);
-  auto result = lua::Call(L, 2);
-  CHECK(result.ok()) << result.error();
-
-  // Nil return so spawn is ignored.
-  if (lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
-    return false;
-  }
-
-  std::unordered_map<std::string, std::string> out_spawn_vars;
-  lua::Read(L, -1, &out_spawn_vars);
-
-  *num_spawn_vars = out_spawn_vars.size();
-  CHECK_NE(0, *num_spawn_vars) << "Must have spawn vars or return nil. (Make "
-                                  "sure all values are strings.)";
-  CHECK_LT(*num_spawn_vars, kMaxSpawnVars) << "Too many spawn vars!";
-  char* mem = spawn_var_chars;
-
-  auto it = out_spawn_vars.begin();
-  for (int i = 0; i < *num_spawn_vars; ++i) {
-    const auto& key = it->first;
-    const auto& value = it->second;
-    ++it;
-    std::size_t kl = key.length() + 1;
-    std::size_t vl = value.length() + 1;
-    *num_spawn_var_chars += kl + vl;
-    CHECK_LT(*num_spawn_var_chars, kMaxSpawnVarChars) << "Too large spawn vars";
-    std::copy(key.c_str(), key.c_str() + kl, mem);
-    spawn_var_offsets[i][0] = std::distance(spawn_var_chars, mem);
-    mem += kl;
-    std::copy(value.c_str(), value.c_str() + vl, mem);
-    spawn_var_offsets[i][1] = std::distance(spawn_var_chars, mem);
-    mem += vl;
-  }
-  lua_pop(L, result.n_results());
-  return true;
-}
-
-bool Context::FindItem(const char* class_name, int* index) {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("createPickup");
-
-  // Check function exists.
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-    return false;
-  }
-
-  lua::Push(L, class_name);
-
-  auto result = lua::Call(L, 2);
-  CHECK(result.ok()) << result.error();
-
-  // If nothing it returned or that it's nil, don't create item.
-  if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
-    return false;
-  }
-
-  lua::TableRef table;
-  CHECK(Read(L, -1, &table)) << "Failed to read pickup table!";
-
-  PickupItem item = {};
-  CHECK(table.LookUp("name", &item.name));
-  CHECK(table.LookUp("class_name", &item.class_name));
-  CHECK(table.LookUp("model_name", &item.model_name));
-  CHECK(table.LookUp("quantity", &item.quantity));
-  CHECK(table.LookUp("type", &item.type));
-
-  // Optional tag field.
-  table.LookUp("tag", &item.tag);
-
-  items_.push_back(item);
-  *index = ItemCount() - 1;
-
-  lua_pop(L, result.n_results());
-  return true;
-}
-
-bool Context::GetItem(int index, char* item_name, int max_item_name,  //
-                      char* class_name, int max_class_name,           //
-                      char* model_name, int max_model_name,           //
-                      int* quantity, int* type, int* tag) {
-  CHECK_GE(index, 0) << "Index out of range!";
-  CHECK_LT(index, ItemCount()) << "Index out of range!";
-
-  const auto& item = items_[index];
-  CHECK(StringCopy(item.name, item_name, max_item_name));
-  CHECK(StringCopy(item.class_name, class_name, max_class_name));
-  CHECK(StringCopy(item.model_name, model_name, max_model_name));
-  *quantity = item.quantity;
-  *type = static_cast<int>(item.type);
-  *tag = item.tag;
-  return true;
-}
-
-bool Context::CanPickup(int entity_id) {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("canPickup");
-
-  // Check function exists.
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-    return true;
-  }
-
-  lua::Push(L, entity_id);
-
-  auto result = lua::Call(L, 2);
-  CHECK(result.ok()) << result.error();
-
-  // If nothing returned or the return is nil, the default.
-  if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
-    return true;
-  }
-
-  bool can_pickup = true;
-  CHECK(lua::Read(L, -1, &can_pickup))
-      << "Failed to read canPickup return value";
-
-  lua_pop(L, result.n_results());
-  return can_pickup;
-}
-
-bool Context::OverridePickup(int entity_id, int* respawn) {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("pickup");
-
-  // Check function exists.
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-    return false;
-  }
-
-  lua::Push(L, entity_id);
-
-  auto result = lua::Call(L, 2);
-  CHECK(result.ok()) << result.error();
-
-  // If nothing returned or the return is nil, we're not overriding the
-  // pickup behaviour.
-  if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
-    return false;
-  }
-
-  CHECK(lua::Read(L, -1, &respawn)) << "Failed to read the respawn time";
-
-  lua_pop(L, result.n_results());
-  return true;
-}
-
 int Context::ExternalReward(int player_id) {
   CHECK_GE(player_id, 0) << "Invalid player Id!";
   double reward = 0;
@@ -967,7 +716,7 @@ void Context::AddBots() {
     bot_table.LookUp("skill", &skill);
     std::string team = "free";
     bot_table.LookUp("team", &team);
-    Calls()->add_bot(bot_name.c_str(), skill, team.c_str());
+    Game().Calls()->add_bot(bot_name.c_str(), skill, team.c_str());
   }
   lua_pop(L, result.n_results());
 }
@@ -1005,147 +754,28 @@ int Context::CallInit() {
   }
   lua::Push(L, settings_);
   auto result = lua::Call(L, 2);
-  lua_pop(L, result.n_results());
   if (!result.ok()) {
-    std::cerr << result.error() << '\n';
+    error_message_ = result.error();
     return 1;
   }
-  return 0;
-}
 
-int Context::CallObservationSpec() {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("customObservationSpec");
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-    return 0;
-  }
-  auto result = lua::Call(L, 1);
-  if (!result.ok()) {
-    std::cerr << result.error() << '\n';
-    return 1;
-  }
-  lua::TableRef observations;
-  lua::Read(L, -1, &observations);
-  observation_infos_.clear();
-  observation_infos_.reserve(observations.ArraySize());
-  for (std::size_t i = 0, c = observations.ArraySize(); i != c; ++i) {
-    lua::TableRef observation_info;
-    observations.LookUp(i + 1, &observation_info);
-    ObservationSpecInfo info;
-    if (!observation_info.LookUp("name", &info.name)) {
-      std::cerr << "[customObservationSpec] - Missing 'name = <string>'.\n";
-      return 1;
-    }
-    std::string type = "Doubles";
-    observation_info.LookUp("type", &type);
-    if (type.compare("Bytes") == 0) {
-      info.type = EnvCApi_ObservationBytes;
-    } else if (type.compare("Doubles") == 0) {
-      info.type = EnvCApi_ObservationDoubles;
+  int ret_val = 0;
+  bool correct_args = result.n_results() == 0 ||
+                      (result.n_results() == 1 && lua_isnil(L, 1)) ||
+                      (result.n_results() <= 2 && lua::Read(L, 1, &ret_val));
+  if (ret_val != 0) {
+    if (result.n_results() == 2) {
+      error_message_ = lua::ToString(L, 2);
     } else {
-      std::cerr
-          << "[customObservationSpec] - Missing 'type = 'Bytes'|'Doubles''.\n";
-      return 1;
+      error_message_ = "Error while calling 'init'.";
     }
-    if (!observation_info.LookUp("shape", &info.shape)) {
-      std::cerr
-          << "[customObservationSpec] - Missing 'shape = {<int>, ...}'.\n";
-      return 1;
-    }
-    observation_infos_.push_back(std::move(info));
   }
   lua_pop(L, result.n_results());
-  return 0;
-}
-
-void Context::CustomObservation(int idx, EnvCApi_Observation* observation) {
-  lua_State* L = lua_vm_.get();
-  script_table_ref_.PushMemberFunction("customObservation");
-  // Function must exist.
-  CHECK(!lua_isnil(L, -2))
-      << "Observations Spec set but no observation member function";
-  const auto& info = observation_infos_[idx];
-  lua::Push(L, info.name);
-  auto result = lua::Call(L, 2);
-  CHECK(result.ok()) << "[customObservation] - " << result.error();
-
-  CHECK_EQ(1, result.n_results())
-      << "[customObservation] - Must return a "
-      << (info.type == EnvCApi_ObservationDoubles ? "DoubleTensor"
-                                                  : "ByteTensor");
-
-  const tensor::Layout* layout = nullptr;
-  if (info.type == EnvCApi_ObservationDoubles) {
-    auto* double_tensor = tensor::LuaTensor<double>::ReadObject(L, -1);
-    if (double_tensor != nullptr) {
-      const auto& view = double_tensor->tensor_view();
-      CHECK(view.IsContiguous())
-          << "[customObservation] - Must return a contiguous tensor!";
-      layout = &view;
-      observation->spec.type = EnvCApi_ObservationDoubles;
-      observation->payload.doubles = view.storage() + view.start_offset();
-    }
-  } else {
-    auto* byte_tensor = tensor::LuaTensor<std::uint8_t>::ReadObject(L, -1);
-    if (byte_tensor != nullptr) {
-      const auto& view = byte_tensor->tensor_view();
-      layout = &view;
-      CHECK(view.IsContiguous())
-          << "[customObservation] - Must return a contiguous tensor!";
-      observation->spec.type = EnvCApi_ObservationBytes;
-      observation->payload.bytes = view.storage() + view.start_offset();
-    }
+  if (!correct_args) {
+    error_message_ = "[init] - Must return none, nil, or integer and message\n";
+    return 1;
   }
-  CHECK(layout != nullptr)
-      << "[customObservation] - Must return a contiguous tensor!\n:"
-      << "at idx" << idx << "\n"
-      << lua::ToString(L, -1);
-
-  observation_tensor_shape_.resize(layout->shape().size());
-  std::copy(layout->shape().begin(), layout->shape().end(),
-            observation_tensor_shape_.begin());
-  observation->spec.dims = observation_tensor_shape_.size();
-  observation->spec.shape = observation_tensor_shape_.data();
-
-  // Prevent observation->payload from being destroyed during pop.
-  lua::Read(L, -1, &observation_tensor_);
-  lua_pop(L, result.n_results());
-}
-
-void Context::CustomObservationSpec(int idx,
-                                    EnvCApi_ObservationSpec* spec) const {
-  const auto& info = observation_infos_[idx];
-  spec->type = info.type;
-  spec->dims = info.shape.size();
-  spec->shape = info.shape.data();
-}
-
-void Context::SetPredictPlayerState(const float pos[3], const float vel[3],
-                                    const float angles[3], float height,
-                                    int timestamp_msec) {
-  PlayerView before = predicted_player_view_;
-  std::copy_n(pos, 3, predicted_player_view_.pos.begin());
-  std::copy_n(vel, 3, predicted_player_view_.vel.begin());
-  std::copy_n(angles, 3, predicted_player_view_.angles.begin());
-  predicted_player_view_.height = height;
-  predicted_player_view_.timestamp_msec = timestamp_msec;
-
-  int delta_time_msec =
-      predicted_player_view_.timestamp_msec - before.timestamp_msec;
-
-  // When delta_time_msec < 3 the velocities become inaccurate.
-  if (before.timestamp_msec > 0 && delta_time_msec > 0) {
-    double inv_delta_time = 1000.0 / delta_time_msec;
-    for (int i : {0, 1, 2}) {
-      predicted_player_view_.anglesVel[i] =
-          CanonicalAngle360(predicted_player_view_.angles[i] -
-                            before.angles[i]) *
-          inv_delta_time;
-    }
-  } else {
-    predicted_player_view_.anglesVel.fill(0);
-  }
+  return ret_val;
 }
 
 int Context::MakeScreenMessages(int screen_width, int screen_height,
@@ -1225,4 +855,3 @@ void Context::MakePk3FromMap(const char* map_path, const char* map_name,
 
 }  // namespace lab
 }  // namespace deepmind
-

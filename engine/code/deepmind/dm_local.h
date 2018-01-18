@@ -75,8 +75,9 @@ int dmlab_external_reward(int player_id);
 // Get the current player score.
 int dmlab_player_score(void);
 
-// Sets the predicted player info.
-void dmlab_predicted_player_state(const playerState_t* ps);
+// Sets the player info.
+void dmlab_player_state(const playerState_t* ps, int team_score,
+                        int other_team_score);
 
 // Make screen messages. Returns the number of messages that were made.
 // 'screen_width' and 'screen_height' are the virtual screen size and the top

@@ -59,12 +59,14 @@ int dmlab_callback(
       return ctx->hooks.override_pickup(ctx->userdata, a1, VM_ArgPtr(a2));
     case DEEPMIND_EXTERNAL_REWARD:
       return ctx->hooks.external_reward(ctx->userdata, a1);
-    case DEEPMIND_SET_PREDICTED_PLAYER_STATE: {
+    case DEEPMIND_SET_PLAYER_STATE: {
       const playerState_t* ps = VM_ArgPtr(a1);
       int timestamp_msec = ctx->calls.total_engine_time_msec();
-      ctx->hooks.predicted_player_state(ctx->userdata, ps->origin, ps->velocity,
-                                        ps->viewangles, ps->viewheight,
-                                        timestamp_msec);
+      ctx->hooks.player_state(ctx->userdata, ps->origin, ps->velocity,
+                              ps->viewangles, ps->viewheight,
+                              /*team_score=*/a2,
+                              /*other_team_score=*/a3, ps->clientNum,
+                              timestamp_msec);
       break;
     }
     case DEEPMIND_MAKE_SCREEN_MESSAGES:

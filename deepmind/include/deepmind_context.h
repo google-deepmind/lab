@@ -57,7 +57,8 @@ struct DeepmindContext_s {
 int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx,
                          bool (*file_reader_override)(const char* file_name,
                                                       char** buff,
-                                                      size_t* size));
+                                                      size_t* size),
+                         const char* temp_folder);
 
 // Release the resources associated with *ctx. The context shall have been
 // obtained by a successful call of the previous function.

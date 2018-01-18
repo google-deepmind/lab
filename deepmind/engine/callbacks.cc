@@ -16,9 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <stddef.h>
-
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <utility>
@@ -34,6 +33,7 @@
 
 namespace lua = deepmind::lab::lua;
 namespace tensor = deepmind::lab::tensor;
+
 using deepmind::lab::Context;
 using deepmind::lab::LuaMazeGeneration;
 using deepmind::lab::LuaRandom;
@@ -42,10 +42,12 @@ using deepmind::lab::LuaTextLevelMaker;
 
 extern "C" {
 
-int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx,
-                         bool (*file_reader_override)(const char* file_name,
-                                                      char** buff,
-                                                      size_t* size)) {
+int dmlab_create_context(
+    const char* runfiles_path,
+    DeepmindContext* ctx,
+    bool (*file_reader_override)(const char* file_name, char** buff,
+                                 std::size_t* size),
+    const char* temp_folder) {
   lua::Vm lua_vm = lua::CreateVm();
   lua_State* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
@@ -55,7 +57,7 @@ int dmlab_create_context(const char* runfiles_path, DeepmindContext* ctx,
   LuaSnippetEmitter::Register(L);
 
   ctx->userdata = new Context(std::move(lua_vm), runfiles_path, &ctx->calls,
-                              &ctx->hooks, file_reader_override);
+                              &ctx->hooks, file_reader_override, temp_folder);
   return 0;
 }
 

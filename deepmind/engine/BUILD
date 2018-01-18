@@ -9,16 +9,22 @@ cc_library(
     hdrs = ["context.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":context_game",
+        ":context_observations",
+        ":context_pickups",
         ":lua_image",
         ":lua_maze_generation",
         ":lua_random",
         ":lua_text_level_maker",
+        "//:level_cache_types",
         "//deepmind/include:context_hdrs",
+        "//deepmind/level_generation:compile_map",
         "//deepmind/lua",
         "//deepmind/lua:bind",
         "//deepmind/lua:call",
         "//deepmind/lua:class",
         "//deepmind/lua:n_results_or",
+        "//deepmind/lua:push",
         "//deepmind/lua:push_script",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
@@ -41,6 +47,57 @@ cc_library(
         "//deepmind/level_generation/text_level:lua_bindings",
         "//deepmind/lua:vm",
         "//deepmind/tensor:lua_tensor",
+        "//deepmind/tensor:tensor_view",
+        "//third_party/rl_api:env_c_api",
+    ],
+)
+
+cc_library(
+    name = "context_game",
+    srcs = ["context_game.cc"],
+    hdrs = ["context_game.h"],
+    deps = [
+        "//deepmind/include:context_hdrs",
+        "//deepmind/lua",
+        "//deepmind/lua:class",
+        "//deepmind/lua:n_results_or",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/tensor:lua_tensor",
+        "//deepmind/tensor:tensor_view",
+        "//deepmind/util:files",
+    ],
+)
+
+cc_library(
+    name = "context_observations",
+    srcs = ["context_observations.cc"],
+    hdrs = ["context_observations.h"],
+    deps = [
+        "//deepmind/lua",
+        "//deepmind/lua:call",
+        "//deepmind/lua:n_results_or",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/support:logging",
+        "//deepmind/tensor:lua_tensor",
+        "//deepmind/tensor:tensor_view",
+        "//third_party/rl_api:env_c_api",
+    ],
+)
+
+cc_library(
+    name = "context_pickups",
+    srcs = ["context_pickups.cc"],
+    hdrs = ["context_pickups.h"],
+    deps = [
+        "//deepmind/lua:call",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/support:logging",
     ],
 )
 

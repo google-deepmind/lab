@@ -23,42 +23,25 @@
 
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "deepmind/engine/context_game.h"
+#include "deepmind/engine/context_observations.h"
+#include "deepmind/engine/context_pickups.h"
 #include "deepmind/include/deepmind_calls.h"
 #include "deepmind/include/deepmind_hooks.h"
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/lua/vm.h"
+#include "public/level_cache_types.h"
+#include "third_party/rl_api/env_c_api.h"
 
 namespace deepmind {
 namespace lab {
-
-// Parameters for a custom pickup item.
-struct PickupItem {
-  std::string name;        // Name that will show when picking up item.
-  std::string class_name;  // Class name to spawn entity as. Must be unique.
-  std::string model_name;  // Model for pickup item.
-  int quantity;            // Amount to award on pickup.
-  int type;                // Type of pickup. E.g. health, ammo, frags etc.
-                           // Must match itemType_t in bg_public.h
-  int tag;                 // Tag used in conjunction with type. E.g. determine
-                           // which weapon to award, or if a goal should bob and
-                           // rotate.
-};
-
-// Represents a player's state in world units.
-struct PlayerView {
-  std::array<double, 3> pos;        // Position (forward, left, up).
-  std::array<double, 3> vel;        // World velocity (forward, left, up).
-  std::array<double, 3> angles;     // Orientation degrees (pitch, yaw, roll).
-  std::array<double, 3> anglesVel;  // Angular velocity in degrees.
-  int timestamp_msec;               // Engine time in msec of the view.
-  double height;                    // View height.
-};
 
 // This is the userdata in DeepmindContext. It contains the Lua VM and
 // methods for handling callbacks from DeepMind Lab.
@@ -73,10 +56,15 @@ class Context {
   // successfully and if so 'buff' points to the content and 'size' contains the
   // size of the file and after use 'buff' must be freed with 'free'. Otherwise
   // returns false.
-  Context(lua::Vm lua_vm, const char* executable_runfiles,
-          const DeepmindCalls* calls, DeepmindHooks* hooks,
-          bool (*file_reader_override)(const char* file_name, char** buff,
-                                       size_t* size));
+  // 'temp_folder' optional folder to store temporary objects.
+  Context(
+      lua::Vm lua_vm,
+      const char* executable_runfiles,
+      const DeepmindCalls* calls,
+      DeepmindHooks* hooks,
+      bool (*file_reader_override)(const char* file_name, char** buff,
+                                   std::size_t* size),
+      const char* temp_folder);
 
   // Inserts 'key' 'value' into settings_.
   // Must be called before Init.
@@ -158,33 +146,6 @@ class Context {
   // controller will call SetActions.
   bool NativeApp() { return native_app_; }
 
-
-  // Allows Lua to replace contents of this c-style dictionary.
-  // 'spawn_var_chars' is pointing at the memory holding the strings.
-  // '*num_spawn_var_chars' is the total length of all strings and nulls.
-  // 'spawn_var_offsets' is the  key, value offsets in 'spawn_var_chars'.
-  // '*num_spawn_vars' is the number of valid spawn_var_offsets.
-  //
-  // So the dictionary { key0=value0, key1=value1, key2=value2 } would be
-  // represented as:
-  // spawn_var_chars[4096] = "key0\0value0\0key1\0value1\0key2\0value2";
-  // *num_spawn_var_chars = 36
-  // spawn_var_offsets[64][2] = {{0,5}, {12,17}, {24,29}};
-  // *num_spawn_vars = 3
-  // The update will not increase *num_spawn_var_chars to greater than 4096.
-  // and not increase *num_spawn_vars to greater than 64.
-  bool UpdateSpawnVars(            //
-      char* spawn_var_chars,       //
-      int* num_spawn_var_chars,    //
-      int spawn_var_offsets[][2],  //
-      int* num_spawn_vars);
-
-  // Finds a pickup item by class_name, and registers this item with the
-  // Context's item array. This is so all the VMs can update their respective
-  // item lists by iterating through that array during update.
-  // Returns whether the item was found, and if so, writes the index at which
-  // the item now resides to *index.
-  bool FindItem(const char* class_name, int* index);
   // Sets whether we are running a native app and the internal controller will
   // call SetActions.
   void SetNativeApp(bool v) { native_app_ = v; }
@@ -192,69 +153,28 @@ class Context {
   // Adds all the bots specified in the script. Called on each map load.
   void AddBots();
 
-  // Get the current number of registered items.
-  int ItemCount() const { return items_.size(); }
-
-  // Get an item at a particular index and fill in the various buffers
-  // provided.
-  // Returns whether the operation succeeded.
-  bool GetItem(            //
-      int index,           //
-      char* item_name,     //
-      int max_item_name,   //
-      char* class_name,    //
-      int max_class_name,  //
-      char* model_name,    //
-      int max_model_name,  //
-      int* quantity,       //
-      int* type,           //
-      int* tag);
-
-  // Clear the current list of registered items. Called just before loading a
-  // new map.
-  void ClearItems() { items_.clear(); }
-
-  // Returns whether we should finish the current map.
-  bool MapFinished() const { return map_finished_; }
-
-  // Sets whether the current map should finish.
-  void SetMapFinished(bool map_finished) { map_finished_ = map_finished; }
+  // Finds a model by model_name, and registers this item with the Context's
+  // model array.
+  bool FindModel(const char* model_name);
 
   // Returns whether we should finish the episode. Called at the end of every
   // frame.
   bool HasEpisodeFinished(double elapsed_episode_time_seconds);
-
-  // Returns whether we can pickup the specified entity id. By default this
-  // returns true.
-  bool CanPickup(int entity_id);
-
-  // Customization point for overriding the entity's pickup behaviour. Also
-  // allows for modifying the default respawn time for the entity.
-  // Returns true if the pickup behaviour has been overridden by the user,
-  // otherwise calls the default pickup behaviour based on the item type.
-  bool OverridePickup(int entity_id, int* respawn);
-
-  // Subtracts the integral part from the stashed reward (see AddScore) and
-  // returns that integral part. The remaining stashed reward is smaller than
-  // one in magnitude. The returned (integral) value is suitable for the game
-  // server, which only deals in integral reward increments.
-  int ExternalReward(int player_id);
 
   // Adds the given reward for the specified player. The reward is accumulated
   // temporarily until it is harvested by ExternalReward.
   void AddScore(int player_id, double reward);
 
   // Path to where DeepMind Lab assets are stored.
-  const std::string& ExecutableRunfiles() const { return executable_runfiles_; }
+  const std::string& ExecutableRunfiles() const {
+    return Game().ExecutableRunfiles();
+  }
+
+  const std::string& TempDirectory() const { return Game().TempFolder(); }
 
   // Returns a new random seed on each call. Internally uses 'engine_prbg_' to
   // generate new positive integers.
   int MakeRandomSeed();
-
-  const DeepmindCalls* Calls() const { return deepmind_calls_; }
-
-  // Gets the seed this episode was launched with.
-  int GetEpisodeSeed() const { return random_seed_; }
 
   std::mt19937_64* UserPrbg() { return &user_prbg_; }
 
@@ -263,30 +183,6 @@ class Context {
   // Modify a texture after loading.
   void ModifyRgbaTexture(const char* name, unsigned char* data, int width,
                          int height);
-
-  // Script observation count.
-  int CustomObservationCount() const { return observation_infos_.size(); }
-
-  // Script observation name.
-  const char* CustomObservationName(int idx) const {
-    return observation_infos_[idx].name.c_str();
-  }
-
-  // Script observation spec.
-  void CustomObservationSpec(int idx, EnvCApi_ObservationSpec* spec) const;
-
-  // Script observation.
-  void CustomObservation(int idx, EnvCApi_Observation* obs);
-
-  // Set latest predicted player state.
-  void SetPredictPlayerState(const float pos[3], const float vel[3],
-                             const float angles[3], float height,
-                             int timestamp_msec);
-
-  // Get latest predicted player view. (This is where the game renders from.)
-  const PlayerView GetPredictPlayerView() {
-    return predicted_player_view_;
-  }
 
   // Calls script to retrieve a list of screen messages. The message returned
   // from the script shall be strictly smaller than buffer_size, since the
@@ -307,12 +203,15 @@ class Context {
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                         int* align_l0_r1_c2, int* shadow, float rgba[4]) const;
 
+  // Subtracts the integral part from the stashed reward (see AddScore) and
+  // returns that integral part. The remaining stashed reward is smaller than
+  // one in magnitude. The returned (integral) value is suitable for the game
+  // server, which only deals in integral reward increments.
+  int ExternalReward(int player_id);
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.
   void MakePk3FromMap(const char* map_path, const char* map_name, bool gen_aas);
-
-  const std::string& TempDirectory() { return temp_directory_; }
 
   // Sets which level caches to use. See MapCompileSettings in compile_map.h.
   void SetLevelCacheSetting(bool local, bool global,
@@ -335,6 +234,25 @@ class Context {
     error_message_ = std::string(message);
   }
 
+  // Sets whether there are alternative cameras. This will make the server send
+  // all entities, so they are visible to all cameras.
+  void SetHasAltCameras(bool has_alt_cameras) {
+    has_alt_cameras_ = has_alt_cameras;
+  }
+
+  // Returns whether the server sends all entities, so they are visible to all
+  // cameras.
+  bool HasAltCameras() const { return has_alt_cameras_; }
+
+  const ContextGame& Game() const { return game_; }
+  ContextGame* MutableGame() { return &game_; }
+
+  const ContextObservations& Observations() const { return observations_; }
+  ContextObservations* MutableObservations() { return &observations_; }
+
+  const ContextPickups& Pickups() const { return pickups_; }
+  ContextPickups* MutablePickups() { return &pickups_; }
+
  private:
   // Message to be placed on screen.
   struct ScreenMessage {
@@ -356,16 +274,7 @@ class Context {
     int buttons_down;
   };
 
-  // Entry for a custom observation spec.
-  struct ObservationSpecInfo {
-    std::string name;
-    EnvCApi_ObservationType type;
-    std::vector<int> shape;
-  };
-
   int CallInit();
-
-  int CallObservationSpec();
 
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
@@ -389,8 +298,6 @@ class Context {
   // The name of the script to run on first Init.
   std::string script_path_;
 
-  std::string temp_directory_;
-
   // The result of the script that was run when Init was first called.
   lua::TableRef script_table_ref_;
 
@@ -410,49 +317,41 @@ class Context {
   // Current actions to apply when lab is advanced.
   Actions actions_;
 
-  // Array of current custom pickup items. Reset each episode.
-  std::vector<PickupItem> items_;
-
-  // Flag that can be set from the game to finish the current map.
-  bool map_finished_;
 
   // Transient reward stash for each player. Rewards are added with AddScore and
   // removed by ExternalReward.
   std::vector<double> player_rewards_;
 
-  // Random seed used for this episode.
-  int random_seed_;
-
   // A pseudo-random-bit generator for exclusive use by users.
   std::mt19937_64 user_prbg_;
 
   // A pseudo-random-bit generator for exclusive use of the engine. Seeded each
-  // episode with 'random_seed_'.
+  // episode with the episode start seed.
   std::mt19937_64 engine_prbg_;
-
-  // Storage of supplementary observation types from script.
-  std::vector<ObservationSpecInfo> observation_infos_;
-
-  // Used to hold the EnvCApi_ObservationSpec::shape values until the next call
-  // of observation.
-  std::vector<int> observation_tensor_shape_;
-
-  // Used to hold a reference to the observation tensor until the next call of
-  // observation.
-  lua::TableRef observation_tensor_;
-
-  PlayerView predicted_player_view_;
-
-  // Callbacks for fetching/writing levels to cache.
-  DeepMindLabLevelCacheParams level_cache_params_;
-  bool use_local_level_cache_;
-  bool use_global_level_cache_;
 
   // A list of screen messages to display this frame.
   std::vector<ScreenMessage> screen_messages_;
+
+  bool use_local_level_cache_;
+  bool use_global_level_cache_;
+
+  // Callbacks for fetching/writing levels to cache.
+  DeepMindLabLevelCacheParams level_cache_params_;
+
   // Last error message.
   std::string error_message_;
 
+  // An object for calling into the engine.
+  ContextGame game_;
+
+  // An object for storing and retrieving custom observations.
+  ContextObservations observations_;
+
+  // An object for interacting with pickups.
+  ContextPickups pickups_;
+
+  // When enabled all entities are forced to be rendered.
+  bool has_alt_cameras_;
 };
 
 }  // namespace lab
