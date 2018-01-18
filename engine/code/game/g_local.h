@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -579,7 +579,7 @@ void BeginIntermission (void);
 void InitBodyQue (void);
 void ClientSpawn( gentity_t *ent );
 void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
-void AddScore( gentity_t *ent, vec3_t origin, int score );
+void AddScore( gentity_t *ent, vec3_t origin, int score, const char* reason, gentity_t *other );
 void CalculateRanks( void );
 qboolean SpotWouldTelefrag( gentity_t *spot );
 

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -991,7 +991,7 @@ void ClientThink_real( gentity_t *ent ) {
 	client->latched_buttons |= client->buttons & ~client->oldbuttons;
 
 	// Add External Score
-	AddScore( ent, NULL, 0 );
+	AddScore( ent, NULL, 0, NULL, NULL );
 	// check for respawning
 	if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		// wait for the attack button to be pressed

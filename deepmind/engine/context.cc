@@ -189,8 +189,12 @@ static bool override_pickup(void* userdata, int entity_id, int* respawn) {
       entity_id, respawn);
 }
 
-static int external_reward(void* userdata, int player_id) {
-  return static_cast<Context*>(userdata)->ExternalReward(player_id);
+static int reward_override(void* userdata, const char* reason_opt,
+                           int player_id, int team,
+                           const int* other_player_id_opt,
+                           const float* origin_opt, int score) {
+  return static_cast<Context*>(userdata)->RewardOverride(
+      reason_opt, player_id, team, other_player_id_opt, origin_opt, score);
 }
 
 static void add_score(void* userdata, int player_id, double reward) {
@@ -332,7 +336,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_map_finished = set_map_finished;
   hooks->can_pickup = can_pickup;
   hooks->override_pickup = override_pickup;
-  hooks->external_reward = external_reward;
+  hooks->reward_override = reward_override;
   hooks->add_score = add_score;
   hooks->make_random_seed = make_random_seed;
   hooks->has_episode_finished = has_episode_finished;
@@ -668,6 +672,47 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
 int Context::MakeRandomSeed() {
   return std::uniform_int_distribution<int>(
       1, std::numeric_limits<int>::max())(*EnginePrbg());
+}
+
+int Context::RewardOverride(const char* optional_reason, int player_id,
+                            int team, const int* optional_other_player_id,
+                            const float* optional_origin, int score) {
+  if (optional_reason != nullptr) {
+    lua_State* L = script_table_ref_.LuaState();
+    script_table_ref_.PushMemberFunction("rewardOverride");
+    // Check function exists.
+    if (!lua_isnil(L, -2)) {
+      auto args = lua::TableRef::Create(L);
+      args.Insert("reason", optional_reason);
+      args.Insert("playerId", player_id);
+      if (team >= 0 && team
+          < std::distance(std::begin(kTeamNames), std::end(kTeamNames))) {
+        args.Insert("team", kTeamNames[team]);
+      }
+      if (optional_other_player_id != nullptr) {
+        args.Insert("otherPlayerId", *optional_other_player_id);
+      }
+      if (optional_origin != nullptr) {
+        std::array<float, 3> float_array3 = {
+            {optional_origin[0], optional_origin[1], optional_origin[2]}};
+        args.Insert("location", float_array3);
+      }
+      args.Insert("score", score);
+      lua::Push(L, args);
+      auto result = lua::Call(L, 2);
+      CHECK(result.ok()) << "[scoreOverride] - " << result.error();
+      CHECK(result.n_results() <= 1)
+          << "[scoreOverride] - Must return new score or nil";
+      if (result.n_results() == 1 && !lua_isnil(L, -1)) {
+        CHECK(lua::Read(L, -1, &score))
+            << "[scoreOverride] - Score must be an integer!";
+      }
+      lua_pop(L, result.n_results());
+    } else {
+      lua_pop(L, 2);
+    }
+  }
+  return ExternalReward(player_id) + score;
 }
 
 int Context::ExternalReward(int player_id) {

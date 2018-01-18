@@ -73,9 +73,14 @@ qboolean dmlab_override_pickup(int entity_id, int* respawn) {
                                (intptr_t)respawn, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-int dmlab_external_reward(int player_id) {
-  return trap_DeepmindCallback(DEEPMIND_EXTERNAL_REWARD, (intptr_t)player_id,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+int dmlab_reward_override(const char* reason_opt, int player_id, int team,
+                          const int* other_player_id_opt,
+                          const vec3_t origin_opt, int score) {
+  return trap_DeepmindCallback(
+      DEEPMIND_REWARD_OVERRIDE, (intptr_t)reason_opt, (intptr_t)player_id,
+      (intptr_t)team, (intptr_t)other_player_id_opt, (intptr_t)origin_opt,
+      (intptr_t)score, 0, 0, 0, 0, 0, 0);
 }
 
 void dmlab_player_state(const playerState_t* ps, int team_score,

@@ -152,8 +152,10 @@ struct DeepmindHooks_s {
   // behaviour. Optionally sets the default respawn time.
   bool (*override_pickup)(void* userdata, int entity_id, int* respawn);
 
-  // Get external reward added to the player since last call.
-  int (*external_reward)(void* userdata, int player_id);
+  // Get reward override for player.
+  int (*reward_override)(void* userdata, const char* reason_opt, int player_id,
+                         int team, const int* other_player_id_opt,
+                         const float* origin_opt, int score);
 
   // Add score to a player. (This is picked up by the server on the next
   // update.)

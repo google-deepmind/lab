@@ -161,6 +161,27 @@ class Context {
   // frame.
   bool HasEpisodeFinished(double elapsed_episode_time_seconds);
 
+  // Customization point for overriding the value of a reward.
+  //
+  // * 'optional_reason' - The reason is either a nullptr or a string containing
+  //   the reason this reward is being awarded.
+  //
+  // * 'player_id' Is the player the reward applies to.
+  //
+  // * 'team' is the team id the player belongs to.
+  //
+  // * 'optional_other_player_id' is a nullptr or the other player involved in
+  //   the reward.
+  //
+  // * 'optional_origin' is either a nullptr or 3 floats containing the
+  //   location of the reward.
+  //
+  // Returns the modified reward combined with the reward provided by
+  // 'ExternalReward'.
+  int RewardOverride(const char* optional_reason, int player_id, int team,
+                     const int* optional_other_player_id,
+                     const float* optional_origin, int score);
+
   // Adds the given reward for the specified player. The reward is accumulated
   // temporarily until it is harvested by ExternalReward.
   void AddScore(int player_id, double reward);
@@ -203,11 +224,6 @@ class Context {
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                         int* align_l0_r1_c2, int* shadow, float rgba[4]) const;
 
-  // Subtracts the integral part from the stashed reward (see AddScore) and
-  // returns that integral part. The remaining stashed reward is smaller than
-  // one in magnitude. The returned (integral) value is suitable for the game
-  // server, which only deals in integral reward increments.
-  int ExternalReward(int player_id);
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.
@@ -274,6 +290,12 @@ class Context {
     int buttons_down;
   };
 
+  // Subtracts the integral part from the stashed reward (see AddScore) and
+  // returns that integral part. The remaining stashed reward is smaller than
+  // one in magnitude. The returned (integral) value is suitable for the game
+  // server, which only deals in integral reward increments.
+  int ExternalReward(int player_id);
+
   int CallInit();
 
   Context(const Context&) = delete;
@@ -316,7 +338,6 @@ class Context {
 
   // Current actions to apply when lab is advanced.
   Actions actions_;
-
 
   // Transient reward stash for each player. Rewards are added with AddScore and
   // removed by ExternalReward.

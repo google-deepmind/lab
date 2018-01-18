@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -49,7 +49,8 @@ AddScore
 Adds score to both the client and his team
 ============
 */
-void AddScore( gentity_t *ent, vec3_t origin, int score ) {
+void AddScore( gentity_t *ent, vec3_t origin, int score, const char* reason, gentity_t *other ) {
+  const int* other_client_num = NULL;
 	if ( !ent->client ) {
 		return;
 	}
@@ -57,7 +58,10 @@ void AddScore( gentity_t *ent, vec3_t origin, int score ) {
 	if ( level.warmupTime ) {
 		return;
 	}
-	score += dmlab_external_reward( ent - g_entities );
+  if (other != NULL && other->client) {
+    other_client_num = &other->client->ps.clientNum;
+  }
+	score = dmlab_reward_override(reason, ent->client->ps.clientNum, ent->client->sess.sessionTeam, other_client_num, origin, score);
 	if ( score == 0 ) {
 		return;
 	}
@@ -512,9 +516,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		attacker->client->lastkilled_client = self->s.number;
 
 		if ( attacker == self || OnSameTeam (self, attacker ) ) {
-			AddScore( attacker, self->r.currentOrigin, -1 );
+			AddScore( attacker, self->r.currentOrigin, -1, "TAG_SELF", self );
 		} else {
-			AddScore( attacker, self->r.currentOrigin, 1 );
+			AddScore( attacker, self->r.currentOrigin, 1, "TAG_PLAYER", self );
 
 			if( meansOfDeath == MOD_GAUNTLET ) {
 				
@@ -545,7 +549,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 		}
 	} else {
-		AddScore( self, self->r.currentOrigin, -1 );
+		AddScore( self, self->r.currentOrigin, -1, "TAG_SELF", self );
 	}
 
 	// Add team bonuses

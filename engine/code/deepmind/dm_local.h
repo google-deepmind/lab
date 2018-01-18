@@ -69,8 +69,11 @@ qboolean dmlab_can_pickup(int entity_id);
 // Returns true if the pickup behaviour has been overridden.
 qboolean dmlab_override_pickup(int entity_id, int* respawn);
 
-// Consume reward stored in external context for player 'player_id'.
-int dmlab_external_reward(int player_id);
+// Customization point for overriding the value of a reward and consuming reward
+// stored in external context for player 'player_id'.
+int dmlab_reward_override(const char* reason_opt, int player_id, int team,
+                          const int* other_player_id_opt,
+                          const vec3_t origin_opt, int score);
 
 // Get the current player score.
 int dmlab_player_score(void);

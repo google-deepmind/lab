@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -206,14 +206,14 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 //======================================================================
 
 int Pickup_Reward( gentity_t *ent, gentity_t *other ) {
-	AddScore( other, NULL, ent->count ? ent->count : ent->item->quantity );
+	AddScore( other, NULL, ent->count ? ent->count : ent->item->quantity, "PICKUP_REWARD", ent );
 	return -1;
 }
 
 //======================================================================
 
 int Pickup_Goal( gentity_t *ent, gentity_t *other ) {
-	AddScore( other, NULL, ent->count ? ent->count : ent->item->quantity );
+	AddScore( other, NULL, ent->count ? ent->count : ent->item->quantity, "PICKUP_GOAL", ent );
 	dmlab_set_map_finished( qtrue );
 	return -1;
 }

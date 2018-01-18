@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -122,7 +122,7 @@ void SP_target_delay( gentity_t *ent ) {
 The activator is given this many points.
 */
 void Use_Target_Score (gentity_t *ent, gentity_t *other, gentity_t *activator) {
-	AddScore( activator, ent->r.currentOrigin, ent->count );
+	AddScore( activator, ent->r.currentOrigin, ent->count, "TARGET_SCORE", ent );
 }
 
 void SP_target_score( gentity_t *ent ) {

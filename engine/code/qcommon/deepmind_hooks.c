@@ -56,9 +56,16 @@ int dmlab_callback(
     case DEEPMIND_CAN_PICKUP:
       return ctx->hooks.can_pickup(ctx->userdata, /*entity_id=*/a1);
     case DEEPMIND_OVERRIDE_PICKUP:
-      return ctx->hooks.override_pickup(ctx->userdata, a1, VM_ArgPtr(a2));
-    case DEEPMIND_EXTERNAL_REWARD:
-      return ctx->hooks.external_reward(ctx->userdata, a1);
+      return ctx->hooks.override_pickup(ctx->userdata, /*entity_id=*/a1,
+                                        /*respawn=*/VM_ArgPtr(a2));
+    case DEEPMIND_REWARD_OVERRIDE:
+      return ctx->hooks.reward_override(ctx->userdata,
+                                        /*reason=*/VM_ArgPtr(a1),
+                                        /*player_id=*/a2,
+                                        /*team=*/a3,
+                                        /*other_player_id_opt=*/VM_ArgPtr(a4),
+                                        /*origin=*/VM_ArgPtr(a5),
+                                        /*score=*/a6);
     case DEEPMIND_SET_PLAYER_STATE: {
       const playerState_t* ps = VM_ArgPtr(a1);
       int timestamp_msec = ctx->calls.total_engine_time_msec();

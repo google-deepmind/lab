@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -314,7 +314,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 #endif
 	if (targ->client->ps.powerups[enemy_flag_pw]) {
 		attacker->client->pers.teamState.lastfraggedcarrier = level.time;
-		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS);
+		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS, "CTF_FRAG_CARRIER_BONUS", targ);
 		attacker->client->pers.teamState.fragcarrier++;
 		PrintMsg(NULL, "%s" S_COLOR_WHITE " tagged %s's flag carrier!\n",
 			attacker->client->pers.netname, TeamName(team));
@@ -332,7 +332,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	// did the attacker frag a head carrier? other->client->ps.generic1
 	if (tokens) {
 		attacker->client->pers.teamState.lastfraggedcarrier = level.time;
-		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS * tokens * tokens);
+		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS * tokens * tokens, "CTF_FRAG_CARRIER_BONUS", targ);
 		attacker->client->pers.teamState.fragcarrier++;
 		PrintMsg(NULL, "%s" S_COLOR_WHITE " tagged %s's skull carrier!\n",
 			attacker->client->pers.netname, TeamName(team));
@@ -352,7 +352,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		!attacker->client->ps.powerups[flag_pw]) {
 		// attacker is on the same team as the flag carrier and
 		// fragged a guy who hurt our flag carrier
-		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
+		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS,  "CTF_CARRIER_DANGER_PROTECT_BONUS", targ);
 
 		attacker->client->pers.teamState.carrierdefense++;
 		targ->client->pers.teamState.lasthurtcarrier = 0;
@@ -432,7 +432,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
 
 		// we defended the base flag
-		AddScore(attacker, targ->r.currentOrigin, CTF_FLAG_DEFENSE_BONUS);
+		AddScore(attacker, targ->r.currentOrigin, CTF_FLAG_DEFENSE_BONUS, "CTF_FLAG_DEFENSE_BONUS", targ);
 		attacker->client->pers.teamState.basedefense++;
 
 		attacker->client->ps.persistant[PERS_DEFEND_COUNT]++;
@@ -453,7 +453,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 			( VectorLength(v2) < CTF_ATTACKER_PROTECT_RADIUS &&
 				trap_InPVS(carrier->r.currentOrigin, attacker->r.currentOrigin ) ) ) &&
 			attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
-			AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_PROTECT_BONUS);
+			AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_PROTECT_BONUS, "CTF_CARRIER_PROTECT_BONUS", targ);
 			attacker->client->pers.teamState.carrierdefense++;
 
 			attacker->client->ps.persistant[PERS_DEFEND_COUNT]++;
@@ -700,7 +700,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 		// hey, it's not home.  return it by teleporting it back
 		PrintMsg( NULL, "%s" S_COLOR_WHITE " returned the %s flag!\n", 
 			cl->pers.netname, TeamName(team));
-		AddScore(other, ent->r.currentOrigin, CTF_RECOVERY_BONUS);
+		AddScore(other, ent->r.currentOrigin, CTF_RECOVERY_BONUS, "CTF_RECOVERY_BONUS", ent);
 		other->client->pers.teamState.flagrecovery++;
 		other->client->pers.teamState.lastreturnedflag = level.time;
 		//ResetFlag will remove this entity!  We must return zero
@@ -743,7 +743,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	other->client->ps.persistant[PERS_CAPTURES]++;
 
 	// other gets another 10 frag bonus
-	AddScore(other, ent->r.currentOrigin, CTF_CAPTURE_BONUS);
+	AddScore(other, ent->r.currentOrigin, CTF_CAPTURE_BONUS, "CTF_CAPTURE_BONUS", ent);
 
 	Team_CaptureFlagSound( ent, team );
 
@@ -760,13 +760,11 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			player->client->pers.teamState.lasthurtcarrier = -5;
 		} else if (player->client->sess.sessionTeam ==
 			cl->sess.sessionTeam) {
-#ifdef MISSIONPACK
-			AddScore(player, ent->r.currentOrigin, CTF_TEAM_BONUS);
-#endif
+			AddScore(player, ent->r.currentOrigin, CTF_TEAM_BONUS, "CTF_TEAM_BONUS", ent);
 			// award extra points for capture assists
 			if (player->client->pers.teamState.lastreturnedflag + 
 				CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time) {
-				AddScore (player, ent->r.currentOrigin, CTF_RETURN_FLAG_ASSIST_BONUS);
+				AddScore(player, ent->r.currentOrigin, CTF_RETURN_FLAG_ASSIST_BONUS, "CTF_RETURN_FLAG_ASSIST_BONUS", ent);
 				other->client->pers.teamState.assists++;
 
 				player->client->ps.persistant[PERS_ASSIST_COUNT]++;
@@ -778,7 +776,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			} 
 			if (player->client->pers.teamState.lastfraggedcarrier + 
 				CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.time) {
-				AddScore(player, ent->r.currentOrigin, CTF_FRAG_CARRIER_ASSIST_BONUS);
+				AddScore(player, ent->r.currentOrigin, CTF_FRAG_CARRIER_ASSIST_BONUS, "CTF_FRAG_CARRIER_ASSIST_BONUS", ent);
 				other->client->pers.teamState.assists++;
 				player->client->ps.persistant[PERS_ASSIST_COUNT]++;
 				// add the sprite over the player's head
@@ -825,8 +823,8 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 #ifdef MISSIONPACK
 	}
 
-	AddScore(other, ent->r.currentOrigin, CTF_FLAG_BONUS);
 #endif
+	AddScore(other, ent->r.currentOrigin, CTF_FLAG_BONUS, "CTF_FLAG_BONUS", ent);
 	cl->pers.teamState.flagsince = level.time;
 	Team_TakeFlagSound( ent, team );
 
@@ -1241,7 +1239,7 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 
 	G_AddEvent( self->activator, EV_OBELISKEXPLODE, 0 );
 
-	AddScore(attacker, self->r.currentOrigin, CTF_CAPTURE_BONUS);
+	AddScore(attacker, self->r.currentOrigin, CTF_CAPTURE_BONUS, "CTF_CAPTURE_BONUS");
 
 	// add the sprite over the player's head
 	attacker->client->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
@@ -1276,7 +1274,7 @@ static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 	AddTeamScore(self->s.pos.trBase, other->client->sess.sessionTeam, tokens);
 	Team_ForceGesture(other->client->sess.sessionTeam);
 
-	AddScore(other, self->r.currentOrigin, CTF_CAPTURE_BONUS*tokens);
+	AddScore(other, self->r.currentOrigin, CTF_CAPTURE_BONUS*tokens, "CTF_CAPTURE_BONUS");
 
 	// add the sprite over the player's head
 	other->client->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
@@ -1300,7 +1298,7 @@ static void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage ) {
 		G_AddEvent(self, EV_OBELISKPAIN, 0);
 	}
 	self->activator->s.frame = 1;
-	AddScore(attacker, self->r.currentOrigin, actualDamage);
+	AddScore(attacker, self->r.currentOrigin, actualDamage, "OBELISK");
 }
 
 // spawn invisible damagable obelisk entity / harvester base trigger.
