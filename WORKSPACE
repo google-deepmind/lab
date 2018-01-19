@@ -15,9 +15,9 @@ http_archive(
 new_http_archive(
     name = "eigen_archive",
     build_file = "eigen.BUILD",
-    sha256 = "7e05dd4b9866ef0aa4498be34752a362596cc5db2f8439cee111e4ea54046b57",
-    strip_prefix = "eigen-eigen-1d454915237a",
-    url = "http://bitbucket.org/eigen/eigen/get/1d454915237a.tar.gz",
+    sha256 = "9a01fed6311df359f3f9af119fcf298a3353aef7d1b1bc86f6c8ae0ca6a2f842",
+    strip_prefix = "/eigen-eigen-5d5dd50b2eb6",
+    url = "https://bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
 )
 
 new_http_archive(
@@ -31,24 +31,25 @@ new_http_archive(
 new_http_archive(
     name = "jpeg_archive",
     build_file = "jpeg.BUILD",
-    sha256 = "3a753ea48d917945dd54a2d97de388aa06ca2eb1066cbfdc6652036349fe05a7",
-    strip_prefix = "jpeg-9a",
-    url = "http://www.ijg.org/files/jpegsrc.v9a.tar.gz",
+    sha256 = "39e111cd9da5e72a589b98feeded334bb0e5776511e507e3d811ab25a213a3cd",
+    strip_prefix = "jpeg-9c",
+    url = "http://www.ijg.org/files/jpegsrc.v9c.tar.gz",
 )
 
 new_http_archive(
     name = "libxml_archive",
     build_file = "libxml.BUILD",
-    strip_prefix = "libxml2-2.9.4",
-    url = "http://xmlsoft.org/sources/libxml2-2.9.4.tar.gz",
+    sha256 = "f63c5e7d30362ed28b38bfa1ac6313f9a80230720b7fb6c80575eeab3ff5900c",
+    strip_prefix = "libxml2-2.9.7",
+    url = "http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
 )
 
 new_http_archive(
     name = "png_archive",
     build_file = "png.BUILD",
-    sha256 = "c35bcc6387495ee6e757507a68ba036d38ad05b415c2553b3debe2a57647a692",
-    strip_prefix = "libpng-1.2.53",
-    url = "http://github.com/glennrp/libpng/archive/v1.2.53.zip",
+    sha256 = "7ffa5eb8f9f3ed23cf107042e5fec28699718916668bbce48b968600475208d3",
+    strip_prefix = "libpng-1.6.34",
+    url = "http://github.com/glennrp/libpng/archive/v1.6.34.zip",
 )
 
 new_http_archive(
@@ -65,11 +66,13 @@ new_local_repository(
     build_file = "lua.BUILD",
     path = "/usr",
 )
+
 new_local_repository(
     name = "sdl_system",
     build_file = "sdl.BUILD",
     path = "/usr",
 )
+
 new_local_repository(
     name = "python_system",
     build_file = "python.BUILD",
