@@ -679,7 +679,7 @@ genrule(
         "assets_oa/scripts/**/*.shader",
     ]),
     outs = ["baselab/assets_oa.pk3"],
-    cmd = "A=$$(pwd); (cd assets_oa; zip -r $${A}/$(OUTS) -- .)",
+    cmd = "A=$$(pwd); (cd assets_oa; zip --quiet -r $${A}/$(OUTS) -- .)",
     visibility = ["//visibility:public"],
 )
 
@@ -695,7 +695,7 @@ genrule(
         "assets/scripts/**/*.shader",
     ]),
     outs = ["baselab/assets.pk3"],
-    cmd = "A=$$(pwd); (cd assets; zip -r $${A}/$(OUTS) -- .)",
+    cmd = "A=$$(pwd); (cd assets; zip --quiet -r $${A}/$(OUTS) -- .)",
     visibility = ["//visibility:public"],
 )
 
@@ -703,7 +703,7 @@ genrule(
     name = "assets_bots_pk3",
     srcs = ["assets_oa/scripts/bots.txt"] + glob(["assets_oa/botfiles/**/*"]),
     outs = ["baselab/assets_bots.pk3"],
-    cmd = "A=$$(pwd); (cd assets_oa; zip -r $${A}/$(OUTS) -- .)",
+    cmd = "A=$$(pwd); (cd assets_oa; zip --quiet -r $${A}/$(OUTS) -- .)",
     visibility = ["//visibility:public"],
 )
 
@@ -718,7 +718,7 @@ genrule(
         CODE_DIR + "/q3_ui/ui.qvm",
     ],
     outs = ["baselab/vm.pk3"],
-    cmd = "A=$$(pwd); mkdir $(@D)/vm; ln -s -r -t $(@D)/vm -- $(SRCS); (cd $(@D); zip -r $${A}/$(OUTS) -- vm)",
+    cmd = "A=$$(pwd); mkdir $(@D)/vm; ln -s -r -t $(@D)/vm -- $(SRCS); (cd $(@D); zip --quiet -r $${A}/$(OUTS) -- vm)",
     visibility = ["//testing:__subpackages__"],
 )
 
