@@ -96,6 +96,17 @@ int dmlab_callback(
                                     /*player_id=*/a1,
                                     /*player_name=*/VM_ArgPtr(a2));
       break;
+    case DEEPMIND_ENTITIES_CLEAR:
+      ctx->hooks.entities.clear(ctx->userdata);
+      break;
+    case DEEPMIND_ENTITIES_ADD:
+      ctx->hooks.entities.add(ctx->userdata, /*player_id=*/a1,
+                              /*user_id=*/a2,
+                              /*type=*/a3,
+                              /*flags=*/a4,
+                              /*position=*/VM_ArgPtr(a5),
+                              /*classname=*/VM_ArgPtr(a6));
+      break;
     default:
       Com_Error(ERR_DROP, "DeepMind system call %d not implemented\n",
                 dm_callnum);

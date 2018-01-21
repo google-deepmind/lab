@@ -35,6 +35,8 @@ typedef struct DeepmindHooks_s DeepmindHooks;
 
 typedef struct DeepmindEventsHooks_s DeepmindEventsHooks;
 
+typedef struct DeepmindEntitiesHooks_s DeepmindEntitiesHooks;
+
 struct DeepmindEventsHooks_s {
   // Returns number of event types.
   int (*type_count)(void* userdata);
@@ -51,6 +53,15 @@ struct DeepmindEventsHooks_s {
   // Exports an event at 'idx', which must be in range [0, count()), to an
   // EnvCApi_Event structure.
   void (*export_event)(void* userdata, int idx, EnvCApi_Event* event);
+};
+
+struct DeepmindEntitiesHooks_s {
+  // Clears all entities at start of entity update.
+  void (*clear)(void* userdata);
+
+  // Called with each active entity during entity update.
+  void (*add)(void* userdata, int entity_id, int user_id, int type, int flags,
+              float position[3], const char* classname);
 };
 
 struct DeepmindHooks_s {
@@ -249,6 +260,8 @@ struct DeepmindHooks_s {
   const char* (*error_message)(void* userdata);
 
   DeepmindEventsHooks events;
+
+  DeepmindEntitiesHooks entities;
 };
 
 #ifdef __cplusplus

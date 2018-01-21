@@ -288,6 +288,17 @@ static void events_export(void* userdata, int event_idx, EnvCApi_Event* event) {
   static_cast<Context*>(userdata)->MutableEvents()->Export(event_idx, event);
 }
 
+static void entities_clear(void* userdata) {
+  static_cast<Context*>(userdata)->MutableGameEntities()->Clear();
+}
+
+static void entities_add(void* userdata, int entity_id, int user_id,
+                            int type, int flags, float position[3],
+                            const char* classname) {
+  static_cast<Context*>(userdata)->MutableGameEntities()->Add(
+      entity_id, user_id, type, flags, position, classname);
+}
+
 }  // extern "C"
 
 namespace deepmind {
@@ -377,6 +388,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->events.type_name = events_type_name;
   hooks->events.count = events_count;
   hooks->events.export_event = events_export;
+  hooks->entities.clear = entities_clear;
+  hooks->entities.add = entities_add;
 }
 
 void Context::AddSetting(const char* key, const char* value) {
@@ -450,6 +463,9 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.events", &lua::Bind<ContextEvents::Module>,
       {MutableEvents()});
+  lua_vm_.AddCModuleToSearchers("dmlab.system.game_entities",
+                                &lua::Bind<ContextEntities::Module>,
+                                {MutableGameEntities()});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
 

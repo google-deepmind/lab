@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "deepmind/engine/context_entities.h"
 #include "deepmind/engine/context_events.h"
 #include "deepmind/engine/context_game.h"
 #include "deepmind/engine/context_observations.h"
@@ -273,6 +274,9 @@ class Context {
   const ContextPickups& Pickups() const { return pickups_; }
   ContextPickups* MutablePickups() { return &pickups_; }
 
+  const ContextEntities& GameEntities() const { return game_entities_; }
+  ContextEntities* MutableGameEntities() { return &game_entities_; }
+
  private:
   // Message to be placed on screen.
   struct ScreenMessage {
@@ -377,6 +381,9 @@ class Context {
 
   // An object for interacting with pickups.
   ContextPickups pickups_;
+
+  // An object for retrieving information about in game entities.
+  ContextEntities game_entities_;
 
   // When enabled all entities are forced to be rendered.
   bool has_alt_cameras_;

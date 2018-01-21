@@ -102,4 +102,10 @@ int dmlab_make_screen_messages(int screen_width, int screen_height,
 void dmlab_get_screen_message(int message_id, char* buffer, int* x, int* y,
                               int* align_l0_r1_c2, int* shadow, float rgba[4]);
 
+// Called at the start of entity update.
+void dmlab_entities_clear();
+// Called on each active entity during entity update.
+void dmlab_entities_add(int entity_id, int user_id, int type, int flags,
+                        float position[3], const char* classname);
+
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_

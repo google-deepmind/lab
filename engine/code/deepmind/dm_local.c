@@ -117,3 +117,15 @@ char dmlab_select_team(int player_id, const char* player_name) {
                                      0, 0, 0);
 }
 
+void dmlab_entities_clear() {
+  trap_DeepmindCallback(DEEPMIND_ENTITIES_CLEAR, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0);
+}
+
+void dmlab_entities_add(int entity_id, int user_id, int type, int flags,
+                           float position[3], const char* classname) {
+  trap_DeepmindCallback(DEEPMIND_ENTITIES_ADD, (intptr_t)entity_id,
+                        (intptr_t)user_id, (intptr_t)type, (intptr_t)flags,
+                        (intptr_t)position, (intptr_t)classname, 0, 0, 0, 0, 0,
+                        0);
+}

@@ -8,6 +8,7 @@
 2.  Add Image Lua library for loading and scaling PNGs.
 3.  Add error handling to the env_c_api.
 4.  Add ability to create events from Lua scripts.
+5.  Add ability to retrieve game entity from Lua scripts.
 
 ### Minor Improvements:
 

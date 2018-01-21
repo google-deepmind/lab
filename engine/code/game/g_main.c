@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -1790,7 +1790,7 @@ void G_RunFrame( int levelTime ) {
 	G_UpdateCvars();
 
 	BG_UpdateItems();
-
+	dmlab_entities_clear();
 	//
 	// go through all allocated objects
 	//
@@ -1822,6 +1822,9 @@ void G_RunFrame( int levelTime ) {
 			}
 		}
 
+		if (ent->item) {
+			dmlab_entities_add( ent->s.number, ent->id, ent->item->giType, ent->s.eFlags, ent->r.currentOrigin, ent->item->classname );
+		}
 		// temporary entities don't think
 		if ( ent->freeAfterEvent ) {
 			continue;

@@ -9,6 +9,7 @@ cc_library(
     hdrs = ["context.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":context_entities",
         ":context_events",
         ":context_game",
         ":context_observations",
@@ -64,6 +65,38 @@ cc_library(
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//deepmind/util:files",
+    ],
+)
+
+cc_library(
+    name = "context_entities",
+    srcs = ["context_entities.cc"],
+    hdrs = ["context_entities.h"],
+    deps = [
+        "//deepmind/lua",
+        "//deepmind/lua:class",
+        "//deepmind/lua:n_results_or",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+    ],
+)
+
+cc_test(
+    name = "context_entities_test",
+    srcs = ["context_entities_test.cc"],
+    deps = [
+        ":context_entities",
+        "//deepmind/lua:bind",
+        "//deepmind/lua:call",
+        "//deepmind/lua:n_results_or_test_util",
+        "//deepmind/lua:push",
+        "//deepmind/lua:push_script",
+        "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/lua:vm_test_util",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
