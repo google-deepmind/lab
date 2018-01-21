@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -1479,7 +1479,7 @@ RawImage_ScaleToPower2
 
 ===============
 */
-static qboolean RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
+static qboolean RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer, qboolean capMaxSize )
 {
 	int width =         *inout_width;
 	int height =        *inout_height;
@@ -1490,6 +1490,8 @@ static qboolean RawImage_ScaleToPower2( byte **data, int *inout_width, int *inou
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
 	qboolean scaled;
 
+	// Do not attempt to rescale textures without source
+	capMaxSize = capMaxSize && *data != NULL;
 	//
 	// convert to exact power of 2 sizes
 	//
@@ -1508,6 +1510,14 @@ static qboolean RawImage_ScaleToPower2( byte **data, int *inout_width, int *inou
 		scaled_width >>= 1;
 	if ( r_roundImagesDown->integer && scaled_height > height )
 		scaled_height >>= 1;
+
+	if ( capMaxSize ) {
+		while ( scaled_width > r_textureMaxSize->integer ||
+		        scaled_height > r_textureMaxSize->integer ) {
+			scaled_width = scaled_width > 1 ? scaled_width >> 1 : scaled_width;
+			scaled_height = scaled_height > 1 ? scaled_height >> 1 : scaled_height;
+		}
+	}
 
 	if ( picmip && data && resampledBuffer && r_imageUpsample->integer && 
 	     scaled_width < r_imageUpsampleMaxSize->integer && scaled_height < r_imageUpsampleMaxSize->integer)
@@ -1708,7 +1718,7 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 	}
 	else if(lightMap)
 	{
-		if(r_greyscale->integer)
+		if(r_greyscale->integer || r_monolightmaps->integer)
 			internalFormat = GL_LUMINANCE;
 		else
 			internalFormat = GL_RGBA;
@@ -2021,16 +2031,16 @@ Upload32
 
 ===============
 */
-static void Upload32(byte *data, int x, int y, int width, int height, GLenum picFormat, int numMips, image_t *image, qboolean scaled)
+static void Upload32(byte *data, int x, int y, int width, int height, GLenum picFormat, int numMips, image_t *image, qboolean scaled, qboolean lightMap)
 {
 	int			i, c;
 	byte		*scan;
-
 	imgType_t type = image->type;
 	imgFlags_t flags = image->flags;
 	GLenum internalFormat = image->internalFormat;
 	qboolean rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP) && (rgba8 || numMips > 1);
+	image->uploadMips = mipmap ? numMips : 1;
 	qboolean cubemap = !!(flags & IMGFLAG_CUBEMAP);
 
 	// These operations cannot be performed on non-rgba8 images.
@@ -2041,7 +2051,7 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 
 		if (type == IMGTYPE_COLORALPHA)
 		{
-			if( r_greyscale->integer )
+			if( r_greyscale->integer || ( lightMap && r_monolightmaps->integer ) )
 			{
 				for ( i = 0; i < c; i++ )
 				{
@@ -2051,14 +2061,15 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 					scan[i*4 + 2] = luma;
 				}
 			}
-			else if( r_greyscale->value )
+			else if( r_greyscale->value || ( lightMap && r_monolightmaps->value ) )
 			{
+				float scl = r_greyscale->value ? r_greyscale->value : r_monolightmaps->value;
 				for ( i = 0; i < c; i++ )
 				{
 					float luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
-					scan[i*4] = LERP(scan[i*4], luma, r_greyscale->value);
-					scan[i*4 + 1] = LERP(scan[i*4 + 1], luma, r_greyscale->value);
-					scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, r_greyscale->value);
+					scan[i*4] = LERP(scan[i*4], luma, scl);
+					scan[i*4 + 1] = LERP(scan[i*4 + 1], luma, scl);
+					scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, scl);
 				}
 			}
 
@@ -2094,14 +2105,7 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 }
 
 
-/*
-================
-R_CreateImage2
-
-This is the only way any image_t are created
-================
-*/
-image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLenum picFormat, int numMips, imgType_t type, imgFlags_t flags, int internalFormat ) {
+static image_t *R_CreateImage2Internal( const char *name, byte *pic, int width, int height, GLenum picFormat, int numMips, imgType_t type, imgFlags_t flags, int internalFormat, qboolean capMaxSize ) {
 	byte       *resampledBuffer = NULL;
 	image_t    *image;
 	qboolean    isLightmap = qfalse, scaled = qfalse;
@@ -2152,7 +2156,7 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	if (!cubemap)
 	{
 		if (rgba8)
-			scaled = RawImage_ScaleToPower2(&pic, &width, &height, type, flags, &resampledBuffer);
+			scaled = RawImage_ScaleToPower2(&pic, &width, &height, type, flags, &resampledBuffer, capMaxSize);
 		else if (pic && picmip)
 		{
 			for (miplevel = r_picmip->integer; miplevel > 0 && numMips > 1; miplevel--, numMips--)
@@ -2196,7 +2200,7 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 
 	// Upload data.
 	if (pic)
-		Upload32(pic, 0, 0, width, height, picFormat, numMips, image, scaled);
+		Upload32(pic, 0, 0, width, height, picFormat, numMips, image, scaled, isLightmap);
 
 	if (resampledBuffer != NULL)
 		ri.Hunk_FreeTempMemory(resampledBuffer);
@@ -2242,6 +2246,18 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 
 /*
 ================
+R_CreateImage2
+
+This is the only way any image_t are created
+================
+*/
+image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLenum picFormat, int numMips, imgType_t type, imgFlags_t flags, int internalFormat ) {
+  return R_CreateImage2Internal( name, pic, width, height, picFormat, numMips, type, flags, internalFormat, qtrue );
+}
+
+
+/*
+================
 R_CreateImage
 
 Wrapper for R_CreateImage2(), for the old parameters.
@@ -2255,7 +2271,7 @@ image_t *R_CreateImage(const char *name, byte *pic, int width, int height, imgTy
 
 void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int height, GLenum picFormat )
 {
-	Upload32(pic, x, y, width, height, picFormat, 0, image, qfalse);
+	Upload32(pic, x, y, width, height, picFormat, 0, image, qfalse, qfalse);
 }
 
 //===================================================================
@@ -2394,13 +2410,16 @@ Returns NULL if it fails, not a default image.
 image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 {
 	DeepmindContext* ctx = dmlab_context();
+	char new_name[MAX_QPATH];
+	const char	*file_name = name;
 	image_t	*image;
-	int		width, height;
-	byte	*pic;
-	GLenum  picFormat;
-	int picNumMips;
+	int		width = 0, height = 0;
+	byte	*pic = NULL;
+	GLenum  picFormat = GL_RGBA8;
+	int picNumMips = 1;
 	long	hash;
 	imgFlags_t checkFlagsTrue, checkFlagsFalse;
+	qboolean capMaxSize = qtrue;
 
 	if (!name) {
 		return NULL;
@@ -2423,16 +2442,26 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		}
 	}
 
+	if ( ctx->hooks.replace_texture_name( ctx->userdata, name, new_name, sizeof( new_name ) ) ) {
+		file_name = new_name;
+	}
 	//
-	// load the pic from disk
+	// Load the pic from disk or from hooks.
 	//
-	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
+	if ( !ctx->hooks.load_texture( ctx->userdata, file_name, &pic, &width, &height, ri.Malloc ) ) {
+		R_LoadImage( file_name, &pic, &width, &height, &picFormat, &picNumMips );
+	} else {
+		capMaxSize = qfalse;
+	}
+
 	if ( pic == NULL ) {
 		return NULL;
 	}
 
 	// Allow modification of a loaded texture.
-	ctx->hooks.modify_rgba_texture( ctx->userdata, name, pic, width, height );
+	if ( ctx->hooks.modify_rgba_texture( ctx->userdata, name, pic, width, height ) ) {
+		capMaxSize = qfalse;
+	}
 
 	checkFlagsTrue = IMGFLAG_PICMIP | IMGFLAG_MIPMAP | IMGFLAG_GENNORMALMAP;
 	checkFlagsFalse = IMGFLAG_CUBEMAP;
@@ -2535,8 +2564,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			}
 #endif
 
-			R_CreateImage( normalName, normalPic, normalWidth, normalHeight, IMGTYPE_NORMAL, normalFlags, 0 );
-			ri.Free( normalPic );	
+			R_CreateImage2Internal( normalName, normalPic, normalWidth, normalHeight, GL_RGBA8, 0, IMGTYPE_NORMAL, normalFlags, 0, capMaxSize );
+			ri.Free( normalPic );
 		}
 	}
 
@@ -2554,7 +2583,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			flags &= ~IMGFLAG_MIPMAP;
 	}
 
-	image = R_CreateImage2( ( char * ) name, pic, width, height, picFormat, picNumMips, type, flags, 0 );
+	image = R_CreateImage2Internal( ( char * ) name, pic, width, height, picFormat, picNumMips, type, flags, 0, capMaxSize );
 	ri.Free( pic );
 	return image;
 }

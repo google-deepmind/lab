@@ -212,9 +212,30 @@ struct DeepmindHooks_s {
   // Calls script when bots should be loaded.
   void (*add_bots)(void* userdata);
 
-  // Enables game to modify a texture after load.
-  void (*modify_rgba_texture)(void* userdata, const char* name,
+  // Returns whether to replace texture named 'name' with new_name.
+  // 'new_name' shall be a null terminated with length in [0, max_size).
+  bool (*replace_texture_name)(void* userdata, const char* name, char* new_name,
+                               int max_size);
+
+  // Returns whether the texture named 'name' has been loaded externally.
+  // If texture is loaded externally: 'pixels' will be a buffer sized *width *
+  // *height * 4 and allocated using 'allocator'.
+  // Otherwise 'pixels' 'width' and 'height' are left unchanged.
+  bool (*load_texture)(void* userdata, const char* name, unsigned char** pixels,
+                       int* width, int* height, void* (*allocator)(int size));
+
+  // Enables game to modify a texture on load.
+  bool (*modify_rgba_texture)(void* userdata, const char* name,
                               unsigned char* data, int width, int height);
+
+  // Returns whether to replace model named 'name' with 'new_name' and prefix
+  // the textures used with the model with 'texture_prefix'. The buffers pointed
+  // to by new_name and texture_prefix shall have space for at least
+  // new_name_size and texture_prefix_size, respectively, and on success they
+  // are filled with null-terminated strings.
+  bool (*replace_model_name)(void* userdata, const char* name, char* new_name,
+                             int new_name_size, char* texture_prefix,
+                             int texture_prefix_size);
 
   // Level-specific observations
   ///////////////

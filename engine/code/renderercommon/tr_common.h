@@ -23,8 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define TR_COMMON_H
 
 #include "../qcommon/q_shared.h"
-#include "../renderercommon/tr_public.h"
+#include "../qcommon/qcommon.h"
+#include "../qcommon/qfiles.h"
 #include "qgl.h"
+#include "tr_public.h"
 
 typedef enum
 {
@@ -50,6 +52,7 @@ typedef struct image_s {
 	char		imgName[MAX_QPATH];		// game path, including extension
 	int			width, height;				// source image
 	int			uploadWidth, uploadHeight;	// after power of two and picmip but not including clamp to MAX_TEXTURE_SIZE
+	int			uploadMips;
 	GLuint		texnum;					// gl texture binding
 
 	int			frameUsed;			// for texture usage in frame statistics
@@ -114,6 +117,8 @@ extern cvar_t *r_stereoEnabled;
 
 extern	cvar_t	*r_saveFontData;
 
+extern cvar_t *r_textureMaxSize;
+
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
 float R_NoiseGet4f( float x, float y, float z, double t );
@@ -146,6 +151,17 @@ void R_LoadJPG( const char *name, byte **pic, int *width, int *height );
 void R_LoadPCX( const char *name, byte **pic, int *width, int *height );
 void R_LoadPNG( const char *name, byte **pic, int *width, int *height );
 void R_LoadTGA( const char *name, byte **pic, int *width, int *height );
+void R_LoadDDS( const char *filename, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips );
+
+/*
+====================================================================
+
+MODEL HELPERS
+
+====================================================================
+*/
+
+qboolean R_DMLabToMD3( const char *mod_name, md3Header_t **mod_md3 );
 
 /*
 ====================================================================

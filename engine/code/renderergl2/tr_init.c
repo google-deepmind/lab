@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -65,6 +65,7 @@ cvar_t	*r_stereoEnabled;
 cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
+cvar_t	*r_monolightmaps;
 
 cvar_t	*r_ignorehwgamma;
 cvar_t	*r_measureOverdraw;
@@ -231,6 +232,8 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+
+cvar_t	*r_textureMaxSize;
 
 /*
 ** InitOpenGL
@@ -1353,6 +1356,10 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+
+	r_monolightmaps = ri.Cvar_Get("r_monolightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH);
+
+	r_textureMaxSize = ri.Cvar_Get( "r_textureMaxSize", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

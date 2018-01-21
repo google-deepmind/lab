@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -31,6 +31,8 @@ int		gl_filter_max = GL_LINEAR;
 
 #define FILE_HASH_SIZE		1024
 static	image_t*		hashTable[FILE_HASH_SIZE];
+
+static int textureMaxSize;
 
 /*
 ** R_GammaCorrect
@@ -554,13 +556,14 @@ Upload32
 ===============
 */
 static void Upload32( unsigned *data, 
-						  int width, int height, 
+						  int width, int height, int numMips,
 						  qboolean mipmap, 
 						  qboolean picmip, 
 							qboolean lightMap,
 						  qboolean allowCompression,
+						  qboolean capMaxSize,
 						  int *format, 
-						  int *pUploadWidth, int *pUploadHeight )
+						  int *pUploadWidth, int *pUploadHeight, int *pUploadMips )
 {
 	int			samples;
 	unsigned	*scaledBuffer = NULL;
@@ -570,6 +573,8 @@ static void Upload32( unsigned *data,
 	byte		*scan;
 	GLenum		internalFormat = GL_RGB;
 	float		rMax = 0, gMax = 0, bMax = 0;
+	int			texsizex, texsizey;
+	int			miplevel = 0;
 
 	//
 	// convert to exact power of 2 sizes
@@ -591,6 +596,13 @@ static void Upload32( unsigned *data,
 		height = scaled_height;
 	}
 
+	if (capMaxSize) {
+		texsizex = ( textureMaxSize <= 0 || textureMaxSize > glConfig.maxTextureSize ) ? glConfig.maxTextureSize : textureMaxSize;
+		texsizey = texsizex;
+	} else {
+		texsizex = width;
+		texsizey = height;
+	}
 	//
 	// perform optional picmip operation
 	//
@@ -614,8 +626,8 @@ static void Upload32( unsigned *data,
 	// scale both axis down equally so we don't have to
 	// deal with a half mip resampling
 	//
-	while ( scaled_width > glConfig.maxTextureSize
-		|| scaled_height > glConfig.maxTextureSize ) {
+	while ( scaled_width > texsizex
+		|| scaled_height > texsizey ) {
 		scaled_width >>= 1;
 		scaled_height >>= 1;
 	}
@@ -630,7 +642,7 @@ static void Upload32( unsigned *data,
 	scan = ((byte *)data);
 	samples = 3;
 
-	if( r_greyscale->integer )
+	if( r_greyscale->integer || ( lightMap && r_monolightmaps->integer ) )
 	{
 		for ( i = 0; i < c; i++ )
 		{
@@ -640,20 +652,21 @@ static void Upload32( unsigned *data,
 			scan[i*4 + 2] = luma;
 		}
 	}
-	else if( r_greyscale->value )
+	else if( r_greyscale->value || ( lightMap && r_monolightmaps->value ) )
 	{
+		float scl = r_greyscale->value ? r_greyscale->value : r_monolightmaps->value;
 		for ( i = 0; i < c; i++ )
 		{
 			float luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
-			scan[i*4] = LERP(scan[i*4], luma, r_greyscale->value);
-			scan[i*4 + 1] = LERP(scan[i*4 + 1], luma, r_greyscale->value);
-			scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, r_greyscale->value);
+			scan[i*4] = LERP(scan[i*4], luma, scl);
+			scan[i*4 + 1] = LERP(scan[i*4 + 1], luma, scl);
+			scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, scl);
 		}
 	}
 
 	if(lightMap)
 	{
-		if(r_greyscale->integer)
+		if(r_greyscale->integer || r_monolightmaps->integer)
 			internalFormat = GL_LUMINANCE;
 		else
 			internalFormat = GL_RGB;
@@ -745,19 +758,37 @@ static void Upload32( unsigned *data,
 		}
 	}
 
+	*pUploadWidth = scaled_width;
+	*pUploadHeight = scaled_height;
+	*format = internalFormat;
+	*pUploadMips = 1;
+
 	// copy or resample data as appropriate for first MIP level
 	if ( ( scaled_width == width ) && 
 		( scaled_height == height ) ) {
 		if (!mipmap)
 		{
 			qglTexImage2D (GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			*pUploadWidth = scaled_width;
-			*pUploadHeight = scaled_height;
-			*format = internalFormat;
-
 			goto done;
 		}
-		Com_Memcpy (scaledBuffer, data, width*height*4);
+		else
+		{
+			while ( scaled_width > 1 || scaled_height > 1 ) {
+				if ( miplevel + 1 >= numMips ) break;  // stop at the last available mip
+				qglTexImage2D (GL_TEXTURE_2D, miplevel, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+				data += scaled_width * scaled_height;
+				scaled_width /= 2;
+				scaled_height /= 2;
+				if ( scaled_width < 1 ) {
+					scaled_width = 1;
+				}
+				if ( scaled_height < 1 ) {
+					scaled_height = 1;
+				}
+				++miplevel;
+			}
+		}
+		Com_Memcpy (scaledBuffer, data, scaled_width*scaled_height*4);
 	}
 	else
 	{
@@ -778,17 +809,10 @@ static void Upload32( unsigned *data,
 
 	R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, !mipmap );
 
-	*pUploadWidth = scaled_width;
-	*pUploadHeight = scaled_height;
-	*format = internalFormat;
-
-	qglTexImage2D (GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
+	qglTexImage2D (GL_TEXTURE_2D, miplevel, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 
 	if (mipmap)
 	{
-		int		miplevel;
-
-		miplevel = 0;
 		while (scaled_width > 1 || scaled_height > 1)
 		{
 			R_MipMap( (byte *)scaledBuffer, scaled_width, scaled_height );
@@ -806,6 +830,7 @@ static void Upload32( unsigned *data,
 
 			qglTexImage2D (GL_TEXTURE_2D, miplevel, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 		}
+		*pUploadMips = miplevel + 1;
 	}
 done:
 
@@ -838,13 +863,13 @@ done:
 
 /*
 ================
-R_CreateImage
+R_CreateImageInternal
 
 This is the only way any image_t are created
 ================
 */
-image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
-		imgType_t type, imgFlags_t flags, int internalFormat ) {
+image_t *R_CreateImageInternal( const char *name, byte *pic, int width, int height, int numMips,
+		imgType_t type, imgFlags_t flags, int internalFormat, qboolean capMaxSize ) {
 	image_t		*image;
 	qboolean	isLightmap = qfalse;
 	long		hash;
@@ -890,14 +915,16 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
 
 	GL_Bind(image);
 
-	Upload32( (unsigned *)pic, image->width, image->height, 
+	Upload32( (unsigned *)pic, image->width, image->height, numMips,
 								image->flags & IMGFLAG_MIPMAP,
 								image->flags & IMGFLAG_PICMIP,
 								isLightmap,
 								!(image->flags & IMGFLAG_NO_COMPRESSION),
+								capMaxSize,
 								&image->internalFormat,
 								&image->uploadWidth,
-								&image->uploadHeight );
+								&image->uploadHeight,
+								&image->uploadMips );
 
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
@@ -914,6 +941,18 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
 	hashTable[hash] = image;
 
 	return image;
+}
+
+/*
+================
+R_CreateImage
+
+Wrapper of R_CreateImageInternal using 0 mips
+================
+*/
+image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
+		imgType_t type, imgFlags_t flags, int internalFormat ) {
+	return R_CreateImageInternal( name, pic, width, height, 0, type, flags, internalFormat, qtrue );
 }
 
 //===================================================================
@@ -1032,10 +1071,15 @@ Returns NULL if it fails, not a default image.
 image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 {
 	DeepmindContext	*ctx = dmlab_context();
+	char new_name[MAX_QPATH];
+	char dds_name[MAX_QPATH];
+	const char	*file_name = name;
 	image_t	*image;
-	int		width, height;
-	byte	*pic;
+	int		width = 0, height = 0, numMips = 0;
+	byte	*pic = NULL;
 	long	hash;
+	GLenum picFormat;
+	qboolean capMaxSize = qtrue;
 
 	if (!name) {
 		return NULL;
@@ -1058,18 +1102,45 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		}
 	}
 
+	if ( ctx->hooks.replace_texture_name( ctx->userdata, name, new_name, sizeof( new_name ) ) ) {
+		file_name = new_name;
+	}
 	//
-	// load the pic from disk
+	// Load the pic from disk or from hooks.
 	//
-	R_LoadImage( name, &pic, &width, &height );
+	if ( !ctx->hooks.load_texture( ctx->userdata, file_name, &pic, &width, &height, ri.Malloc ) ) {
+		// Attempt to load a DDS version of this requested texture.
+		COM_StripExtension( file_name, dds_name, MAX_QPATH );
+		Q_strcat( dds_name, MAX_QPATH, ".dds" );
+
+		R_LoadDDS( dds_name, &pic, &width, &height, &picFormat, &numMips );
+
+		// If a DDS texture was loaded, but it is any other format than the expected
+		// RGBA8, discard it and carry on attempting to load the orginal texture.
+		if ( pic != NULL && picFormat != GL_RGBA8 ) {
+			ri.Free( pic );
+			pic = NULL;
+			numMips = 0;
+		}
+
+		if ( pic == NULL ) {
+			R_LoadImage( file_name, &pic, &width, &height );
+		}
+	} else {
+		capMaxSize = qfalse;
+	}
+
 	if ( pic == NULL ) {
 		return NULL;
 	}
 
 	// Allow modification of a loaded texture.
-	ctx->hooks.modify_rgba_texture( ctx->userdata, name, pic, width, height );
+	if ( ctx->hooks.modify_rgba_texture( ctx->userdata, name, pic, width, height ) ) {
+		numMips = 1;
+		capMaxSize = qfalse;
+	}
 
-	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, 0 );
+	image = R_CreateImageInternal( ( char * ) name, pic, width, height, numMips, type, flags, 0, capMaxSize );
 	ri.Free( pic );
 	return image;
 }
@@ -1359,6 +1430,9 @@ R_InitImages
 */
 void	R_InitImages( void ) {
 	Com_Memset(hashTable, 0, sizeof(hashTable));
+
+	textureMaxSize = r_textureMaxSize->integer;
+
 	// build brightness translation tables
 	R_SetColorMappings();
 

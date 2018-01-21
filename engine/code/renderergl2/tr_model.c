@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -21,12 +21,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // tr_models.c -- model loading and caching
 
+#include "../deepmind/context.h"
 #include "tr_local.h"
 
 #define	LL(x) x=LittleLong(x)
 
-static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *modName);
-static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *name );
+static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *mod_name, const char *shaderPrefix);
+static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *name, const char *shaderPrefix);
 
 /*
 ====================
@@ -44,12 +45,16 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 	int			ident;
 	qboolean	loaded = qfalse;
 	int			numLoaded;
-	char filename[MAX_QPATH], namebuf[MAX_QPATH+20];
+	char filename[MAX_QPATH], namebuf[MAX_QPATH+20], shaderPrefix[MAX_QPATH] = "";
 	char *fext, defex[] = "md3";
+	DeepmindContext	*ctx = dmlab_context();
 
 	numLoaded = 0;
 
-	strcpy(filename, name);
+	if ( !ctx->hooks.replace_model_name( ctx->userdata, name, filename, sizeof(filename), shaderPrefix, sizeof(shaderPrefix) ) ) {
+		strcpy(filename, name);
+	}
+
 
 	fext = strchr(filename, '.');
 	if(!fext)
@@ -73,7 +78,7 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 		
 		ident = LittleLong(* (unsigned *) buf.u);
 		if (ident == MD3_IDENT)
-			loaded = R_LoadMD3(mod, lod, buf.u, size, name);
+			loaded = R_LoadMD3(mod, lod, buf.u, size, name, shaderPrefix);
 		else
 			ri.Printf(PRINT_WARNING,"R_RegisterMD3: unknown fileid for %s\n", name);
 		
@@ -124,7 +129,14 @@ qhandle_t R_RegisterMDR(const char *name, model_t *mod)
 	qboolean loaded = qfalse;
 	int filesize;
 
-	filesize = ri.FS_ReadFile(name, (void **) &buf.v);
+	char filename[MAX_QPATH], shaderPrefix[MAX_QPATH] = "";
+	DeepmindContext	*ctx = dmlab_context();
+
+	if ( !ctx->hooks.replace_model_name( ctx->userdata, name, filename, sizeof(filename), shaderPrefix, sizeof(shaderPrefix) ) ) {
+		strcpy(filename, name);
+	}
+
+	filesize = ri.FS_ReadFile(filename, (void **) &buf.v);
 	if(!buf.u)
 	{
 		mod->type = MOD_BAD;
@@ -133,7 +145,7 @@ qhandle_t R_RegisterMDR(const char *name, model_t *mod)
 	
 	ident = LittleLong(*(unsigned *)buf.u);
 	if(ident == MDR_IDENT)
-		loaded = R_LoadMDR(mod, buf.u, filesize, name);
+		loaded = R_LoadMDR(mod, buf.u, filesize, name, shaderPrefix);
 
 	ri.FS_FreeFile (buf.v);
 	
@@ -182,6 +194,50 @@ qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	return mod->index;
 }
 
+/*
+====================
+R_RegisterDMLab
+====================
+*/
+qhandle_t R_RegisterDMLab(const char *name, model_t *mod)
+{
+	int lod;
+	char namebuf[MAX_QPATH + 20];
+	md3Header_t *mod_md3;
+	qboolean loaded = qfalse;
+
+	for ( lod = 0 ; lod < MD3_MAX_LODS ; ++lod )
+	{
+		if ( lod != 0 )
+			Com_sprintf(namebuf, sizeof(namebuf), "%s_%d", name, lod);
+		else
+			Com_sprintf(namebuf, sizeof(namebuf), "%s", name);
+
+		if ( R_DMLabToMD3( name, &mod_md3 ) )
+		{
+			loaded = R_LoadMD3( mod, lod, (byte *)mod_md3, mod_md3->ofsEnd, name, "" );
+			ri.Free( mod_md3 );
+		}
+
+		if ( loaded )
+			mod->numLods++;
+		else
+			break;
+	}
+
+	if ( lod > 0 )
+	{
+		mod->type = MOD_MESH;
+		return mod->index;
+	}
+
+#ifdef _DEBUG
+	ri.Printf(PRINT_WARNING, "R_RegisterDMLab: couldn't load %s\n", name);
+#endif
+
+	mod->type = MOD_BAD;
+	return 0;
+}
 
 typedef struct
 {
@@ -362,6 +418,12 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		}
 	}
 
+	// As a fallback, attempt to load a DeepMind Lab custom model.
+	if( !hModel )
+	{
+		hModel = R_RegisterDMLab( name, mod );
+	}
+
 	return hModel;
 }
 
@@ -370,7 +432,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 R_LoadMD3
 =================
 */
-static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, const char *modName)
+static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, const char *modName, const char *shaderPrefix)
 {
 	int             f, i, j;
 
@@ -393,8 +455,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 	mdvTag_t       *tag;
 	mdvTagName_t   *tagName;
 
-	int             version;
-	int             size;
+	int version;
+	int size;
+	char shader_name[MAX_QPATH + 64];
+	int shaderPrefix_length = strlen(shaderPrefix);
+	Com_Memcpy(shader_name, shaderPrefix, shaderPrefix_length + 1);
 
 	md3Model = (md3Header_t *) buffer;
 
@@ -531,8 +596,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 		for(j = 0; j < md3Surf->numShaders; j++, shaderIndex++, md3Shader++)
 		{
 			shader_t       *sh;
-
-			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
+			Com_Memcpy(shader_name + shaderPrefix_length, md3Shader->name, sizeof(md3Shader->name));
+			sh = R_FindShader(shader_name, LIGHTMAP_NONE, qtrue);
 			if(sh->defaultShader)
 			{
 				*shaderIndex = 0;
@@ -821,7 +886,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 R_LoadMDR
 =================
 */
-static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char *mod_name ) 
+static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char *mod_name, const char *shaderPrefix)
 {
 	int					i, j, k, l;
 	mdrHeader_t			*pinmodel, *mdr;
@@ -834,6 +899,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	mdrTag_t			*tag, *curtag;
 	int					size;
 	shader_t			*sh;
+	char	shader_name[MAX_QPATH + 64];
+	int shaderPrefix_length = strlen(shaderPrefix);
+	Com_Memcpy(shader_name, shaderPrefix, shaderPrefix_length + 1);
 
 	pinmodel = (mdrHeader_t *)buffer;
 
@@ -1037,7 +1105,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			Q_strlwr( surf->name );
 
 			// register the shaders
-			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
+			Com_Memcpy( shader_name + shaderPrefix_length, surf->shader, sizeof(surf->shader) );
+			sh = R_FindShader(shader_name, LIGHTMAP_NONE, qtrue);
+
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {

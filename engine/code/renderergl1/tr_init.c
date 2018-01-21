@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_init.c -- functions that are not called every frame
 
 #include "tr_local.h"
+#include <string.h>
 
 glconfig_t  glConfig;
 qboolean    textureFilterAnisotropic = qfalse;
@@ -63,6 +64,7 @@ cvar_t	*r_stereoEnabled;
 cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
+cvar_t	*r_monolightmaps;
 
 cvar_t	*r_ignorehwgamma;
 cvar_t	*r_measureOverdraw;
@@ -167,6 +169,8 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+
+cvar_t	*r_textureMaxSize;
 
 /*
 ** InitOpenGL
@@ -837,11 +841,19 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 */
 void GL_SetDefaultState( void )
 {
+	static const GLfloat initial_color[4] = {1, 1, 1, 1};
+	GLfloat current_color[4];
+
 	qglClearDepth( 1.0f );
 
 	qglCullFace(GL_FRONT);
 
-	qglColor4f (1,1,1,1);
+	qglGetFloatv(GL_CURRENT_COLOR, current_color);
+
+	// Because of a bug in NVIDIA's driver, we should only change glColor if it is needed.
+	if (memcmp(current_color, initial_color, sizeof(current_color)) != 0) {
+		qglColor4f (1,1,1,1);
+	}
 
 	// initialize downstream texture unit if we're running
 	// in a multitexture environment
@@ -924,12 +936,34 @@ void GfxInfo_f( void )
 	if ( qglGetStringi )
 	{
 		GLint numExtensions;
+		GLenum error_code;
 		int i;
 
-		qglGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
-		for ( i = 0; i < numExtensions; i++ )
+		// Flush existing errors first. (There shouldn't be any.)
+		while ( (error_code = qglGetError()) != GL_NO_ERROR )
 		{
-			ri.Printf( PRINT_ALL, "%s ", qglGetStringi( GL_EXTENSIONS, i ) );
+			ri.Printf( PRINT_ALL, "Unexpected previous error %d.\n", error_code );
+		}
+
+		qglGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
+		if ( (error_code = qglGetError()) != GL_NO_ERROR )
+		{
+			ri.Printf( PRINT_ALL, "Failed to enumerate GL Extensions, %d\n", error_code );
+		}
+		else
+		{
+			for ( i = 0; i < numExtensions; i++ )
+			{
+				const GLubyte *const extension_name = qglGetStringi( GL_EXTENSIONS, i );
+				if ( (error_code = qglGetError()) != GL_NO_ERROR )
+				{
+					ri.Printf( PRINT_ALL, "Failed to get GL Extension name for extension %d (error: %d)\n", i, error_code );
+				}
+				else
+				{
+					ri.Printf( PRINT_ALL, "%s ", extension_name );
+				}
+			}
 		}
 	}
 	else
@@ -1155,6 +1189,10 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+
+	r_monolightmaps = ri.Cvar_Get("r_monolightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH);
+
+	r_textureMaxSize = ri.Cvar_Get( "r_textureMaxSize", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

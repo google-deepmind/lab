@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -1399,7 +1399,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 		}
 	}
 
-	if ( !glState.finishCalled ) {
+	if ( r_finish->integer == 1 && !glState.finishCalled ) {
 		qglFinish();
 	}
 

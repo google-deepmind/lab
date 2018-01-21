@@ -103,7 +103,9 @@ function factory.createLevelApi(kwargs)
         tensor:select(3, 1):fill(r)
         tensor:select(3, 2):fill(g)
         tensor:select(3, 3):fill(b)
+        return true
       end
+      return false
     end
   end
 

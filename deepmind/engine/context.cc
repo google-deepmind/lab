@@ -233,9 +233,30 @@ static void add_bots(void* userdata) {
   return static_cast<Context*>(userdata)->AddBots();
 }
 
-static void modify_rgba_texture(void* userdata, const char* name,
+static bool modify_rgba_texture(void* userdata, const char* name,
                                 unsigned char* data, int width, int height) {
-  static_cast<Context*>(userdata)->ModifyRgbaTexture(name, data, width, height);
+  return static_cast<Context*>(userdata)->ModifyRgbaTexture(name, data, width,
+                                                            height);
+}
+
+static bool replace_model_name(void* userdata, const char* name, char* new_name,
+                               int new_name_size, char* texture_prefix,
+                               int texture_prefix_size) {
+  return static_cast<Context*>(userdata)->ReplaceModelName(
+      name, new_name, new_name_size, texture_prefix, texture_prefix_size);
+}
+
+static bool replace_texture_name(void* userdata, const char* name,
+                                 char* new_name, int max_size) {
+  return static_cast<Context*>(userdata)->ReplaceTextureName(name, new_name,
+                                                             max_size);
+}
+
+static bool load_texture(void* userdata, const char* name,
+                         unsigned char** pixels, int* width, int* height,
+                         void* (*allocator)(int size)) {
+  return static_cast<Context*>(userdata)->LoadTexture(name, pixels, width,
+                                                      height, allocator);
 }
 
 static int custom_observation_count(void* userdata) {
@@ -417,6 +438,9 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->make_random_seed = make_random_seed;
   hooks->has_episode_finished = has_episode_finished;
   hooks->add_bots = add_bots;
+  hooks->replace_model_name = replace_model_name;
+  hooks->replace_texture_name = replace_texture_name;
+  hooks->load_texture = load_texture;
   hooks->modify_rgba_texture = modify_rgba_texture;
   hooks->custom_observation_count = custom_observation_count;
   hooks->custom_observation_name = custom_observation_name;
@@ -903,14 +927,117 @@ void Context::AddBots() {
   lua_pop(L, result.n_results());
 }
 
-void Context::ModifyRgbaTexture(const char* name, unsigned char* data,
+bool Context::ReplaceModelName(const char* name, char* new_name,
+                               int new_name_size, char* texture_prefix,
+                               int texture_prefix_size) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("replaceModelName");
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return false;
+  }
+
+  lua::Push(L, name);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[replaceModelName] - " << result.error();
+
+  if (lua_isnoneornil(L, 1)) {
+    CHECK(lua_isnoneornil(L, 2))
+        << "[replaceModelName] - Return arg2 (texturePrefix) must be nil if "
+           "return arg1 (newModelName) is nil.";
+    lua_pop(L, result.n_results());
+    return false;
+  }
+
+  std::string replacement_name;
+  CHECK(lua::Read(L, 1, &replacement_name))
+      << "[replaceModelName] - Return arg1 (newModelName) must be a string.";
+  CHECK_LT(replacement_name.size(), new_name_size)
+      << "[replaceModelName] - Return arg1 (newModelName) is too long.";
+
+  std::string string_prefix;
+  if (result.n_results() == 2 && !lua_isnil(L, 2)) {
+    CHECK(lua::Read(L, 2, &string_prefix))
+        << "[replaceModelName] - Return arg2 (texturePrefix) must be a string.";
+    CHECK_LT(string_prefix.size(), texture_prefix_size)
+        << "[replaceModelName] - Return arg2 (texturePrefix) is too long.";
+  }
+
+  std::copy_n(replacement_name.c_str(), replacement_name.size() + 1, new_name);
+  std::copy_n(string_prefix.c_str(), string_prefix.size() + 1, texture_prefix);
+  lua_pop(L, result.n_results());
+  return true;
+}
+
+bool Context::ReplaceTextureName(const char* name, char* new_name,
+                                 int max_size) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("replaceTextureName");
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return false;
+  }
+
+  lua::Push(L, name);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[replaceTextureName] - " << result.error();
+  if (result.n_results() == 0 || lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return false;
+  }
+  std::string replacement_name;
+  CHECK(lua::Read(L, -1, &replacement_name))
+      << "[replaceTextureName] - New name must be a string.";
+  CHECK_LT(replacement_name.size(), max_size)
+      << "[replaceTextureName] - New name is too long.";
+  std::copy_n(replacement_name.c_str(), replacement_name.size() + 1, new_name);
+  lua_pop(L, result.n_results());
+  return true;
+}
+
+bool Context::LoadTexture(const char* name, unsigned char** pixels, int* width,
+                          int* height, void* (*allocator)(int size)) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("loadTexture");
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return false;
+  }
+
+  lua::Push(L, name);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[loadTexture] - " << result.error();
+  if (result.n_results() == 0 || lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return false;
+  }
+  auto* image_tensor = tensor::LuaTensor<unsigned char>::ReadObject(L, -1);
+  CHECK(image_tensor) << "[loadTexture] - Must return ByteTensor.";
+  const auto& view = image_tensor->tensor_view();
+  CHECK_EQ(3, view.shape().size())
+      << "[loadTexture] - Must return ByteTensor shaped HxWx4";
+  CHECK_EQ(4, view.shape()[2])
+      << "[loadTexture] - Must return ByteTensor shaped HxWx4";
+  *height = view.shape()[0];
+  *width = view.shape()[1];
+  *pixels = static_cast<unsigned char*>(allocator(view.num_elements()));
+  unsigned char* pixel_it = *pixels;
+  view.ForEach([&pixel_it](unsigned char value) { *pixel_it++ = value; });
+  lua_pop(L, result.n_results());
+  return true;
+}
+
+bool Context::ModifyRgbaTexture(const char* name, unsigned char* data,
                                 int width, int height) {
   lua_State* L = lua_vm_.get();
   script_table_ref_.PushMemberFunction("modifyTexture");
   // Check function exists.
   if (lua_isnil(L, -2)) {
     lua_pop(L, 2);
-    return;
+    return false;
   }
 
   lua::Push(L, name);
@@ -923,8 +1050,13 @@ void Context::ModifyRgbaTexture(const char* name, unsigned char* data,
                                                 storage_validity);
   auto result = lua::Call(L, 3);
   CHECK(result.ok()) << "[modifyTexture] - " << result.error();
+
+  bool modified_texture;
+  CHECK(lua::Read(L, -1, &modified_texture))
+      << "[modifyTexture] - must return true or false";
   lua_pop(L, result.n_results());
   storage_validity->Invalidate();
+  return modified_texture;
 }
 
 int Context::CallInit() {

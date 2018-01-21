@@ -213,8 +213,42 @@ class Context {
 
   std::mt19937_64* EnginePrbg() { return &engine_prbg_; }
 
+  // Returns whether to replace the name of model being loaded with an
+  // alternative name and add a prefix to all the model's textures loaded with
+  // it.
+  //
+  // `name` - Name of the model being loaded.
+  // `new_name` - Pointer to a buffer to store the alternative name in.
+  // `new_name_size` - The size of the `new_name` buffer.
+  // `texture_prefix` - Pointer to a buffer to store the prefix in.
+  // `texture_prefix_size` - The size of the `texture_prefix` buffer.
+  bool ReplaceModelName(const char* name, char* new_name, int new_name_size,
+                        char* texture_prefix, int texture_prefix_size);
+
+  // Returns whether to replace the name of a texture being loaded with an
+  // alternative one.
+  //
+  // `name` - Name of the texture about to be loaded.
+  // `new_name` - A pointer to a buffer to store the alternative name in.
+  // `max_size` - The size of the `new_name` buffer.
+  bool ReplaceTextureName(const char* name, char* new_name, int max_size);
+
+  // External texture loader. Returns whether a texture was loaded. If true,
+  // `pixels`, `width` and `height` will store the data about the texture.
+  // Otherwise the arguments are left unchanged and the built-in texture loaders
+  // are used.
+  //
+  // `name` - Name of the texture being loaded (without extension).
+  // `pixels` - A buffer sized to hold an rgba byte texture.
+  // `width` - Used to store the width of the created texture.
+  // `height` - Used to store the height of the created texture.
+  // `allocator` - Used to allocate the memory for `pixels`. The amount of
+  //               memory allocated shall be *width * *height * 4 bytes.
+  bool LoadTexture(const char* name, unsigned char** pixels, int* width,
+                   int* height, void* (*allocator)(int size));
+
   // Modify a texture after loading.
-  void ModifyRgbaTexture(const char* name, unsigned char* data, int width,
+  bool ModifyRgbaTexture(const char* name, unsigned char* data, int width,
                          int height);
 
   // Calls script to retrieve a list of screen messages. The message returned

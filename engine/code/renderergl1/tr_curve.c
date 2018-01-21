@@ -294,7 +294,7 @@ srfGridMesh_t *R_CreateSurfaceGridMesh(int width, int height,
 	srfGridMesh_t *grid;
 
 	// copy the results out to a grid
-	size = (width * height - 1) * sizeof( drawVert_t ) + sizeof( *grid );
+	size = width * height * sizeof( *grid->verts ) + sizeof( *grid );
 
 #ifdef PATCH_STITCHING
 	grid = /*ri.Hunk_Alloc*/ ri.Malloc( size );

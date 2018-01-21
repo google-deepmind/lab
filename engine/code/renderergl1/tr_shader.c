@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -2362,7 +2362,6 @@ static shader_t *FinishShader( void ) {
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has VERTEX forced lightmap!\n", shader.name );
 		} else {
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap but no lightmap stage!\n", shader.name );
-  			shader.lightmapIndex = LIGHTMAP_NONE;
 		}
 	}
 

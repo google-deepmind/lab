@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 2011 James Canete (use.less01@gmail.com)
+Copyright (C) 2011 James Canete (use.less01@gmail.com), 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -65,7 +65,7 @@ void GLimp_InitExtraExtensions()
 #undef GLE
 
 	// GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
-#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name);
+#define GLE(ret, name, ...) qgl##name = (name##proc *) GLimp_GetProcAddress("gl" #name);
 
 	// OpenGL 1.3, was GL_ARB_texture_compression
 	QGL_1_3_PROCS;
