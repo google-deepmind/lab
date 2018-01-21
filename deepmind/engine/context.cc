@@ -346,6 +346,17 @@ static void get_filled_rectangle(void* userdata, int rectangle_id, int* x,
                                                       height, rgba);
 }
 
+static void lua_mover(void* userdata, int entity_id,
+                      const float entity_position[3],
+                      const float player_position[3],
+                      const float player_velocity[3],
+                      float player_position_delta[3],
+                      float player_velocity_delta[3]) {
+  static_cast<Context*>(userdata)->CustomPlayerMovement(
+      entity_id, entity_position, player_position, player_velocity,
+      player_position_delta, player_velocity_delta);
+}
+
 static void make_pk3_from_map(void* userdata, const char* map_path,
                               const char* map_name, bool gen_aas) {
   static_cast<Context*>(userdata)->MakePk3FromMap(map_path, map_name, gen_aas);
@@ -489,6 +500,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->get_filled_rectangle = get_filled_rectangle;
   hooks->get_temporary_folder = get_temporary_folder;
   hooks->make_pk3_from_map = make_pk3_from_map;
+  hooks->lua_mover = lua_mover;
   hooks->events.clear = events_clear;
   hooks->events.type_count = events_type_count;
   hooks->events.type_name = events_type_name;
@@ -1339,6 +1351,54 @@ void Context::MakePk3FromMap(const char* map_path, const char* map_name,
   compile_settings.level_cache_params = level_cache_params_;
   std::string target = absl::StrCat(TempDirectory(), "/baselab/", map_name);
   CHECK(RunMapCompileFor(ExecutableRunfiles(), target, compile_settings));
+}
+
+void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
+                                   const float player_pos[3],
+                                   const float player_vel[3],
+                                   float player_pos_delta[3],
+                                   float player_vel_delta[3]) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("playerMover");
+
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return;
+  }
+
+  std::array<float, 3> float_array3;
+
+  auto args = lua::TableRef::Create(L);
+  args.Insert("moverId", mover_id);
+
+  std::copy_n(mover_pos, float_array3.size(), float_array3.data());
+  args.Insert("moverPos", float_array3);
+
+  std::copy_n(player_pos, float_array3.size(), float_array3.data());
+  args.Insert("playerPos", float_array3);
+
+  std::copy_n(player_vel, float_array3.size(), float_array3.data());
+  args.Insert("playerVel", float_array3);
+
+  lua::Push(L, args);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[playerMover] - " << result.error();
+
+  std::array<float, 3> pos_delta = {{0.0f, 0.0f, 0.0f}};
+  std::array<float, 3> vel_delta = {{0.0f, 0.0f, 0.0f}};
+
+  CHECK(lua_isnoneornil(L, 1) || lua::Read(L, 1, &pos_delta))
+      << "[playerMover] - First return value must be a table containing"
+         "player position delta values.";
+  CHECK(lua_isnoneornil(L, 2) || lua::Read(L, 2, &vel_delta))
+      << "[playerMover] - Second return value must be a table containing"
+         "player velocity delta values.";
+
+  std::copy_n(pos_delta.data(), pos_delta.size(), player_pos_delta);
+  std::copy_n(vel_delta.data(), vel_delta.size(), player_vel_delta);
+
+  lua_pop(L, result.n_results());
 }
 
 }  // namespace lab

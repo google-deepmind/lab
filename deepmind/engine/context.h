@@ -300,6 +300,21 @@ class Context {
   void GetFilledRectangle(int rectangle_id, int* x, int* y, int* width,
                           int* height, float rgba[4]) const;
 
+  // Retrieves player position and velocity deltas.
+  // 'mover_id' is the ID of the triggering entity.
+  // 'mover_pos' is the position of the triggering entity.
+  // 'player_pos' is the current position of the player.
+  // 'player_vel' is the current velocity of the player.
+  // 'player_pos_delta' retrieves the position delta for the player.
+  // 'player_vel_delta' retrieves the velocity delta for the player.
+  // If the Lua function 'playerMover' is unimplemented, player_pos_delta and
+  // player_vel_delta will remain unchanged.
+  void CustomPlayerMovement(int mover_id, const float mover_pos[3],
+                            const float player_pos[3],
+                            const float player_vel[3],
+                            float player_pos_delta[3],
+                            float player_vel_delta[3]);
+
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.

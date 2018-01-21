@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 
 #include "g_local.h"
-
 
 
 /*
@@ -1158,6 +1157,46 @@ void SP_func_plat (gentity_t *ent) {
 	}
 }
 
+/*
+===============================================================================
+
+LUA MOVER
+
+===============================================================================
+*/
+
+void Think_LuaMover( gentity_t *ent ) {
+	vec3_t player_position_delta;
+	vec3_t player_velocity_delta;
+	playerState_t* ps = &(ent->activator->client->ps);
+
+	VectorSet(player_position_delta, 0.0f, 0.0f, 0.0f);
+	VectorSet(player_velocity_delta, 0.0f, 0.0f, 0.0f);
+
+	dmlab_lua_mover(ent->id, ent->s.origin, ps->origin, ps->velocity, player_position_delta, player_velocity_delta);
+
+	VectorAdd(ps->origin, player_position_delta, ps->origin);
+	VectorAdd(ps->velocity, player_velocity_delta, ps->velocity);
+
+	ent->nextthink = level.time + FRAMETIME;
+	ent->think = Think_LuaMover;
+}
+
+void Use_LuaMover( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
+	if (activator->client) {
+		ent->activator = activator;
+		ent->nextthink = level.time;
+		ent->think = Think_LuaMover;
+	}
+}
+
+void SP_func_lua_mover( gentity_t *ent ) {
+	if (ent->targetname) {
+		ent->use = Use_LuaMover;
+	} else {
+		Use_LuaMover(ent, ent, ent);
+	}
+}
 
 /*
 ===============================================================================

@@ -142,6 +142,17 @@ int dmlab_player_score(void) {
   return trap_DeepmindCallback(DEEPMIND_PLAYER_SCORE, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0);
 }
+
+void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
+                     const vec3_t playerPosition, const vec3_t playerVelocity,
+                     vec3_t playerPositionDelta, vec3_t playerVelocityDelta) {
+  trap_DeepmindCallback(DEEPMIND_LUA_MOVER, (intptr_t)entity_id,
+                        (intptr_t)entityPosition,
+                        (intptr_t)playerPosition, (intptr_t)playerVelocity,
+                        (intptr_t)playerPositionDelta,
+                        (intptr_t)playerVelocityDelta, 0, 0, 0, 0, 0, 0);
+}
+
 char dmlab_select_team(int player_id, const char* player_name) {
   return (char)trap_DeepmindCallback(DEEPMIND_TEAM_SELECT, (intptr_t)player_id,
                                      (intptr_t)player_name, 0, 0, 0, 0, 0, 0, 0,

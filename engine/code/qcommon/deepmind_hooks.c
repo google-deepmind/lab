@@ -113,6 +113,13 @@ int dmlab_callback(
       break;
     case DEEPMIND_PLAYER_SCORE:
       return ctx->calls.player_score(ctx->context);
+    case DEEPMIND_LUA_MOVER:
+      ctx->hooks.lua_mover(
+          ctx->userdata, /*entity_id=*/a1, /*entity_pos=*/VM_ArgPtr(a2),
+          /*player_pos=*/VM_ArgPtr(a3), /*player_vel=*/VM_ArgPtr(a4),
+          /*player_pos_delta=*/VM_ArgPtr(a5),
+          /*player_vel_delta=*/VM_ArgPtr(a6));
+      break;
     case DEEPMIND_TEAM_SELECT:
       return ctx->hooks.team_select(ctx->userdata,
                                     /*player_id=*/a1,

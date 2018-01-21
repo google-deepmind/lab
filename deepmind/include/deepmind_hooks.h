@@ -304,6 +304,11 @@ struct DeepmindHooks_s {
   void (*make_pk3_from_map)(void* userdata, const char* map_path,
                             const char* map_name, bool gen_aas);
 
+  // See CustomPlayerMovement in deepmind/engine/context.h.
+  void (*lua_mover)(void* userdata, int entity_id, const float entity_pos[3],
+                    const float player_pos[3], const float player_vel[3],
+                    float player_pos_delta[3], float player_vel_delta[3]);
+
   // See TeamSelect in deepmind/engine/context.h.
   char (*team_select)(void* userdata, int player_id, const char* player_name);
 

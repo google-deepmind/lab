@@ -130,6 +130,17 @@ int dmlab_make_filled_rectangles(int screen_width, int screen_height);
 void dmlab_get_filled_rectangle(int rectangle_id, int* x, int* y, int* width,
                                 int* height, float rgba[4]);
 
+// Calls script to retrieve player position and velocity deltas.
+// 'entity_id' is the ID of the triggering entity.
+// 'entityPosition' is the position of the triggering entity.
+// 'playerPosition' is the current position of the player.
+// 'playerVelocity' is the current velocity of the player.
+// 'playerPositionDelta' retrieves the position delta for the player.
+// 'playerVelocityDelta' retrieves the velocity delta for the player.
+void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
+                     const vec3_t playerPosition, const vec3_t playerVelocity,
+                     vec3_t playerPositionDelta, vec3_t playerVelocityDelta);
+
 // Called at the start of entity update.
 void dmlab_entities_clear();
 // Called on each active entity during entity update.
