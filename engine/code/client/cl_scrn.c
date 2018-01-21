@@ -624,3 +624,16 @@ void SCR_UpdateScreen( void ) {
 	recursive = 0;
 }
 
+void SCR_RenderCustomView() {
+	if ( !scr_initialized ) {
+		return;				// not initialized yet
+	}
+
+	if ( !uivm || clc.state != CA_ACTIVE) {
+		return;
+	}
+	re.BeginFrameCustomView( );
+	VM_Call( cgvm, CG_DRAW_CUSTOM_VIEW );
+	re.EndFrameCustomView( );
+}
+

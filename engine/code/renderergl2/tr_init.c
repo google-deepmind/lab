@@ -204,6 +204,8 @@ cvar_t	*r_lodCurveError;
 cvar_t	*r_fullscreen;
 cvar_t  *r_noborder;
 
+cvar_t	*r_buffwidth;
+cvar_t	*r_buffheight;
 cvar_t	*r_customwidth;
 cvar_t	*r_customheight;
 cvar_t	*r_customPixelAspect;
@@ -354,7 +356,7 @@ vidmode_t r_vidModes[] =
 };
 static int	s_numVidModes = ARRAY_LEN( r_vidModes );
 
-qboolean R_GetModeInfo( int *width, int *height, float *windowAspect, int mode ) {
+qboolean R_GetModeInfo( int *width, int *height, int *buff_width, int *buff_height, float *windowAspect, int mode ) {
 	vidmode_t	*vm;
 	float			pixelAspect;
 
@@ -368,12 +370,16 @@ qboolean R_GetModeInfo( int *width, int *height, float *windowAspect, int mode )
 	if ( mode == -1 ) {
 		*width = r_customwidth->integer;
 		*height = r_customheight->integer;
+		*buff_width = r_buffwidth->integer;
+		*buff_height = r_buffheight->integer;
 		pixelAspect = r_customPixelAspect->value;
 	} else {
 		vm = &r_vidModes[mode];
 
 		*width  = vm->width;
 		*height = vm->height;
+		*buff_width = r_buffwidth->integer;
+		*buff_height = r_buffheight->integer;
 		pixelAspect = vm->pixelAspect;
 	}
 
@@ -1193,6 +1199,8 @@ void R_Register( void )
 	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE );
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_buffwidth = ri.Cvar_Get( "r_buffwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
+	r_buffheight = ri.Cvar_Get( "r_buffheight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customPixelAspect = ri.Cvar_Get( "r_customPixelAspect", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1411,8 +1419,8 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != 11332)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 11332", (unsigned int) sizeof(glconfig_t));
+	if(sizeof(glconfig_t) != 11340)
+		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 11340", (unsigned int) sizeof(glconfig_t));
 
 //	Swap_Init();
 
@@ -1599,6 +1607,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.BeginFrame = RE_BeginFrame;
 	re.EndFrame = RE_EndFrame;
+	re.BeginFrameCustomView = RE_BeginFrameCustomView;
+	re.EndFrameCustomView = RE_EndFrameCustomView;
 
 	re.MarkFragments = R_MarkFragments;
 	re.LerpTag = R_LerpTag;

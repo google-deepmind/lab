@@ -35,7 +35,7 @@ QGL_3_0_PROCS;
 
 void GLimp_MakeCurrent(void) {
   if (!OSMesaMakeCurrent(osmesa_ctx, osmesa_frame_buffer, GL_UNSIGNED_BYTE,
-                         glConfig.vidWidth, glConfig.vidHeight)) {
+                         glConfig.buffWidth, glConfig.buffHeight)) {
     Sys_Error("GLimp_MakeCurrent - Failed!");
   }
 }
@@ -52,7 +52,7 @@ void GLimp_Init(qboolean coreContext) {
 
   /* Allocate the image buffer */
   osmesa_frame_buffer =
-      calloc(glConfig.vidWidth * glConfig.vidHeight * 4, sizeof(GLubyte));
+      calloc(glConfig.buffWidth * glConfig.buffHeight * 4, sizeof(GLubyte));
   if (!osmesa_frame_buffer) {
     Sys_Error("Alloc image buffer failed!");
   }

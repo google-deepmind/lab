@@ -82,8 +82,8 @@ void GLimp_Init(qboolean coreContext) {
                                     &num_configs));
 
   EGLint pbuffer_attribs[] = {
-      EGL_WIDTH,  glConfig.vidWidth,   //
-      EGL_HEIGHT, glConfig.vidHeight,  //
+      EGL_WIDTH,  glConfig.buffWidth,   //
+      EGL_HEIGHT, glConfig.buffHeight,  //
       EGL_NONE,
   };
 

@@ -746,6 +746,21 @@ static void CG_PlayBufferedSounds( void ) {
 
 //=========================================================================
 
+void CG_DrawCustomView() {
+	trap_R_ClearScene();
+	if ( !cg.snap || ( cg.snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) ) {
+		return;
+	}
+	cg.renderingThirdPerson = dmlab_custom_view( &cg.refdef );
+	CG_AddPacketEntities();
+	CG_AddMarks();
+	CG_AddParticles();
+	CG_AddLocalEntities();
+
+	// actually issue the rendering calls
+	trap_R_RenderScene( &cg.refdef );
+}
+
 /*
 =================
 CG_DrawActiveFrame

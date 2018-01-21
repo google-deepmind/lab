@@ -567,6 +567,8 @@ void	SCR_Init (void);
 void	SCR_SkipRendering (qboolean value);
 void	SCR_UpdateScreen (void);
 
+void	SCR_RenderCustomView (void);
+
 void	SCR_DebugGraph (float value);
 
 int		SCR_GetBigStringWidth( const char *str );	// returns in virtual 640x480 coordinates

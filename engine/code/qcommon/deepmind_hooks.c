@@ -19,6 +19,7 @@
 #include "deepmind_hooks.h"
 #include "../deepmind/context.h"
 #include "../deepmind/dm_public.h"
+#include "../renderercommon/tr_types.h"
 #include "qcommon.h"
 
 int dmlab_callback(
@@ -128,6 +129,23 @@ int dmlab_callback(
                               /*position=*/VM_ArgPtr(a5),
                               /*classname=*/VM_ArgPtr(a6));
       break;
+    case DEEPMIND_CUSTOM_VIEW: {
+      refdef_t* camera = VM_ArgPtr(a1);
+      vec3_t angles = {0, 0, 0};
+      bool render_player;
+      ctx->hooks.custom_view(ctx->userdata, &camera->width, &camera->height,
+                             camera->vieworg, angles, &render_player);
+      AnglesToAxis(angles, camera->viewaxis);
+      int width, height, buff_width, buff_height;
+      ctx->calls.screen_shape(&width, &height, &buff_width, &buff_height);
+      camera->y = buff_height - camera->height;
+      double aspect = (double)camera->height / camera->width;
+      camera->fov_x = 90;
+      double fov_x_rad = camera->fov_x * (M_PI / 180.0);
+      double fov_y_rad = 2.0 * atan(aspect * tan(fov_x_rad * 0.5));
+      camera->fov_y = (180.0 / M_PI) * fov_y_rad;
+      return (render_player) ? qtrue : qfalse;
+    }
     default:
       Com_Error(ERR_DROP, "DeepMind system call %d not implemented\n",
                 dm_callnum);

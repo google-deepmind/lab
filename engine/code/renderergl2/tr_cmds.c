@@ -322,6 +322,76 @@ void R_SetColorMode(GLboolean *rgba, stereoFrame_t stereoFrame, int colormode)
 	}
 }
 
+static void SwapVidAndBuff( glconfig_t* config ) {
+	int swap = config->vidWidth;
+	config->vidWidth = config->buffWidth;
+	config->buffWidth = swap;
+	swap = config->vidHeight;
+	config->vidHeight = config->buffHeight;
+	config->buffHeight = swap;
+}
+
+void RE_BeginFrameCustomView( void ) {
+	drawBufferCommand_t	*cmd = NULL;
+	if ( !tr.registered ) {
+		return;
+	}
+	SwapVidAndBuff( &glConfig );
+	tr.refdef.width = glConfig.vidWidth;
+	tr.refdef.height = glConfig.vidHeight;
+	glState.finishCalled = qfalse;
+
+	//
+	// texturemode stuff
+	//
+	if ( r_textureMode->modified ) {
+		R_IssuePendingRenderCommands();
+		GL_TextureMode( r_textureMode->string );
+		r_textureMode->modified = qfalse;
+	}
+
+	//
+	// gamma stuff
+	//
+	if ( r_gamma->modified ) {
+		r_gamma->modified = qfalse;
+
+		R_IssuePendingRenderCommands();
+		R_SetColorMappings();
+	}
+
+	// check for errors
+	if ( !r_ignoreGLErrors->integer )
+	{
+		int	err;
+
+		R_IssuePendingRenderCommands();
+		if ((err = qglGetError()) != GL_NO_ERROR)
+			ri.Error(ERR_FATAL, "RE_BeginFrame() - glGetError() failed (0x%x)!", err);
+	}
+
+	if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
+		return;
+	if(cmd)
+	{
+		cmd->commandId = RC_DRAW_BUFFER;
+		cmd->buffer = GL_BACK;
+	}
+
+	tr.refdef.stereoFrame = STEREO_CENTER;
+}
+
+void RE_EndFrameCustomView( void ) {
+	if ( !tr.registered ) {
+		return;
+	}
+	R_IssueRenderCommands( qtrue );
+	R_InitNextFrame();
+	SwapVidAndBuff( &glConfig );
+	tr.refdef.width = glConfig.vidWidth;
+	tr.refdef.height = glConfig.vidHeight;
+	glState.finishCalled = qfalse;
+}
 
 /*
 ====================

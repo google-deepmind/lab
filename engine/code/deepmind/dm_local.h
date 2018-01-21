@@ -20,6 +20,7 @@
 #define DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_
 
 #include "../qcommon/q_shared.h"
+#include "../renderercommon/tr_types.h"
 
 int trap_DeepmindCallback(int dm_callnum, intptr_t a1, intptr_t a2, intptr_t a3,
                           intptr_t a4, intptr_t a5, intptr_t a6, intptr_t a7,
@@ -134,5 +135,7 @@ void dmlab_entities_clear();
 // Called on each active entity during entity update.
 void dmlab_entities_add(int entity_id, int user_id, int type, int flags,
                         float position[3], const char* classname);
+
+qboolean dmlab_custom_view(refdef_t* camera);
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_

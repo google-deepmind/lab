@@ -1236,6 +1236,7 @@ void CG_ZoomUp_f( void );
 void CG_AddBufferedSound( sfxHandle_t sfx);
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, qboolean skipRendering );
+void CG_DrawCustomView( void );
 
 
 //

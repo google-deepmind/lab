@@ -100,7 +100,7 @@ typedef struct PboData_s {
 } PboData;
 
 typedef struct GamePixelBufferObjects_s {
-  PboData rgb, depth;  // PBO information storage.
+  PboData rgb, depth, custom_view;  // PBO information storage.
   bool supported;  // If PBO's are supported with the current GL backend.
   bool enabled;    // If PBO rendering is enabled.
 } GamePixelBufferObjects;
@@ -109,6 +109,8 @@ typedef struct GameContext_s {
   DeepmindContext* dm_ctx;
   int width;
   int height;
+  int alt_camera_width;
+  int alt_camera_height;
   int image_shape[3];
   unsigned char* image_buffer;
   unsigned char* temp_buffer;  // Holds result from glReadPixels.
@@ -486,6 +488,21 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
     gc->is_client_only = v_bool;
+  } else if (strcmp(key, "hasAltCameras") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    ctx->hooks.set_has_alt_cameras(ctx->userdata, v_bool);
+    return 0;
+  } else if (strcmp(key, "maxAltCameraWidth") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    if (v >= 0) gc->alt_camera_width = v;
+    return 0;
+  } else if (strcmp(key, "maxAltCameraHeight") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    if (v >= 0) gc->alt_camera_height = v;
+    return 0;
   } else if (strcmp(key, "localLevelCache") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
@@ -994,7 +1011,7 @@ static void dmlab_destroy_context(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
 
-  if (gc->pbos.rgb.id || gc->pbos.depth.id) {
+  if (gc->pbos.rgb.id || gc->pbos.depth.id || gc->pbos.custom_view.id) {
     re.MakeCurrent();
     if (gc->pbos.rgb.id) {
       qglDeleteBuffers(1, &gc->pbos.rgb.id);
@@ -1002,6 +1019,10 @@ static void dmlab_destroy_context(void* context) {
 
     if (gc->pbos.depth.id) {
       qglDeleteBuffers(1, &gc->pbos.depth.id);
+    }
+
+    if (gc->pbos.custom_view.id) {
+      qglDeleteBuffers(1, &gc->pbos.custom_view.id);
     }
   }
 
@@ -1016,8 +1037,14 @@ static void call_add_score(int player_id, double score) {
   ctx->hooks.add_score(ctx->userdata, player_id, score);
 }
 
-static void screen_shape(void* context, int* width, int* height) {
-  GameContext* gc = context;
+static void screen_shape(int* width, int* height, int* buff_width,
+                         int* buff_height) {
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+  *buff_width =
+      gc->width >= gc->alt_camera_width ? gc->width : gc->alt_camera_width;
+  *buff_height =
+      gc->height >= gc->alt_camera_height ? gc->height : gc->alt_camera_height;
   *width = gc->width;
   *height = gc->height;
 }
@@ -1048,6 +1075,33 @@ static bool dmlab_is_map_loading(void* context) {
   DeepmindContext* ctx = dmlab_context();
   GameContext* gc = ctx->context;
   return gc->is_map_loading;
+}
+
+static void dmlab_render_custom_view(
+    int width, int height, unsigned char* buffer) {
+  re.MakeCurrent();
+  DeepmindContext* ctx = dmlab_context();
+  GameContext* gc = ctx->context;
+
+  SCR_RenderCustomView();
+
+  gc->current_screen_rendered = false;
+
+  if (!gc->pbos.custom_view.id) {
+    qglGenBuffers(1, &gc->pbos.custom_view.id);
+  }
+  qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.custom_view.id);
+  int size = width * height * 3;
+  if (gc->pbos.custom_view.size < size) {
+    gc->pbos.custom_view.size = size;
+    qglBufferData(GL_PIXEL_PACK_BUFFER, size, NULL, GL_STREAM_READ);
+  }
+
+  qglReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  const void* pixel_buffer = qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+  memcpy(buffer, pixel_buffer, size);
+  qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+  qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
@@ -1125,6 +1179,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.serialise_model = dmlab_serialise_model;
   gc->dm_ctx->calls.save_model = dmlab_save_model;
   gc->dm_ctx->calls.is_map_loading = dmlab_is_map_loading;
+  gc->dm_ctx->calls.render_custom_view = dmlab_render_custom_view;
   gc->dm_ctx->context = gc;
   return dmlab_create_context(gc->runfiles_path, gc->dm_ctx,
                               params->file_reader_override,

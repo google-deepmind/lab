@@ -115,6 +115,21 @@ static char team_select(void* userdata, int player_id,
   return static_cast<Context*>(userdata)->TeamSelect(player_id, player_name);
 }
 
+static bool has_alt_cameras(void* userdata) {
+  return static_cast<Context*>(userdata)->HasAltCameras();
+}
+
+static void set_has_alt_cameras(void* userdata, bool has_alt_camera) {
+  static_cast<Context*>(userdata)->SetHasAltCameras(has_alt_camera);
+}
+
+static void custom_view(void* userdata, int* width, int* height,
+                        float position[3], float view_angles[3],
+                        bool* render_player) {
+  static_cast<Context*>(userdata)->Game().GetCustomView(
+      width, height, position, view_angles, render_player);
+}
+
 static int run_lua_snippet(void* userdata, const char* command) {
   std::size_t command_len = std::strlen(command);
   return static_cast<Context*>(userdata)->RunLuaSnippet(command, command_len);
@@ -419,7 +434,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
       actions_{},
       level_cache_params_{},
       game_(executable_runfiles, calls, file_reader_override,
-            temp_folder != nullptr ? temp_folder : "") {
+            temp_folder != nullptr ? temp_folder : ""),
+      has_alt_cameras_(false) {
   CHECK(lua_vm_ != nullptr);
   hooks->add_setting = add_setting;
   hooks->set_level_cache_settings = set_level_cache_settings;
@@ -480,6 +496,9 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->events.export_event = events_export;
   hooks->entities.clear = entities_clear;
   hooks->entities.add = entities_add;
+  hooks->set_has_alt_cameras = set_has_alt_cameras;
+  hooks->has_alt_cameras = has_alt_cameras;
+  hooks->custom_view = custom_view;
 }
 
 void Context::AddSetting(const char* key, const char* value) {

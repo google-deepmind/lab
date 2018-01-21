@@ -75,6 +75,8 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
         {"loadFileToByteTensor", Member<&LuaGameModule::LoadFileToByteTensor>},
         {"loadFileToString", Member<&LuaGameModule::LoadFileToString>},
         {"copyFileToLocation", Member<&LuaGameModule::CopyFileToLocation>},
+        {"renderCustomView", Member<&LuaGameModule::RenderCustomView>},
+        {"screenShape", Member<&LuaGameModule::ScreenShape>},
     };
     Class::Register(L, methods);
   }
@@ -93,6 +95,60 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     error += " or reward: ";
     error += lua::ToString(L, 3);
     return std::move(error);
+  }
+
+  lua::NResultsOr ScreenShape(lua_State* L) {
+    int screen_width, screen_height, max_width, max_height;
+    ctx_->Calls()->screen_shape(&screen_width, &screen_height, &max_width,
+                                &max_height);
+    auto table = lua::TableRef::Create(L);
+    auto screen = table.CreateSubTable("window");
+    screen.Insert("width", screen_width);
+    screen.Insert("height", screen_height);
+    auto buffer = table.CreateSubTable("buffer");
+    buffer.Insert("width", max_width);
+    buffer.Insert("height", max_height);
+    lua::Push(L, table);
+    return 1;
+  }
+
+  lua::NResultsOr RenderCustomView(lua_State* L) {
+    lua::TableRef args;
+    if (!lua::Read(L, 2, &args)) {
+      return "[customView] - Must call with table containing "
+             "'width', 'height', 'pos' and 'look'.";
+    }
+
+    int requested_width, requested_height;
+    std::array<float, 3> pos, eye;
+
+    if (!args.LookUp("width", &requested_width))
+      return "[customView] - Missing named arg 'width'";
+    if (!args.LookUp("height", &requested_height))
+      return "[customView] - Missing named arg 'height'";
+    if (!args.LookUp("look", &eye))
+      return "[customView] - Missing named arg 'look'";
+    if (!args.LookUp("pos", &pos))
+      return "[customView] - Missing named arg 'pos'";
+
+    bool render_player = true;
+    args.LookUp("renderPlayer", &render_player);
+
+    int width, height, buff_width, buff_height;
+    ctx_->Calls()->screen_shape(&width, &height, &buff_width, &buff_height);
+    requested_width = std::min(buff_width, requested_width);
+    requested_height = std::min(buff_height, requested_height);
+
+    ctx_->SetCustomView(requested_width, requested_height, pos, eye,
+                        render_player);
+    tensor::ShapeVector shape = {static_cast<std::size_t>(requested_height),
+                                 static_cast<std::size_t>(requested_width), 3};
+    std::vector<unsigned char> storage(tensor::Layout::num_elements(shape));
+    ctx_->Calls()->render_custom_view(requested_width, requested_height,
+                                      storage.data());
+    tensor::LuaTensor<unsigned char>::CreateObject(L, std::move(shape),
+                                                   std::move(storage));
+    return 1;
   }
 
   lua::NResultsOr FinishMap(lua_State* L) {
@@ -291,6 +347,27 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
   } else {
     player_view_.anglesVel.fill(0);
   }
+}
+
+void ContextGame::GetCustomView(int* width, int* height, float position[3],
+                                float view_angles[3],
+                                bool* render_player) const {
+  std::copy_n(camera_position_.data(), 3, position);
+  std::copy_n(camera_view_angles_.data(), 3, view_angles);
+  *width = camera_width_;
+  *height = camera_height_;
+  *render_player = camera_render_player_;
+}
+
+void ContextGame::SetCustomView(int width, int height,
+                                const std::array<float, 3>& pos,
+                                const std::array<float, 3>& eye,
+                                bool render_player) {
+  camera_height_ = height;
+  camera_width_ = width;
+  camera_position_ = pos;
+  camera_view_angles_ = eye;
+  camera_render_player_ = render_player;
 }
 
 }  // namespace lab

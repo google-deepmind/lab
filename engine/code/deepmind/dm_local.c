@@ -160,3 +160,8 @@ void dmlab_entities_add(int entity_id, int user_id, int type, int flags,
                         (intptr_t)position, (intptr_t)classname, 0, 0, 0, 0, 0,
                         0);
 }
+
+qboolean dmlab_custom_view(refdef_t* camera) {
+  return trap_DeepmindCallback(DEEPMIND_CUSTOM_VIEW, (intptr_t)camera, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0);
+}

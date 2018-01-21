@@ -53,8 +53,8 @@ void GLimp_Init(qboolean coreContext) {
 
   GLimp_CommonPreInit();
 
-  const int glx_pbuffer_attribs[] = {GLX_PBUFFER_WIDTH, glConfig.vidWidth,
-                                     GLX_PBUFFER_HEIGHT, glConfig.vidHeight,
+  const int glx_pbuffer_attribs[] = {GLX_PBUFFER_WIDTH, glConfig.buffWidth,
+                                     GLX_PBUFFER_HEIGHT, glConfig.buffHeight,
                                      None};
 
   glXCreateContextAttribsARBProc* glXCreateContextAttribsARB =

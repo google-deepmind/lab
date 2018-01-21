@@ -58,8 +58,8 @@ void GLimp_CommonPreInit(void) {
       ri.Cvar_Get("r_tvConsoleMode", "0", CVAR_LATCH | CVAR_ARCHIVE);
   r_motionblur = ri.Cvar_Get("r_motionblur", "0", CVAR_ARCHIVE | CVAR_LATCH);
   // Ignore r_tvMode.
-  R_GetModeInfo(&glConfig.vidWidth, &glConfig.vidHeight, &glConfig.windowAspect,
-                -1);
+  R_GetModeInfo(&glConfig.vidWidth, &glConfig.vidHeight, &glConfig.buffWidth,
+                &glConfig.buffHeight, &glConfig.windowAspect, -1);
 }
 
 void GLimp_CommonPostInit(void) {

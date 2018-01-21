@@ -41,6 +41,7 @@ typedef enum deepmindImport_enum {
   DEEPMIND_TEAM_SELECT,
   DEEPMIND_ENTITIES_CLEAR,
   DEEPMIND_ENTITIES_ADD,
+  DEEPMIND_CUSTOM_VIEW,
 } deepmindImport_t;
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_PUBLIC_H_

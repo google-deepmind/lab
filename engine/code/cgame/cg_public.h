@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // needs to be larger than PACKET_BACKUP
 
 
-#define	MAX_ENTITIES_IN_SNAPSHOT	256
+#define	MAX_ENTITIES_IN_SNAPSHOT	512
 
 // snapshots are a view of the server at a given time
 
@@ -222,6 +222,9 @@ typedef enum {
 //	qboolean demoPlayback, qboolean skipRendering );
 	// Generates and draws a game scene and status information at the given time.
 	// If demoPlayback is set, local movement prediction will not be enabled
+
+	CG_DRAW_CUSTOM_VIEW,
+//	void (*CG_DrawCustomView) ( void);
 
 	CG_CROSSHAIR_PLAYER,
 //	int (*CG_CrosshairPlayer)( void );

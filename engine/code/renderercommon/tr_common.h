@@ -119,7 +119,7 @@ extern	cvar_t	*r_saveFontData;
 
 extern cvar_t *r_textureMaxSize;
 
-qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
+qboolean	R_GetModeInfo( int *width, int *height, int *buff_width, int *buff_height, float *windowAspect, int mode );
 
 float R_NoiseGet4f( float x, float y, float z, double t );
 void  R_NoiseInit( void );

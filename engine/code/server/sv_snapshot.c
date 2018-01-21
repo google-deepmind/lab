@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "server.h"
-
+#include "../deepmind/context.h"
 
 /*
 =============================================================================
@@ -299,6 +299,8 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 	int		leafnum;
 	byte	*clientpvs;
 	byte	*bitvector;
+	DeepmindContext*	ctx = dmlab_context();
+	bool has_alt_cameras = ctx->hooks.has_alt_cameras(ctx->userdata);
 
 	// during an error shutdown message we may need to transmit
 	// the shutdown message after the server has shutdown, so
@@ -362,7 +364,7 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 		}
 
 		// broadcast entities are always sent
-		if ( ent->r.svFlags & SVF_BROADCAST ) {
+		if ( ent->r.svFlags & SVF_BROADCAST || has_alt_cameras ) {
 			SV_AddEntToSnapshot( svEnt, ent, eNums );
 			continue;
 		}

@@ -307,6 +307,17 @@ struct DeepmindHooks_s {
   // See TeamSelect in deepmind/engine/context.h.
   char (*team_select)(void* userdata, int player_id, const char* player_name);
 
+  // See SetHasAltCameras in deepmind/engine/context.h.
+  void (*set_has_alt_cameras)(void* userdata, bool has_alt_cameras);
+
+  // See HasAltCameras in deepmind/engine/context.h.
+  bool (*has_alt_cameras)(void* userdata);
+
+  // See GetCustomView in deepmind/engine/context_game.h.
+  void (*custom_view)(void* userdata, int* width, int* height,
+                      float position[3], float view_angles[3],
+                      bool* render_player);
+
   // Set and retrieve error message. 'error_message' shall be a null terminated
   // string.
   void (*set_error_message)(void* userdata, const char* error_message);

@@ -41,7 +41,8 @@ struct DeepmindCalls_s {
   void (*add_score)(int player_id, double score);
 
   // Get desired screen shape.
-  void (*screen_shape)(void* context, int* width, int* height);
+  void (*screen_shape)(int* width, int* height, int* buff_width,
+                       int* buff_height);
 
   // Engine time between the start of two consecutive frames, in milliseconds.
   int (*engine_frame_period_msec)(void);
@@ -97,6 +98,8 @@ struct DeepmindCalls_s {
       const DeepmindModelGetters* model_getters,  //
       void* model_data,                           //
       const char* model_path);
+
+  void (*render_custom_view)(int width, int height, unsigned char* buffer);
 
   bool (*is_map_loading)();
 };

@@ -101,6 +101,16 @@ class ContextGame {
 
   Reader* FileReaderOverride() { return file_reader_override_; }
 
+  // Retrieves what to render when render_custom_view engine command is called.
+  // Returns whether to render the player or not.
+  void GetCustomView(int* width, int* height, float position[3],
+                      float view_angles[3], bool* render_player) const;
+
+  // Used to store the current view for rendering when render_custom_view engine
+  // command is called.
+  void SetCustomView(int width, int height, const std::array<float, 3>& pos,
+                     const std::array<float, 3>& eye, bool render_player);
+
  private:
   // Calls into the engine.
   const DeepmindCalls* deepmind_calls_;
@@ -119,6 +129,12 @@ class ContextGame {
   // The path level scripts should use for temporary files.
   std::string temp_folder_;
   bool temp_folder_owned_;
+
+  int camera_width_;
+  int camera_height_;
+  std::array<float, 3> camera_position_;
+  std::array<float, 3> camera_view_angles_;
+  bool camera_render_player_;
 };
 
 }  // namespace lab
