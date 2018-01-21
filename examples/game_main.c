@@ -64,24 +64,28 @@ static const char kUsage[] =
     "                        available to the level script. This flag may be provided\n"
     "                        multiple times.\n"
     "  -e, --num_episodes:   The number of episodes to play. Defaults to 1.\n"
+    "  -p, --print_events:   Print events emitted.\n"
     "  -r, --random_seed:    A seed value used for randomly generated content; using\n"
     "                        the same seed should result in the same content. Defaults\n"
     "                        to a fixed value.\n"
     ;
 
 static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
-                                void* context, int* num_episodes, int* seed) {
+                                void* context, int* num_episodes, int* seed,
+                                bool* log_events) {
   static struct option long_options[] = {
       {"help", no_argument, NULL, 'h'},
       {"level_script", required_argument, NULL, 'l'},
       {"level_setting", required_argument, NULL, 's'},
       {"num_episodes", required_argument, NULL, 'e'},
       {"random_seed", required_argument, NULL, 'r'},
+      {"print_events", no_argument, NULL, 'p'},
       {NULL, 0, NULL, 0}};
 
   char *key, *value;
 
-  for (int c; (c = getopt_long(argc, argv, "hl:s:e:r:", long_options, 0)) != -1;) {
+  for (int c;
+       (c = getopt_long(argc, argv, "hl:s:e:r:p", long_options, 0)) != -1;) {
     switch (c) {
       case 'h':
         fputs(kUsage, stdout);
@@ -115,6 +119,9 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
           sys_error("Failed to set random_seed to '%s'.", optarg);
         }
         break;
+      case 'p':
+        *log_events = true;
+        break;
       case ':':
       case '?':
       default:
@@ -123,11 +130,67 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
   }
 }
 
+// Prints events to stdout. Returns number printed.
+static int print_events(EnvCApi* env_c_api, void* context) {
+  int event_count = env_c_api->event_count(context);
+  for (int e = 0; e < event_count; ++e) {
+    EnvCApi_Event event;
+    env_c_api->event(context, e, &event);
+    printf("Event %d: \"%s\" - ", e,
+           env_c_api->event_type_name(context, event.id));
+    for (int obs_id = 0; obs_id < event.observation_count; ++obs_id) {
+      if (obs_id != 0) {
+        fputs(", ", stdout);
+      }
+      const EnvCApi_Observation* obs = &event.observations[obs_id];
+      switch (obs->spec.type) {
+        case EnvCApi_ObservationString:
+          printf("\"%.*s\"", obs->spec.shape[0],
+                 obs->payload.string);
+          break;
+        case EnvCApi_ObservationDoubles:
+          if (obs->spec.dims == 1) {
+            if (obs->spec.shape[0] == 1) {
+              printf("%f", obs->payload.doubles[0]);
+              break;
+            } else if (obs->spec.shape[0] < 6) {
+              fputs("{", stdout);
+              for (int i = 0; i < obs->spec.shape[0]; ++i) {
+                if (i != 0) fputs(", ", stdout);
+                printf("%f", obs->payload.doubles[0]);
+              }
+              fputs("}", stdout);
+              break;
+            }
+          }
+          fputs("<DoubleTensor ", stdout);
+          for (int i = 0; i < obs->spec.dims; ++i) {
+            if (i != 0) fputs("x", stdout);
+            printf("%d", obs->spec.shape[i]);
+          }
+          fputs(">", stdout);
+          break;
+        case EnvCApi_ObservationBytes:
+          fputs("<ByteTensor ", stdout);
+          for (int i = 0; i < obs->spec.dims; ++i) {
+            if (i != 0) fputs("x", stdout);
+            printf("%d", obs->spec.shape[i]);
+          }
+          fputs(">", stdout);
+          break;
+      }
+    }
+    fputs("\n", stdout);
+  }
+  return event_count;
+}
+
 int main(int argc, char** argv) {
   static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
   static EnvCApi env_c_api;
   static void* context;
   static char runfiles_path[4096];
+  bool log_events = false;
 
   if (sizeof(runfiles_path) < strlen(argv[0]) + sizeof(kRunfiles)) {
     sys_error("Runfiles directory name too long!");
@@ -165,7 +228,8 @@ int main(int argc, char** argv) {
 
   int num_episodes = 1;
   int seed = 1;
-  process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed);
+  process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed,
+                      &log_events);
 
   if (env_c_api.init(context) != 0) {
     sys_error("Failed to init RL API: %s", env_c_api.error_message(context));
@@ -180,15 +244,25 @@ int main(int argc, char** argv) {
                 env_c_api.error_message(context));
     }
     printf("Episode: %d\n", episode);
+    if (log_events && print_events(&env_c_api, context) != 0) {
+      fflush(stdout);
+    }
     double score = 0;
     double reward;
-    while (env_c_api.advance(context, 1, &reward) ==
-           EnvCApi_EnvironmentStatus_Running) {
+
+    while (EnvCApi_EnvironmentStatus_Running ==
+           (status = env_c_api.advance(context, 1, &reward))) {
+      int event_count = log_events ? print_events(&env_c_api, context) : 0;
       if (reward != 0.0) {
         score += reward;
         printf("Score: %f\n", score);
+      }
+      if (event_count != 0 || reward != 0.0) {
         fflush(stdout);
       }
+    }
+    if (log_events && print_events(&env_c_api, context) != 0) {
+      fflush(stdout);
     }
   }
   if (status == EnvCApi_EnvironmentStatus_Error) {

@@ -267,6 +267,27 @@ static void make_pk3_from_map(void* userdata, const char* map_path,
   static_cast<Context*>(userdata)->MakePk3FromMap(map_path, map_name, gen_aas);
 }
 
+static void events_clear(void* userdata) {
+  static_cast<Context*>(userdata)->MutableEvents()->Clear();
+}
+
+static int events_type_count(void* userdata) {
+  return static_cast<const Context*>(userdata)->Events().TypeCount();
+}
+
+static const char* events_type_name(void* userdata, int event_type_idx) {
+  return static_cast<const Context*>(userdata)->Events().TypeName(
+      event_type_idx);
+}
+
+static int events_count(void* userdata) {
+  return static_cast<const Context*>(userdata)->Events().Count();
+}
+
+static void events_export(void* userdata, int event_idx, EnvCApi_Event* event) {
+  static_cast<Context*>(userdata)->MutableEvents()->Export(event_idx, event);
+}
+
 }  // extern "C"
 
 namespace deepmind {
@@ -351,6 +372,11 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->get_screen_message = get_screen_message;
   hooks->get_temporary_folder = get_temporary_folder;
   hooks->make_pk3_from_map = make_pk3_from_map;
+  hooks->events.clear = events_clear;
+  hooks->events.type_count = events_type_count;
+  hooks->events.type_name = events_type_name;
+  hooks->events.count = events_count;
+  hooks->events.export_event = events_export;
 }
 
 void Context::AddSetting(const char* key, const char* value) {
@@ -421,6 +447,9 @@ int Context::Init() {
       "dmlab.system.map_maker", &lua::Bind<MapMakerModule>, {this});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.game", &lua::Bind<ContextGame::Module>, {MutableGame()});
+  lua_vm_.AddCModuleToSearchers(
+      "dmlab.system.events", &lua::Bind<ContextEvents::Module>,
+      {MutableEvents()});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
 

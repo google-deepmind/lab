@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "deepmind/engine/context_events.h"
 #include "deepmind/engine/context_game.h"
 #include "deepmind/engine/context_observations.h"
 #include "deepmind/engine/context_pickups.h"
@@ -263,6 +264,9 @@ class Context {
   const ContextGame& Game() const { return game_; }
   ContextGame* MutableGame() { return &game_; }
 
+  const ContextEvents& Events() const { return events_; }
+  ContextEvents* MutableEvents() { return &events_; }
+
   const ContextObservations& Observations() const { return observations_; }
   ContextObservations* MutableObservations() { return &observations_; }
 
@@ -361,6 +365,9 @@ class Context {
 
   // Last error message.
   std::string error_message_;
+
+  // An object for storing and retrieving events.
+  ContextEvents events_;
 
   // An object for calling into the engine.
   ContextGame game_;

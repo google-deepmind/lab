@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -99,9 +99,9 @@ typedef struct GameContext_s {
   bool first_start;
   bool init_called;
   bool map_loaded;
-  int engine_frame_period_msec;   // This is the number of milliseconds to
-                                  // advance the engine each frame. If set to
-                                  // zero the wall clock is used.
+  int engine_frame_period_msec;  // This is the number of milliseconds to
+                                 // advance the engine each frame. If set to
+                                 // zero the wall clock is used.
   int step;
   int map_start_frame;            // First frame after warm-up.
   double total_engine_time_msec;  // This is step * engine_frame_period_msec.
@@ -484,6 +484,7 @@ static int dmlab_start(void* context, int episode_id, int seed) {
     }
     return err;
   }
+  ctx->hooks.events.clear(ctx->userdata);
   gc->step = 0;
   gc->total_engine_time_msec = 0.0;
   gc->score = 0.0;
@@ -616,14 +617,6 @@ static void dmlab_observation_spec(
   }
 }
 
-static int dmlab_event_type_count(void* context) {
-  return 0;
-}
-
-const char* dmlab_event_type_name(void* context, int event_type) {
-  return 0;
-}
-
 static int dmlab_fps(void* context) {
   GameContext* gc = context;
   if (gc->engine_frame_period_msec > 0) {
@@ -720,11 +713,29 @@ static void dmlab_observation(
   }
 }
 
-static int dmlab_event_count(void* context) {
-  return 0;
+static int dmlab_event_type_count(void* context) {
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return ctx->hooks.events.type_count(ctx->userdata);
 }
 
-static void dmlab_event(void* context, int event_idx, EnvCApi_Event* event) {}
+static const char* dmlab_event_type_name(void* context, int event_type) {
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return ctx->hooks.events.type_name(ctx->userdata, event_type);
+}
+
+static int dmlab_event_count(void* context) {
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return ctx->hooks.events.count(ctx->userdata);
+}
+
+static void dmlab_event(void* context, int event_idx, EnvCApi_Event* event) {
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return ctx->hooks.events.export_event(ctx->userdata, event_idx, event);
+}
 
 static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
   GameContext* gc = context;
@@ -758,6 +769,7 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
   re.MakeCurrent();
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  ctx->hooks.events.clear(ctx->userdata);
   *reward = 0;
   bool episode_ended = false;
   for (int i = 0; i < num_steps && !episode_ended; ++i) {

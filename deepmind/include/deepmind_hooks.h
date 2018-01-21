@@ -33,6 +33,26 @@ extern "C" {
 
 typedef struct DeepmindHooks_s DeepmindHooks;
 
+typedef struct DeepmindEventsHooks_s DeepmindEventsHooks;
+
+struct DeepmindEventsHooks_s {
+  // Returns number of event types.
+  int (*type_count)(void* userdata);
+
+  // Returns name of an event. 'type_idx' shall be on range [0, 'type_count').
+  const char* (*type_name)(void* userdata, int type_idx);
+
+  // Clears all events.
+  void (*clear)(void* userdata);
+
+  // Returns the number of events generated since last call to 'clear'.
+  int (*count)(void* userdata);
+
+  // Exports an event at 'idx', which must be in range [0, count()), to an
+  // EnvCApi_Event structure.
+  void (*export_event)(void* userdata, int idx, EnvCApi_Event* event);
+};
+
 struct DeepmindHooks_s {
   // A script will be passed these settings via params when the script is ran.
   // Calls after first call of init will be ignored.
@@ -227,6 +247,8 @@ struct DeepmindHooks_s {
   // string.
   void (*set_error_message)(void* userdata, const char* error_message);
   const char* (*error_message)(void* userdata);
+
+  DeepmindEventsHooks events;
 };
 
 #ifdef __cplusplus

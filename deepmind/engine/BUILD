@@ -9,6 +9,7 @@ cc_library(
     hdrs = ["context.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":context_events",
         ":context_game",
         ":context_observations",
         ":context_pickups",
@@ -34,18 +35,14 @@ cc_library(
 )
 
 cc_library(
-    name = "callbacks",
-    srcs = ["callbacks.cc"],
-    data = ["//:non_pk3_assets"],
-    visibility = ["//visibility:public"],
+    name = "context_events",
+    srcs = ["context_events.cc"],
+    hdrs = ["context_events.h"],
     deps = [
-        ":context",
-        ":lua_maze_generation",
-        ":lua_random",
-        ":lua_text_level_maker",
-        "//deepmind/include:context_hdrs",
-        "//deepmind/level_generation/text_level:lua_bindings",
-        "//deepmind/lua:vm",
+        "//deepmind/lua",
+        "//deepmind/lua:class",
+        "//deepmind/lua:n_results_or",
+        "//deepmind/lua:read",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
@@ -98,6 +95,23 @@ cc_library(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/support:logging",
+    ],
+)
+
+cc_library(
+    name = "callbacks",
+    srcs = ["callbacks.cc"],
+    data = ["//:non_pk3_assets"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":context",
+        ":lua_maze_generation",
+        ":lua_random",
+        ":lua_text_level_maker",
+        "//deepmind/include:context_hdrs",
+        "//deepmind/level_generation/text_level:lua_bindings",
+        "//deepmind/lua:vm",
+        "//deepmind/tensor:lua_tensor",
     ],
 )
 
