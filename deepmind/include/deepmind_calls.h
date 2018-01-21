@@ -99,6 +99,13 @@ struct DeepmindCalls_s {
       void* model_data,                           //
       const char* model_path);
 
+  float (*raycast)(const float start[3], const float end[3]);
+
+  bool (*in_fov)(const float start[3],   //
+                 const float end[3],     //
+                 const float angles[3],  //
+                 float fov);
+
   void (*render_custom_view)(int width, int height, unsigned char* buffer);
 
   bool (*is_map_loading)();

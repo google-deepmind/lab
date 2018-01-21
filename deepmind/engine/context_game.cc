@@ -72,6 +72,8 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
         {"episodeTimeSeconds", Member<&LuaGameModule::EpisodeTimeSeconds>},
         {"tempFolder", Member<&LuaGameModule::TempFolder>},
         {"runFiles", Member<&LuaGameModule::ExecutableRunfiles>},
+        {"raycast", Member<&LuaGameModule::Raycast>},
+        {"inFov", Member<&LuaGameModule::InFov>},
         {"loadFileToByteTensor", Member<&LuaGameModule::LoadFileToByteTensor>},
         {"loadFileToString", Member<&LuaGameModule::LoadFileToString>},
         {"copyFileToLocation", Member<&LuaGameModule::CopyFileToLocation>},
@@ -95,6 +97,29 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     error += " or reward: ";
     error += lua::ToString(L, 3);
     return std::move(error);
+  }
+
+  lua::NResultsOr Raycast(lua_State* L) {
+    std::array<float, 3> start, end;
+    if (lua::Read(L, 2, &start) && lua::Read(L, 3, &end)) {
+      lua::Push(L, ctx_->Calls()->raycast(start.data(), end.data()));
+      return 1;
+    }
+    return "Must provide start and end coordinates";
+  }
+
+  lua::NResultsOr InFov(lua_State* L) {
+    std::array<float, 3> start, end, angles;
+    float fov = 360.0f;
+    if (lua::Read(L, 2, &start) && lua::Read(L, 3, &end) &&
+        lua::Read(L, 4, &angles)) {
+      lua::Read(L, 5, &fov);
+      lua::Push(L, ctx_->Calls()->in_fov(start.data(), end.data(),
+                                         angles.data(), fov));
+      return 1;
+    } else {
+      return "Must provide start, end coordinates and orientation angles";
+    }
   }
 
   lua::NResultsOr ScreenShape(lua_State* L) {

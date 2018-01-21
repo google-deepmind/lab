@@ -1087,6 +1087,13 @@ static bool dmlab_is_map_loading(void* context) {
   return gc->is_map_loading;
 }
 
+float dmlab_raycast(const float start[3], const float end[3]);
+
+static bool dmlab_in_fov(const float start[3], const float end[3],
+                         const float angles[3], float fov) {
+  return InFov(start, end, angles, fov) == qtrue;
+}
+
 static void dmlab_render_custom_view(
     int width, int height, unsigned char* buffer) {
   re.MakeCurrent();
@@ -1188,6 +1195,8 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.serialised_model_size = dmlab_serialised_model_size;
   gc->dm_ctx->calls.serialise_model = dmlab_serialise_model;
   gc->dm_ctx->calls.save_model = dmlab_save_model;
+  gc->dm_ctx->calls.raycast = dmlab_raycast;
+  gc->dm_ctx->calls.in_fov = dmlab_in_fov;
   gc->dm_ctx->calls.is_map_loading = dmlab_is_map_loading;
   gc->dm_ctx->calls.render_custom_view = dmlab_render_custom_view;
   gc->dm_ctx->context = gc;

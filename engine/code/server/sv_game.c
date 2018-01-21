@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -968,3 +968,12 @@ qboolean SV_GameCommand( void ) {
 	return VM_Call( gvm, GAME_CONSOLE_COMMAND );
 }
 
+
+float dmlab_raycast(const float start[3], const float end[3]) {
+	if ( sv.state != SS_GAME ) {
+		return 0.0f;
+	}
+	trace_t results;
+	SV_Trace(&results, start, NULL, NULL, end, ENTITYNUM_NONE, CONTENTS_SOLID, qfalse);
+	return results.fraction;
+}
