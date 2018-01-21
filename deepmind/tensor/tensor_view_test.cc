@@ -83,6 +83,77 @@ TEST(TensorViewTest, NonContiguous) {
   });
 }
 
+TEST(TensorViewTest, Reverse) {
+  ShapeVector shape = {5, 5};
+  std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
+  TensorView<int> int_tensor_view(Layout(shape), storage.data());
+
+  ShapeVector index = {0, 0};
+  std::size_t offset;
+
+  ASSERT_TRUE(int_tensor_view.Reverse(1));
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 0}, &offset));
+  EXPECT_EQ(4, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 4}, &offset));
+  EXPECT_EQ(0, offset);
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 0}, &offset));
+  EXPECT_EQ(24, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 4}, &offset));
+  EXPECT_EQ(20, offset);
+
+  ASSERT_TRUE(int_tensor_view.Reverse(0));
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 0}, &offset));
+  EXPECT_EQ(24, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 4}, &offset));
+  EXPECT_EQ(20, offset);
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 0}, &offset));
+  EXPECT_EQ(4, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 4}, &offset));
+  EXPECT_EQ(0, offset);
+
+  ASSERT_TRUE(int_tensor_view.Reverse(1));
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 0}, &offset));
+  EXPECT_EQ(20, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({0, 4}, &offset));
+  EXPECT_EQ(24, offset);
+
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 0}, &offset));
+  EXPECT_EQ(0, offset);
+  EXPECT_TRUE(int_tensor_view.GetOffset({4, 4}, &offset));
+  EXPECT_EQ(4, offset);
+
+  ASSERT_TRUE(int_tensor_view.Reverse(0));
+
+  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+    EXPECT_EQ(id[0] * 5 + id[1], value);
+  });
+
+  ASSERT_TRUE(int_tensor_view.Reverse(0));
+
+  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+    EXPECT_EQ((4 - id[0]) * 5 + id[1], value);
+  });
+
+  ASSERT_TRUE(int_tensor_view.Reverse(1));
+
+  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+    EXPECT_EQ((4 - id[0]) * 5 + 4 - id[1], value);
+  });
+
+  ASSERT_TRUE(int_tensor_view.Reverse(0));
+
+  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+    EXPECT_EQ(id[0] * 5 + 4 - id[1], value);
+  });
+
+  ASSERT_FALSE(int_tensor_view.Reverse(3));
+}
+
 TEST(TensorViewTest, Reshape) {
   ShapeVector shape = {3, 8};
   std::vector<float> storage = MakeSequence<float>(Layout::num_elements(shape));

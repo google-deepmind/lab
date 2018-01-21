@@ -123,6 +123,34 @@ class Layout {
     }
   }
 
+  // Reverses the dimension 'dim' of the tensor layout. If the 'dim' is valid
+  // the indexing of that dimension is reversed.
+  // Returns whether dim is valid.
+  //
+  // Example:
+  // view = { { 1, 2, 3 },
+  //          { 4, 5, 6 } };
+  // view.Reverse(0) == true
+  // view == { { 4, 5, 6 },
+  //           { 1, 2, 3 } };
+  //
+  // view = { { 1, 2, 3 },
+  //          { 4, 5, 6 } };
+  // view.Reverse(1) == true
+  // view == { { 3, 2, 1 },
+  //           { 6, 5, 4 }};
+  //
+  // view.Reverse(2) == false
+  bool Reverse(std::size_t dim) {
+    if (dim < shape_.size()) {
+      offset_ += stride_[dim] * (shape_[dim] - 1);
+      stride_[dim] = -stride_[dim];
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   const ShapeVector& shape() const { return shape_; }
   const StrideVector& stride() const { return stride_; }
   const std::size_t start_offset() const { return offset_; }
@@ -326,16 +354,6 @@ class Layout {
     }
     return stride_.back();
   }
-
-  struct OffsetIterator {
-    std::size_t offset;
-    // 'index' cannot be used if is_contiguous is true.
-    ShapeVector index;
-    std::size_t num;
-    std::size_t pos;
-    std::ptrdiff_t stride;
-    bool is_contiguous;
-  };
 
   struct WindowIterator {
     std::size_t offset;

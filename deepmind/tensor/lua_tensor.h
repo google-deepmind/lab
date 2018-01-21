@@ -125,6 +125,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         {"__tostring", &Class::template Member<&LuaTensor<T>::ToString>},
         {"__call", &Class::template Member<&LuaTensor<T>::Index>},
         {"__eq", &Class::template Member<&LuaTensor<T>::Equal>},
+        {"size", &Class::template Member<&LuaTensor<T>::Size>},
         {"shape", &Class::template Member<&LuaTensor<T>::Shape>},
         {"reshape", &Class::template Member<&LuaTensor<T>::Reshape>},
         {"clone", &Class::template Member<&LuaTensor<T>::Clone>},
@@ -132,6 +133,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         {"transpose", &Class::template Member<&LuaTensor<T>::Transpose>},
         {"select", &Class::template Member<&LuaTensor<T>::Select>},
         {"narrow", &Class::template Member<&LuaTensor<T>::Narrow>},
+        {"reverse", &Class::template Member<&LuaTensor<T>::Reverse>},
         {"apply", &Class::template Member<&LuaTensor<T>::Apply>},
         {"applyIndexed", &Class::template Member<&LuaTensor<T>::ApplyIndexed>},
         {"fill",
@@ -556,6 +558,18 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
            lua::ToString(L, 4);
   }
 
+  // [1, 1, e]
+  lua::NResultsOr Reverse(lua_State* L) {
+    std::size_t dim;
+    auto result = tensor_view_;
+    if (lua::Read(L, 2, &dim) && result.Reverse(dim - 1)) {
+      LuaTensor::CreateObject(L, std::move(result), storage_validity_);
+      return 1;
+    }
+    return "[Tensor.Reverse] Must contain 1 based dim received: " +
+           lua::ToString(L, 2);
+  }
+
   // [1, 2, e]
   lua::NResultsOr ApplyIndexed(lua_State* L) {
     lua::NResultsOr err = 0;
@@ -640,6 +654,12 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // [1, 0, -]
   lua::NResultsOr Type(lua_State* L) {
     lua::Push(L, ClassName());
+    return 1;
+  }
+
+  // [1, 0, -]
+  lua::NResultsOr Size(lua_State* L) {
+    lua::Push(L, tensor_view_.num_elements());
     return 1;
   }
 

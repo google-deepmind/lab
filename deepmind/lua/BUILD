@@ -43,7 +43,6 @@ cc_test(
         ":read",
         ":table_ref",
         ":vm",
-        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "@com_google_googletest//:gtest_main",
     ],

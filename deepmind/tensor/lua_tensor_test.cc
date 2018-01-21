@@ -277,6 +277,22 @@ TEST_F(LuaTensorTest, Narrow) {
   EXPECT_TRUE(bt->tensor_view().storage() == bt_alt->tensor_view().storage());
 }
 
+constexpr char kReverse[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
+local narrow = tensor.ByteTensor{{3, 4}, {5, 6}}
+assert (bt:reverse(1) == tensor.ByteTensor{{5, 6}, {3, 4}, {1, 2}})
+assert (bt:reverse(2) == tensor.ByteTensor{{2, 1}, {4, 3}, {6, 5}})
+assert (bt:reverse(2):reverse(1) == tensor.ByteTensor{{6, 5}, {4, 3}, {2, 1}})
+)";
+
+TEST_F(LuaTensorTest, Reverse) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kReverse, sizeof(kReverse) - 1, "kReverse"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
 constexpr char kApply[] = R"(
 local tensor = require 'dmlab.system.tensor'
 local bt = tensor.ByteTensor{{1, 2}, {3, 4}, {5, 6}}
@@ -899,6 +915,21 @@ TEST_F(LuaTensorTest, kBadByteOffsetNegative) {
   lua::Push(L, CreateBytesRawFile());
   ASSERT_THAT(lua::Call(L, 1), StatusIs(HasSubstr("byteOffset")));
 }
+
+constexpr char kNumElements[] = R"(
+local tensor = require 'dmlab.system.tensor'
+assert(tensor.ByteTensor(4, 5):size() == 20)
+)";
+
+TEST_F(LuaTensorTest, kNumElements) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kNumElements,
+                              sizeof(kNumElements) - 1,
+                              "kNumElements"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
 }  // namespace
 }  // namespace lab
 }  // namespace deepmind
