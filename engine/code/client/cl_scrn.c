@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -472,10 +472,15 @@ SCR_DrawScreenField
 This will be called twice if rendering in stereo mode
 ==================
 */
-void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
+void SCR_DrawScreenField( stereoFrame_t stereoFrame, qboolean skipRendering ) {
 	qboolean uiFullscreen;
 
-	re.BeginFrame( stereoFrame );
+	// Many skip rendering calls below are not needed for performance
+	// but to match any BeginFrame skips
+	if ( !skipRendering ) {
+		re.BeginFrame( stereoFrame );
+	}
+
 
 	uiFullscreen = (uivm && VM_Call( uivm, UI_IS_FULLSCREEN ));
 
@@ -497,42 +502,54 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad clc.state" );
 			break;
 		case CA_CINEMATIC:
-			SCR_DrawCinematic();
+			if ( !skipRendering ) {
+				SCR_DrawCinematic();
+			}
 			break;
 		case CA_DISCONNECTED:
-			// force menu up
-			S_StopAllSounds();
-			VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if ( !skipRendering ) {
+				// force menu up
+				S_StopAllSounds();
+				VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			}
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
-			// connecting clients will only show the connection dialog
-			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if ( !skipRendering ) {
+				// connecting clients will only show the connection dialog
+				// refresh to update the time
+				VM_Call( uivm, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qfalse );
+			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			CL_CGameRendering(stereoFrame);
+			CL_CGameRendering(stereoFrame, skipRendering);
 
-			// also draw the connection information, so it doesn't
-			// flash away too briefly on local or lan games
-			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
+			if ( !skipRendering ) {
+				// also draw the connection information, so it doesn't
+				// flash away too briefly on local or lan games
+				// refresh to update the time
+				VM_Call( uivm, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
+			}
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			CL_CGameRendering(stereoFrame);
-			SCR_DrawDemoRecording();
+			CL_CGameRendering(stereoFrame, skipRendering);
+			if ( !skipRendering ) {
+				SCR_DrawDemoRecording();
 #ifdef USE_VOIP
-			SCR_DrawVoipMeter();
+				SCR_DrawVoipMeter();
 #endif
+			}
 			break;
 		}
 	}
+
+	if ( skipRendering ) return;
 
 	// the menu draws next
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
@@ -546,6 +563,19 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
 		SCR_DrawDebugGraph ();
 	}
+}
+
+static	qboolean	skipRendering = qfalse;
+
+/*
+==================
+SCR_SkipRendering
+
+Skip rendering for subsequent calls to SCR_UpdateScreen
+==================
+*/
+void SCR_SkipRendering( qboolean value ) {
+	skipRendering = value;
 }
 
 /*
@@ -576,19 +606,21 @@ void SCR_UpdateScreen( void ) {
 		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
-			SCR_DrawScreenField( STEREO_LEFT );
-			SCR_DrawScreenField( STEREO_RIGHT );
+			SCR_DrawScreenField( STEREO_LEFT, skipRendering );
+			SCR_DrawScreenField( STEREO_RIGHT, skipRendering );
 		} else {
-			SCR_DrawScreenField( STEREO_CENTER );
+			SCR_DrawScreenField( STEREO_CENTER, skipRendering );
 		}
 
-		if ( com_speeds->integer ) {
-			re.EndFrame( &time_frontend, &time_backend );
-		} else {
-			re.EndFrame( NULL, NULL );
+		if ( !skipRendering ) {
+			if ( com_speeds->integer ) {
+				re.EndFrame( &time_frontend, &time_backend );
+			} else {
+				re.EndFrame( NULL, NULL );
+			}
 		}
 	}
-	
+
 	recursive = 0;
 }
 

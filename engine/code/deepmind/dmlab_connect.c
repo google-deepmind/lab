@@ -89,6 +89,22 @@ const char* const kObservationNames[] = {
     "RGBD",             //
 };
 
+typedef enum PixelBufferTypeEnum_e {
+  kPixelBufferTypeEnum_Rgb,
+  kPixelBufferTypeEnum_Depth,
+} PixelBufferTypeEnum;
+
+typedef struct PboData_s {
+  GLuint id;  // PBO buffer id allocated by glGenBuffers.
+  int size;   // Current size in bytes of assigned data buffer.
+} PboData;
+
+typedef struct GamePixelBufferObjects_s {
+  PboData rgb, depth;  // PBO information storage.
+  bool supported;  // If PBO's are supported with the current GL backend.
+  bool enabled;    // If PBO rendering is enabled.
+} GamePixelBufferObjects;
+
 typedef struct GameContext_s {
   DeepmindContext* dm_ctx;
   int width;
@@ -96,6 +112,7 @@ typedef struct GameContext_s {
   int image_shape[3];
   unsigned char* image_buffer;
   unsigned char* temp_buffer;  // Holds result from glReadPixels.
+  GamePixelBufferObjects pbos;
   char command_line[MAX_STRING_CHARS];
   char runfiles_path[MAX_STRING_CHARS];
   bool first_start;
@@ -125,10 +142,125 @@ typedef struct GameContext_s {
   int map_frame_number_shape[1];
   double map_frame_number_observation;
   bool is_map_loading;
+  bool current_screen_rendered;
 } GameContext;
 
-
 // **** Local helper functions and data **** //
+
+static void* realloc_or_die(void* ptr, size_t n) {
+  void* result = realloc(ptr, n);
+  if (n > 0 && result == NULL) {
+    fputs("Reallocation failure, aborting.\n", stderr);
+    abort();
+  }
+  return result;
+}
+
+static bool use_pbo_rendering(GameContext* gc) {
+  return gc->pbos.supported && gc->pbos.enabled;
+}
+
+// Helper function for creating or updating PBO's based on the provided game
+// context. Aborts on error.
+static void create_update_pbo_or_die(GameContext* gc) {
+  if (!gc->pbos.rgb.id) {
+    qglGenBuffers(1, &gc->pbos.rgb.id);
+  }
+  if (!gc->pbos.depth.id) {
+    qglGenBuffers(1, &gc->pbos.depth.id);
+  }
+
+  // Check that we successfully created RGB and Depth buffers.
+  if (qglGetError() != GL_NO_ERROR) {
+    fputs("GL Error creating PBO buffers.\n", stderr);
+    abort();
+  }
+
+  int rgb_pbo_size = gc->width * gc->height * 3;
+  if (gc->pbos.rgb.size < rgb_pbo_size) {
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
+    qglBufferData(GL_PIXEL_PACK_BUFFER, rgb_pbo_size, NULL, GL_STREAM_READ);
+    if (qglGetError() != GL_NO_ERROR) {
+      fputs("Failed to generate PBO data buffer.\n", stderr);
+      abort();
+    }
+    gc->pbos.rgb.size = rgb_pbo_size;
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+  }
+
+  int depth_pbo_size = gc->width * gc->height;
+  if (gc->pbos.depth.size < depth_pbo_size) {
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.depth.id);
+    qglBufferData(GL_PIXEL_PACK_BUFFER, depth_pbo_size, NULL, GL_STREAM_READ);
+
+    if (qglGetError() != GL_NO_ERROR) {
+      fputs("Failed to generate PBO data buffer.\n", stderr);
+      abort();
+    }
+    gc->pbos.depth.size = depth_pbo_size;
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+  }
+}
+
+// Begins request for provided pixel observation. For PBO rendering, this sends
+// async GL command to begin reading pixels off card.
+static void request_pixel_observations(GameContext* gc,
+                                       PixelBufferTypeEnum type) {
+  if (use_pbo_rendering(gc)) {
+    create_update_pbo_or_die(gc);
+    switch (type) {
+      case kPixelBufferTypeEnum_Rgb:
+        qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
+        qglReadPixels(0, 0, gc->width, gc->height, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        break;
+      case kPixelBufferTypeEnum_Depth:
+        qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.depth.id);
+        qglReadPixels(0, 0, gc->width, gc->height, GL_DEPTH_COMPONENT,
+                      GL_UNSIGNED_BYTE, 0);
+        break;
+    }
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+  }
+}
+
+// Returns a pointer to the requested pixel observations.
+static void* bind_pixel_observation(GameContext* gc, PixelBufferTypeEnum type) {
+  if (use_pbo_rendering(gc)) {
+    switch (type) {
+      case kPixelBufferTypeEnum_Rgb:
+        qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
+        break;
+      case kPixelBufferTypeEnum_Depth:
+        qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.depth.id);
+        break;
+    }
+    void* pixel_buffer = qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+
+    return pixel_buffer;
+  } else {
+    gc->temp_buffer =
+        realloc_or_die(gc->temp_buffer, gc->width * gc->height * 3);
+    switch (type) {
+      case kPixelBufferTypeEnum_Rgb:
+        qglReadPixels(0, 0, gc->width, gc->height, GL_RGB, GL_UNSIGNED_BYTE,
+                      gc->temp_buffer);
+        break;
+      case kPixelBufferTypeEnum_Depth:
+        qglReadPixels(0, 0, gc->width, gc->height, GL_DEPTH_COMPONENT,
+                      GL_UNSIGNED_BYTE, gc->temp_buffer);
+        break;
+    }
+
+    return gc->temp_buffer;
+  }
+}
+
+static void unbind_pixel_observation(GameContext* gc) {
+  if (use_pbo_rendering(gc)) {
+    qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+  }
+}
 
 static int first_start(GameContext* gc) {
   DeepmindContext* ctx = gc->dm_ctx;
@@ -154,6 +286,9 @@ static int first_start(GameContext* gc) {
 
   NET_Init();
   CON_Init();
+
+  // We assume PBO's are supported iff we can load the glGenBuffers function.
+  gc->pbos.supported = qglGenBuffers;
 
   return 0;
 }
@@ -303,21 +438,11 @@ static DeepmindContext* get_context_once(void) {
   }
 }
 
-static void* realloc_or_die(void* ptr, size_t n) {
-  void* result = realloc(ptr, n);
-  if (n > 0 && result == NULL) {
-    fputs("Reallocation failure, aborting.\n", stderr);
-    abort();
-  }
-  return result;
-}
-
 // **** DeepmindContext **** //
 
 DeepmindContext* dmlab_context(void) {
   return &dmlab_context_impl;
 }
-
 
 // **** RL Environment implementation **** //
 
@@ -421,6 +546,15 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
   } else if (strcmp(key, "appendCommand") == 0) {
     Q_strcat(gc->command_line, sizeof(gc->command_line), " ");
     Q_strcat(gc->command_line, sizeof(gc->command_line), value);
+  } else if (strcmp(key, "use_pbos") == 0) {
+    int res = parse_bool(value, &v_bool, ctx);
+    if (res != 0) return res;
+    gc->pbos.enabled = v_bool;
+  } else if (strcmp(key, "gpuDeviceIndex") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    Q_strcat(gc->command_line, sizeof(gc->command_line),
+             va(" +set r_gpuDeviceIndex %ld", v));
   } else {
     ctx->hooks.add_setting(ctx->userdata, key, value);
   }
@@ -431,6 +565,8 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
 static int dmlab_init(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  SCR_SkipRendering(!ctx->hooks.get_native_app(ctx->userdata));
+
   if (gc->vm_mode != VMI_NATIVE) {
     Q_strcat(gc->command_line, sizeof(gc->command_line),
              va(" +set vm_cgame \"%d\""
@@ -477,6 +613,7 @@ static int dmlab_start(void* context, int episode_id, int seed) {
   seed = (seed < 0) ? seed + 1 + INT_MAX : seed;
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  gc->current_screen_rendered = false;
   if (gc->is_connecting) {
     re.MakeCurrent();
     int err = connecting(gc);
@@ -632,80 +769,105 @@ static void dmlab_observation(
     void* context, int observation_idx, EnvCApi_Observation* obs) {
   GameContext* gc = context;
   if (observation_idx < ARRAY_LEN(kObservationNames)) {
-    int window_size = gc->height * gc->width;
-
     dmlab_observation_spec(context, observation_idx, &obs->spec);
-    gc->temp_buffer = realloc_or_die(gc->temp_buffer, window_size * 3);
+
     re.MakeCurrent();
-    qglReadPixels(0, 0, gc->width, gc->height, GL_RGB, GL_UNSIGNED_BYTE,
-                 gc->temp_buffer);
+
+    if (!gc->current_screen_rendered) {
+      SCR_SkipRendering(false);
+      SCR_UpdateScreen();
+      gc->current_screen_rendered = true;
+    }
+
+    bool render_depth = observation_idx == kObservations_RgbdInterlaced ||
+                        observation_idx == kObservations_RgbdPlanar;
+
+    const int width = gc->width;
+    const int height = gc->height;
+    const int window_size = height * width;
+
+    request_pixel_observations(gc, kPixelBufferTypeEnum_Rgb);
+    if (render_depth) {
+      request_pixel_observations(gc, kPixelBufferTypeEnum_Depth);
+    }
+
+    byte* temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Rgb);
 
     switch (observation_idx) {
-      case kObservations_RgbInterlaced:
+      case kObservations_RgbInterlaced: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 3);
-        for (int i = 0; i < gc->height; ++i) {
-          for (int j = 0; j < gc->width; ++j) {
-            int loc = (i * gc->width + j) * 3;
-            int invy = (gc->height - i - 1) * gc->width + j;
-            gc->image_buffer[invy * 3 + 0] = gc->temp_buffer[loc + 0];
-            gc->image_buffer[invy * 3 + 1] = gc->temp_buffer[loc + 1];
-            gc->image_buffer[invy * 3 + 2] = gc->temp_buffer[loc + 2];
+        unsigned char* const image_buffer = gc->image_buffer;
+        for (int i = 0; i < height; ++i) {
+          for (int j = 0; j < width; ++j) {
+            int loc = (i * width + j) * 3;
+            int invy = (height - i - 1) * width + j;
+            image_buffer[invy * 3 + 0] = temp_buffer[loc + 0];
+            image_buffer[invy * 3 + 1] = temp_buffer[loc + 1];
+            image_buffer[invy * 3 + 2] = temp_buffer[loc + 2];
           }
         }
         break;
-      case kObservations_RgbdInterlaced:
+      }
+      case kObservations_RgbdInterlaced: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 4);
-        for (int i = 0; i < gc->height; ++i) {
-          for (int j = 0; j < gc->width; ++j) {
-            int loc = (i * gc->width + j) * 3;
-            int invy = (gc->height - i - 1) * gc->width + j;
-            gc->image_buffer[invy * 4 + 0] = gc->temp_buffer[loc + 0];
-            gc->image_buffer[invy * 4 + 1] = gc->temp_buffer[loc + 1];
-            gc->image_buffer[invy * 4 + 2] = gc->temp_buffer[loc + 2];
+        unsigned char* const image_buffer = gc->image_buffer;
+        for (int i = 0; i < height; ++i) {
+          for (int j = 0; j < width; ++j) {
+            int loc = (i * width + j) * 3;
+            int invy = (height - i - 1) * width + j;
+            image_buffer[invy * 4 + 0] = temp_buffer[loc + 0];
+            image_buffer[invy * 4 + 1] = temp_buffer[loc + 1];
+            image_buffer[invy * 4 + 2] = temp_buffer[loc + 2];
           }
         }
         break;
-      case kObservations_RgbPlanar:
+      }
+      case kObservations_RgbPlanar: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 3);
-        for (int i = 0; i < gc->height; ++i) {
-          for (int j = 0; j < gc->width; ++j) {
-            int loc = (i * gc->width + j) * 3;
-            int invy = (gc->height - i - 1) * gc->width + j;
-            gc->image_buffer[invy + window_size * 0] = gc->temp_buffer[loc + 0];
-            gc->image_buffer[invy + window_size * 1] = gc->temp_buffer[loc + 1];
-            gc->image_buffer[invy + window_size * 2] = gc->temp_buffer[loc + 2];
+        unsigned char* const image_buffer = gc->image_buffer;
+        for (int i = 0; i < height; ++i) {
+          for (int j = 0; j < width; ++j) {
+            int loc = (i * width + j) * 3;
+            int invy = (height - i - 1) * width + j;
+            image_buffer[invy + window_size * 0] = temp_buffer[loc + 0];
+            image_buffer[invy + window_size * 1] = temp_buffer[loc + 1];
+            image_buffer[invy + window_size * 2] = temp_buffer[loc + 2];
           }
         }
         break;
-      case kObservations_RgbdPlanar:
+      }
+      case kObservations_RgbdPlanar: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 4);
-        for (int i = 0; i < gc->height; ++i) {
-          for (int j = 0; j < gc->width; ++j) {
-            int loc = (i * gc->width + j) * 3;
-            int invy = (gc->height - i - 1) * gc->width + j;
-            gc->image_buffer[invy + window_size * 0] = gc->temp_buffer[loc + 0];
-            gc->image_buffer[invy + window_size * 1] = gc->temp_buffer[loc + 1];
-            gc->image_buffer[invy + window_size * 2] = gc->temp_buffer[loc + 2];
+        unsigned char* const image_buffer = gc->image_buffer;
+        for (int i = 0; i < height; ++i) {
+          for (int j = 0; j < width; ++j) {
+            int loc = (i * width + j) * 3;
+            int invy = (height - i - 1) * width + j;
+            image_buffer[invy + window_size * 0] = temp_buffer[loc + 0];
+            image_buffer[invy + window_size * 1] = temp_buffer[loc + 1];
+            image_buffer[invy + window_size * 2] = temp_buffer[loc + 2];
           }
         }
         break;
+      }
     }
-    if (observation_idx == kObservations_RgbdInterlaced ||
-        observation_idx == kObservations_RgbdPlanar) {
-      qglReadPixels(0, 0, gc->width, gc->height, GL_DEPTH_COMPONENT,
-                   GL_UNSIGNED_BYTE, gc->temp_buffer);
+    unbind_pixel_observation(gc);
 
-      for (int i = 0; i < gc->height; ++i) {
-        for (int j = 0; j < gc->width; ++j) {
-          int loc = i * gc->width + j;
-          int invy = (gc->height - i - 1) * gc->width + j;
+    if (render_depth) {
+      unsigned char* const image_buffer = gc->image_buffer;
+      temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Depth);
+      for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+          int loc = i * width + j;
+          int invy = (height - i - 1) * width + j;
           if (observation_idx == kObservations_RgbdInterlaced) {
-            gc->image_buffer[invy * 4 + 3] = gc->temp_buffer[loc];
+            image_buffer[invy * 4 + 3] = temp_buffer[loc];
           } else {
-            gc->image_buffer[invy + window_size * 3] = gc->temp_buffer[loc];
+            image_buffer[invy + window_size * 3] = temp_buffer[loc];
           }
         }
       }
+      unbind_pixel_observation(gc);
     }
     obs->payload.bytes = gc->image_buffer;
   } else {
@@ -771,6 +933,8 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
   re.MakeCurrent();
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  SCR_SkipRendering(!ctx->hooks.get_native_app(ctx->userdata));
+  gc->current_screen_rendered = false;
   ctx->hooks.events.clear(ctx->userdata);
   *reward = 0;
   bool episode_ended = false;
@@ -821,7 +985,7 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
     }
     gc->is_map_loading = false;
   }
-
+  gc->current_screen_rendered = false;
   return episode_ended ? EnvCApi_EnvironmentStatus_Terminated
                        : EnvCApi_EnvironmentStatus_Running;
 }
@@ -829,6 +993,17 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
 static void dmlab_destroy_context(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+
+  if (gc->pbos.rgb.id || gc->pbos.depth.id) {
+    re.MakeCurrent();
+    if (gc->pbos.rgb.id) {
+      qglDeleteBuffers(1, &gc->pbos.rgb.id);
+    }
+
+    if (gc->pbos.depth.id) {
+      qglDeleteBuffers(1, &gc->pbos.depth.id);
+    }
+  }
 
   dmlab_release_context(ctx);
   free(gc->temp_buffer);
@@ -909,6 +1084,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx = dm_ctx;
   gc->map_frame_number_shape[0] = 1;
   gc->map_frame_number_observation = 0;
+  gc->pbos.enabled = true;
 
   memset(env_c_api, 0, sizeof(EnvCApi));
 

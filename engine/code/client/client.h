@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -482,6 +482,7 @@ int CL_GetPingQueueCount( void );
 
 void CL_ShutdownRef( void );
 void CL_InitRef( void );
+
 qboolean CL_CDKeyValidate( const char *key, const char *checksum );
 int CL_ServerStatus( char *serverAddress, char *serverStatusString, int maxLen );
 
@@ -563,6 +564,7 @@ void CL_SaveConsoleHistory( void );
 // cl_scrn.c
 //
 void	SCR_Init (void);
+void	SCR_SkipRendering (qboolean value);
 void	SCR_UpdateScreen (void);
 
 void	SCR_DebugGraph (float value);
@@ -604,7 +606,7 @@ void CIN_CloseAllVideos(void);
 void CL_InitCGame( void );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
-void CL_CGameRendering( stereoFrame_t stereo );
+void CL_CGameRendering(stereoFrame_t stereo, qboolean skipRendering);
 void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
