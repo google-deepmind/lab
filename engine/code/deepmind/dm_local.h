@@ -141,6 +141,9 @@ void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
                      const vec3_t playerPosition, const vec3_t playerVelocity,
                      vec3_t playerPositionDelta, vec3_t playerVelocityDelta);
 
+// Called during G_InitSessionData.
+char dmlab_select_team(int player_id, const char* player_name);
+
 // Called at the start of entity update.
 void dmlab_entities_clear();
 // Called on each active entity during entity update.

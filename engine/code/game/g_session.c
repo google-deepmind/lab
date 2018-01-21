@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -102,7 +102,7 @@ Called on a first-time connect
 void G_InitSessionData( gclient_t *client, char *userinfo ) {
 	clientSession_t	*sess;
 	const char		*value;
-
+	char	team[2] = {'\0', '\0'};
 	sess = &client->sess;
 
 	// check for team preference, mainly for bots
@@ -114,6 +114,11 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 
 		// clear team so it's only used once
 		trap_Cvar_Set( "g_localTeamPref", "" );
+	}
+
+	team[0] = dmlab_select_team( client - level.clients, Info_ValueForKey (userinfo, "name") );
+	if ( team[0] ){
+		value = team;
 	}
 
 	// initial team determination

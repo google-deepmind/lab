@@ -572,6 +572,16 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     if (res != 0) return res;
     Q_strcat(gc->command_line, sizeof(gc->command_line),
              va(" +set r_gpuDeviceIndex %ld", v));
+  } else if (strcmp(key, "playerName") == 0) {
+    if (strlen(value) >= MAX_CVAR_VALUE_STRING) {
+      ctx->hooks.set_error_message(ctx->userdata,
+                                   va("Invalid playerName is must be shorter "
+                                      "than, '%d' characters.",
+                                      MAX_CVAR_VALUE_STRING));
+      return 1;
+    }
+    Q_strcat(gc->command_line, sizeof(gc->command_line),
+             va(" +set name \"%s\"", value));
   } else {
     ctx->hooks.add_setting(ctx->userdata, key, value);
   }
