@@ -179,6 +179,18 @@ static int update_spawn_vars(void* userdata, char* spawn_var_chars,
       spawn_var_chars, num_spawn_var_chars, spawn_var_offsets, num_spawn_vars);
 }
 
+static int make_extra_entities(void* userdata) {
+  return static_cast<Context*>(userdata)->MutablePickups()->MakeExtraEntities();
+}
+
+static void read_extra_entity(void* userdata, int entity_index,
+                              char* spawn_var_chars, int* num_spawn_var_chars,
+                              int spawn_var_offsets[][2], int* num_spawn_vars) {
+  return static_cast<Context*>(userdata)->MutablePickups()->ReadExtraEntity(
+      entity_index, spawn_var_chars, num_spawn_var_chars, spawn_var_offsets,
+      num_spawn_vars);
+}
+
 static bool find_item(void* userdata, const char* class_name, int* index) {
   return static_cast<Context*>(userdata)->MutablePickups()->FindItem(class_name,
                                                                      index);
@@ -477,6 +489,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_actions = set_actions;
   hooks->get_actions = get_actions;
   hooks->update_spawn_vars = update_spawn_vars;
+  hooks->make_extra_entities = make_extra_entities;
+  hooks->read_extra_entity = read_extra_entity;
   hooks->find_item = find_item;
   hooks->item_count = item_count;
   hooks->item = item;

@@ -40,6 +40,19 @@ int dmlab_update_spawn_vars(char* spawn_var_chars,       //
                             int spawn_var_offsets[][2],  //
                             int* num_spawn_vars);
 
+// Hook to create a number of entities externally. Returns the number of
+// entities created.
+int dmlab_make_extra_entities(void);
+
+// Hook to read an entity at a particular 'entity_id'. 'entity_id' shall be in
+// the range [0, dmlab_make_extra_entities()) and the remaining arguments match
+// 'dmlab_update_spawn_vars'.
+int dmlab_read_extra_entity(int entity_id,               //
+                            char* spawn_var_chars,       //
+                            int* num_spawn_var_chars,    //
+                            int spawn_var_offsets[][2],  //
+                            int* num_spawn_vars);
+
 // Find item with particular class_name.
 // Returns true if we found the item, and the deepmind_item index.
 int dmlab_finditem(const char* classname, int* index);

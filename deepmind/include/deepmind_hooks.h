@@ -152,7 +152,21 @@ struct DeepmindHooks_s {
                            int spawn_vars_offsets[][2],  //
                            int* num_spawn_vars);
 
-  // Find item with the given class_name.
+  // Hook to create a number of entities externally. Returns the number of
+  // entities created.
+  int (*make_extra_entities)(void* userdata);
+
+  // Hook to read an entity at a particular 'entity_id'. 'entity_id' shall be in
+  // the range [0, dmlab_make_extra_entities()) and the remaining arguments
+  // match 'dmlab_update_spawn_vars'.
+  void (*read_extra_entity)(void* userdata,              //
+                            int entity_id,               //
+                            char* spawn_var_chars,       //
+                            int* num_spawn_var_chars,    //
+                            int spawn_var_offsets[][2],  //
+                            int* num_spawn_vars);        //
+
+  // Finds item with the given class_name.
   // Returns whether the item was found, and if so, writes the index of the
   // found item to *index.
   bool (*find_item)(void* userdata, const char* class_name, int* index);

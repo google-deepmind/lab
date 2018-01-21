@@ -35,6 +35,16 @@ int dmlab_callback(
                                           /*spawn_vars_offsets=*/VM_ArgPtr(a3),
                                           /*num_spawn_vars=*/VM_ArgPtr(a4));
 
+    case DEEPMIND_MAKE_EXTRA_ENTITIES:
+      return ctx->hooks.make_extra_entities(ctx->userdata);
+    case DEEPMIND_READ_EXTRA_ENTITY:
+      ctx->hooks.read_extra_entity(ctx->userdata,
+                                   /*entity_index=*/a1,
+                                   /*spawn_var_chars=*/VM_ArgPtr(a2),
+                                   /*num_spawn_var_chars=*/VM_ArgPtr(a3),
+                                   /*spawn_vars_offsets=*/VM_ArgPtr(a4),
+                                   /*num_spawn_vars=*/VM_ArgPtr(a5));
+      return 0;
     case DEEPMIND_FIND_ITEM:
       return ctx->hooks.find_item(ctx->userdata, /*class_name=*/VM_ArgPtr(a1),
                                   /*index=*/VM_ArgPtr(a2));

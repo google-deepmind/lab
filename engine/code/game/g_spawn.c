@@ -403,28 +403,6 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	gentity_t	*ent;
 	char		*s, *value, *gametypeName;
 	static char *gametypeNames[] = {"ffa", "tournament", "single", "team", "ctf", "oneflag", "obelisk", "harvester"};
-	int spawnVarsOffset[MAX_SPAWN_VARS][2];	// key / value pairs offsets
-
-	// Convert to offsets.
-	for (i = 0; i < level.numSpawnVars; ++i) {
-		spawnVarsOffset[i][0] = level.spawnVars[i][0] - level.spawnVarChars;
-		spawnVarsOffset[i][1] = level.spawnVars[i][1] - level.spawnVarChars;
-	}
-
-	// Early out if spawn is not required.
-	if (!dmlab_update_spawn_vars(
-			level.spawnVarChars,
-			&level.numSpawnVarChars,
-			spawnVarsOffset,
-			&level.numSpawnVars)) {
-		return;
-	}
-
-	// Convert from offsets.
-	for (i = 0; i < level.numSpawnVars; ++i) {
-		level.spawnVars[i][0] = level.spawnVarChars + spawnVarsOffset[i][0];
-		level.spawnVars[i][1] = level.spawnVarChars + spawnVarsOffset[i][1];
-	}
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -648,6 +626,8 @@ Parses textual entity definitions out of an entstring and spawns gentities.
 */
 void G_SpawnEntitiesFromString( void ) {
 	// allow calls to G_Spawn*()
+	int i, ent_id, extra_spawn_count;
+	int spawnVarsOffset[MAX_SPAWN_VARS][2];	// key / value pairs offsets
 	level.spawning = qtrue;
 	level.numSpawnVars = 0;
 
@@ -661,8 +641,46 @@ void G_SpawnEntitiesFromString( void ) {
 
 	// parse ents
 	while( G_ParseSpawnVars() ) {
+		// Convert to offsets.
+		for (i = 0; i < level.numSpawnVars; ++i) {
+			spawnVarsOffset[i][0] = level.spawnVars[i][0] - level.spawnVarChars;
+			spawnVarsOffset[i][1] = level.spawnVars[i][1] - level.spawnVarChars;
+		}
+
+		// Skip if spawn is not required.
+		if (!dmlab_update_spawn_vars(
+				level.spawnVarChars,
+				&level.numSpawnVarChars,
+				spawnVarsOffset,
+				&level.numSpawnVars)) {
+			continue;
+		}
+		// Convert from offsets.
+		for (i = 0; i < level.numSpawnVars; ++i) {
+			level.spawnVars[i][0] = level.spawnVarChars + spawnVarsOffset[i][0];
+			level.spawnVars[i][1] = level.spawnVarChars + spawnVarsOffset[i][1];
+		}
 		G_SpawnGEntityFromSpawnVars();
-	}	
+	}
+	extra_spawn_count = dmlab_make_extra_entities();
+	for (ent_id = 0; ent_id < extra_spawn_count; ++ent_id) {
+		level.numSpawnVars = 0;
+		level.numSpawnVarChars = 0;
+		// Early out if spawn is not required.
+		dmlab_read_extra_entity(
+				ent_id,
+				level.spawnVarChars,
+				&level.numSpawnVarChars,
+				spawnVarsOffset,
+				&level.numSpawnVars);
+
+		// Convert from offsets.
+		for (i = 0; i < level.numSpawnVars; ++i) {
+			level.spawnVars[i][0] = level.spawnVarChars + spawnVarsOffset[i][0];
+			level.spawnVars[i][1] = level.spawnVarChars + spawnVarsOffset[i][1];
+		}
+		G_SpawnGEntityFromSpawnVars();
+	}
 
 	level.spawning = qfalse;			// any future calls to G_Spawn*() will be errors
 }

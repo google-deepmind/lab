@@ -31,6 +31,25 @@ int dmlab_update_spawn_vars(char* spawn_var_chars,
                                0);
 }
 
+int dmlab_make_extra_entities(void) {
+  return trap_DeepmindCallback(DEEPMIND_MAKE_EXTRA_ENTITIES,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+int dmlab_read_extra_entity(int entity_id,
+                            char* spawn_var_chars,
+                            int* num_spawn_var_chars,
+                            int spawn_var_offsets[][2],
+                            int* num_spawn_vars) {
+  return trap_DeepmindCallback(DEEPMIND_READ_EXTRA_ENTITY,          //
+                               (intptr_t)entity_id,            //
+                               (intptr_t)spawn_var_chars,      //
+                               (intptr_t)num_spawn_var_chars,  //
+                               (intptr_t)spawn_var_offsets,    //
+                               (intptr_t)num_spawn_vars, 0, 0, 0, 0, 0, 0, 0);
+}
+
+
 int dmlab_finditem(const char* classname, int* index) {
   return trap_DeepmindCallback(DEEPMIND_FIND_ITEM, (intptr_t)classname,
                                (intptr_t)index, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
