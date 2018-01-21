@@ -25,6 +25,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "dmlab_load_model.h"
+#include "dmlab_save_model.h"
 #include "../../../deepmind/include/deepmind_context.h"
 #include "../../../public/dmlab.h"
 #include "../client/client.h"
@@ -941,6 +943,11 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.engine_frame_period_msec = engine_frame_period_msec;
   gc->dm_ctx->calls.total_engine_time_msec = total_engine_time_msec;
   gc->dm_ctx->calls.total_time_seconds = total_time_seconds;
+  gc->dm_ctx->calls.deserialise_model = dmlab_deserialise_model;
+  gc->dm_ctx->calls.load_model = dmlab_load_model;
+  gc->dm_ctx->calls.serialised_model_size = dmlab_serialised_model_size;
+  gc->dm_ctx->calls.serialise_model = dmlab_serialise_model;
+  gc->dm_ctx->calls.save_model = dmlab_save_model;
   gc->dm_ctx->calls.is_map_loading = dmlab_is_map_loading;
   gc->dm_ctx->context = gc;
   return dmlab_create_context(gc->runfiles_path, gc->dm_ctx,

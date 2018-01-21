@@ -29,6 +29,7 @@
 #include "deepmind/include/deepmind_context.h"
 #include "deepmind/level_generation/text_level/lua_bindings.h"
 #include "deepmind/lua/vm.h"
+#include "deepmind/model_generation/lua_model.h"
 #include "deepmind/tensor/lua_tensor.h"
 
 namespace lua = deepmind::lab::lua;
@@ -39,6 +40,7 @@ using deepmind::lab::LuaMazeGeneration;
 using deepmind::lab::LuaRandom;
 using deepmind::lab::LuaSnippetEmitter;
 using deepmind::lab::LuaTextLevelMaker;
+using deepmind::lab::LuaModel;
 
 extern "C" {
 
@@ -55,6 +57,7 @@ int dmlab_create_context(
   LuaRandom::Register(L);
   LuaTextLevelMaker::Register(L);
   LuaSnippetEmitter::Register(L);
+  LuaModel::Register(L);
 
   ctx->userdata = new Context(std::move(lua_vm), runfiles_path, &ctx->calls,
                               &ctx->hooks, file_reader_override, temp_folder);

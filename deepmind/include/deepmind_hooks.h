@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 
+#include "deepmind/include/deepmind_model_getters.h"
 #include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
@@ -169,6 +170,17 @@ struct DeepmindHooks_s {
   // Clears the current list of custom items. This is called on each
   // initialization.
   void (*clear_items)(void* userdata);
+
+  // Retrieves model with the given model_name.
+  // Returns whether the model was found and loads it within the context.
+  bool (*find_model)(void* userdata, const char* model_name);
+
+  // Return the accessor API for currently selected model.
+  void (*model_getters)(void* userdata, DeepmindModelGetters* model,
+                        void** model_data);
+
+  // Clears the currently selected model. This is called on each initialization.
+  void (*clear_model)(void* userdata);
 
   // Returns whether we should finish the current map.
   bool (*map_finished)(void* userdata);

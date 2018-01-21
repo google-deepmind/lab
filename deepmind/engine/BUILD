@@ -31,7 +31,16 @@ cc_library(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/lua:vm",
+        "//deepmind/model_generation:lua_model",
+        "//deepmind/model_generation:lua_transform",
+        "//deepmind/model_generation:model",
+        "//deepmind/model_generation:model_getters",
+        "//deepmind/model_generation:model_lua",
+        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
+        "//deepmind/tensor:tensor_view",
+        "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -144,6 +153,7 @@ cc_library(
         "//deepmind/include:context_hdrs",
         "//deepmind/level_generation/text_level:lua_bindings",
         "//deepmind/lua:vm",
+        "//deepmind/model_generation:lua_model",
         "//deepmind/tensor:lua_tensor",
     ],
 )

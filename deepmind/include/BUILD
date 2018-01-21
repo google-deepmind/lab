@@ -9,10 +9,12 @@ cc_library(
         "deepmind_calls.h",
         "deepmind_context.h",
         "deepmind_hooks.h",
+        "deepmind_model_getters.h",
+        "deepmind_model_setters.h",
     ],
-    visibility = [
-        "//:__pkg__",
-        "//deepmind/engine:__pkg__",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:level_cache_types",
+        "//third_party/rl_api:env_c_api",
     ],
-    deps = ["//third_party/rl_api:env_c_api"],
 )

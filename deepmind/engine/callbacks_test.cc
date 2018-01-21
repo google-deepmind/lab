@@ -103,4 +103,36 @@ TEST(DeepmindCallbackTest, CustomObservations) {
   dmlab_release_context(&ctx);
 }
 
+TEST(DeepmindCallbackTest, CreateModel) {
+  DeepmindContext ctx{};
+  ASSERT_EQ(0,
+            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(
+      0, ctx.hooks.set_script_name(ctx.userdata, "tests/callbacks_test"));
+  ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
+
+  ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "cube"));
+  DeepmindModelGetters model;
+  void* model_data;
+  ctx.hooks.model_getters(ctx.userdata, &model, &model_data);
+
+  ASSERT_EQ(model.get_surface_count(model_data), 1);
+
+  ASSERT_EQ(model.get_surface_vertex_count(model_data, 0), 24);
+  ASSERT_EQ(model.get_surface_face_count(model_data, 0), 12);
+
+  float vertex_normal[3];
+  model.get_surface_vertex_normal(model_data, 0, 12, vertex_normal);
+  EXPECT_THAT(vertex_normal, ElementsAre(-1.0, 0.0, 0.0));
+  model.get_surface_vertex_normal(model_data, 0, 23, vertex_normal);
+  EXPECT_THAT(vertex_normal, ElementsAre(0.0, -1.0, 0.0));
+
+  int face_indices[3];
+  model.get_surface_face(model_data, 0, 11, face_indices);
+  EXPECT_THAT(face_indices, ElementsAre(20, 22, 23));
+
+  ctx.hooks.clear_model(ctx.userdata);
+  dmlab_release_context(&ctx);
+}
+
 }  // namespace

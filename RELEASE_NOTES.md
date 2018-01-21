@@ -9,6 +9,7 @@
 3.  Add error handling to the env_c_api.
 4.  Add ability to create events from Lua scripts.
 5.  Add ability to retrieve game entity from Lua scripts.
+6.  Add ability create pickup models during level load.
 
 ### Minor Improvements:
 

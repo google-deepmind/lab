@@ -36,9 +36,12 @@
 #include "deepmind/engine/context_pickups.h"
 #include "deepmind/include/deepmind_calls.h"
 #include "deepmind/include/deepmind_hooks.h"
+#include "deepmind/include/deepmind_model_getters.h"
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/lua/vm.h"
+#include "deepmind/model_generation/model.h"
+#include "deepmind/model_generation/model_getters.h"
 #include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
@@ -158,6 +161,13 @@ class Context {
   // Finds a model by model_name, and registers this item with the Context's
   // model array.
   bool FindModel(const char* model_name);
+
+  // Return the accessor API for currently selected model.
+  void GetModelGetters(DeepmindModelGetters* model_getters, void** model_data);
+
+  // Clear the current list of registered models. Called just before loading a
+  // new map.
+  void ClearModel() { model_.reset(); }
 
   // Returns whether we should finish the episode. Called at the end of every
   // frame.
@@ -346,6 +356,10 @@ class Context {
 
   // Current actions to apply when lab is advanced.
   Actions actions_;
+
+  // Current custom pickup model. Reset each episode.
+  std::string model_name_;
+  std::unique_ptr<Model> model_;
 
   // Transient reward stash for each player. Rewards are added with AddScore and
   // removed by ExternalReward.

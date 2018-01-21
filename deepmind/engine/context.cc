@@ -36,6 +36,7 @@
 #include "deepmind/engine/lua_maze_generation.h"
 #include "deepmind/engine/lua_random.h"
 #include "deepmind/engine/lua_text_level_maker.h"
+#include "deepmind/include/deepmind_model_getters.h"
 #include "deepmind/level_generation/compile_map.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
@@ -45,6 +46,10 @@
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
+#include "deepmind/model_generation/lua_model.h"
+#include "deepmind/model_generation/lua_transform.h"
+#include "deepmind/model_generation/model_getters.h"
+#include "deepmind/model_generation/model_lua.h"
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
 #include "public/level_cache_types.h"
@@ -169,6 +174,19 @@ static bool item(void* userdata, int index,
 
 static void clear_items(void* userdata) {
   static_cast<Context*>(userdata)->MutablePickups()->ClearItems();
+}
+
+static bool find_model(void* userdata, const char* model_name) {
+  return static_cast<Context*>(userdata)->FindModel(model_name);
+}
+
+static void model_getters(void* userdata, DeepmindModelGetters* model_getters,
+                          void** model_data) {
+  static_cast<Context*>(userdata)->GetModelGetters(model_getters, model_data);
+}
+
+static void clear_model(void* userdata) {
+  static_cast<Context*>(userdata)->ClearModel();
 }
 
 static bool map_finished(void* userdata) {
@@ -328,6 +346,16 @@ lua::NResultsOr MapMakerModule(lua_State* L) {
   }
 }
 
+lua::NResultsOr ModelModule(lua_State* L) {
+  if (const auto* calls = static_cast<const DeepmindCalls*>(
+          lua_touserdata(L, lua_upvalueindex(1)))) {
+    LuaModel::CreateObject(L, calls);
+    return 1;
+  } else {
+    return "Missing context!";
+  }
+}
+
 }  // namespace
 
 Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
@@ -364,6 +392,9 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->item_count = item_count;
   hooks->item = item;
   hooks->clear_items = clear_items;
+  hooks->find_model = find_model;
+  hooks->model_getters = model_getters;
+  hooks->clear_model = clear_model;
   hooks->map_finished = map_finished;
   hooks->set_map_finished = set_map_finished;
   hooks->can_pickup = can_pickup;
@@ -468,6 +499,11 @@ int Context::Init() {
                                 {MutableGameEntities()});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
+  lua_vm_.AddCModuleToSearchers(
+      "dmlab.system.model", &lua::Bind<ModelModule>,
+      {const_cast<DeepmindCalls*>(Game().Calls())});
+  lua_vm_.AddCModuleToSearchers(
+      "dmlab.system.transform", LuaTransform::Require);
 
   lua::Push(L, script_path_);
   result = lua::Call(L, 1);
@@ -717,6 +753,47 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
 int Context::MakeRandomSeed() {
   return std::uniform_int_distribution<int>(
       1, std::numeric_limits<int>::max())(*EnginePrbg());
+}
+
+bool Context::FindModel(const char* model_name) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("createModel");
+
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return false;
+  }
+
+  lua::Push(L, model_name);
+
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "createModel: " << result.error();
+
+  // If no description is returned or the description is nil, don't create
+  // model.
+  if (result.n_results() == 0 || lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return false;
+  }
+
+  // Read model
+  std::unique_ptr<Model> model(new Model());
+  CHECK(Read(L, -1, model.get()))
+      << "createModel: Failed to parse data for model " << model_name;
+  model_name_ = model_name;
+  model_ = std::move(model);
+
+  lua_pop(L, result.n_results());
+  return true;
+}
+
+void Context::GetModelGetters(DeepmindModelGetters* model_getters,
+                              void** model_data) {
+  CHECK(model_) << "No model was selected for this context!";
+
+  *model_getters = ModelGetters();
+  *model_data = model_.get();
 }
 
 int Context::RewardOverride(const char* optional_reason, int player_id,

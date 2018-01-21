@@ -24,6 +24,9 @@
 
 #include <stdbool.h>
 
+#include "deepmind/include/deepmind_model_getters.h"
+#include "deepmind/include/deepmind_model_setters.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +60,43 @@ struct DeepmindCalls_s {
 
   // Get the player score.
   int (*player_score)(void* context);
+
+  // Attempt to load a serialised model from the MD3 data in 'buffer', invoking
+  // the relevant callbacks in 'model_mutators' as the data is traversed.
+  // Returns whether valid model data was found in the buffer.
+  bool (*deserialise_model)(                       //
+      const void* buffer,                          //
+      const DeepmindModelSetters* model_mutators,  //
+      void* model_data);
+
+  // Attempt to load a model from a MD3 file at the given path, invoking the
+  // relevant callbacks in 'model_mutators' as the file is traversed.
+  // Returns whether a valid model file was found at the given path.
+  bool (*load_model)(                              //
+      const char* model_path,                      //
+      const DeepmindModelSetters* model_mutators,  //
+      void* model_data);
+
+  // Returns the buffer size required to serialise the model described by
+  // 'model_getters' in MD3 format.
+  size_t (*serialised_model_size)(                //
+      const DeepmindModelGetters* model_getters,  //
+      void* model_data);
+
+  // Attempt to serialise the model described by 'model_getters' in MD3 format
+  // onto 'buffer'.
+  void (*serialise_model)(                        //
+      const DeepmindModelGetters* model_getters,  //
+      void* model_data,                           //
+      void* buffer);
+
+  // Attempt to save the model described by 'model_getters' as a MD3 file onto
+  // the given path.
+  // Returns whether the save operation succeeded.
+  bool (*save_model)(                             //
+      const DeepmindModelGetters* model_getters,  //
+      void* model_data,                           //
+      const char* model_path);
 
   bool (*is_map_loading)();
 };
