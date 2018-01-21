@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 
 #include "../botlib/botlib.h"
+#include "../deepmind/context.h"
 #include "../qcommon/deepmind_hooks.h"
 
 #ifdef USE_MUMBLE
@@ -1076,6 +1077,7 @@ void CL_SetCGameTime( void ) {
 		// the contents of cl.snap
 		CL_ReadDemoMessage();
 		if ( clc.state != CA_ACTIVE ) {
+			dmlab_context()->hooks.set_map_finished(dmlab_context()->userdata, qtrue);
 			return;		// end of demo
 		}
 	}
