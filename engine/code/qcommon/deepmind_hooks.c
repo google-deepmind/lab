@@ -120,6 +120,25 @@ int dmlab_callback(
           /*player_pos_delta=*/VM_ArgPtr(a5),
           /*player_vel_delta=*/VM_ArgPtr(a6));
       break;
+    case DEEPMIND_SPAWN_INVENTORY:
+    case DEEPMIND_UPDATE_INVENTORY: {
+      playerState_t* ps = VM_ArgPtr(a1);
+      ctx->hooks.update_inventory(
+          ctx->userdata,
+          /*is_spawning=*/dm_callnum == DEEPMIND_SPAWN_INVENTORY,
+          /*player_id=*/ps->clientNum,
+          /*gadget_count=*/MAX_WEAPONS,
+          /*gadget_inventory=*/ps->ammo,
+          /*stat_count=*/MAX_STATS,
+          /*stats_inventory=*/ps->stats,
+          /*powerup_count=*/MAX_POWERUPS,
+          /*powerup_time=*/ps->powerups,
+          /*gadget_held=*/ps->weapon,
+          /*height=*/ps->viewheight,
+          /*position=*/ps->origin,
+          /*view_angles=*/ps->viewangles);
+      break;
+    }
     case DEEPMIND_TEAM_SELECT:
       return ctx->hooks.team_select(ctx->userdata,
                                     /*player_id=*/a1,

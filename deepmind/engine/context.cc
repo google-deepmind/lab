@@ -106,6 +106,17 @@ static const char* next_map(void* userdata) {
   return static_cast<Context*>(userdata)->NextMap();
 }
 
+void update_inventory(void* userdata, bool is_spawning, int player_id,
+                      int gadget_count, int gadget_inventory[], int stat_count,
+                      int stat_inventory[], int powerup_count,
+                      int powerup_time[], int gadget_held, float height,
+                      float position[3], float view_angles[3]) {
+  static_cast<Context*>(userdata)->UpdateInventory(
+      is_spawning, player_id, gadget_count, gadget_inventory, stat_count,
+      stat_inventory, powerup_count, powerup_time, gadget_held, height,
+      position, view_angles);
+}
+
 static int game_type(void* userdata) {
   return static_cast<Context*>(userdata)->GameType();
 }
@@ -508,6 +519,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->events.export_event = events_export;
   hooks->entities.clear = entities_clear;
   hooks->entities.add = entities_add;
+  hooks->update_inventory = update_inventory;
   hooks->set_has_alt_cameras = set_has_alt_cameras;
   hooks->has_alt_cameras = has_alt_cameras;
   hooks->custom_view = custom_view;
@@ -726,6 +738,47 @@ const char* Context::NextMap() {
   MutableGame()->NextMap();
   lua_pop(L, result.n_results());
   return map_name_.c_str();
+}
+
+void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
+                              int gadget_inventory[], int stat_count,
+                              int stat_inventory[], int powerup_count,
+                              int powerup_time[], int gadget_held, float height,
+                              float position[3], float view_angles[3]) {
+  const char* update_type = is_spawning ? "spawnInventory" : "updateInventory";
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction(update_type);
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return;
+  }
+
+  auto table = lua::TableRef::Create(L);
+  table.Insert("playerId", player_id + 1);
+  table.Insert("amounts", absl::MakeConstSpan(gadget_inventory, gadget_count));
+  table.Insert("stats", absl::MakeConstSpan(stat_inventory, stat_count));
+  table.Insert("powerups", absl::MakeConstSpan(powerup_time, powerup_count));
+  table.Insert("position", absl::MakeConstSpan(position, 3));
+  table.Insert("angles", absl::MakeConstSpan(view_angles, 3));
+  table.Insert("height", height);
+  table.Insert("gadget", gadget_held + 1);
+  lua::Push(L, table);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[" << update_type << "] - " << result.error();
+  if (result.n_results() > 0) {
+    CHECK_EQ(1, result.n_results())
+        << "[" << update_type << "] - Must return table or nil!";
+    if (!lua_isnil(L, -1)) {
+      CHECK(lua::Read(L, -1, &table))
+          << "[" << update_type << "] - Must return table or nil!";
+      CHECK(table.LookUp("amounts",
+                         absl::MakeSpan(gadget_inventory, gadget_count)))
+          << "[" << update_type << "] - Table missing 'amounts'!";
+      CHECK(table.LookUp("stats", absl::MakeSpan(stat_inventory, stat_count)))
+          << "[" << update_type << "] - Table missing 'stats'!";
+    }
+    lua_pop(L, result.n_results());
+  }
 }
 
 int Context::GameType() {

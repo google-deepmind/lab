@@ -153,6 +153,16 @@ void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
                         (intptr_t)playerVelocityDelta, 0, 0, 0, 0, 0, 0);
 }
 
+void dmlab_spawn_inventory(playerState_t* player_state) {
+  trap_DeepmindCallback(DEEPMIND_SPAWN_INVENTORY, (intptr_t)player_state, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void dmlab_update_inventory(playerState_t* player_state) {
+  trap_DeepmindCallback(DEEPMIND_UPDATE_INVENTORY, (intptr_t)player_state, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
 char dmlab_select_team(int player_id, const char* player_name) {
   return (char)trap_DeepmindCallback(DEEPMIND_TEAM_SELECT, (intptr_t)player_id,
                                      (intptr_t)player_name, 0, 0, 0, 0, 0, 0, 0,

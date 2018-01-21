@@ -141,6 +141,12 @@ void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
                      const vec3_t playerPosition, const vec3_t playerVelocity,
                      vec3_t playerPositionDelta, vec3_t playerVelocityDelta);
 
+// Called on the spawning of each player.
+void dmlab_spawn_inventory(playerState_t* player_state);
+
+// Called on the update of each player.
+void dmlab_update_inventory(playerState_t* player_state);
+
 // Called during G_InitSessionData.
 char dmlab_select_team(int player_id, const char* player_name);
 

@@ -315,6 +315,22 @@ class Context {
                             float player_pos_delta[3],
                             float player_vel_delta[3]);
 
+  // Called on the spawning and updating of each player. Arrays are prefixed
+  // with their count:
+  //
+  // `is_spawning` whether the player player is spawning.
+  // `gadget_inventory` array and matches the contents of playerState_t::ammo,
+  // `stat_inventory` array and matches the contents of playerState_t::stats,
+  // `powerup_time` array and matches the contents of playerState_t::powerups.
+  // `gadget_held` player gadget held (See game_scripts/common/inventory.lua)
+  // `height` player eye height.
+  // `position` player location in world units.
+  // `view_angles` player look direction in Euler degrees.
+  void UpdateInventory(bool is_spawning, int player_id, int gadget_count,
+                       int gadget_inventory[], int stat_count,
+                       int stat_inventory[], int powerup_count,
+                       int powerup_time[], int gadget_held, float height,
+                       float position[3], float view_angles[3]);
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.

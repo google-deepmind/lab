@@ -816,6 +816,7 @@ void ClientThink_real( gentity_t *ent ) {
 	pmove_t		pm;
 	int			oldEventSequence;
 	int			msec;
+	int			health;
 	usercmd_t	*ucmd;
 
 	client = ent->client;
@@ -1059,6 +1060,17 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// Add External Score
 	AddScore( ent, NULL, 0, NULL, NULL );
+	health = client->ps.stats[STAT_HEALTH];
+	dmlab_update_inventory(&client->ps);
+
+	if (health != client->ps.stats[STAT_HEALTH]) {
+		// Don't revive the dead.
+		if (health <= 0) {
+			client->ps.stats[STAT_HEALTH] = health;
+		} else {
+			ent->health = client->ps.stats[STAT_HEALTH];
+		}
+	}
 	// check for respawning
 	if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		// wait for the attack button to be pressed
