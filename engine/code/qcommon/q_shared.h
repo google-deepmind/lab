@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -160,6 +160,7 @@ typedef int intptr_t;
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <time.h>
 #include <ctype.h>
@@ -721,6 +722,12 @@ void MakeNormalVectors( const vec3_t forward, vec3_t right, vec3_t up );
 void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3]);
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 void PerpendicularVector( vec3_t dst, const vec3_t src );
+void SwapElements( vec3_t matrix[3], int i, int j );
+void InverseRotation( const vec3_t angles, vec3_t point,
+                      qboolean right_handed );
+
+qboolean InFov( const float start[3], const float end[3], const float angles[3],
+                float fov );
 
 #ifndef MAX
 #define MAX(x,y) ((x)>(y)?(x):(y))
@@ -1076,8 +1083,8 @@ typedef enum {
 ========================================================================
 */
 
-#define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
-#define	SHORT2ANGLE(x)	((x)*(360.0/65536))
+#define	ANGLE2SHORT(x)	((int)((x)*(65536.0f/360.0f)+0.5f) & 65535)
+#define	SHORT2ANGLE(x)	((x)*(360.0f/65536.0f))
 
 #define	SNAPFLAG_RATE_DELAYED	1
 #define	SNAPFLAG_NOT_ACTIVE		2	// snapshot used during connection and for zombies

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -36,6 +36,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CONTENTS_NOTTEAM1		0x0080
 #define CONTENTS_NOTTEAM2		0x0100
 #define CONTENTS_NOBOTCLIP		0x0200
+
+#define CONTENTS_LOOKAT		0x0400
 
 #define	CONTENTS_AREAPORTAL		0x8000
 

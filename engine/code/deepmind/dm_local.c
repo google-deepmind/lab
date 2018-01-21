@@ -73,6 +73,24 @@ qboolean dmlab_override_pickup(int entity_id, int* respawn) {
                                (intptr_t)respawn, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
+qboolean dmlab_can_trigger(int entity_id, const char* target_name) {
+  return trap_DeepmindCallback(DEEPMIND_CAN_TRIGGER,
+                               (intptr_t)entity_id, (intptr_t)target_name,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+qboolean dmlab_override_trigger(int entity_id, const char* target_name) {
+  return trap_DeepmindCallback(DEEPMIND_OVERRIDE_TRIGGER,
+                               (intptr_t)entity_id, (intptr_t)target_name,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position) {
+  trap_DeepmindCallback(DEEPMIND_OVERRIDE_LOOKAT,
+                        (intptr_t)entity_id, (intptr_t)looked_at,
+                        (intptr_t)position,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
 
 int dmlab_reward_override(const char* reason_opt, int player_id, int team,
                           const int* other_player_id_opt,

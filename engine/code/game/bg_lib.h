@@ -37,6 +37,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define NULL ((void *)0)
 #endif
 
+#ifndef offsetof
+#define offsetof(T, mem) ((size_t)&(((T*)0)->mem))
+#endif
+
 typedef unsigned int size_t;
 
 typedef char *  va_list;

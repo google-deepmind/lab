@@ -69,6 +69,19 @@ qboolean dmlab_can_pickup(int entity_id);
 // Returns true if the pickup behaviour has been overridden.
 qboolean dmlab_override_pickup(int entity_id, int* respawn);
 
+// Returns if the specified entity can trigger.
+qboolean dmlab_can_trigger(int entity_id, const char* target_name);
+
+// Hook to allow customization of the entity's trigger behaviour. Users are
+// expected to implement their own game logic for triggering the specified item.
+// Returns whether the trigger behaviour has been overridden.
+// If the default trigger behaviour has been overridden then the custom trigger
+// logic will execute instead.
+qboolean dmlab_override_trigger(int entity_id, const char* target_name);
+
+// Hook to allow customization of the entity's lookat behaviour.
+void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position);
+
 // Customization point for overriding the value of a reward and consuming reward
 // stored in external context for player 'player_id'.
 int dmlab_reward_override(const char* reason_opt, int player_id, int team,

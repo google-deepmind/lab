@@ -137,6 +137,7 @@ struct gentity_s {
 	void		(*use)(gentity_t *self, gentity_t *other, gentity_t *activator);
 	void		(*pain)(gentity_t *self, gentity_t *attacker, int damage);
 	void		(*die)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
+	void		(*look)(gentity_t *self, gentity_t *other, const trace_t *trace);
 
 	int			pain_debounce_time;
 	int			fly_sound_debounce_time;	// wind tunnel
@@ -325,6 +326,7 @@ struct gclient_s {
 #endif
 
 	char		*areabits;
+	int			lastLookAt;  // Stores the last look at trigger for a client.
 };
 
 
@@ -700,7 +702,7 @@ void BotTestAAS(vec3_t origin);
 extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 
-#define	FOFS(x) ((size_t)&(((gentity_t *)0)->x))
+#define	FOFS(x) offsetof(gentity_t, x)
 
 extern	vmCvar_t	g_gametype;
 extern	vmCvar_t	g_dedicated;

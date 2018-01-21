@@ -310,6 +310,70 @@ void	G_TouchTriggers( gentity_t *ent ) {
 }
 
 /*
+============
+ClientLookAtTriggers
+
+Find all lookat trigger entities that the entity is looking at.
+We use the muzzle position & orientation for the ray.
+============
+*/
+void ClientLookAtTriggers( gentity_t *ent ) {
+	trace_t trace;
+	vec3_t start, end;
+	vec3_t forward, right, up;
+	gentity_t* trigger;
+	gentity_t* last_trigger;
+
+	// Double check that we're definitely a player.
+	if ( !ent->client ) {
+		return;
+	}
+
+	// Ignore dead clients.
+	if ( ent->client->ps.stats[STAT_HEALTH] <= 0 ) {
+		// Clear the last lookat entity when dead.
+		if ( ent->client->lastLookAt ) {
+			last_trigger = &g_entities[ ent->client->lastLookAt ];
+			if( last_trigger->look )
+				last_trigger->look( last_trigger, ent, NULL );
+			ent->client->lastLookAt = 0;
+		}
+		return;
+	}
+
+	// Calculate the start and end of the ray.
+	AngleVectors( ent->client->ps.viewangles, forward, right, up );
+	CalcMuzzlePoint( ent, forward, right, up, start );
+	VectorMA( start, 131072, forward, end );
+
+	trap_Trace( &trace, start, vec3_origin, vec3_origin, end,
+		ent->client->ps.clientNum, CONTENTS_SOLID|CONTENTS_LOOKAT );
+
+	// If the new trigger is not what the client was last looking at, invoke the
+	// last trigger with 'trace' set to NULL & reset. This allows entites to
+	// reset any internal state they may have.
+	if ( ent->client->lastLookAt && ent->client->lastLookAt != trace.entityNum ) {
+		last_trigger = &g_entities[ ent->client->lastLookAt ];
+		if( last_trigger->look )
+			last_trigger->look( last_trigger, ent, NULL );
+		ent->client->lastLookAt = 0;
+	}
+
+	trigger = &g_entities[ trace.entityNum ];
+
+	// Check ray hit a lookat trigger and not a wall.
+	if ( !trace.entityNum || (trigger->r.contents & CONTENTS_LOOKAT) == 0 )
+		return;
+
+	// Store the trigger for the next frame, and call the look function (if it
+	// exists).
+	ent->client->lastLookAt = trace.entityNum;
+	if (trigger->look) {
+		trigger->look(trigger, ent, &trace);
+	}
+}
+
+/*
 =================
 SpectatorThink
 =================
@@ -970,6 +1034,9 @@ void ClientThink_real( gentity_t *ent ) {
 	if ( !ent->client->noclip ) {
 		G_TouchTriggers( ent );
 	}
+
+	// Determine what lookat triggers are being looked at by this client.
+	ClientLookAtTriggers( ent );
 
 	// NOTE: now copy the exact origin over otherwise clients can be snapped into solid
 	VectorCopy( ent->client->ps.origin, ent->r.currentOrigin );

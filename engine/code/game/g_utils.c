@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -246,6 +246,14 @@ void G_UseTargets( gentity_t *ent, gentity_t *activator ) {
 	}
 
 	if ( !ent->target ) {
+		return;
+	}
+
+	if ( !dmlab_can_trigger(ent->id, ent->target) ) {
+		return;
+	}
+
+	if ( dmlab_override_trigger(ent->id, ent->target) ) {
 		return;
 	}
 

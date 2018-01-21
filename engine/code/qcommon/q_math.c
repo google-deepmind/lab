@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -148,7 +148,7 @@ vec3_t	bytedirs[NUMVERTEXNORMALS] =
 //==============================================================
 
 int		Q_rand( int *seed ) {
-	*seed = (69069 * *seed + 1);
+	*seed = (69069U * *seed + 1U);
 	return *seed;
 }
 
@@ -554,16 +554,7 @@ Always returns a value from -180 to 180
 =================
 */
 float	AngleSubtract( float a1, float a2 ) {
-	float	a;
-
-	a = a1 - a2;
-	while ( a > 180 ) {
-		a -= 360;
-	}
-	while ( a < -180 ) {
-		a += 360;
-	}
-	return a;
+	return AngleNormalize180(a1 - a2);
 }
 
 
@@ -573,10 +564,22 @@ void AnglesSubtract( vec3_t v1, vec3_t v2, vec3_t v3 ) {
 	v3[2] = AngleSubtract( v1[2], v2[2] );
 }
 
+#ifdef Q3_VM
+static float Floor( float val ) {
+	int n = val;
+	if (val < 0 && n != val) {
+		--n;
+	}
+	return n;
+}
+#else
+static float Floor( float val ) {
+	return floorf( val );
+}
+#endif
 
-float	AngleMod(float a) {
-	a = (360.0/65536) * ((int)(a*(65536/360.0)) & 65535);
-	return a;
+float	AngleMod(float angle) {
+	return angle - 360.0f * Floor( angle * (1.0f / 360.0f) );
 }
 
 
@@ -588,23 +591,18 @@ returns angle normalized to the range [0 <= angle < 360]
 =================
 */
 float AngleNormalize360 ( float angle ) {
-	return (360.0 / 65536) * ((int)(angle * (65536 / 360.0)) & 65535);
+	return AngleMod( angle );
 }
-
 
 /*
 =================
 AngleNormalize180
 
-returns angle normalized to the range [-180 < angle <= 180]
+returns angle normalized to the range [-180 <= angle < 180]
 =================
 */
 float AngleNormalize180 ( float angle ) {
-	angle = AngleNormalize360( angle );
-	if ( angle > 180.0 ) {
-		angle -= 360.0;
-	}
-	return angle;
+	return angle - 360.0f * Floor( (angle + 180.0f) * (1.0f / 360.0f) );
 }
 
 
@@ -992,6 +990,37 @@ void PerpendicularVector( vec3_t dst, const vec3_t src )
 	** normalize the result
 	*/
 	VectorNormalize( dst );
+}
+
+void SwapElements(vec3_t matrix[3], int i, int j) {
+	float temp = matrix[i][j];
+	matrix[i][j] = matrix[j][i];
+	matrix[j][i] = temp;
+}
+
+void InverseRotation(const vec3_t angles, vec3_t point, qboolean right_handed) {
+	vec3_t matrix[3];
+	vec3_t tvec;
+	AngleVectors(angles, matrix[0], matrix[1], matrix[2]);
+	if ( right_handed == qtrue ) VectorInverse(matrix[1]);
+	// Transpose matrix.
+	SwapElements(matrix, 0, 1);
+	SwapElements(matrix, 0, 2);
+	SwapElements(matrix, 1, 2);
+	// Copy point because VectorRotate requires for the input and output vectors
+	// not to be aliases.
+	VectorCopy(point, tvec);
+	VectorRotate(tvec, matrix, point);
+}
+
+qboolean InFov(const float start[3], const float end[3], const float angles[3], float fov) {
+	vec3_t dir, view_angles;
+	float hfov = fov * 0.5;
+	VectorSubtract( end, start, dir );
+	InverseRotation( angles, dir, qfalse );
+	vectoangles( dir, view_angles );
+	return fabs(AngleNormalize180(view_angles[0])) < hfov &&
+				 fabs(AngleNormalize180(view_angles[1])) < hfov ? qtrue : qfalse;
 }
 
 /*

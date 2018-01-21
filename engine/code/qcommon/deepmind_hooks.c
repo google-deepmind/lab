@@ -58,6 +58,17 @@ int dmlab_callback(
     case DEEPMIND_OVERRIDE_PICKUP:
       return ctx->hooks.override_pickup(ctx->userdata, /*entity_id=*/a1,
                                         /*respawn=*/VM_ArgPtr(a2));
+    case DEEPMIND_CAN_TRIGGER:
+      return ctx->hooks.can_trigger(ctx->userdata, /*entity_id=*/a1,
+                                    /*target_name=*/VM_ArgPtr(a2));
+    case DEEPMIND_OVERRIDE_TRIGGER:
+      return ctx->hooks.override_trigger(ctx->userdata, /*entity_id=*/a1,
+                                         /*target_name=*/VM_ArgPtr(a2));
+    case DEEPMIND_OVERRIDE_LOOKAT:
+      ctx->hooks.trigger_lookat(ctx->userdata, /*entity_id=*/a1,
+                                /*looked_at=*/a2,
+                                /*position=*/VM_ArgPtr(a3));
+      break;
     case DEEPMIND_REWARD_OVERRIDE:
       return ctx->hooks.reward_override(ctx->userdata,
                                         /*reason=*/VM_ArgPtr(a1),

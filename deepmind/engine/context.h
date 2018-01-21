@@ -173,6 +173,20 @@ class Context {
   // frame.
   bool HasEpisodeFinished(double elapsed_episode_time_seconds);
 
+  // Returns whether the specified entity id can trigger. By default this
+  // returns true.
+  bool CanTrigger(int entity_id, const char* target_name);
+
+  // Customization point for overriding the entity's trigger behaviour.
+  // Returns whether the trigger behaviour has been overridden by the user.
+  // If the trigger behaviour is not overridden, calls the default trigger
+  // behaviour based on the item type.
+  bool OverrideTrigger(int entity_id, const char* target_name);
+
+  // Customization point for triggering a callback in response to a trigger
+  // lookat.
+  void TriggerLookat(int entity_id, bool looked_at, const float position[3]);
+
   // Customization point for overriding the value of a reward.
   //
   // * 'optional_reason' - The reason is either a nullptr or a string containing

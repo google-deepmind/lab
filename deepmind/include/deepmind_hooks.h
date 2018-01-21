@@ -195,6 +195,18 @@ struct DeepmindHooks_s {
   // behaviour. Optionally sets the default respawn time.
   bool (*override_pickup)(void* userdata, int entity_id, int* respawn);
 
+  // Returns if the specified entity has a trigger.
+  bool (*can_trigger)(void* userdata, int entity_id, const char* target_name);
+
+  // Hook to determine if we're overriding the entity's default trigger
+  // behaviour.
+  bool (*override_trigger)(void* userdata, int entity_id,
+                           const char* target_name);
+
+  // Hook which is invoked on reply to a trigger lookat.
+  void (*trigger_lookat)(void* userdata, int entity_id, bool looked_at,
+                         const float position[3]);
+
   // Get reward override for player.
   int (*reward_override)(void* userdata, const char* reason_opt, int player_id,
                          int team, const int* other_player_id_opt,

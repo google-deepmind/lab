@@ -207,6 +207,23 @@ static bool override_pickup(void* userdata, int entity_id, int* respawn) {
       entity_id, respawn);
 }
 
+static bool can_trigger(void* userdata, int entity_id,
+                        const char* target_name) {
+  return static_cast<Context*>(userdata)->CanTrigger(entity_id, target_name);
+}
+
+static bool override_trigger(void* userdata, int entity_id,
+                             const char* target_name) {
+  return static_cast<Context*>(userdata)->OverrideTrigger(entity_id,
+                                                          target_name);
+}
+
+static void trigger_lookat(void* userdata, int entity_id, bool looked_at,
+                           const float position[3]) {
+  static_cast<Context*>(userdata)->TriggerLookat(entity_id, looked_at,
+                                                 position);
+}
+
 static int reward_override(void* userdata, const char* reason_opt,
                            int player_id, int team,
                            const int* other_player_id_opt,
@@ -433,6 +450,9 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_map_finished = set_map_finished;
   hooks->can_pickup = can_pickup;
   hooks->override_pickup = override_pickup;
+  hooks->can_trigger = can_trigger;
+  hooks->override_trigger = override_trigger;
+  hooks->trigger_lookat = trigger_lookat;
   hooks->reward_override = reward_override;
   hooks->add_score = add_score;
   hooks->make_random_seed = make_random_seed;
@@ -833,6 +853,90 @@ void Context::GetModelGetters(DeepmindModelGetters* model_getters,
 
   *model_getters = ModelGetters();
   *model_data = model_.get();
+}
+
+
+bool Context::CanTrigger(int entity_id, const char* target_name) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("canTrigger");
+
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return true;
+  }
+
+  lua::Push(L, entity_id);
+  lua::Push(L, target_name);
+
+  auto result = lua::Call(L, 3);
+  CHECK(result.ok()) << "[canTrigger] - " << result.error();
+
+  CHECK(result.n_results() != 0 && !lua_isnil(L, -1))
+      << "canTrigger: return value from lua canTrigger must be true or false.";
+
+  bool can_trigger;
+  CHECK(lua::Read(L, -1, &can_trigger))
+      << "canTrigger: Failed to read the return value as a boolean."
+      << "Return true or false.";
+
+  lua_pop(L, result.n_results());
+  return can_trigger;
+}
+
+bool Context::OverrideTrigger(int entity_id, const char* target_name) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("trigger");
+
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return false;
+  }
+
+  lua::Push(L, entity_id);
+  lua::Push(L, target_name);
+
+  auto result = lua::Call(L, 3);
+  CHECK(result.ok()) << "[trigger] - " << result.error();
+
+  // If nothing was returned or if the first return value is nil, the trigger
+  // behaviour was not overridden
+  if (result.n_results() == 0 || lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return false;
+  }
+
+  bool has_override;
+  CHECK(lua::Read(L, -1, &has_override))
+      << "trigger: Failed to read the return value as a boolean."
+      << "Return true or false.";
+
+  lua_pop(L, result.n_results());
+  return has_override;
+}
+
+void Context::TriggerLookat(int entity_id, bool looked_at,
+                            const float position[3]) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("lookat");
+
+  // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return;
+  }
+
+  lua::Push(L, entity_id);
+  lua::Push(L, looked_at);
+  std::array<float, 3> float_array3;
+  std::copy_n(position, float_array3.size(), float_array3.data());
+  lua::Push(L, float_array3);
+
+  auto result = lua::Call(L, 4);
+  CHECK(result.ok()) << "[lookat] - " << result.error();
+
+  lua_pop(L, result.n_results());
 }
 
 int Context::RewardOverride(const char* optional_reason, int player_id,

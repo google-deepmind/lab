@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -283,10 +283,16 @@ void trigger_teleporter_touch (gentity_t *self, gentity_t *other, trace_t *trace
 		return;
 	}
 
-
 	dest = 	G_PickTarget( self->target );
 	if (!dest) {
 		G_Printf ("Couldn't find teleporter destination\n");
+		return;
+	}
+
+	if ( !dmlab_can_trigger(self->id, self->target) ) {
+		return;
+	}
+	if ( dmlab_override_trigger(self->id, self->target) ) {
 		return;
 	}
 
@@ -401,6 +407,56 @@ void SP_trigger_hurt( gentity_t *self ) {
 	}
 }
 
+static void BoxRelative(const vec3_t point, const vec3_t box_min,
+												const vec3_t box_max, vec3_t result) {
+	result[0] = (point[0] - box_min[0])/(box_max[0] - box_min[0]);
+	result[1] = (point[1] - box_min[1])/(box_max[1] - box_min[1]);
+	result[2] = (point[2] - box_min[2])/(box_max[2] - box_min[2]);
+}
+
+static void MoveToEntitySpace(const gentity_t* entity, const vec3_t world_point,
+															vec3_t result) {
+	vec3_t local_point;
+	// Compute the displacement vector of 'world_point' with respect to the
+	// entity's origin.
+	VectorSubtract(world_point, entity->r.currentOrigin, local_point);
+	// Express such displacement vector in the coordinate frame spanned by the
+	// entity's bounding box.
+	InverseRotation(entity->r.currentAngles, local_point, qtrue);
+	BoxRelative(local_point, entity->r.mins, entity->r.maxs, result);
+}
+
+/*
+==============================================================================
+
+trigger_lookat
+
+==============================================================================
+*/
+
+void func_lookat_look(gentity_t *self, gentity_t *other, const trace_t *trace) {
+	vec3_t local_point = {0.0, 0.0, 0.0};
+
+	if (!other->client) return;
+	if (other->client->ps.pm_type == PM_DEAD) return;
+
+	if (trace) {
+		MoveToEntitySpace(self, trace->endpos, local_point);
+	}
+	dmlab_trigger_lookat( self->id, trace != NULL, local_point );
+}
+
+/*QUAKED trigger_lookat
+Activation caused while looking at the entity. Can be overriden by the level
+API.
+A final call is issued (with looked_at = false) when the player looks away from
+the trigger.
+*/
+void SP_trigger_lookat(gentity_t *self) {
+	InitTrigger(self);
+	self->r.contents |= CONTENTS_LOOKAT;
+	self->look = func_lookat_look;
+}
 
 /*
 ==============================================================================
