@@ -280,6 +280,19 @@ static void get_screen_message(void* userdata, int message_id, char* buffer,
       message_id, buffer, x, y, align_l0_r1_c2, shadow, rgba);
 }
 
+static int make_filled_rectangles(void* userdata, int screen_width,
+                                  int screen_height) {
+  return static_cast<Context*>(userdata)->MakeFilledRectangles(screen_width,
+                                                               screen_height);
+}
+
+static void get_filled_rectangle(void* userdata, int rectangle_id, int* x,
+                                 int* y, int* width, int* height,
+                                 float rgba[4]) {
+  static_cast<Context*>(userdata)->GetFilledRectangle(rectangle_id, x, y, width,
+                                                      height, rgba);
+}
+
 static void make_pk3_from_map(void* userdata, const char* map_path,
                               const char* map_name, bool gen_aas) {
   static_cast<Context*>(userdata)->MakePk3FromMap(map_path, map_name, gen_aas);
@@ -412,6 +425,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->player_state = player_state;
   hooks->make_screen_messages = make_screen_messages;
   hooks->get_screen_message = get_screen_message;
+  hooks->make_filled_rectangles = make_filled_rectangles;
+  hooks->get_filled_rectangle = get_filled_rectangle;
   hooks->get_temporary_folder = get_temporary_folder;
   hooks->make_pk3_from_map = make_pk3_from_map;
   hooks->events.clear = events_clear;
@@ -1005,6 +1020,57 @@ void Context::GetScreenMessage(int message_id, char* buffer, int* x, int* y,
   *align_l0_r1_c2 = screen_message.align_l0_r1_c2;
   *shadow = screen_message.shadow ? 1 : 0;
   std::copy_n(screen_message.rgba.data(), screen_message.rgba.size(), rgba);
+}
+
+int Context::MakeFilledRectangles(int screen_width, int screen_height) {
+  filled_rectangles_.clear();
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("filledRectangles");
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return 0;
+  }
+
+  auto args = lua::TableRef::Create(L);
+  args.Insert("width", screen_width);
+  args.Insert("height", screen_height);
+  lua::Push(L, args);
+  auto result = lua::Call(L, 2);
+  CHECK(result.ok()) << "[filledRectangles] - " << result.error();
+  CHECK_EQ(1, result.n_results())
+      << "[filledRectangles] - Must return an array of rectangles";
+  lua::TableRef rectangles_array;
+  lua::Read(L, -1, &rectangles_array);
+  for (std::size_t i = 0, size = rectangles_array.ArraySize(); i != size; ++i) {
+    lua::TableRef rectangle_table;
+    CHECK(rectangles_array.LookUp(i + 1, &rectangle_table))
+        << "[filledRectangles] - Each message must be a table";
+    FilledRectangle filled_rectangle = {};
+    CHECK(rectangle_table.LookUp("x", &filled_rectangle.x))
+        << "[filledRectangles] - Must supply x";
+    CHECK(rectangle_table.LookUp("y", &filled_rectangle.y))
+        << "[filledRectangles] - Must supply y";
+    CHECK(rectangle_table.LookUp("width", &filled_rectangle.width))
+        << "[filledRectangles] - Must supply width";
+    CHECK(rectangle_table.LookUp("height", &filled_rectangle.height))
+        << "[filledRectangles] - Must supply height";
+    CHECK(rectangle_table.LookUp("rgba", &filled_rectangle.rgba))
+        << "[filledRectangles] - Must supply rgba";
+    filled_rectangles_.push_back(filled_rectangle);
+  }
+
+  lua_pop(L, result.n_results());
+  return filled_rectangles_.size();
+}
+
+void Context::GetFilledRectangle(int rectangle_id, int* x, int* y, int* width,
+                                 int* height, float rgba[4]) const {
+  const auto& filled_rectangle = filled_rectangles_[rectangle_id];
+  *x = filled_rectangle.x;
+  *y = filled_rectangle.y;
+  *width = filled_rectangle.width;
+  *height = filled_rectangle.height;
+  std::copy_n(filled_rectangle.rgba.data(), filled_rectangle.rgba.size(), rgba);
 }
 
 void Context::MakePk3FromMap(const char* map_path, const char* map_name,

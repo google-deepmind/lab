@@ -102,6 +102,20 @@ int dmlab_make_screen_messages(int screen_width, int screen_height,
 void dmlab_get_screen_message(int message_id, char* buffer, int* x, int* y,
                               int* align_l0_r1_c2, int* shadow, float rgba[4]);
 
+// Make filled rectangles. Returns the number of rectangles that were made.
+// 'screen_width' and 'screen_height' are the virtual screen size and the top
+// left is the origin.
+int dmlab_make_filled_rectangles(int screen_width, int screen_height);
+
+// Get a filled rectangle for rendering.
+// Shall be called after dmlab_make_filled_rectangles with a
+// 'rectangle_id' greater than or equal to zero and less than that returned by
+// dmlab_make_screen_messages.
+// Coordinates 'x', 'y', 'width' and 'height' are in screen space where top left
+// is 0, 0 and bottom right is width, height from dmlab_make_filled_rectangles.
+void dmlab_get_filled_rectangle(int rectangle_id, int* x, int* y, int* width,
+                                int* height, float rgba[4]);
+
 // Called at the start of entity update.
 void dmlab_entities_clear();
 // Called on each active entity during entity update.

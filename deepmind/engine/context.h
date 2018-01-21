@@ -236,6 +236,22 @@ class Context {
   void GetScreenMessage(int message_id, char* buffer, int* x, int* y,
                         int* align_l0_r1_c2, int* shadow, float rgba[4]) const;
 
+  // Calls script to retrieve a list of filled rectangles. 'screen_width' and
+  // 'screen_height' are the size of the screen.
+  int MakeFilledRectangles(int screen_width, int screen_height);
+
+  // Retrieve filled rectangle.
+  // 'rectangle_id' shall be greater than or equal to zero and less than what
+  // was returned by the last call of MakeFilledRectangles.
+  // 'x', 'y' is the position and 'width' and 'height' is the size of the
+  // rectangle in screen-coordinates. They shall be all greater or equal to
+  // zero. (Off-screen rendering is allowed.)
+  // 'rgba' is the color and alpha of the rendered rectangle. 'rgba' values
+  // shall be in the range [0, 1].
+  // The parts of the rectangles that are out of bounds are not rendered.
+  void GetFilledRectangle(int rectangle_id, int* x, int* y, int* width,
+                          int* height, float rgba[4]) const;
+
 
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.
@@ -296,6 +312,14 @@ class Context {
     int align_l0_r1_c2;
     std::array<float, 4> rgba;
     bool shadow;
+  };
+
+  struct FilledRectangle {
+    int x;
+    int y;
+    int width;
+    int height;
+    std::array<float, 4> rgba;
   };
 
   // Current action state.
@@ -374,6 +398,9 @@ class Context {
 
   // A list of screen messages to display this frame.
   std::vector<ScreenMessage> screen_messages_;
+
+  // A list of filled rectangles to display this frame.
+  std::vector<FilledRectangle> filled_rectangles_;
 
   bool use_local_level_cache_;
   bool use_global_level_cache_;

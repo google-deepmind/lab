@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -728,6 +728,16 @@ static float CG_DrawSnapshot( float y ) {
 	CG_DrawBigString( 635 - w, y + 2, s, 1.0F);
 
 	return y + BIGCHAR_HEIGHT + 4;
+}
+
+static void CG_DrawScriptFilledRectangles( void ) {
+	int i, x, y, width, height;
+	vec4_t rgba;
+	int c = dmlab_make_filled_rectangles( SCREEN_WIDTH, SCREEN_HEIGHT );
+	for (i = 0; i < c; ++i) {
+		dmlab_get_filled_rectangle( i, &x, &y, &width, &height, rgba );
+		CG_FillRect( x, y, width, height, rgba );
+	}
 }
 
 static void CG_DrawScriptMessage( void ) {
@@ -2498,6 +2508,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	}
 
 	CG_DrawScriptMessage();
+	CG_DrawScriptFilledRectangles();
 	CG_DrawVote();
 	CG_DrawTeamVote();
 

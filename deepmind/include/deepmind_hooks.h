@@ -259,6 +259,14 @@ struct DeepmindHooks_s {
                              int* x, int* y, int* shadow, int* align_l0_r1_c2,
                              float rgba[4]);
 
+  // See MakeFilledRectangles in deepmind/engine/context.h.
+  int (*make_filled_rectangles)(void* userdata, int screen_width,
+                                int screen_height);
+
+  // See GetFilledRectangle in deepmind/engine/context.h.
+  void (*get_filled_rectangle)(void* userdata, int rectangle_id, int* x, int* y,
+                               int* width, int* height, float rgba[4]);
+
   // See MakePk3FromMap in deepmind/engine/context.h.
   void (*make_pk3_from_map)(void* userdata, const char* map_path,
                             const char* map_name, bool gen_aas);

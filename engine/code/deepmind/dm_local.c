@@ -107,6 +107,19 @@ void dmlab_get_screen_message(int message_id, char* buffer, int* x, int* y,
                         (intptr_t)rgba, 0, 0, 0, 0, 0);
 }
 
+int dmlab_make_filled_rectangles(int screen_width, int screen_height) {
+  return trap_DeepmindCallback(DEEPMIND_MAKE_FILLED_RECTANGLES,
+                               (intptr_t)screen_width, (intptr_t)screen_height,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void dmlab_get_filled_rectangle(int rectangle_id, int* x, int* y, int* width,
+                                int* height, float rgba[4]) {
+  trap_DeepmindCallback(DEEPMIND_GET_FILLED_RECTANGLE, (intptr_t)rectangle_id,
+                        (intptr_t)x, (intptr_t)y, (intptr_t)width,
+                        (intptr_t)height, (intptr_t)rgba, 0, 0, 0, 0, 0, 0);
+}
+
 int dmlab_player_score(void) {
   return trap_DeepmindCallback(DEEPMIND_PLAYER_SCORE, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0);

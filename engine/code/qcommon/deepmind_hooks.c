@@ -88,6 +88,16 @@ int dmlab_callback(
           /*align_l0_r1_c2=*/VM_ArgPtr(a6),
           /*rgba=*/VM_ArgPtr(a7));
       break;
+    case DEEPMIND_MAKE_FILLED_RECTANGLES:
+      return ctx->hooks.make_filled_rectangles(ctx->userdata,
+                                               /*screen_width=*/a1,
+                                               /*screen_height=*/a2);
+    case DEEPMIND_GET_FILLED_RECTANGLE:
+      ctx->hooks.get_filled_rectangle(
+          ctx->userdata, /*rectangle_id=*/a1, /*x=*/VM_ArgPtr(a2),
+          /*y=*/VM_ArgPtr(a3),
+          /*width=*/VM_ArgPtr(a4), /*height=*/VM_ArgPtr(a5),
+          /*rgba=*/VM_ArgPtr(a6));
       break;
     case DEEPMIND_PLAYER_SCORE:
       return ctx->calls.player_score(ctx->context);
