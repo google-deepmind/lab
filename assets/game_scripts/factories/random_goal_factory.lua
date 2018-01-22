@@ -29,13 +29,13 @@ function factory.createLevelApi(kwargs)
 
   function api:start(episode, seed, params)
     api._time_remaining = kwargs.episodeLengthSeconds
-    random.seed(seed)
+    random:seed(seed)
     local height, width = maze:size()
     height = (height - 1) / 2
     width = (width - 1) / 2
 
-    api._goal = {random.uniformInt(1, height) * 2,
-                 random.uniformInt(1, width) * 2}
+    api._goal = {random:uniformInt(1, height) * 2,
+                 random:uniformInt(1, width) * 2}
 
     local goal_location
     local all_spawn_locations = {}
@@ -105,7 +105,7 @@ function factory.createLevelApi(kwargs)
     end
 
     local spawn_location = api._all_spawn_locations[
-                                random.uniformInt(1, #api._all_spawn_locations)]
+                                random:uniformInt(1, #api._all_spawn_locations)]
     api._newSpawnVarsPlayerStart = {
         classname = 'info_player_start',
         origin = spawn_location

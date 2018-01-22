@@ -16,8 +16,8 @@ local function getRandomEvenCoodinate(rows, cols)
   assert (rows > 2 and rows % 2 == 1)
   assert (cols > 2 and cols % 2 == 1)
   return {
-      random.uniformInt(1, math.floor(rows / 2)) * 2,
-      random.uniformInt(1, math.floor(cols / 2)) * 2
+      random:uniformInt(1, math.floor(rows / 2)) * 2,
+      random:uniformInt(1, math.floor(cols / 2)) * 2
   }
 end
 
@@ -49,7 +49,7 @@ local function generateTensorMaze(rows, cols)
     maze(r, c):val(1)
     local vistableCells = findVisitableCells(r, c, maze)
     if #vistableCells > 0 then
-      local choice = vistableCells[random.uniformInt(1, #vistableCells)]
+      local choice = vistableCells[random:uniformInt(1, #vistableCells)]
       maze(unpack(choice[2])):val(1)
       stack[#stack + 1] = choice[1]
     else
@@ -68,7 +68,7 @@ function api:createPickup(className)
 end
 
 function api:start(episode, seed, params)
-  random.seed(seed)
+  random:seed(seed)
   local rows, cols = 15, 15
   local mazeT = generateTensorMaze(rows, cols)
   local maze = maze_gen.MazeGeneration{height = rows, width = cols}
@@ -76,7 +76,7 @@ function api:start(episode, seed, params)
   mazeT:applyIndexed(function(val, index)
     local row, col = unpack(index)
     if 1 < row and row < rows and 1 < col and row < rows and
-        random.uniformReal(0, 1) < 0.15 then
+        random:uniformReal(0, 1) < 0.15 then
       maze:setEntityCell(row, col, ' ')
     else
       maze:setEntityCell(row, col, val == 0 and '*' or ' ')

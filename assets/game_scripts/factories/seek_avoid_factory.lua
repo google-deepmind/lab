@@ -23,7 +23,7 @@ function factory.createLevelApi(kwargs)
   end
 
   function api:start(episode, seed, params)
-    random.seed(seed)
+    random:seed(seed)
     api._has_goal = false
     api._count = 0
     api._finish_count = 0
@@ -42,7 +42,7 @@ function factory.createLevelApi(kwargs)
       local possibleClassNames = helpers.split(spawnVars.random_items, ',')
       if #possibleClassNames > 0 then
         classname = possibleClassNames[
-          random.uniformInt(1,  #possibleClassNames)]
+          random:uniformInt(1,  #possibleClassNames)]
       end
     end
     local pickup = pickups.defaults[spawnVars.classname]

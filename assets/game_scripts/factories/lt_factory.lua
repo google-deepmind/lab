@@ -74,10 +74,10 @@ function factory.createLevelApi(kwargs)
   end
 
   function api:start(episode, seed, params)
-    random.seed(seed)
+    random:seed(seed)
     if kwargs.color then
       -- Pick a random angle.
-      api.bot_hue_degrees_ = random.uniformInt(0, 359)
+      api.bot_hue_degrees_ = random:uniformInt(0, 359)
     end
   end
 
