@@ -575,6 +575,8 @@ IOQ3_COMMON_SRCS = [
     CODE_DIR + "/deepmind/dm_public.h",
     CODE_DIR + "/deepmind/dmlab_load_model.c",
     CODE_DIR + "/deepmind/dmlab_load_model.h",
+    CODE_DIR + "/deepmind/dmlab_recording.c",
+    CODE_DIR + "/deepmind/dmlab_recording.h",
     CODE_DIR + "/deepmind/dmlab_save_model.c",
     CODE_DIR + "/deepmind/dmlab_save_model.h",
     CODE_DIR + "/game/bg_public.h",

@@ -48,11 +48,12 @@ class DeepMindLabTest(unittest.TestCase):
     lab = deepmind_lab.Lab('tests/demo_map', [])
     observation_spec = lab.observation_spec()
     observation_names = {o['name'] for o in observation_spec}
+    observation_spec_lookup = {o['name']: o for o in observation_spec}
     action_names = {a['name'] for a in lab.action_spec()}
-
-    self.assertSetEqual(observation_names,
-                        {'RGB_INTERLACED', 'RGB', 'RGBD_INTERLACED', 'RGBD'})
-    for o in observation_spec:
+    observation_set = {'RGB_INTERLACED', 'RGB', 'RGBD_INTERLACED', 'RGBD'}
+    self.assertGreaterEqual(observation_names, observation_set)
+    for k in observation_set:
+      o = observation_spec_lookup[k]
       self.assertIn('shape', o)
       self.assertDictContainsSubset({'dtype': np.uint8}, o)
 

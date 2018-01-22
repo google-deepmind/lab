@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include "dmlab_load_model.h"
+#include "dmlab_recording.h"
 #include "dmlab_save_model.h"
 #include "../../../deepmind/include/deepmind_context.h"
 #include "../../../public/dmlab.h"
@@ -80,13 +81,15 @@ enum ObservationsEnum {
   kObservations_RgbdInterlaced,
   kObservations_RgbPlanar,
   kObservations_RgbdPlanar,
+  kObservations_MapFrameNumber,
 };
 
 const char* const kObservationNames[] = {
-    "RGB_INTERLACED",   //
-    "RGBD_INTERLACED",  //
-    "RGB",              //
-    "RGBD",             //
+    "RGB_INTERLACED",    //
+    "RGBD_INTERLACED",   //
+    "RGB",               //
+    "RGBD",              //
+    "MAP_FRAME_NUMBER",  //
 };
 
 typedef enum PixelBufferTypeEnum_e {
@@ -127,6 +130,7 @@ typedef struct GameContext_s {
   int map_start_frame;            // First frame after warm-up.
   double total_engine_time_msec;  // This is step * engine_frame_period_msec.
   double score;
+  dmlabRecordingContext* recording_ctx;
   vmInterpret_t vm_mode;  // Selected VM mode for the game, ui, and client.
   bool is_server;         // Whether this environment acts as a server.
   bool is_client_only;    // Whether this environment is attached to an external
@@ -368,17 +372,30 @@ static int connecting(GameContext* gc) {
 static bool load_map(GameContext* gc) {
   gc->is_map_loading = true;
   dev_map(gc);
-  while (connecting(gc) == EAGAIN) {
-  }
-  // Players join team games in spectator mode. Leave 3 frames for player to
-  // join the correct team.
-  for (int i = 0; i < 3; ++i) {
-    IN_Frame();
-    Com_Frame();
+  if (!gc->recording_ctx->is_demo) {
+    while (connecting(gc) == EAGAIN) {
+    }
+    // Players join team games in spectator mode. Leave 3 frames for player to
+    // join the correct team.
+    for (int i = 0; i < 3; ++i) {
+      IN_Frame();
+      Com_Frame();
+    }
   }
   gc->map_start_frame = cls.framecount;
+
+  bool demo_ok = true;
+  if (gc->recording_ctx->is_recording) {
+    demo_ok &= dmlab_start_recording(gc->recording_ctx);
+  }
+  if (gc->recording_ctx->is_demo) {
+    demo_ok &= dmlab_start_demo(gc->recording_ctx);
+  }
+  if (gc->recording_ctx->is_video) {
+    demo_ok &= dmlab_start_video(gc->recording_ctx);
+  }
   fflush(stdout);
-  return true;
+  return demo_ok;
 }
 
 // Return 0 iff successful.
@@ -563,6 +580,14 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
   } else if (strcmp(key, "appendCommand") == 0) {
     Q_strcat(gc->command_line, sizeof(gc->command_line), " ");
     Q_strcat(gc->command_line, sizeof(gc->command_line), value);
+  } else if (strcmp(key, "record") == 0) {
+    dmlab_set_recording_name(gc->recording_ctx, value);
+  } else if (strcmp(key, "demo") == 0) {
+    dmlab_set_demo_name(gc->recording_ctx, value);
+  } else if (strcmp(key, "video") == 0) {
+    dmlab_set_video_name(gc->recording_ctx, value);
+  } else if (strcmp(key, "demofiles") == 0) {
+    dmlab_set_demofiles_path(gc->recording_ctx, value);
   } else if (strcmp(key, "use_pbos") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
@@ -631,6 +656,11 @@ static void connect_client(GameContext* gc) {
 
 static void start_server(GameContext* gc) {
   dev_map(gc);
+  if (gc->recording_ctx->is_recording &&
+      !dmlab_start_recording(gc->recording_ctx)) {
+    fprintf(stderr, "Recording failed: '%s' already exists.\n",
+            gc->recording_ctx->recording_name);
+  }
   gc->is_connecting = true;
   gc->map_loaded = false;
 }
@@ -749,7 +779,11 @@ static void dmlab_observation_spec(
     void* context, int observation_idx, EnvCApi_ObservationSpec* spec) {
   GameContext* gc = context;
 
-  if (observation_idx < ARRAY_LEN(kObservationNames)) {
+  if (observation_idx == kObservations_MapFrameNumber) {
+    spec->type = EnvCApi_ObservationDoubles;
+    spec->dims = 1;
+    spec->shape = gc->map_frame_number_shape;
+  } else if (observation_idx < ARRAY_LEN(kObservationNames)) {
     spec->type = EnvCApi_ObservationBytes;
     spec->dims = 3;
     spec->shape = gc->image_shape;
@@ -797,6 +831,12 @@ static void dmlab_observation(
   GameContext* gc = context;
   if (observation_idx < ARRAY_LEN(kObservationNames)) {
     dmlab_observation_spec(context, observation_idx, &obs->spec);
+
+    if (observation_idx == kObservations_MapFrameNumber) {
+      gc->map_frame_number_observation = cls.framecount - gc->map_start_frame;
+      obs->payload.doubles = &gc->map_frame_number_observation;
+      return;
+    }
 
     re.MakeCurrent();
 
@@ -1021,6 +1061,13 @@ static void dmlab_destroy_context(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
 
+  if (gc->recording_ctx->is_recording) {
+    dmlab_stop_recording(gc->recording_ctx);
+  }
+  if (gc->recording_ctx->is_video) {
+    dmlab_stop_video(gc->recording_ctx);
+  }
+
   if (gc->pbos.rgb.id || gc->pbos.depth.id || gc->pbos.custom_view.id) {
     re.MakeCurrent();
     if (gc->pbos.rgb.id) {
@@ -1037,6 +1084,7 @@ static void dmlab_destroy_context(void* context) {
   }
 
   dmlab_release_context(ctx);
+  free(gc->recording_ctx);
   free(gc->temp_buffer);
   free(gc->image_buffer);
   free(gc);
@@ -1144,6 +1192,11 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
     return 4;
   }
 
+  dmlabRecordingContext* rcxt = calloc(1, sizeof(dmlabRecordingContext));
+  if (rcxt == NULL) {
+    return 1;
+  }
+
   *context = gc;
 
   Q_strncpyz(gc->runfiles_path, params->runfiles_path,
@@ -1156,6 +1209,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->width = 320;
   gc->height = 240;
   gc->dm_ctx = dm_ctx;
+  gc->recording_ctx = rcxt;
   gc->map_frame_number_shape[0] = 1;
   gc->map_frame_number_observation = 0;
   gc->pbos.enabled = true;
