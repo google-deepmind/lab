@@ -26,13 +26,6 @@
 static OSMesaContext osmesa_ctx;
 static GLubyte* osmesa_frame_buffer;
 
-#define glGetStringi NULL
-#define GLE(ret, name, ...) name##proc * qgl##name = gl##name;
-QGL_1_1_PROCS;
-QGL_DESKTOP_1_1_PROCS;
-QGL_3_0_PROCS;
-#undef GLE
-
 void GLimp_MakeCurrent(void) {
   if (!OSMesaMakeCurrent(osmesa_ctx, osmesa_frame_buffer, GL_UNSIGNED_BYTE,
                          glConfig.buffWidth, glConfig.buffHeight)) {

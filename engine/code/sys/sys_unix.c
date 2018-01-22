@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -744,72 +744,12 @@ static void Sys_XmessageCommand( dialogType_t type, const char *message, const c
 ==============
 Sys_Dialog
 
-Display a *nix dialog box
+Display a *nix dialog box (but disabled entirely)
 ==============
 */
-dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title )
-{
-	typedef enum
-	{
-		NONE = 0,
-		ZENITY,
-		KDIALOG,
-		XMESSAGE,
-		NUM_DIALOG_PROGRAMS
-	} dialogCommandType_t;
-	typedef void (*dialogCommandBuilder_t)( dialogType_t, const char *, const char * );
-
-	const char              *session = getenv( "DESKTOP_SESSION" );
-	qboolean                tried[ NUM_DIALOG_PROGRAMS ] = { qfalse };
-	dialogCommandBuilder_t  commands[ NUM_DIALOG_PROGRAMS ] = { NULL };
-	dialogCommandType_t     preferredCommandType = NONE;
-	int                     i;
-
-	commands[ ZENITY ] = &Sys_ZenityCommand;
-	commands[ KDIALOG ] = &Sys_KdialogCommand;
-	commands[ XMESSAGE ] = &Sys_XmessageCommand;
-
-	// This may not be the best way
-	if( !Q_stricmp( session, "gnome" ) )
-		preferredCommandType = ZENITY;
-	else if( !Q_stricmp( session, "kde" ) )
-		preferredCommandType = KDIALOG;
-
-	for( i = NONE + 1; i < NUM_DIALOG_PROGRAMS; i++ )
-	{
-		if( preferredCommandType != NONE && preferredCommandType != i )
-			continue;
-
-		if( !tried[ i ] )
-		{
-			int exitCode;
-
-			commands[ i ]( type, message, title );
-			exitCode = Sys_Exec( );
-
-			if( exitCode >= 0 )
-			{
-				switch( type )
-				{
-					case DT_YES_NO:    return exitCode ? DR_NO : DR_YES;
-					case DT_OK_CANCEL: return exitCode ? DR_CANCEL : DR_OK;
-					default:           return DR_OK;
-				}
-			}
-
-			tried[ i ] = qtrue;
-
-			// The preference failed, so start again in order
-			if( preferredCommandType != NONE )
-			{
-				preferredCommandType = NONE;
-				i = NONE + 1;
-			}
-		}
-	}
-
-	Com_DPrintf( S_COLOR_YELLOW "WARNING: failed to show a dialog\n" );
-	return DR_OK;
+dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title ) {
+	Sys_Print( message );
+	return type == DT_YES_NO ? DR_NO : DR_OK;
 }
 #endif
 

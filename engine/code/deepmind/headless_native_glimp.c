@@ -31,13 +31,6 @@ static GLXPbuffer glx_pbuffer;
 static GLXContext glx_context;
 static Display* glx_display;
 
-#define glGetStringi NULL
-#define GLE(ret, name, ...) name##proc * qgl##name = gl##name;
-QGL_1_1_PROCS;
-QGL_DESKTOP_1_1_PROCS;
-QGL_3_0_PROCS;
-#undef GLE
-
 void GLimp_MakeCurrent(void) {
   if (!glXMakeCurrent(glx_display, glx_pbuffer, glx_context)) {
     Sys_Error("GLimp_MakeCurrent - Failed!");

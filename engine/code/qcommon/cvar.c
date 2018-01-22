@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // cvar.c -- dynamic variable tracking
 
+#include <float.h>
 #include "q_shared.h"
 #include "qcommon.h"
 
@@ -503,6 +504,7 @@ Cvar_Set2
 */
 cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	cvar_t	*var;
+	double value_d;
 
 //	Com_DPrintf( "Cvar_Set2: %s %s\n", var_name, value );
 
@@ -615,7 +617,13 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	Z_Free (var->string);	// free the old value string
 	
 	var->string = CopyString(value);
-	var->value = atof (var->string);
+	value_d = atof(var->string);
+
+	// Ignore result of atof if var->string is not representable as a float.
+	if (-FLT_MAX <= value_d && value_d <= FLT_MAX) {
+		var->value = value_d;
+	}
+
 	var->integer = atoi (var->string);
 
 	return var;

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -38,7 +38,6 @@ cvar_t	*sv_rconPassword;		// password for remote server commands
 cvar_t	*sv_privatePassword;		// password for the privateClient slots
 cvar_t	*sv_allowDownload;
 cvar_t	*sv_maxclients;
-
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];	// master server ip address
@@ -49,6 +48,7 @@ cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down
 cvar_t	*sv_mapname;
 cvar_t	*sv_mapChecksum;
 cvar_t	*sv_serverid;
+cvar_t	*sv_rateLimit;		// Whether to rate limit.
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;
 cvar_t	*sv_dlRate;
@@ -57,7 +57,7 @@ cvar_t	*sv_maxPing;
 cvar_t	*sv_gametype;
 cvar_t	*sv_pure;
 cvar_t	*sv_floodProtect;
-cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
+cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to unlimited (0)
 #ifndef STANDALONE
 cvar_t	*sv_strictAuth;
 #endif
@@ -479,22 +479,25 @@ SVC_RateLimit
 */
 qboolean SVC_RateLimit( leakyBucket_t *bucket, int burst, int period ) {
 	if ( bucket != NULL ) {
-		int now = Sys_Milliseconds();
-		int interval = now - bucket->lastTime;
-		int expired = interval / period;
-		int expiredRemainder = interval % period;
+		if (sv_rateLimit->integer){
+			int now = Sys_Milliseconds();
+			int interval = now - bucket->lastTime;
+			int expired = interval / period;
+			int expiredRemainder = interval % period;
 
-		if ( expired > bucket->burst || interval < 0 ) {
-			bucket->burst = 0;
-			bucket->lastTime = now;
+			if ( expired > bucket->burst || interval < 0 ) {
+				bucket->burst = 0;
+				bucket->lastTime = now;
+			} else {
+				bucket->burst -= expired;
+				bucket->lastTime = now - expiredRemainder;
+			}
+
+			if ( bucket->burst < burst ) {
+				bucket->burst++;
+				return qfalse;
+			}
 		} else {
-			bucket->burst -= expired;
-			bucket->lastTime = now - expiredRemainder;
-		}
-
-		if ( bucket->burst < burst ) {
-			bucket->burst++;
-
 			return qfalse;
 		}
 	}
@@ -1191,6 +1194,12 @@ int SV_RateMsec(client_t *client)
 			Cvar_Set("sv_minRate", "1000");
 		if(sv_minRate->integer > rate)
 			rate = sv_minRate->integer;
+	}
+
+	// check for unlimited rate
+	if (rate == 0)
+	{
+		return 0;
 	}
 
 	if(client->netchan.remoteAddress.type == NA_IP6)
