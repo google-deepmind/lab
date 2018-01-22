@@ -36,10 +36,12 @@ constexpr double kThickness = 1.0;
 Builder::Builder() { entities_.emplace_back(Entity::CreateWorld()); }
 
 std::string Builder::ToString() const {
-  return absl::StrJoin(entities_, "\n\n",
-                       [](decltype(absl::StrCat())* out, const Entity& entity) {
-                         absl::StrAppend(out, entity.ToString());
-                       });
+  return absl::StrCat(
+      absl::StrJoin(entities_, "\n\n",
+                    [](decltype(absl::StrCat())* out, const Entity& entity) {
+                      absl::StrAppend(out, entity.ToString());
+                    }),
+      "\n");
 }
 
 void Builder::AddSkybox(

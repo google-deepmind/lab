@@ -68,7 +68,7 @@ class FloodFill {
   // Finds all points attached to goal.
   // 'goal' - Flood fill starts from goal.
   // 'wall_chars' are characters for the flood fill to avoid.
-  FloodFill(const TextMaze& maze, TextMaze::eLayer layer, Pos goal,
+  FloodFill(const TextMaze& maze, TextMaze::Layer layer, Pos goal,
             const std::vector<char>& wall_chars);
 
   // If goal is reachable from start, returns the minimum distance between start

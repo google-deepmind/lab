@@ -18,10 +18,14 @@
 
 #include "deepmind/engine/lua_maze_generation.h"
 
+#include <cstring>
+#include <random>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "deepmind/engine/lua_random.h"
+#include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/n_results_or_test_util.h"
 #include "deepmind/lua/push_script.h"
@@ -40,12 +44,17 @@ class LuaMazeGenerationTest : public lua::testing::TestWithVm {
     LuaMazeGeneration::Register(L);
     vm()->AddCModuleToSearchers("dmlab.system.maze_generation",
                                 LuaMazeGeneration::Require);
+    LuaRandom::Register(L);
+    vm()->AddCModuleToSearchers("dmlab.system.sys_random",
+                                &lua::Bind<LuaRandom::Require>, {&prbg_});
   }
+
+  std::mt19937_64 prbg_;
 };
 
 constexpr char kCreateMaze[] = R"(
-local maze_gen = require 'dmlab.system.maze_generation'
-local maze = maze_gen.MazeGeneration{width = 5, height = 3}
+local maze_generation = require 'dmlab.system.maze_generation'
+local maze = maze_generation.mazeGeneration{width = 5, height = 3}
 return maze:entityLayer(), maze:variationsLayer()
 )";
 
@@ -68,7 +77,7 @@ TEST_F(LuaMazeGenerationTest, ConstructDefaultMaze) {
 }
 
 constexpr char kCreateMazeFromString[] = R"(
-local maze_gen = require 'dmlab.system.maze_generation'
+local maze_generation = require 'dmlab.system.maze_generation'
 local entityLayer = [[
 *******
 *   *G*
@@ -85,7 +94,7 @@ local variationsLayer = [[
 .......
 ]]
 
-local maze = maze_gen.MazeGeneration{
+local maze = maze_generation.mazeGeneration{
   entity = entityLayer,
   variations = variationsLayer
 }
@@ -117,8 +126,8 @@ TEST_F(LuaMazeGenerationTest, ConstructMazeFromString) {
 }
 
 constexpr char kReadWriteMaze[] = R"(
-local maze_gen = require 'dmlab.system.maze_generation'
-local maze = maze_gen.MazeGeneration{width = 5, height = 3}
+local maze_generation = require 'dmlab.system.maze_generation'
+local maze = maze_generation.mazeGeneration{width = 5, height = 3}
 
 assert('*' == maze:getEntityCell(3, 3))
 assert('.' == maze:getVariationsCell(3, 3))
@@ -158,7 +167,7 @@ TEST_F(LuaMazeGenerationTest, ConstructReadWrite) {
 }
 
 constexpr char kFindRooms[] = R"(
-local maze_gen = require 'dmlab.system.maze_generation'
+local maze_generation = require 'dmlab.system.maze_generation'
 local entityLayer = [[
 *********
 *   *   *
@@ -173,7 +182,7 @@ local entityLayer = [[
 *********
 ]]
 
-local maze = maze_gen.MazeGeneration{
+local maze = maze_generation.mazeGeneration{
   entity = entityLayer,
   variations = "",
 }
@@ -209,7 +218,7 @@ TEST_F(LuaMazeGenerationTest, FindRooms) {
 }
 
 constexpr char kVisitFill[] = R"(
-local maze_gen = require 'dmlab.system.maze_generation'
+local maze_generation = require 'dmlab.system.maze_generation'
 local entityLayer = [[
 *********
 *   *   *
@@ -219,7 +228,7 @@ local entityLayer = [[
 *   *   *
 *********
 ]]
-local maze = maze_gen.MazeGeneration{entity = entityLayer}
+local maze = maze_generation.mazeGeneration{entity = entityLayer}
 local height, width = maze:size()
 maze:visitFill{cell={5, 7}, wall="*", func=function(row, col, distance)
     -- Start must be zero
@@ -238,6 +247,298 @@ end}
 TEST_F(LuaMazeGenerationTest, kVisitFill) {
   lua::PushScript(L, kVisitFill, sizeof(kVisitFill) - 1, "kVisitFill");
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kCreateRandomMaze0[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+sys_random:seed(0)
+local maze = maze_generation.randomMazeGeneration{
+    random = sys_random,
+    width = 15,
+    height = 13,
+    maxRooms = 3,
+    extraConnectionProbability = 0.0,
+    simplify = false,
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMaze0) {
+  lua::PushScript(L, kCreateRandomMaze0, sizeof(kCreateRandomMaze0) - 1,
+                  "kCreateRandomMaze0");
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(2));
+  std::string ent_layer, var_layer;
+  ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
+  ASSERT_TRUE(lua::Read(L, 2, &var_layer));
+  EXPECT_EQ(
+      "***************\n"
+      "*             *\n"
+      "***** ***** * *\n"
+      "*     *     * *\n"
+      "***** *     * *\n"
+      "*     *     * *\n"
+      "*     *     * *\n"
+      "*           * *\n"
+      "*     * *** * *\n"
+      "*       * *   *\n"
+      "******* * *   *\n"
+      "*             *\n"
+      "***************\n",
+      ent_layer);
+  EXPECT_EQ(
+      "...............\n"
+      "...............\n"
+      "...............\n"
+      ".......AAAAA...\n"
+      ".......AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.........\n"
+      ".BBBBB.....CCC.\n"
+      "...........CCC.\n"
+      "...........CCC.\n"
+      "...............\n",
+      var_layer);
+}
+
+constexpr char kCreateRandomMaze1[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+sys_random:seed(0)
+local maze = maze_generation.randomMazeGeneration{
+    random = sys_random,
+    width = 15,
+    height = 13,
+    maxRooms = 3,
+    extraConnectionProbability = 0.0,
+    object = 'A',
+    spawn = '2',
+    hasDoors = true,
+    roomSpawnCount = 1,
+    roomObjectCount = 1,
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMaze1) {
+  lua::PushScript(L, kCreateRandomMaze1, sizeof(kCreateRandomMaze1) - 1,
+                  "kCreateRandomMaze1");
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(2));
+  std::string ent_layer, var_layer;
+  ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
+  ASSERT_TRUE(lua::Read(L, 2, &var_layer));
+  EXPECT_EQ(
+      "***************\n"
+      "*****         *\n"
+      "***** *****H* *\n"
+      "***** *   2 * *\n"
+      "*****H*     * *\n"
+      "*    2*   A * *\n"
+      "*     *     * *\n"
+      "*   A I     * *\n"
+      "*     *H***H*H*\n"
+      "*     I ***   *\n"
+      "******* ***   *\n"
+      "*******   I 2A*\n"
+      "***************\n",
+      ent_layer);
+  EXPECT_EQ(
+      "...............\n"
+      "...............\n"
+      "...............\n"
+      ".......AAAAA...\n"
+      ".......AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.AAAAA...\n"
+      ".BBBBB.........\n"
+      ".BBBBB.....CCC.\n"
+      "...........CCC.\n"
+      "...........CCC.\n"
+      "...............\n",
+      var_layer);
+}
+
+constexpr char kCreateRandomMaze2[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+sys_random:seed(123)
+local maze = maze_generation.randomMazeGeneration{
+    random = sys_random,
+    width = 11,
+    height = 7,
+    roomMinSize = 5,
+    maxRooms = 1,
+    extraConnectionProbability = 0.0,
+    roomSpawnCount = 0,
+    roomObjectCount = 0,
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMaze2) {
+  lua::PushScript(L, kCreateRandomMaze2, sizeof(kCreateRandomMaze2) - 1,
+                  "kCreateRandomMaze2");
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(2));
+  std::string ent_layer, var_layer;
+  ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
+  ASSERT_TRUE(lua::Read(L, 2, &var_layer));
+  EXPECT_EQ(
+      "***********\n"
+      "***       *\n"
+      "***       *\n"
+      "***       *\n"
+      "***       *\n"
+      "***       *\n"
+      "***********\n",
+      ent_layer);
+  EXPECT_EQ(
+      "...........\n"
+      "...AAAAAAA.\n"
+      "...AAAAAAA.\n"
+      "...AAAAAAA.\n"
+      "...AAAAAAA.\n"
+      "...AAAAAAA.\n"
+      "...........\n",
+      var_layer);
+}
+
+constexpr char kCreateRandomMazeEvenSize[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+sys_random:seed(0)
+local maze = maze_generation.randomMazeGeneration{
+    random = sys_random,
+    roomMinSize = 4
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMazeEvenSize) {
+  lua::PushScript(L, kCreateRandomMazeEvenSize,
+                  sizeof(kCreateRandomMazeEvenSize) - 1,
+                  "kCreateRandomMazeEvenSize");
+  ASSERT_FALSE(lua::Call(L, 0).ok());
+}
+
+constexpr char kCreateRandomMazeMaxVariations[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+sys_random:seed(0)
+local maze = maze_generation.randomMazeGeneration{
+    random = sys_random,
+    roomMinSize = 27
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMazeMaxVariations) {
+  lua::PushScript(L, kCreateRandomMazeMaxVariations,
+                  sizeof(kCreateRandomMazeMaxVariations) - 1,
+                  "kCreateRandomMazeMaxVariations");
+  ASSERT_FALSE(lua::Call(L, 0).ok());
+}
+
+constexpr char kCreateRandomMazeNoRandom[] = R"(
+local maze_generation = require 'dmlab.system.maze_generation'
+local maze = maze_generation.randomMazeGeneration{
+    width = 15,
+    height = 13,
+    maxRooms = 3,
+    extraConnectionProbability = 0.0,
+    simplify = false,
+}
+
+return maze:entityLayer(), maze:variationsLayer()
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMazeNoRandom) {
+  lua::PushScript(L, kCreateRandomMazeNoRandom,
+                  sizeof(kCreateRandomMazeNoRandom) - 1,
+                  "kCreateRandomMazeNoRandom");
+  ASSERT_FALSE(lua::Call(L, 0).ok());
+}
+
+constexpr char kVisitRandomPath[] = R"(
+local sys_random = require 'dmlab.system.sys_random'
+local maze_generation = require 'dmlab.system.maze_generation'
+local seed = ...
+local entityLayer = [[
+***************
+*P            *
+***** ***** * *
+*     *     * *
+***** *     * *
+*     *     * *
+*     *     * *
+*           * *
+*     * *** * *
+*       *G*   *
+******* * *   *
+*             *
+***************
+]]
+
+local maze = maze_generation.mazeGeneration{
+  entity = entityLayer
+}
+
+local oi = 2
+local oj = 2
+local startVisited = false
+local goalVisited = false
+
+assert(maze:getEntityCell(oi, oj) == 'P', 'Misplaced start')
+assert(maze:getEntityCell(10, 10) == 'G', 'Misplaced goal')
+sys_random:seed(seed)
+maze:visitRandomPath{
+  random = sys_random,
+  from = {2, 2},
+  to = {10, 10},
+  func = function(i, j)
+    local c = maze:getEntityCell(i, j)
+    if c == 'P' then
+      assert(not startVisited, 'Start already visited')
+      startVisited = true
+    elseif c == 'G' then
+      assert(not goalVisited, 'Goal already visited')
+      goalVisited = true
+    elseif c == '*' then
+      error('Hit wall!')
+    elseif c == ' ' then
+      assert(startVisited, 'Start not visited yet')
+      assert(not goalVisited, 'Goal already visited')
+      assert(oi ~= i or oj ~= j, 'Movement not continuous')
+    else
+      error('Unknown error!')
+    end
+    assert(oi == i or oj == j, 'Movement not continuous')
+    assert(oi + 1 == i or oi == i or oi == i + 1, 'Movement not continuous')
+    assert(oj + 1 == j or oj == j or oj == j + 1, 'Movement not continuous')
+    oi, oj = i, j
+  end
+}
+assert(startVisited, 'Start not visited')
+assert(goalVisited, 'Goal not visited')
+)";
+
+
+TEST_F(LuaMazeGenerationTest, kVisitRandomPath) {
+  lua::PushScript(L, kVisitRandomPath, std::strlen(kVisitRandomPath),
+                  "kVisitRandomPath");
+  for (int seed = 1; seed < 100; ++seed) {
+    lua_pushvalue(L, -1);
+    lua::Push(L, seed);
+    EXPECT_THAT(lua::Call(L, 1), IsOkAndHolds(0)) << " with seed " << seed;
+  }
+  lua_pop(L, 1);
 }
 
 }  // namespace

@@ -16,20 +16,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "deepmind/support/stringprintf.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/strings/str_cat.h"
 #include "deepmind/level_generation/map_builder/builder.h"
 
 namespace deepmind {
 namespace lab {
 namespace map_builder {
-
 namespace {
+
+using ::testing::HasSubstr;
 
 constexpr char kDefaultWorldMap[] = R"({
   "classname" "worldspawn"
-})";
+}
+)";
 
 TEST(MapBuilderTest, DefaultWorldEntity) {
   Builder builder;
@@ -40,7 +42,8 @@ constexpr char kCustomWorldEntity[] = R"({
   "classname" "worldspawn"
   "light" "100"
   "worldtype" "2"
-})";
+}
+)";
 
 TEST(MapBuilderTest, CustomWorldEntity) {
   Builder builder;
@@ -57,8 +60,7 @@ TEST(MapBuilderTest, AddBasicEntity) {
   Builder builder;
   builder.AddEntity(test_entity);
 
-  EXPECT_THAT(builder.ToString(),
-              testing::HasSubstr("\"classname\" \"test_entity\""));
+  EXPECT_THAT(builder.ToString(), HasSubstr("\"classname\" \"test_entity\""));
 }
 
 TEST(MapBuilderTest, CreatePointLight) {
@@ -66,10 +68,10 @@ TEST(MapBuilderTest, CreatePointLight) {
   Entity light_entity = Entity::CreatePointLight(pos, 200.0);
 
   std::string light_str = light_entity.ToString();
-  EXPECT_THAT(light_str, testing::HasSubstr("\"classname\" \"light\""));
-  EXPECT_THAT(light_str, testing::HasSubstr("\"light\" \"200\""));
-  EXPECT_THAT(light_str, testing::HasSubstr("\"style\" \"0\""));
-  EXPECT_THAT(light_str, testing::HasSubstr("\"origin\" \"32 32 160\""));
+  EXPECT_THAT(light_str, HasSubstr("\"classname\" \"light\""));
+  EXPECT_THAT(light_str, HasSubstr("\"light\" \"200\""));
+  EXPECT_THAT(light_str, HasSubstr("\"style\" \"0\""));
+  EXPECT_THAT(light_str, HasSubstr("\"origin\" \"32 32 160\""));
 }
 
 TEST(MapBuilderTest, CreateSpawn) {
@@ -79,12 +81,11 @@ TEST(MapBuilderTest, CreateSpawn) {
 
   std::string spawn_str = spawn_entity.ToString();
 
-  EXPECT_THAT(spawn_str,
-              testing::HasSubstr(StringPrintf("\"angle\" \"%g\"", angle)));
-  EXPECT_THAT(spawn_str,
-              testing::HasSubstr(StringPrintf(
-                  "\"origin\" \"%g %g %g\"", pos.x() * kWorldToGameUnits,
-                  pos.y() * kWorldToGameUnits, pos.z() * kWorldToGameUnits)));
+  EXPECT_THAT(spawn_str, HasSubstr(absl::StrCat("\"angle\" \"", angle, "\"")));
+  EXPECT_THAT(spawn_str, HasSubstr(absl::StrCat(
+                             "\"origin\" \"", pos.x() * kWorldToGameUnits, " ",
+                             pos.y() * kWorldToGameUnits, " ",
+                             pos.z() * kWorldToGameUnits, "\"")));
 }
 
 TEST(MapBuilderTest, CreateTeamSpawn) {
@@ -94,17 +95,17 @@ TEST(MapBuilderTest, CreateTeamSpawn) {
       Entity::CreateTeamSpawn(pos, Angle::Degrees(angle), Team::kRed);
 
   EXPECT_THAT(red_spawn_entities.first.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_redplayer\""));
+              HasSubstr("\"classname\" \"team_CTF_redplayer\""));
   EXPECT_THAT(red_spawn_entities.second.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_redspawn\""));
+              HasSubstr("\"classname\" \"team_CTF_redspawn\""));
 
   auto blue_spawn_entities =
       Entity::CreateTeamSpawn(pos, Angle::Degrees(angle), Team::kBlue);
 
   EXPECT_THAT(blue_spawn_entities.first.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_blueplayer\""));
+              HasSubstr("\"classname\" \"team_CTF_blueplayer\""));
   EXPECT_THAT(blue_spawn_entities.second.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_bluespawn\""));
+              HasSubstr("\"classname\" \"team_CTF_bluespawn\""));
 }
 
 TEST(MapBuilderTest, CreateFlag) {
@@ -112,12 +113,12 @@ TEST(MapBuilderTest, CreateFlag) {
   auto red_flag_entity = Entity::CreateFlag(pos, Team::kRed);
 
   EXPECT_THAT(red_flag_entity.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_redflag\""));
+              HasSubstr("\"classname\" \"team_CTF_redflag\""));
 
   auto blue_flag_entity = Entity::CreateFlag(pos, Team::kBlue);
 
   EXPECT_THAT(blue_flag_entity.ToString(),
-              testing::HasSubstr("\"classname\" \"team_CTF_blueflag\""));
+              HasSubstr("\"classname\" \"team_CTF_blueflag\""));
 }
 
 constexpr char kDefaultModelEntity[] = R"({
@@ -135,23 +136,21 @@ TEST(MapBuilderTest, CreateModel) {
 
   std::string model_str = model_entity.ToString();
 
-  EXPECT_THAT(model_str,
-              testing::HasSubstr(StringPrintf(
-                  "\"origin\" \"%g %g %g\"", pos.x() * kWorldToGameUnits,
-                  pos.y() * kWorldToGameUnits, pos.z() * kWorldToGameUnits)));
-  EXPECT_THAT(model_str,
-              testing::HasSubstr(StringPrintf(
-                  "\"angles\" \"%g %g %g\"", rotation.pitch.degrees(),
-                  rotation.yaw.degrees(), rotation.roll.degrees())));
-  EXPECT_THAT(model_str,
-              testing::HasSubstr("\"modelscale_vec\" \"1 1 2\""));
+  EXPECT_THAT(model_str, HasSubstr(absl::StrCat(
+                             "\"origin\" \"", pos.x() * kWorldToGameUnits, " ",
+                             pos.y() * kWorldToGameUnits, " ",
+                             pos.z() * kWorldToGameUnits, "\"")));
+  EXPECT_THAT(model_str, HasSubstr(absl::StrCat(
+                             "\"angles\" \"", rotation.pitch.degrees(), " ",
+                             rotation.yaw.degrees(), " ",
+                             rotation.roll.degrees(), "\"")));
+  EXPECT_THAT(model_str, HasSubstr("\"modelscale_vec\" \"1 1 2\""));
 
   // Create model with default scale and rotation.
   Entity default_model =
       Entity::CreateModel("model/test.md3", pos, {}, {1, 1, 1});
 
-  EXPECT_THAT(default_model.ToString(),
-              testing::HasSubstr(kDefaultModelEntity));
+  EXPECT_THAT(default_model.ToString(), HasSubstr(kDefaultModelEntity));
 }
 
 constexpr char kWorldBoxBrush[] = R"(
@@ -172,7 +171,7 @@ TEST(MapBuilderTest, CreateBoxBrush) {
   auto brush = brush_util::CreateBoxBrush(a, b, {"test_texture"});
   builder.mutable_world_entity()->add_brush(brush);
 
-  EXPECT_THAT(builder.ToString(), testing::HasSubstr(kWorldBoxBrush));
+  EXPECT_THAT(builder.ToString(), HasSubstr(kWorldBoxBrush));
 }
 
 // Only check one brush for each side.
@@ -215,9 +214,9 @@ TEST(MapBuilderTest, CreateHollowBox) {
   auto brushes = brush_util::CreateHollowBox(a, b, 1.0, {"test_texture"});
   builder.mutable_world_entity()->add_brushes(brushes);
 
-  EXPECT_THAT(builder.ToString(), testing::HasSubstr(kHollowBoxTop));
-  EXPECT_THAT(builder.ToString(), testing::HasSubstr(kHollowBoxLeft));
-  EXPECT_THAT(builder.ToString(), testing::HasSubstr(kHollowBoxFront));
+  EXPECT_THAT(builder.ToString(), HasSubstr(kHollowBoxTop));
+  EXPECT_THAT(builder.ToString(), HasSubstr(kHollowBoxLeft));
+  EXPECT_THAT(builder.ToString(), HasSubstr(kHollowBoxFront));
 }
 
 constexpr char kPatchString[] = R"({
@@ -252,7 +251,7 @@ TEST(MapBuilderTest, CreatePatch) {
   Builder builder;
 
   builder.mutable_world_entity()->add_patch(p);
-  EXPECT_THAT(builder.ToString(), testing::HasSubstr(kPatchString));
+  EXPECT_THAT(builder.ToString(), HasSubstr(kPatchString));
 }
 
 TEST(MapBuilderTest, CreateGridPatch) {
@@ -329,8 +328,26 @@ TEST(MapBuilderTest, NestedBrushes) {
   EXPECT_EQ(2, brushes.size());
 }
 
-}  // namespace
+constexpr char kFittedBoxBrush[] = R"({
+    ( -64 0 0 ) ( -64 32 0 ) ( -64 0 32 ) test 0 0 0 -0.3125 0.046875 0 0 0
+    ( 0 0 0 ) ( 0 0 32 ) ( 0 32 0 ) test 0 0 0 -0.3125 0.046875 0 0 0
+    ( 0 0 0 ) ( 0 0 32 ) ( 32 0 0 ) test 0 0 0 -0.0625 0.046875 0 0 0
+    ( 0 320 0 ) ( 32 320 0 ) ( 0 320 32 ) test 0 0 0 -0.0625 0.046875 0 0 0
+    ( 0 0 -48 ) ( 32 0 -48 ) ( 0 32 -48 ) test 0 0 0 -0.0625 0.3125 0 0 0
+    ( 0 0 0 ) ( 0 32 0 ) ( 32 0 0 ) test 0 0 0 -0.0625 0.3125 0 0 0
+  })";
 
+TEST(MapBuilderTest, FittedBoxBrush) {
+  const Eigen::Vector3d a = {-2.0, 0.0, -1.5};
+  const Eigen::Vector3d b = {0.0, 10.0, 0.0};
+  const Eigen::Vector2i texture_size = {1024, 1024};
+
+  auto brush = brush_util::CreateFittedBoxBrush(a, b, "test", texture_size);
+
+  EXPECT_EQ(kFittedBoxBrush, brush.ToString());
+}
+
+}  // namespace
 }  // namespace map_builder
 }  // namespace lab
 }  // namespace deepmind

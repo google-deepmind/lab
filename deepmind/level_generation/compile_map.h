@@ -26,7 +26,6 @@
 
 namespace deepmind {
 namespace lab {
-
 namespace internal {
 
 std::string CalculateMd5(const std::string& file_name);
@@ -34,10 +33,12 @@ std::string CalculateMd5(const std::string& file_name);
 }  // namespace internal
 
 struct MapCompileSettings {
-  bool generate_aas = true;  // Required if level needs to be traversed by bots.
-  std::string map_source_location;  // Optional path to the map file. (If not
-                                    // empty the file at this location is copied
-                                    // to <base>.map.)
+  // Required if level needs to be traversed by bots.
+  bool generate_aas = true;
+
+  // Optional path to the map file. (If not empty the file at this location is
+  // copied to <base>.map.)
+  std::string map_source_location;
 
   // Which level caches to use if any. A level is searched for in the
   // local cache iff enabled and then the global cache iff enabled.
@@ -48,7 +49,7 @@ struct MapCompileSettings {
   bool use_local_level_cache = false;
   bool use_global_level_cache = true;
 
-  DeepMindLabLevelCacheParams level_cache_params = {};
+  DeepMindLabLevelCacheParams level_cache_params = {nullptr, nullptr};
 };
 
 // Runs the map compiler for the map <base>.map, producing <base>.pk3.

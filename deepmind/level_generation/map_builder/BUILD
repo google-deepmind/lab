@@ -17,8 +17,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/strings",
         "//deepmind/support:stringprintf",
+        "@com_google_absl//absl/strings",
         "@eigen_archive//:eigen",
     ],
 )
@@ -29,7 +29,7 @@ cc_test(
     srcs = ["map_builder_test.cc"],
     deps = [
         ":map_builder",
-        "//deepmind/support:stringprintf",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

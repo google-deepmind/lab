@@ -21,8 +21,9 @@
 #include <algorithm>
 #include <functional>
 
-#include "absl/strings/str_split.h"
 #include "deepmind/support/logging.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
 
 namespace deepmind {
 namespace lab {

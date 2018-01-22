@@ -1,6 +1,6 @@
 # Description:
-#   A system for generating maps from "text levels".
-#   See docs/text_level.md for details.
+#   Translation from text levels into .map format.
+#   See deepmind/docs/developers/creating_levels/text_level.md.
 
 licenses(["restricted"])  # GPLv2
 
@@ -31,22 +31,25 @@ cc_library(
 )
 
 cc_library(
-    name = "text_maze_exporter",
-    srcs = ["text_maze_exporter.cc"],
-    hdrs = ["text_maze_exporter.h"],
+    name = "text_level_exporter",
+    srcs = ["text_level_exporter.cc"],
+    hdrs = [
+        "text_level_exporter.h",
+        "text_level_settings.h",
+    ],
     deps = [
         "//deepmind/level_generation/map_builder",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/strings",
         "@eigen_archive//:eigen",
     ],
 )
 
 cc_test(
-    name = "text_maze_exporter_test",
+    name = "text_level_exporter_test",
     size = "small",
-    srcs = ["text_maze_exporter_test.cc"],
+    srcs = ["text_level_exporter_test.cc"],
     deps = [
-        ":text_maze_exporter",
+        ":text_level_exporter",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -74,13 +77,18 @@ cc_test(
 cc_library(
     name = "translate_text_level",
     srcs = ["translate_text_level.cc"],
-    hdrs = ["translate_text_level.h"],
+    hdrs = [
+        "text_level_settings.h",
+        "translate_text_level.h",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":grid_maze",
         ":parse_text_level",
-        ":text_maze_exporter",
+        ":text_level_exporter",
         "//deepmind/level_generation/map_builder",
+        "@com_google_absl//absl/strings",
+        "@eigen_archive//:eigen",
     ],
 )
 
@@ -97,6 +105,8 @@ cc_library(
         "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
+        "//deepmind/lua:table_ref",
+        "//deepmind/support:logging",
     ],
 )
 

@@ -55,7 +55,7 @@ using geometry::kPi;
 lua::NResultsOr LuaTransform::CreateRotation(lua_State* L) {
   float angle;
   std::array<float, 3> a;
-  if (lua::Read(L, -2, &angle), lua::Read(L, -1, &a)) {
+  if (lua::Read(L, -2, &angle) && lua::Read(L, -1, &a)) {
     Transform xfrm;
     xfrm = Eigen::AngleAxis<float>(angle * kPi / 180.0f,  // Convert to radians.
                                    Eigen::Vector3f(a[0], a[1], a[2]));

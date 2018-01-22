@@ -33,7 +33,7 @@ namespace map_builder {
 
 // Constant used to convert world units to game units. In DeepMind Lab there are
 // 32 units to the meter, so we multiply any plane or position by this number.
-constexpr int kWorldToGameUnits = 32;
+constexpr double kWorldToGameUnits = 32.0;
 
 // Textures are used in brushes and patches to define surface settings.
 struct Texture {
@@ -209,15 +209,15 @@ std::vector<Brush> CreateHollowBox(
 // align correctly, we create the brushes so that they don't intersect with each
 // other, whilst still guaranteeing the box is airtight. The texture name is
 // appended with a suffix for each side (so _ft for front, etc).
-// Here is a top-down representation, with the encompassing top brush removed:
-// +--+------+--+
-// |            |
+// Here is a top-down representation:
+//    +------+
+//    |      |
 // +--+------+--+
 // |  |      |  |
 // |  |      |  |
 // +--+------+--+
-// |            |
-// +--+------+--+
+//    |      |
+//    +------+
 std::vector<Brush> CreateSkybox(
     const Eigen::Vector3d& position,
     const Eigen::Vector3d& size,

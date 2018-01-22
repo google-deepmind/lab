@@ -19,61 +19,41 @@
 // TextMazeExporter: An internal data structure to manage the translation of an
 // absract "maze" entity into a .map format representation.
 
-#ifndef DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_MAZE_EXPORTER_H_
-#define DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_MAZE_EXPORTER_H_
+#ifndef DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_LEVEL_EXPORTER_H_
+#define DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_LEVEL_EXPORTER_H_
 
+#include <array>
 #include <cstddef>
 #include <map>
 #include <random>
+#include <utility>
 #include <vector>
 
 #include "Eigen/Core"
 #include "deepmind/level_generation/map_builder/brush.h"
 #include "deepmind/level_generation/map_builder/builder.h"
 #include "deepmind/level_generation/map_builder/entity.h"
+#include "deepmind/level_generation/text_level/text_level_settings.h"
 
 namespace deepmind {
 namespace lab {
+constexpr char kGlassTexture[] = "map/poltergeist";
 
 // Creates a Quake3 .map file from a given maze. Uses map_builder::Builder to
 // build up and generate the actual file.
-class TextMazeExporter {
+class TextLevelExporter {
  public:
   using CellGroup = int;
 
-  enum class Theme {
-    kDefault,
-    TRON,
-    MINESWEEPER,
-    TETRIS,
-    GO,
-    PACMAN,
-    MISHMASH,
-  };
+  // Scale the textures to match the 100 units cell size.
+  static constexpr double kTexelSize = 100.0;
 
-  struct Settings {
-    Settings()
-        : theme(Theme::kDefault),
-          wall_decal_frequency(0.1),
-          floor_object_frequency(0.05),
-          cell_size(100.0 / map_builder::kWorldToGameUnits),
-          ceiling_scale(1.0),
-          light_intensity(1.0) {}
+  // A scaling factor for the platforms height.
+  static constexpr double kHeightScale = 0.2;
 
-    Theme theme;
-    std::string skybox_texture_name;
-    double wall_decal_frequency;
-    double floor_object_frequency;
-    double cell_size;
-    double ceiling_scale;
-    double light_intensity;
-  };
+  explicit TextLevelExporter(TextLevelSettings* settings);
 
-  explicit TextMazeExporter(
-      std::mt19937_64* rng,
-      const Settings& settings = Settings());
-
-  const Settings& GetSettings() const { return settings_; }
+  const TextLevelSettings& GetSettings() const { return *settings_; }
 
   // Call Finalize() before calling ToString().
   void Finalize();
@@ -84,21 +64,22 @@ class TextMazeExporter {
   void SetBoundingBox(Eigen::Vector3d size);
 
   void AddFloor(
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
+      const Eigen::Vector3d& a,
+      const Eigen::Vector3d& b,
+      const Eigen::Vector2i& cell,
       CellGroup group_number);
 
   void AddWall(
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
-      Eigen::Vector3d interior_direction,
+      const Eigen::Vector3d& a,
+      const Eigen::Vector3d& b,
+      const Eigen::Vector3d& interior_direction,
+      const Eigen::Vector2i& cell,
       CellGroup group_number);
 
-  void AddWall(
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
-      Eigen::Vector3d interior_direction,
-      const map_builder::Texture& texture);
+
+  void AddPlatform(double x, double y, int height);
+
+  void AddGlassColumn(double x, double y, int height);
 
   void Add(map_builder::Entity entity) {
     builder_.AddEntity(std::move(entity));
@@ -106,42 +87,62 @@ class TextMazeExporter {
 
   // Creates a light source.
   map_builder::Entity MakeLight(
-      Eigen::Vector3d position,
+      const Eigen::Vector3d& position,
       double intensity);
 
   // Creates a generic entity, scaling the position by the cell size.
   map_builder::Entity MakeEntity(
-      Eigen::Vector3d position,
+      const Eigen::Vector3d& position,
       std::string class_name,
-      std::vector<std::pair<std::string, std::string>> attributes);
+      const std::vector<std::pair<std::string, std::string>>& attributes);
 
   // Creates a generic entity, scaling the position by the cell size
   // and adding an offset.
   map_builder::Entity MakeEntityWithRealOffset(
-      Eigen::Vector3d position,
-      Eigen::Vector3d offset,
+      const Eigen::Vector3d& position,
+      const Eigen::Vector3d& offset,
       std::string class_name,
-      std::vector<std::pair<std::string, std::string>> attributes);
+      const std::vector<std::pair<std::string, std::string>>& attributes);
 
   // Creates a brush entity with a given texture. To make the texture fit the
   // brush, set texture_scale_{width, height} to be the size of the brush
   // divided by the size of the texture. If they are set to zero, the default
   // scale is used.
   map_builder::Entity MakeBrushEntity(
-      Eigen::Vector3d min,
-      Eigen::Vector3d max,
+      const Eigen::Vector3d& min,
+      const Eigen::Vector3d& max,
       std::string class_name,
       std::string texture_name,
       double texture_scale_width,
       double texture_scale_height,
-      std::vector<std::pair<std::string, std::string>> attributes);
+      const std::vector<std::pair<std::string, std::string>>& attributes);
+
+  // Creates a brush entity with a given texture. The texture is fitted to the
+  // brush according to its size.
+  map_builder::Entity MakeFittedBrushEntity(
+      const Eigen::Vector3d& min,
+      const Eigen::Vector3d& max,
+      std::string class_name,
+      const std::string& texture_name,
+      double texture_width,
+      double texture_height,
+      const std::vector<std::pair<std::string, std::string>>& attributes);
+
+  // Creates a brush entity with a series of blocks and a given texture. To make
+  // the texture fit the brush, set texture_scale_{width, height} to be the size
+  // of the brush divided by the size of the texture. If they are set to zero,
+  // the default scale is used.
+  map_builder::Entity MakeBrushEntity(
+      const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& blocks,
+      std::string class_name,
+      std::string texture_name,
+      double texture_scale_width,
+      double texture_scale_height,
+      const std::vector<std::pair<std::string, std::string>>& attributes);
 
  private:
-  struct ArtLocation {
-    Eigen::Vector3d a;
-    Eigen::Vector3d b;
-    Eigen::Vector3d interior_direction;
-  };
+  using  WallArtLocation = Theme::WallArtLocation;
+  using  FloorArtLocation = Theme::FloorArtLocation;
 
   // Set of textures for a theme.
   struct TextureSet {
@@ -154,52 +155,35 @@ class TextMazeExporter {
     std::vector<map_builder::Texture> ceiling;
     std::vector<map_builder::Texture> wall;
     std::vector<map_builder::Texture> wall_decals;
+    std::vector<map_builder::Texture> brick;
     std::vector<MazeModel> floor_models;
-    std::vector<MazeModel> wall_models;
   };
 
   map_builder::Patch GenerateWallDecal(
-      const std::string& texture,
-      double size,
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
-      Eigen::Vector3d interior_direction);
+      const Theme::Texture& texture,
+      const Eigen::Vector3d& a,
+      const Eigen::Vector3d& b,
+      const Eigen::Vector3d& interior_direction);
 
-  map_builder::Patch GenerateWallDecal(
-      std::size_t texture_index,
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
-      Eigen::Vector3d interior_direction);
-
-  map_builder::Entity GenerateWallModel(
-      std::size_t model_index,
-      Eigen::Vector3d a,
-      Eigen::Vector3d b,
-      Eigen::Vector3d interior_direction);
-
-  std::size_t Unbiased(std::size_t n) {
-    return size_dist(
-        *rng_,
-        std::uniform_int_distribution<std::size_t>::param_type(0, n - 1));
-  }
-
-  std::mt19937_64* rng_;
-  std::uniform_int_distribution<std::size_t> size_dist;
-  std::uniform_real_distribution<double> real_dist;
-
-  const Settings settings_;
+  TextLevelSettings* settings_;
 
   std::map<CellGroup, map_builder::Texture> floor_textures_;
   std::map<CellGroup, map_builder::Texture> ceiling_textures_;
-  std::map<CellGroup, map_builder::Texture> wall_textures_;
+  map_builder::Texture riser_texture_;
+  map_builder::Texture tread_texture_;
+  std::array<std::map<CellGroup, map_builder::Texture>, 4> wall_textures_;
 
   map_builder::Builder builder_;
   TextureSet texture_set_;
-  std::vector<ArtLocation> art_locations_;
+  std::vector<WallArtLocation> wall_art_locations_;
+
+  std::vector<FloorArtLocation> floor_art_locations_;
   Eigen::Vector3d bounding_box_size_;
+
+  map_builder::Texture glass_texture_{kGlassTexture, {0, 0}, 0, {0, 0}};
 };
 
 }  // namespace lab
 }  // namespace deepmind
 
-#endif  // DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_MAZE_EXPORTER_H_
+#endif  // DML_DEEPMIND_LEVEL_GENERATION_TEXT_LEVEL_TEXT_LEVEL_EXPORTER_H_

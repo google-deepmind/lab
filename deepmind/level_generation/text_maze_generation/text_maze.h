@@ -23,15 +23,37 @@
 #include <array>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace deepmind {
 namespace lab {
 namespace maze_generation {
 
+struct Vec {
+  int d_row;
+  int d_col;
+};
+
+inline Vec operator*(int scl, const Vec& vec) {
+  return {scl * vec.d_row, scl * vec.d_col};
+}
+
 struct Pos {
   int row;
   int col;
 };
+
+inline Pos operator+(const Pos& pos, const Vec& vec) {
+  return {pos.row + vec.d_row, pos.col + vec.d_col};
+}
+
+inline Pos operator-(const Pos& pos, const Vec& vec) {
+  return {pos.row - vec.d_row, pos.col - vec.d_col};
+}
+
+inline bool operator==(const Pos& op0, const Pos& op1) {
+  return op0.row == op1.row && op0.col == op1.col;
+}
 
 struct Size {
   int height;
@@ -103,7 +125,7 @@ inline bool IsSeparate(const Rectangle& lhs, const Rectangle& rhs) {
 class TextMaze {
  public:
   // Selects which layer to apply operations to.
-  enum eLayer { kEntityLayer, kVariationsLayer };
+  enum Layer { kEntityLayer, kVariationsLayer };
 
   // Creates an entity and variation layer of a text level with extents of
   // 'extents'. Each layer is constructed as a new-line separated block of text.
@@ -114,7 +136,7 @@ class TextMaze {
   // Calls f(i, j, cell) for each cell (i, j) in the intersection of the maze
   // and rect.
   template <typename F>
-  void VisitIntersection(eLayer layer, const Rectangle& rect, F&& f) const {
+  void VisitIntersection(Layer layer, const Rectangle& rect, F&& f) const {
     const auto& text = text_[layer];
     Overlap(Area(), rect).Visit([this, &text, &f](int i, int j) {
       f(i, j, text[ToTextIdx(i, j)]);
@@ -123,7 +145,7 @@ class TextMaze {
 
   // Mutable variant of VisitIntersection.
   template <typename F>
-  void VisitMutableIntersection(eLayer layer, const Rectangle& rect, F&& f) {
+  void VisitMutableIntersection(Layer layer, const Rectangle& rect, F&& f) {
     auto& text = text_[layer];
     Overlap(Area(), rect).Visit([this, &text, &f](int i, int j) {
       f(i, j, &text[ToTextIdx(i, j)]);
@@ -132,19 +154,19 @@ class TextMaze {
 
   // Calls f(i, j, cell) for each cell (i, j).
   template <typename F>
-  void Visit(eLayer layer, F&& f) const {
+  void Visit(Layer layer, F&& f) const {
     VisitIntersection(layer, Area(), std::forward<F>(f));
   }
 
   // Mutable variant of Visit.
   template <typename F>
-  void VisitMutable(eLayer layer, F&& f) {
+  void VisitMutable(Layer layer, F&& f) {
     VisitMutableIntersection(layer, Area(), std::forward<F>(f));
   }
 
   // Returns the character at position pos in layer layer, or '\0' of pos is out
   // of bounds of the maze.
-  char GetCell(eLayer layer, Pos pos) const {
+  char GetCell(Layer layer, Pos pos) const {
     if (Area().InBounds(pos)) {
       return text_[layer][ToTextIdx(pos.row, pos.col)];
     } else {
@@ -154,14 +176,55 @@ class TextMaze {
 
   // Sets the character at position 'pos' in layer 'layer' to 'value' if pos is
   // within bounds of the maze; otherwise there is no effect.
-  void SetCell(eLayer layer, Pos pos, char value) {
+  void SetCell(Layer layer, Pos pos, char value) {
     if (Area().InBounds(pos)) {
       text_[layer][ToTextIdx(pos.row, pos.col)] = value;
     }
   }
 
+  // Sets the characters within the rectangle 'rect' to 'value' for the subset
+  // of 'rect' that's within the bounds of the maze.
+  void FillRect(Layer layer, const Rectangle& rect, char value) {
+    VisitMutableIntersection(layer, rect, [value](int i, int j, char* c) {
+        *c = value;
+    });
+  }
+
+  // Returns the id at position pos, or 0 of pos is out of bounds of the maze.
+  unsigned int GetCellId(Pos pos) const {
+    if (Area().InBounds(pos)) {
+      return ids_[ToIdIdx(pos.row, pos.col)];
+    } else {
+      return 0;
+    }
+  }
+
+  // Sets the character at position 'pos' in layer 'layer' to 'value' if pos is
+  // within bounds of the maze; otherwise there is no effect.
+  void SetCellId(Pos pos, unsigned int id) {
+    if (Area().InBounds(pos)) {
+      ids_[ToIdIdx(pos.row, pos.col)] = id;
+    }
+  }
+
+  // Perform 'rotation' number of clockwise rotations on the maze.
+  // If 'rotation' is negative, rotate counterclockwise instead.
+  // A 'rotation' of any multiple of 4 returns a copy of the passed in maze.
+  // Returns a rotated copy of the maze. Return-by-value is reasonable because
+  // of the move operator on TextMaze.
+  TextMaze Rotate(int rotation) const;
+
+  // Copy the 'layer' of 'maze' into the position start at 'pos'.
+  // Clamp the copy to the bounds of the current maze.
+  void Paste(Layer layer, Pos pos, const TextMaze& maze) {
+    Rectangle rect{pos, maze.Area().size};
+    VisitMutableIntersection(layer, rect, [&](int i, int j, char* c) {
+        *c = maze.GetCell(layer, Pos{i - pos.row, j - pos.col});
+    });
+  }
+
   // Returns text associated with the 'layer'.
-  const std::string& Text(eLayer layer) const { return text_[layer]; }
+  const std::string& Text(Layer layer) const { return text_[layer]; }
 
   // Area representing mutable cells of the grid.
   const Rectangle& Area() const { return area_; }
@@ -172,8 +235,13 @@ class TextMaze {
   // (j is allowed to be area_.size.width for setting new-lines.)
   int ToTextIdx(int i, int j) const { return i * (area_.size.width + 1) + j; }
 
-  const Rectangle area_;
+  // Translates grid coordinates to the linear id position. Use only when (i, j)
+  // is within bounds.
+  int ToIdIdx(int i, int j) const { return i * area_.size.width + j; }
+
+  Rectangle area_;
   std::array<std::string, 2> text_;
+  std::vector<unsigned int> ids_;
 };
 
 }  // namespace maze_generation

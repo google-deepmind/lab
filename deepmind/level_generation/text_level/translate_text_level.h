@@ -28,6 +28,8 @@
 #include <utility>
 #include <vector>
 
+#include "deepmind/level_generation/text_level/text_level_settings.h"
+
 namespace deepmind {
 namespace lab {
 
@@ -36,15 +38,14 @@ namespace lab {
 class MapSnippetEmitter {
  public:
   // Emits an entity with the given class name and set of attributes located in
-  // the centre of the the (i, j) cell.
+  // the centre of the the (i, j) cell and at a given height.
   std::string AddEntity(
-      std::size_t i,
-      std::size_t j,
-      std::string class_name,
+      double i, double j, double height, std::string class_name,
       const std::vector<std::pair<std::string, std::string>>& attributes) const;
 
-  // Emits a spawn point in the (i, j) cell.
-  std::string AddSpawn(std::size_t i, std::size_t j, double angle_rad) const;
+  // Emits a spawn point in the (i, j) cell and at a given height.
+  std::string AddSpawn(double i, double j, double height,
+                       double angle_rad) const;
 
   // Emits a door cell. There are two possible directions for a door, labeled
   // 'I' and 'H'. A door if type 'I' at cell (i, j) can be traversed in the
@@ -58,7 +59,27 @@ class MapSnippetEmitter {
   //                 *     *
   //                 *******
   //
-  std::string AddDoor(std::size_t i, std::size_t j, char direction) const;
+  std::string AddDoor(double i, double j, char direction) const;
+
+  // Emits a fence door cell. Fence door cells are very similar to door cells,
+  // except that the fence doors are composed of a series of blocks so that we
+  // can see through them.
+  std::string AddFenceDoor(double i, double j, char direction) const;
+
+  // Emits a platform cell at specified position and height. The platform
+  // surface size is a whole maze cell.
+  // A platform is composed by several layers from top to bottom:
+  //   - A top thin layer with a floor texture.
+  //   - An intermediate layer with black texture, to enphasize the platform
+  //     borders.
+  //   - A plaform base, with a brick-like textures.
+  //   - An invisible column from the bottom of the platform down to the ground
+  //     which prevents the player from steping below other platforms.
+  std::string AddPlatform(double i, double j, double height) const;
+
+  // Emits an invisible column all the way from the ground to the specified
+  // height. The column section will be a whole maze cell.
+  std::string AddGlassColumn(double i, double j, double height) const;
 
  protected:
   MapSnippetEmitter() = default;
@@ -88,6 +109,9 @@ class MapSnippetEmitter {
 // A random number generator must be provided which is used to select variations
 // and decorations.
 //
+// Additional parameters for level generation (e.g. use skybox) can be specified
+// via level_settings.
+//
 // See documentation for details.
 
 using TranslateTextLevelCallback = std::function<bool(
@@ -101,7 +125,8 @@ std::string TranslateTextLevel(
     std::string level_text,
     std::string variations_text,
     std::mt19937_64* rng,
-    const TranslateTextLevelCallback& callback);
+    const TranslateTextLevelCallback& callback,
+    TextLevelSettings* level_settings);
 
 }  // namespace lab
 }  // namespace deepmind

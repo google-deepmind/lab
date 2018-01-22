@@ -11,6 +11,9 @@
 5.  Add ability to retrieve game entity from Lua scripts.
 6.  Add ability create pickup models during level load.
 7.  Add ability to update textures from script after the level has loaded.
+8.  Add customisable themes. Note: This change renames helpers in
+    `maze_generation` to be in lowerCamelCase (e.g. `MazeGeneration` ->
+    `mazeGeneration`).
 
 ### Minor Improvements:
 

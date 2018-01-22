@@ -67,7 +67,7 @@ int FloodFill::DistanceFrom(Pos pos) const {
   }
 }
 
-FloodFill::FloodFill(const TextMaze& maze, TextMaze::eLayer layer, Pos goal,
+FloodFill::FloodFill(const TextMaze& maze, TextMaze::Layer layer, Pos goal,
                      const std::vector<char>& wall_chars)
     : area_(maze.Area()) {
   auto is_wall = internal::MakeCharBoolMap(wall_chars);

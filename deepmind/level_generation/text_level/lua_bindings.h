@@ -81,9 +81,12 @@ class LuaSnippetEmitter : public lua::Class<LuaSnippetEmitter> {
   // strings that are suitable for returning from the custom entity callback.
   static void Register(lua_State* L) {
     const Class::Reg methods[] = {
-      {"makeEntity", Member<&LuaSnippetEmitter::MakeEntity>},
-      {"makeSpawnPoint", Member<&LuaSnippetEmitter::MakeSpawnPoint>},
-      {"makeDoor", Member<&LuaSnippetEmitter::MakeDoor>},
+        {"makeEntity", Member<&LuaSnippetEmitter::MakeEntity>},
+        {"makeSpawnPoint", Member<&LuaSnippetEmitter::MakeSpawnPoint>},
+        {"makeDoor", Member<&LuaSnippetEmitter::MakeDoor>},
+        {"makeFenceDoor", Member<&LuaSnippetEmitter::MakeFenceDoor>},
+        {"addPlatform", Member<&LuaSnippetEmitter::AddPlatform>},
+        {"addGlassColumn", Member<&LuaSnippetEmitter::AddGlassColumn>},
     };
     Class::Register(L, methods);
   }
@@ -91,23 +94,43 @@ class LuaSnippetEmitter : public lua::Class<LuaSnippetEmitter> {
   explicit LuaSnippetEmitter(const MapSnippetEmitter* emitter)
       : emitter_(*emitter) {}
 
-  // makeEntity(i, j, className[, attributes])
+  // makeEntity({i, j[, height], classname[, attributes]}),
+  // use table call conventions.
   //
   // Creates a custom entity at the centre of cell (i, j) with the given class
   // name and list of attributes (which must be a string-to-string map).
+  // If the height is given, the entity will be created at
   lua::NResultsOr MakeEntity(lua_State* L);
 
-  // makeSpawnPoint(i, j[, angle_rad])
+  // makeSpawnPoint({i, j[, height, angleRad]}), use table call conventions.
   //
   // Creates a spawn point at cell (i, j) facing in direction of angle_rad,
   // which is the angle (in radians) counter-clockwise from West.
   lua::NResultsOr MakeSpawnPoint(lua_State* L);
 
-  // makeDoor(i, j, isEastWest)
+  // makeDoor({i, j, isEastWest}), use table call conventions.
   //
   // Creates a door in cell (i, j). If isEastWest is true, the door is of type
   // 'I', otherwise it is of type 'H'.
   lua::NResultsOr MakeDoor(lua_State* L);
+
+  // makeFenceDoor({i, j, isEastWest}), use table call conventions.
+  //
+  // Creates a fence door in cell (i, j). If isEastWest is true, the door is of
+  // type 'I', otherwise it is of type 'H'.
+  lua::NResultsOr MakeFenceDoor(lua_State* L);
+
+  // makePlatform({i, j, height}), use table call conventions.
+  //
+  // Adds a platform cell in cell (i, j) and place the platform at the given
+  // height.
+  lua::NResultsOr AddPlatform(lua_State* L);
+
+  // addGlassColumn({i, j, height}), use table call conventions.
+  //
+  // Adds an invisible column all the way from the ground to the given height in
+  // cell (i, j).
+  lua::NResultsOr AddGlassColumn(lua_State* L);
 
  private:
   const MapSnippetEmitter& emitter_;

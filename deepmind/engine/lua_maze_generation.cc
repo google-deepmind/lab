@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "deepmind/engine/lua_random.h"
 #include "deepmind/level_generation/text_level/char_grid.h"
 #include "deepmind/level_generation/text_maze_generation/algorithm.h"
 #include "deepmind/level_generation/text_maze_generation/flood_fill.h"
@@ -33,6 +34,36 @@
 
 namespace deepmind {
 namespace lab {
+namespace {
+
+std::mt19937_64* GetRandomNumberGenerator(lua::TableRef* table,
+                                          std::mt19937_64* seeded_rng) {
+  std::mt19937_64* prng = nullptr;
+  lua_State* L = table->LuaState();
+  table->LookUpToStack("random");
+  if (!lua_isnil(L, -1)) {
+    LuaRandom* random = LuaRandom::ReadObject(L, -1);
+    if (random != nullptr) {
+      prng = random->GetPrbg();
+    }
+  }
+  lua_pop(L, 1);
+  if (prng == nullptr) {
+    int seed = 0;
+    if (table->LookUp("seed", &seed)) {
+      seeded_rng->seed(seed);
+      prng = seeded_rng;
+    }
+  }
+  return prng;
+}
+
+}  // namespace
+
+// Default maximum number of attempts to lay out rooms in
+// LuaMazeGeneration::CreateRandom.
+constexpr int kDefaultRetryCount = 1000;
+constexpr int kGridWidth = 100;
 
 class LuaRoom : public lua::Class<LuaRoom> {
  public:
@@ -87,7 +118,9 @@ const char* LuaMazeGeneration::ClassName() {
 
 int LuaMazeGeneration::Require(lua_State* L) {
   auto table = lua::TableRef::Create(L);
-  table.Insert("MazeGeneration", &lua::Bind<LuaMazeGeneration::Create>);
+  table.Insert("mazeGeneration", &lua::Bind<LuaMazeGeneration::Create>);
+  table.Insert("randomMazeGeneration",
+               &lua::Bind<LuaMazeGeneration::CreateRandom>);
   lua::Push(L, table);
   return 1;
 }
@@ -98,7 +131,7 @@ lua::NResultsOr LuaMazeGeneration::Create(lua_State* L) {
   if (table.Contains("entity")) {
     std::string entity_layer;
     if (!table.LookUp("entity", &entity_layer) || entity_layer.empty()) {
-      return "[MazeGeneration] - Must construct with non empty entity_layer";
+      return "[mazeGeneration] - Must construct with non empty entity_layer";
     }
     std::string variations_layer;
     if (table.LookUp("variations", &variations_layer) &&
@@ -114,13 +147,177 @@ lua::NResultsOr LuaMazeGeneration::Create(lua_State* L) {
     int height = 0;
     int width = 0;
     if (!table.LookUp("height", &height) || height <= 0) {
-      return "[MazeGeneration] - Must construct with positive width and height";
+      return "[mazeGeneration] - Must construct with positive width and height";
     }
     if (!table.LookUp("width", &width) || width <= 0) {
-      return "[MazeGeneration] - Must construct with positive width and height";
+      return "[mazeGeneration] - Must construct with positive width and height";
     }
     CreateObject(L, maze_generation::Size{height, width});
   }
+  return 1;
+}
+
+lua::NResultsOr LuaMazeGeneration::CreateRandom(lua_State* L) {
+  lua::TableRef table;
+  lua::Read(L, -1, &table);
+
+  std::mt19937_64 seeded_rng;
+  std::mt19937_64* prng = GetRandomNumberGenerator(&table, &seeded_rng);
+  if (prng == nullptr) {
+    return "[randomMazeGeneration] - Must construct with 'random' a random "
+           "number generator. ('seed' is deprecated.)";
+  }
+
+  int height = 0;
+  int width = 0;
+  if (!table.LookUp("height", &height) || height <= 0 || height % 2 == 0) {
+    return "[randomMazeGeneration] - Must construct with positive odd height";
+  }
+  if (!table.LookUp("width", &width) || width <= 0 || width % 2 == 0) {
+    return "[randomMazeGeneration] - Must construct with positive odd width";
+  }
+  int max_rooms = 0;
+  if (!table.LookUp("maxRooms", &max_rooms) || max_rooms < 0) {
+    return "[randomMazeGeneration] - Must construct with non-negative "
+           "maxRooms";
+  }
+  int max_variations = 26;
+  table.LookUp("maxVariations", &max_variations);
+  if (max_variations <= 0 || max_variations > 26) {
+    return "[randomMazeGeneration] - Must construct with maxVariations in  "
+           "[1,26]";
+  }
+  int room_min_size = 3;
+  table.LookUp("roomMinSize", &room_min_size);
+  if (room_min_size <= 0 || room_min_size % 2 == 0) {
+    return "[randomMazeGeneration] - Must construct with positive odd "
+           "roomMinSize";
+  }
+  int room_max_size = 7;
+  table.LookUp("roomMaxSize", &room_max_size);
+  if (room_max_size <= 0 || room_max_size % 2 == 0) {
+    return "[randomMazeGeneration] - Must construct with positive odd "
+           "roomMaxSize";
+  }
+  int retry_count = kDefaultRetryCount;
+  table.LookUp("retryCount", &retry_count);
+  if (retry_count <= 0) {
+    return "[randomMazeGeneration] - Must construct with positive retryCount";
+  }
+  double extra_connection_probability = 0.05;
+  table.LookUp("extraConnectionProbability", &extra_connection_probability);
+  bool simplify = true;
+  table.LookUp("simplify", &simplify);
+  int room_spawn_count = 0;
+  std::string spawn = "P";
+  table.LookUp("roomSpawnCount", &room_spawn_count);
+  table.LookUp("spawn", &spawn);
+  if (spawn.length() != 1) {
+    return "[randomMazeGeneration] - Must construct with single character as "
+           "spawn entity";
+  }
+  int room_object_count = 0;
+  std::string object = "G";
+  table.LookUp("roomObjectCount", &room_object_count);
+  table.LookUp("object", &object);
+  if (object.length() != 1) {
+    return "[randomMazeGeneration] - Must construct with single character as "
+           "object entity";
+  }
+  bool has_doors = false;
+  table.LookUp("hasDoors", &has_doors);
+
+  maze_generation::TextMaze maze(maze_generation::Size{height, width});
+
+  // Create random rooms.
+  maze_generation::SeparateRectangleParams params{};
+  params.min_size = maze_generation::Size{room_min_size, room_min_size};
+  params.max_size = maze_generation::Size{room_max_size, room_max_size};
+  params.retry_count = retry_count;
+  params.max_rects = max_rooms;
+  params.density = 1.0;
+  const auto rects = MakeSeparateRectangles(maze.Area(), params, prng);
+  const auto num_rooms = rects.size();
+  for (unsigned int r = 0; r < num_rooms; ++r) {
+    maze.VisitMutableIntersection(maze_generation::TextMaze::kEntityLayer,
+                                  rects[r],
+                                  [&maze, r](int i, int j, char* cell) {
+                                    *cell = ' ';
+                                    maze.SetCellId({i, j}, r + 1);
+                                  });
+  }
+
+  // Fill the vacant space with corridors.
+  FillSpaceWithMaze(num_rooms + 1, 0, &maze, prng);
+
+  // Connect adjacent regions at least once.
+  auto conns =
+      RandomConnectRegions(-1, extra_connection_probability, &maze, prng);
+
+  // Add variations.
+  maze.VisitMutable(
+      maze_generation::TextMaze::kVariationsLayer,
+      [max_variations, &maze, num_rooms](int i, int j, char* cell) {
+        auto id = maze.GetCellId({i, j});
+        if (id > 0 && id <= num_rooms) {
+          *cell = 'A' + (id - 1) % max_variations;
+        }
+      });
+
+
+  // Simplify the maze if requested.
+  if (simplify) {
+    RemoveDeadEnds(' ', '*', {}, &maze);
+    RemoveAllHorseshoeBends('*', {}, &maze);
+  }
+
+  // Add entities and spawn points.
+  AddNEntitiesToEachRoom(rects, room_spawn_count, spawn[0], ' ', &maze, prng);
+  AddNEntitiesToEachRoom(rects, room_object_count, object[0], ' ', &maze, prng);
+
+  // Set each connection cell connection type.
+  for (const auto& conn : conns) {
+    char connection_type;
+    // Set to wall if connected to nowhere.
+    if (maze.GetCell(maze_generation::TextMaze::kEntityLayer,
+                     conn.first + conn.second) == '*') {
+      connection_type = '*';
+    } else if (has_doors) {
+      connection_type = (conn.second.d_col == 0) ? 'H' : 'I';
+    } else {
+      connection_type = ' ';
+    }
+    maze.SetCell(maze_generation::TextMaze::kEntityLayer, conn.first,
+                 connection_type);
+  }
+
+  CreateObject(L, maze);
+  return 1;
+}
+
+lua::NResultsOr LuaMazeGeneration::Rotate(lua_State* L) {
+  int rotation = 0;
+  if (lua_gettop(L) != 2 || !lua::Read(L, 2, &rotation)) {
+    return "[rotate] - Must provide rotation";
+  }
+  maze_generation::TextMaze rotated = text_maze_.Rotate(rotation);
+  CreateObject(L, maze_generation::TextMaze(rotated));
+  return 1;
+}
+
+lua::NResultsOr LuaMazeGeneration::Paste(lua_State* L) {
+  int row = 0;
+  int col = 0;
+  if (lua_gettop(L) != 4 || !lua::Read(L, 2, &row) || !lua::Read(L, 3, &col)) {
+    return "[insert] - Must provide row, col";
+  }
+  LuaMazeGeneration* pasteMaze = ReadObject(L, 4);
+  if (!pasteMaze) {
+    return "[insert] - Must provide maze";
+  }
+
+  text_maze_.Paste(maze_generation::TextMaze::kEntityLayer, {row - 1, col - 1},
+                   pasteMaze->text_maze_);
   return 1;
 }
 
@@ -158,6 +355,28 @@ lua::NResultsOr LuaMazeGeneration::SetEntityCell(lua_State* L) {
 
   text_maze_.SetCell(maze_generation::TextMaze::kEntityLayer,
                      {row - 1, col - 1}, character[0]);
+  return 0;
+}
+
+lua::NResultsOr LuaMazeGeneration::FillEntityRect(lua_State* L) {
+  lua::TableRef table;
+  lua::Read(L, -1, &table);
+
+  int row = 0;
+  int col = 0;
+  int height = 0;
+  int width = 0;
+  std::string character;
+  if (!table.LookUp("row", &row) ||
+      !table.LookUp("col", &col) ||
+      !table.LookUp("height", &height) ||
+      !table.LookUp("width", &width) ||
+      !table.LookUp("character", &character)) {
+    return "[setEntityRect] - Must provide row, col, height, width, character";
+  }
+
+  text_maze_.FillRect(maze_generation::TextMaze::kEntityLayer,
+                      {{row - 1, col - 1}, {height, width}}, character[0]);
   return 0;
 }
 
@@ -218,6 +437,41 @@ lua::NResultsOr LuaMazeGeneration::Size(lua_State* L) {
   return 2;
 }
 
+lua::NResultsOr LuaMazeGeneration::ToWorldPos(lua_State* L) {
+  int row = 0;
+  int col = 0;
+  if (lua_gettop(L) != 3 || !lua::Read(L, 2, &row) || !lua::Read(L, 3, &col)) {
+    return "[toWorldPos] - Must provide row, col";
+  }
+  lua::Push(L, (col - 1) * kGridWidth + kGridWidth / 2);
+  lua::Push(
+      L, (text_maze_.Area().size.height - row) * kGridWidth + kGridWidth / 2);
+  return 2;
+}
+
+lua::NResultsOr LuaMazeGeneration::FromWorldPos(lua_State* L) {
+  double x = 0.0;
+  double y = 0.0;
+  if (lua_gettop(L) != 3 || !lua::Read(L, 2, &x) || !lua::Read(L, 3, &y)) {
+    return "[fromWorldPos] - Must provide x, y";
+  }
+
+  // y = (text_maze_.Area().size.height - row) * kGridWidth + kGridWidth/2
+  //  ==>  row = text_maze_.Area().size.height - (y - kGridWidth/2) / kGridWidth
+  //           = text_maze_.Area().size.height - y/kGridWidth - 1/2
+  //           = text_maze_.Area().size.height - floor(y/kGridWidth)
+  lua::Push(L, text_maze_.Area().size.height -
+                   static_cast<int>(std::floor(y / kGridWidth)));
+
+  // x = (col - 1) * kGridWidth + kGridWidth/2
+  //  ==>  col = (x - kGridWidth/2) / kGridWidth + 1
+  //           = x / kGridWidth - 1/2 + 1
+  //           = x / kGridWidth + 1/2
+  //           = floor(x / kGridWidth + 1)
+  lua::Push(L, static_cast<int>(std::floor(x / kGridWidth + 1.0)));
+  return 2;
+}
+
 lua::NResultsOr LuaMazeGeneration::VisitFill(lua_State* L) {
   lua::TableRef table;
   if (lua_gettop(L) < 2 || !lua::Read(L, 2, &table)) {
@@ -260,21 +514,77 @@ lua::NResultsOr LuaMazeGeneration::VisitFill(lua_State* L) {
   return first_error;
 }
 
+lua::NResultsOr LuaMazeGeneration::VisitRandomPath(lua_State* L) {
+  lua::TableRef table;
+  if (lua_gettop(L) < 2 || !lua::Read(L, 2, &table)) {
+    return "[visitRandomPath] - must supply table";
+  }
+  std::mt19937_64 seeded_rng;
+  std::mt19937_64* prng = GetRandomNumberGenerator(&table, &seeded_rng);
+  if (prng == nullptr) {
+    return "[visitRandomPath] - must supply 'random' with random number "
+           "generator. ('seed' is deprecated.)";
+  }
+  std::array<int, 2> from;
+  if (!table.LookUp("from", &from)) {
+    return "[visitRandomPath] - must supply 'from' with an array of two "
+           "integers.";
+  }
+  std::array<int, 2> to;
+  if (!table.LookUp("to", &to)) {
+    return "[visitRandomPath] - must supply 'to' with an array of two "
+           "integers.";
+  }
+  std::vector<char> wall_chars = {'*'};
+  if (table.Contains("wall")) {
+    std::string wall_string;
+    if (!table.LookUp("wall", &wall_string)) {
+      return "[visitRandomPath] - must supply 'wall' with a string of wall "
+             "characters.";
+    }
+    wall_chars.assign(wall_string.begin(), wall_string.end());
+  }
+  if (!table.Contains("func")) {
+    return "[visitRandomPath] - must supply callback 'func' with a string of "
+           "wall characters.";
+  }
+
+  std::vector<maze_generation::Pos> path = maze_generation::FindRandomPath(
+      {from[0] - 1, from[1] - 1}, {to[0] - 1, to[1] - 1}, wall_chars,
+      &text_maze_, prng);
+  for (const auto& pos : path) {
+    table.LookUpToStack("func");
+    lua::Push(L, pos.row + 1);
+    lua::Push(L, pos.col + 1);
+    lua::NResultsOr error = lua::Call(L, 2);
+    lua_pop(L, error.n_results());
+    if (!error.ok()) return error;
+  }
+  lua::Push(L, !path.empty());
+  return 1;
+}
+
 // Registers classes metatable with Lua.
-// [0 0 -]
+// [0, 0, -]
 void LuaMazeGeneration::Register(lua_State* L) {
   Class::Reg regs[] = {
       {"entityLayer", Class::Member<&LuaMazeGeneration::EntityLayer>},
       {"variationsLayer", Class::Member<&LuaMazeGeneration::VariationsLayer>},
       {"getEntityCell", Class::Member<&LuaMazeGeneration::GetEntityCell>},
       {"setEntityCell", Class::Member<&LuaMazeGeneration::SetEntityCell>},
+      {"fillEntityRect", Class::Member<&LuaMazeGeneration::FillEntityRect>},
       {"getVariationsCell",
        Class::Member<&LuaMazeGeneration::GetVariationsCell>},
       {"setVariationsCell",
        Class::Member<&LuaMazeGeneration::SetVariationsCell>},
+      {"rotate", Class::Member<&LuaMazeGeneration::Rotate>},
+      {"paste", Class::Member<&LuaMazeGeneration::Paste>},
       {"findRooms", Class::Member<&LuaMazeGeneration::FindRooms>},
       {"size", Class::Member<&LuaMazeGeneration::Size>},
+      {"toWorldPos", Class::Member<&LuaMazeGeneration::ToWorldPos>},
+      {"fromWorldPos", Class::Member<&LuaMazeGeneration::FromWorldPos>},
       {"visitFill", Class::Member<&LuaMazeGeneration::VisitFill>},
+      {"visitRandomPath", Class::Member<&LuaMazeGeneration::VisitRandomPath>},
   };
   Class::Register(L, regs);
   LuaRoom::Register(L);

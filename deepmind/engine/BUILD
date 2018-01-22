@@ -176,8 +176,10 @@ cc_library(
     srcs = ["lua_maze_generation.cc"],
     hdrs = ["lua_maze_generation.h"],
     deps = [
+        ":lua_random",
         "//deepmind/level_generation/text_level:char_grid",
         "//deepmind/level_generation/text_maze_generation:algorithm",
+        "//deepmind/level_generation/text_maze_generation:flood_fill",
         "//deepmind/level_generation/text_maze_generation:text_maze",
         "//deepmind/lua",
         "//deepmind/lua:bind",
@@ -196,6 +198,8 @@ cc_test(
     srcs = ["lua_maze_generation_test.cc"],
     deps = [
         ":lua_maze_generation",
+        ":lua_random",
+        "//deepmind/lua:bind",
         "//deepmind/lua:call",
         "//deepmind/lua:n_results_or_test_util",
         "//deepmind/lua:push_script",

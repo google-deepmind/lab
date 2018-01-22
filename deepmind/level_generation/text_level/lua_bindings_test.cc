@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "deepmind/level_generation/text_level/text_level_settings.h"
 #include "deepmind/level_generation/text_level/translate_text_level.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/push_script.h"
@@ -40,16 +41,36 @@ constexpr char kLuaFn[] = R"(
 i, j, ent, emitter = ...
 
 if ent == "x" then
-  return {emitter:makeEntity(i, j, "xyzzy", {a = "goodattr"}),
-          emitter:makeEntity(i, j, "xyzzy", {a = "badattr", b = 10})}
+  return {
+      emitter:makeEntity{
+          i = i,
+          j = j,
+          classname = "xyzzy",
+          attributes = {a = "goodattr"}
+      },
+      emitter:makeEntity{
+          i = i,
+          j = j,
+          classname = "xyzzy",
+          attributes = {a = "badattr", b = 10}
+      }
+  }
 end
 
 if ent == "y" then
-  return emitter:makeDoor(i, j, true)
+  return emitter:makeDoor{
+      i = i,
+      j = j,
+      isEastWest = true
+  }
 end
 
 if ent == "z" then
-  return emitter:makeSpawnPoint(i, j, 1.25)
+  return emitter:makeSpawnPoint{
+      i = i,
+      j = j,
+      angleRad = 1.25
+  }
 end
 
 if ent == "w" then
@@ -86,7 +107,8 @@ TEST(LuaBindings, Simple) {
   using namespace std::placeholders;
   auto cb = std::bind(LuaCustomEntityCallback, L, -1, _1, _2, _3, _4, _5);
 
-  std::string s = TranslateTextLevel("* xyzw abc *\n", "", &rng, cb);
+  TextLevelSettings settings;
+  std::string s = TranslateTextLevel("* xyzw *\n", "", &rng, cb, &settings);
 
   // From 'x':
   EXPECT_THAT(s, HasSubstr("\"classname\" \"xyzzy\""));
@@ -101,9 +123,26 @@ TEST(LuaBindings, Simple) {
 
   // From 'w':
   EXPECT_THAT(s, HasSubstr("x\n\ny\n\nz\n\n"));
+}
 
-  // From 'a', 'b', 'c':
-  EXPECT_THAT(s, Not(HasSubstr("poison")));
+TEST(LuaBindings, CallbackErrorIsFatal) {
+  auto vm = lua::CreateVm();
+  lua_State* L = vm.get();
+  std::mt19937_64 rng(123);
+
+  LuaSnippetEmitter::Register(L);
+
+  {
+    auto res = lua::PushScript(L, std::string(kLuaFn), "lua_test_function");
+    CHECK(res.ok());
+    CHECK_EQ(1, res.n_results());
+  }
+  using namespace std::placeholders;
+  auto cb = std::bind(LuaCustomEntityCallback, L, -1, _1, _2, _3, _4, _5);
+
+  TextLevelSettings settings;
+  EXPECT_DEATH(TranslateTextLevel("* abc *\n", "", &rng, cb, &settings),
+               "User callback invocation failed");
 }
 
 }  // namespace

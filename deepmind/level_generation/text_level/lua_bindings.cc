@@ -32,6 +32,7 @@
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
+#include "deepmind/lua/table_ref.h"
 
 namespace deepmind {
 namespace lab {
@@ -72,8 +73,7 @@ bool LuaCustomEntityCallback(
   std::vector<std::string> data(1);
 
   if (!res.ok()) {
-    LOG(ERROR) << "User callback invocation failed ('" + res.error() + "')";
-    return false;
+    LOG(FATAL) << "User callback invocation failed ('" + res.error() + "')";
   } else if ((res.n_results() == 0) ||
              (res.n_results() == 1 && lua_isnil(L, -1))) {
     VLOG(1) << "User callback(" << i << ", " << j << ", '" << ent
@@ -82,9 +82,7 @@ bool LuaCustomEntityCallback(
     return false;
   } else if ((res.n_results() > 1) ||
              !(lua::Read(L, -1, &data) || lua::Read(L, -1, &data.front()))) {
-    LOG(ERROR) << "User callback returned invalid results.";
-    lua_pop(L, res.n_results());
-    return false;
+    LOG(FATAL) << "User callback returned invalid results.";
   } else {
     auto is_empty = std::mem_fn(&std::string::empty);
     data.erase(std::remove_if(data.begin(), data.end(), is_empty), data.end());
@@ -99,54 +97,129 @@ bool LuaCustomEntityCallback(
 }
 
 lua::NResultsOr LuaSnippetEmitter::MakeEntity(lua_State* L) {
-  int i, j;
-  std::string class_name;
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[makeEntity] - Invalid argument, it must be a table.";
+  }
+
+  double i, j, height;
+  std::string classname;
   std::unordered_map<std::string, std::string> attrs;
 
-  if (!lua::Read(L, 2, &i) ||
-      !lua::Read(L, 3, &j) ||
-      !lua::Read(L, 4, &class_name)) {
-    return "Bad arguments";
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
+      !table.LookUp("classname", &classname)) {
+    return "[makeEntity] - Invalid arguments";
   }
 
-  if (lua_gettop(L) == 5 && !lua::Read(L, 5, &attrs)) {
-    LOG(ERROR) << "Malformed attribute table in user callback; ignoring.";
+  if (!table.LookUp("height", &height)) {
+    height = 0;
   }
 
-  lua::Push(L, emitter_.AddEntity(
-      i, j, std::move(class_name),
-      std::vector<std::pair<std::string, std::string>>(
-          attrs.begin(), attrs.end())));
+  if (table.Contains("attributes")) {
+    if (!table.LookUp("attributes", &attrs)) {
+      LOG(ERROR) << "[makeEntity] - Malformed attribute table in user "
+                    "callback; ignoring.";
+    }
+  }
+
+  lua::Push(L,
+            emitter_.AddEntity(i, j, height, std::move(classname),
+                               std::vector<std::pair<std::string, std::string>>(
+                                   attrs.begin(), attrs.end())));
   return 1;
 }
 
 lua::NResultsOr LuaSnippetEmitter::MakeSpawnPoint(lua_State* L) {
-  int i, j;
-  double angle_rad;
-
-  if (!lua::Read(L, 2, &i) || !lua::Read(L, 3, &j)) {
-    return "Bad arguments";
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[makeSpawnPoint] - Invalid argument, it must be a table.";
   }
 
-  if (!lua::Read(L, 4, &angle_rad)) {
+  double i, j, height, angle_rad;
+
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j)) {
+    return "[makeSpawnPoint] - Invalid arguments";
+  }
+
+  if (!table.LookUp("height", &height)) {
+    height = 0;
+  }
+
+  if (!table.LookUp("angleRad", &angle_rad)) {
     angle_rad = 0.0;
   }
 
-  lua::Push(L, emitter_.AddSpawn(i, j, angle_rad));
+  lua::Push(L, emitter_.AddSpawn(i, j, height, angle_rad));
   return 1;
 }
 
 lua::NResultsOr LuaSnippetEmitter::MakeDoor(lua_State* L) {
-  int i, j;
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[makeDoor] - Invalid argument, it must be a table.";
+  }
+
+  double i, j;
   bool is_east_west;
 
-  if (!lua::Read(L, 2, &i) ||
-      !lua::Read(L, 3, &j) ||
-      !lua::Read(L, 4, &is_east_west)) {
-    return "Bad arguments";
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
+      !table.LookUp("isEastWest", &is_east_west)) {
+    return "[makeDoor] - Invalid arguments";
   }
 
   lua::Push(L, emitter_.AddDoor(i, j, is_east_west ? 'I' : 'H'));
+  return 1;
+}
+
+lua::NResultsOr LuaSnippetEmitter::MakeFenceDoor(lua_State* L) {
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[makeFenceDoor] - Invalid argument, it must be a table.";
+  }
+
+  double i, j;
+  bool is_east_west;
+
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
+      !table.LookUp("isEastWest", &is_east_west)) {
+    return "[makeFenceDoor] - Invalid arguments";
+  }
+
+  lua::Push(L, emitter_.AddFenceDoor(i, j, is_east_west ? 'I' : 'H'));
+  return 1;
+}
+
+lua::NResultsOr LuaSnippetEmitter::AddPlatform(lua_State* L) {
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[addPlatform] - Invalid argument, it must be a table.";
+  }
+
+  double i, j, height;
+
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
+      !table.LookUp("height", &height)) {
+    return "[addPlatform] - Invalid arguments";
+  }
+
+  lua::Push(L, emitter_.AddPlatform(i, j, height));
+  return 1;
+}
+
+lua::NResultsOr LuaSnippetEmitter::AddGlassColumn(lua_State* L) {
+  lua::TableRef table;
+  if (!lua::Read(L, 2, &table)) {
+    return "[addGlassColumn] - Invalid argument, it must be a table.";
+  }
+
+  double i, j, height;
+
+  if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
+      !table.LookUp("height", &height)) {
+    return "[addGlassColumn] - Invalid arguments";
+  }
+
+  lua::Push(L, emitter_.AddGlassColumn(i, j, height));
   return 1;
 }
 

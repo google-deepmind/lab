@@ -50,3 +50,15 @@ cc_library(
     visibility = ["//deepmind/engine:__pkg__"],
     deps = [":text_maze"],
 )
+
+cc_test(
+    name = "flood_fill_test",
+    size = "small",
+    srcs = ["flood_fill_test.cc"],
+    deps = [
+        ":algorithm",
+        ":flood_fill",
+        ":text_maze",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

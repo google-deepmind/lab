@@ -59,10 +59,6 @@ local function generateTensorMaze(rows, cols)
   return maze
 end
 
-function api:commandLine(oldCommandLine)
-  return make_map.commandLine(oldCommandLine)
-end
-
 function api:createPickup(className)
   return pickups.defaults[className]
 end
@@ -71,7 +67,7 @@ function api:start(episode, seed, params)
   random:seed(seed)
   local rows, cols = 15, 15
   local mazeT = generateTensorMaze(rows, cols)
-  local maze = maze_gen.MazeGeneration{height = rows, width = cols}
+  local maze = maze_gen.mazeGeneration{height = rows, width = cols}
   local variations = {'.', 'A', 'B', 'C'}
   mazeT:applyIndexed(function(val, index)
     local row, col = unpack(index)
@@ -109,8 +105,11 @@ function api:start(episode, seed, params)
 
   print(maze:entityLayer())
   io.flush()
-  api._maze_name = make_map.makeMap('map_' .. episode .. '_' .. seed,
-                                    maze:entityLayer(), maze:variationsLayer())
+  api._maze_name = make_map.makeMap{
+      mapName = 'map_' .. episode .. '_' .. seed,
+      mapEntityLayer = maze:entityLayer(),
+      mapVariationsLayer = maze:variationsLayer(),
+  }
 end
 
 function api:nextMap()

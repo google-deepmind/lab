@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-#include "deepmind/support/stringprintf.h"
+#include "absl/strings/str_cat.h"
 #include "Eigen/Core"
 #include "deepmind/level_generation/map_builder/brush.h"
 
@@ -117,8 +117,7 @@ class Entity {
   }
 
   void set_attribute(const std::string& key, Eigen::Vector3d value) {
-    attributes_[key] =
-        StringPrintf("%g %g %g", value.x(), value.y(), value.z());
+    attributes_[key] = absl::StrCat(value.x(), " ", value.y(), " ", value.z());
   }
 
   template <typename T>

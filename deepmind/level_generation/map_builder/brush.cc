@@ -30,9 +30,6 @@
 namespace deepmind {
 namespace lab {
 namespace map_builder {
-
-using abslstring = decltype(absl::StrCat());
-
 namespace {
 
 // Helper function to parse a single brush.
@@ -82,7 +79,7 @@ std::string Plane::ToString() const {
 }
 
 std::string Brush::ToString() const {
-  abslstring brush = "{\n";
+  std::string brush = "{\n";
   for (const auto& plane : planes) {
     absl::StrAppend(&brush, "    ", plane.ToString(), "\n");
   }
@@ -97,10 +94,9 @@ std::string PatchPoint::ToString() const {
 }
 
 std::string Patch::ToString() const {
-  abslstring patch =
-      absl::StrCat("{\n    patchDef2\n    {\n      ", texture_.path,
-                   "\n      ( ", grid_size_.x(), " ", grid_size_.y(),
-                   " 0 0 0 )\n");
+  std::string patch = absl::StrCat("{\n    patchDef2\n    {\n      ",
+                                   texture_.path, "\n      ( ", grid_size_.x(),
+                                   " ", grid_size_.y(), " 0 0 0 )\n");
   absl::StrAppend(&patch, "      (\n");
   for (int x = 0; x < grid_size_.x(); x++) {
     absl::StrAppend(&patch, "        (");
@@ -237,29 +233,41 @@ std::vector<Brush> CreateHollowBox(const Eigen::Vector3d& a,
   std::vector<Brush> brushes;
   Eigen::Vector3d t(thickness, thickness, thickness);
 
+  auto min_pos = a.cwiseMin(b);
+  auto max_pos = a.cwiseMax(b);
+
   // Top.
   brushes.emplace_back(CreateBoxBrush(
-      {a.x() - thickness, a.y() - thickness, b.z()}, b + t, texture));
+      {min_pos.x() - thickness, min_pos.y() - thickness, max_pos.z()},
+      max_pos + t, texture));
 
   // Bottom.
   brushes.emplace_back(CreateBoxBrush(
-      a - t, {b.x() + thickness, b.y() + thickness, a.z()}, texture));
+      min_pos - t,
+      {max_pos.x() + thickness, max_pos.y() + thickness, min_pos.z()},
+      texture));
 
   // Left.
   brushes.emplace_back(CreateBoxBrush(
-      a - t, {a.x(), b.y() + thickness, b.z() + thickness}, texture));
+      min_pos - t,
+      {min_pos.x(), max_pos.y() + thickness, max_pos.z() + thickness},
+      texture));
 
   // Right.
   brushes.emplace_back(CreateBoxBrush(
-      {b.x(), a.y() - thickness, a.z() - thickness}, b + t, texture));
+      {max_pos.x(), min_pos.y() - thickness, min_pos.z() - thickness},
+      max_pos + t, texture));
 
   // Front.
   brushes.emplace_back(CreateBoxBrush(
-      {a.x() - thickness, b.y(), a.z() - thickness}, b + t, texture));
+      {min_pos.x() - thickness, max_pos.y(), min_pos.z() - thickness},
+      max_pos + t, texture));
 
   // Back.
   brushes.emplace_back(CreateBoxBrush(
-      a - t, {b.x() + thickness, a.y(), b.z() + thickness}, texture));
+      min_pos - t,
+      {max_pos.x() + thickness, min_pos.y(), max_pos.z() + thickness},
+      texture));
 
   return brushes;
 }
@@ -269,43 +277,38 @@ std::vector<Brush> CreateSkybox(const Eigen::Vector3d& position,
                                 const std::string& texture_name,
                                 const Eigen::Vector2i& texture_size) {
   const auto half_size = size * 0.5;
-  auto a = position - half_size;
-  auto b = position + half_size;
-  const Eigen::Vector3d t = {thickness, thickness, thickness};
+  auto min_pos = position - half_size;
+  auto max_pos = position + half_size;
 
   std::vector<Brush> brushes;
 
-  // Up.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      {a.x() - thickness, a.y() - thickness, b.z()}, b + t,
+  brushes.emplace_back(CreateFittedBoxBrush(
+      max_pos, {min_pos.x(), min_pos.y(), max_pos.z() + thickness},
       absl::StrCat(texture_name, "_up"), texture_size));
 
-  // Down.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      a - t, {b.x() + thickness, b.y() + thickness, a.z()},
+  brushes.emplace_back(CreateFittedBoxBrush(
+      min_pos, {max_pos.x(), max_pos.y(), min_pos.z() - thickness},
       absl::StrCat(texture_name, "_dn"), texture_size));
 
   // Left.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      {a.x(), a.y() - thickness, a.z()},
-      {a.x() - thickness, b.y() + thickness, b.z()},
+  brushes.emplace_back(CreateFittedBoxBrush(
+      min_pos, {min_pos.x() - thickness, max_pos.y(), max_pos.z()},
       absl::StrCat(texture_name, "_lf"), texture_size));
 
   // Right.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      {b.x(), a.y() - thickness, a.z()},
-      {b.x() + thickness, b.y() + thickness, b.z()},
+  brushes.emplace_back(CreateFittedBoxBrush(
+      max_pos, {max_pos.x() + thickness, min_pos.y(), min_pos.z()},
       absl::StrCat(texture_name, "_rt"), texture_size));
 
-  // Front.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      a, {b.x(), a.y() - thickness, b.z()}, absl::StrCat(texture_name, "_ft"),
-      texture_size));
+  // Front
+  brushes.emplace_back(CreateFittedBoxBrush(
+      min_pos, {max_pos.x(), min_pos.y() - thickness, max_pos.z()},
+      absl::StrCat(texture_name, "_ft"), texture_size));
 
-  // Back.
-  brushes.emplace_back(brush_util::CreateFittedBoxBrush(
-      {a.x(), b.y() + thickness, a.z()}, b, absl::StrCat(texture_name, "_bk"),
-      texture_size));
+  // Back
+  brushes.emplace_back(CreateFittedBoxBrush(
+      max_pos, {min_pos.x(), max_pos.y() + thickness, min_pos.z()},
+      absl::StrCat(texture_name, "_bk"), texture_size));
 
   return brushes;
 }

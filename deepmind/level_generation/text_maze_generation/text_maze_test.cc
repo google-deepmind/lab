@@ -163,15 +163,19 @@ constexpr char kAlpha4x3[] =
     "GHI\n"
     "JKL\n";
 
+static void InitAlphabet(TextMaze* maze) {
+  char loc = 'A';
+  maze->VisitMutable(TextMaze::kEntityLayer,
+                    [&loc](int, int, char* c) { *c = loc++; });
+  EXPECT_EQ(kAlpha4x3, maze->Text(TextMaze::kEntityLayer));
+}
+
 TEST(TextMazeTest, Visit) {
   TextMaze maze({4, 3});
-  int loc = 0;
-  maze.VisitMutable(TextMaze::kEntityLayer,
-                    [&loc](int, int, char* c) { *c = 'A' + loc++; });
-  EXPECT_EQ(kAlpha4x3, maze.Text(TextMaze::kEntityLayer));
+  InitAlphabet(&maze);
   int i_guess = 0;
   int j_guess = 0;
-  loc = 0;
+  int loc = 0;
   maze.Visit(TextMaze::kEntityLayer,
              [&loc, &i_guess, &j_guess](int i, int j, char c) {
                EXPECT_EQ(i_guess, i);
@@ -217,6 +221,184 @@ TEST(TextMazeTest, VisitIntersection) {
 
   EXPECT_EQ(4, i_guess);
   EXPECT_EQ(1, j_guess);
+}
+
+constexpr char kAlpha4x3Clockwise[] =
+    "JGDA\n"
+    "KHEB\n"
+    "LIFC\n";
+
+constexpr char kAlpha4x3Counterclockwise[] =
+    "CFIL\n"
+    "BEHK\n"
+    "ADGJ\n";
+
+constexpr char kAlpha4x3UpsideDown[] =
+    "LKJ\n"
+    "IHG\n"
+    "FED\n"
+    "CBA\n";
+
+TEST(TextMazeTest, RotateByMultipleOf4) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(0);
+  EXPECT_EQ(kAlpha4x3, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(4);
+  EXPECT_EQ(kAlpha4x3, m2.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m3 = m1.Rotate(-8);
+  EXPECT_EQ(kAlpha4x3, m3.Text(TextMaze::kEntityLayer));
+}
+
+TEST(TextMazeTest, RotateBy1) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(1);
+  EXPECT_EQ(kAlpha4x3Clockwise, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(1);
+  EXPECT_EQ(kAlpha4x3UpsideDown, m2.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m3 = m2.Rotate(1);
+  EXPECT_EQ(kAlpha4x3Counterclockwise, m3.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m4 = m3.Rotate(1);
+  EXPECT_EQ(kAlpha4x3, m4.Text(TextMaze::kEntityLayer));
+}
+
+TEST(TextMazeTest, RotateByMinus1) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(-1);
+  EXPECT_EQ(kAlpha4x3Counterclockwise, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(-1);
+  EXPECT_EQ(kAlpha4x3UpsideDown, m2.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m3 = m2.Rotate(-1);
+  EXPECT_EQ(kAlpha4x3Clockwise, m3.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m4 = m3.Rotate(-1);
+  EXPECT_EQ(kAlpha4x3, m4.Text(TextMaze::kEntityLayer));
+}
+
+TEST(TextMazeTest, RotateBy2) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(2);
+  EXPECT_EQ(kAlpha4x3UpsideDown, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(2);
+  EXPECT_EQ(kAlpha4x3, m2.Text(TextMaze::kEntityLayer));
+}
+
+TEST(TextMazeTest, RotateByMinus2) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(-2);
+  EXPECT_EQ(kAlpha4x3UpsideDown, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(-2);
+  EXPECT_EQ(kAlpha4x3, m2.Text(TextMaze::kEntityLayer));
+}
+
+TEST(TextMazeTest, RotateByMinus3) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  const TextMaze m1 = maze.Rotate(-3);
+  EXPECT_EQ(kAlpha4x3Clockwise, m1.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m2 = m1.Rotate(-3);
+  EXPECT_EQ(kAlpha4x3UpsideDown, m2.Text(TextMaze::kEntityLayer));
+
+  const TextMaze m3 = m2.Rotate(-3);
+  EXPECT_EQ(kAlpha4x3Counterclockwise, m3.Text(TextMaze::kEntityLayer));
+}
+
+
+static void TestFillRect(const Rectangle& rect, const char* expectedResult) {
+  TextMaze maze({4, 3});
+  InitAlphabet(&maze);
+
+  maze.FillRect(TextMaze::kEntityLayer, rect, 'Z');
+  EXPECT_EQ(expectedResult, maze.Text(TextMaze::kEntityLayer));
+}
+
+constexpr char kAlpha4x3ZTopLeft[] =
+    "ZBC\n"
+    "DEF\n"
+    "GHI\n"
+    "JKL\n";
+
+TEST(TextMazeTest, FillRectTopLeft) {
+  TestFillRect({{0, 0}, {1, 1}}, kAlpha4x3ZTopLeft);
+}
+
+constexpr char kAlpha4x3ZTopRight[] =
+    "AZZ\n"
+    "DZZ\n"
+    "GZZ\n"
+    "JKL\n";
+
+TEST(TextMazeTest, FillRectTopRight) {
+  TestFillRect({{0, 1}, {3, 2}}, kAlpha4x3ZTopRight);
+}
+
+constexpr char kAlpha4x3ZMid[] =
+    "ABC\n"
+    "ZZF\n"
+    "GHI\n"
+    "JKL\n";
+
+TEST(TextMazeTest, FillRectMid) {
+  TestFillRect({{1, 0}, {1, 2}}, kAlpha4x3ZMid);
+}
+
+constexpr char kToPaste[] =
+    "12\n"
+    "34\n"
+    "56\n";
+
+// Test Paste for various locations.
+TEST(TextMazeTest, Paste) {
+  TextMaze insert({3,2});
+  int loc = 0;
+  insert.VisitMutable(TextMaze::kEntityLayer,
+                      [&loc](int, int, char* c) { *c = '1' + loc++; });
+  EXPECT_EQ(kToPaste, insert.Text(TextMaze::kEntityLayer));
+
+  TextMaze original({4, 3});
+  InitAlphabet(&original);
+
+  const Size& size = original.Area().size;
+  for (int i = -insert.Area().size.height + 1; i < size.height; ++i) {
+    for (int j = -insert.Area().size.width + 1; j < size.width; ++j) {
+      TextMaze maze({4, 3});
+      InitAlphabet(&maze);
+
+      maze.Paste(TextMaze::kEntityLayer, Pos{i, j}, insert);
+
+      for (int m = 0; m < size.height; ++m) {
+        for (int n = 0; n < size.width; ++n) {
+          const char c = maze.GetCell(TextMaze::kEntityLayer, Pos{m, n});
+          const Pos insertPos{m - i, n - j};
+          if (insert.Area().InBounds(insertPos)) {
+            EXPECT_EQ(insert.GetCell(TextMaze::kEntityLayer, insertPos), c);
+          } else {
+            EXPECT_EQ(original.GetCell(TextMaze::kEntityLayer, Pos{m, n}), c);
+          }
+        }
+      }
+    }
+  }
 }
 
 }  // namespace

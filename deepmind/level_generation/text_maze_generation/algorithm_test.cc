@@ -285,6 +285,175 @@ TEST(AlgorithmTest, RemoveDeadEndsEdge) {
       maze.Text(TextMaze::kEntityLayer));
 }
 
+// The utility of the following tests:
+// - FillSpaceWithMaze
+// - RandomConnectRegions
+// - RemoveAllHorseshoeBends
+// - AddNEntitiesToEachRoom
+// is somewhat limited: Their outputs depend on the specific implementation of
+// various random algorithms, and thus they are really only reliable on a fixed
+
+// platform. When moving platforms, you will most likely need to generate new
+// expected outputs.
+TEST(AlgorithmTest, FillSpaceWithMaze) {
+  std::mt19937_64 prbg(0);
+  TextMaze maze({11, 11});
+  FillSpaceWithMaze(1, 0, &maze, &prbg);
+  EXPECT_EQ(
+      "***********\n"
+      "* *       *\n"
+      "* *** *** *\n"
+      "*   * * * *\n"
+      "*** * * * *\n"
+      "* *   *   *\n"
+      "* ***** ***\n"
+      "*     * * *\n"
+      "* * *** * *\n"
+      "* *       *\n"
+      "***********\n",
+      maze.Text(TextMaze::kEntityLayer));
+}
+
+TEST(AlgorithmTest, RandomConnectRegions) {
+  std::mt19937_64 prbg(0);
+  TextMaze maze =
+      FromCharGrid(CharGrid("***********\n"
+                            "*     *****\n"
+                            "*     *****\n"
+                            "*     *   *\n"
+                            "*******   *\n"
+                            "*   ***   *\n"
+                            "*   *******\n"
+                            "*   *     *\n"
+                            "*   *     *\n"
+                            "*   *     *\n"
+                            "***********\n"));
+  auto rooms = FindRooms(maze, {'*'});
+  EXPECT_EQ(4, rooms.size());
+  for (unsigned int i = 0; i < rooms.size(); ++i) {
+    const auto& room = rooms[i];
+    for (const auto& cell : room) {
+      maze.SetCellId(cell, i + 1);
+    }
+  }
+  RandomConnectRegions('#', 0.5, &maze, &prbg);
+  EXPECT_EQ(
+      "***********\n"
+      "*     *****\n"
+      "*     *****\n"
+      "*     #   *\n"
+      "*#*#***   *\n"
+      "*   ***   *\n"
+      "*   ***#***\n"
+      "*   *     *\n"
+      "*   *     *\n"
+      "*   #     *\n"
+      "***********\n",
+      maze.Text(TextMaze::kEntityLayer));
+}
+
+TEST(AlgorithmTest, RemoveAllHorseshoeBends) {
+  std::mt19937_64 prbg(0);
+  TextMaze maze =
+      FromCharGrid(CharGrid("***********\n"
+                            "*       * *\n"
+                            "*     * * *\n"
+                            "*     *   *\n"
+                            "* ******* *\n"
+                            "*   *     *\n"
+                            "* * ***** *\n"
+                            "* *       *\n"
+                            "* *****   *\n"
+                            "*     *   *\n"
+                            "***********\n"));
+  auto rooms = FindRooms(maze, {'*'});
+  for (unsigned int i = 0; i < rooms.size(); ++i) {
+    const auto& room = rooms[i];
+    for (const auto& cell : room) {
+      maze.SetCellId(cell, i + 1);
+    }
+  }
+  RemoveDeadEnds(' ', '*', {}, &maze);
+  RemoveAllHorseshoeBends('*', {}, &maze);
+  EXPECT_EQ(
+      "***********\n"
+      "*       ***\n"
+      "*     * ***\n"
+      "*     *   *\n"
+      "* ******* *\n"
+      "*   ***** *\n"
+      "*** ***** *\n"
+      "***       *\n"
+      "*******   *\n"
+      "*******   *\n"
+      "***********\n",
+      maze.Text(TextMaze::kEntityLayer));
+}
+
+TEST(AlgorithmTest, RemoveAllHorseshoeBendsDoors) {
+  std::mt19937_64 prbg(0);
+  TextMaze maze =
+      FromCharGrid(CharGrid("**********\n"
+                            "*****    *\n"
+                            "*****    *\n"
+                            "*   #    *\n"
+                            "* ******#*\n"
+                            "*        *\n"
+                            "**********\n"));
+  auto rooms = FindRooms(maze, {'*'});
+  ASSERT_EQ(1, rooms.size());
+  ASSERT_EQ(12, rooms.front().size());
+  for (unsigned int i = 0; i < rooms.size(); ++i) {
+    const auto& room = rooms[i];
+    for (const auto& cell : room) {
+      maze.SetCellId(cell, i + 1);
+    }
+  }
+  RemoveDeadEnds(' ', '*', {}, &maze);
+  RemoveAllHorseshoeBends('*', {}, &maze);
+
+  EXPECT_EQ(
+      "**********\n"
+      "*****    *\n"
+      "*****    *\n"
+      "*** #    *\n"
+      "*** ****#*\n"
+      "***      *\n"
+      "**********\n",
+      maze.Text(TextMaze::kEntityLayer));
+}
+
+TEST(AlgorithmTest, AddNEntitiesToEachRoom) {
+  std::mt19937_64 prbg(0);
+  TextMaze maze =
+      FromCharGrid(CharGrid("***********\n"
+                            "*       * *\n"
+                            "*     * * *\n"
+                            "*     *   *\n"
+                            "* ******* *\n"
+                            "*   *     *\n"
+                            "* * ***** *\n"
+                            "* *       *\n"
+                            "* *****   *\n"
+                            "*     *   *\n"
+                            "***********\n"));
+  std::vector<Rectangle> rooms = {{{1, 1}, {3, 5}}, {{7, 7}, {3, 3}}};
+  AddNEntitiesToEachRoom(rooms, 3, 'A', ' ', &maze, &prbg);
+  EXPECT_EQ(
+      "***********\n"
+      "*A   A  * *\n"
+      "* A   * * *\n"
+      "*     *   *\n"
+      "* ******* *\n"
+      "*   *     *\n"
+      "* * ***** *\n"
+      "* *     A *\n"
+      "* *****   *\n"
+      "*     *AA *\n"
+      "***********\n",
+      maze.Text(TextMaze::kEntityLayer));
+}
+
 }  // namespace
 }  // namespace maze_generation
 }  // namespace lab
