@@ -325,7 +325,9 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		com_errorEntered = qfalse;
 		longjmp (abortframe, -1);
 	} else if (code == ERR_DROP) {
+		int originalErrorOutput = Sys_ForceErrorOutput();
 		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
+		Sys_ResumeErrorOutput( originalErrorOutput );
 		VM_Forced_Unload_Start();
 		SV_Shutdown (va("Server crashed: %s",  com_errorMessage));
 		if ( restartClient ) {

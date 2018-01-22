@@ -380,6 +380,37 @@ void Sys_Print( const char *msg )
 
 /*
 =================
+Sys_ForceErrorOutput
+=================
+Enable logging to the console, to ensure the error message is output,
+and flush everything that's come before, to put the error message closer
+to the bottom of the console output.
+*/
+int Sys_ForceErrorOutput()
+{
+	int originalErrorOutput = 0;
+	if ( com_logToStdErr ) {
+		originalErrorOutput = com_logToStdErr->integer;
+		com_logToStdErr->integer = 1;
+		fflush (stdout);
+	}
+	return originalErrorOutput;
+}
+
+/*
+=================
+Sys_ResumeErrorOutput
+=================
+*/
+void Sys_ResumeErrorOutput( int originalErrorOutput )
+{
+	if ( com_logToStdErr ) {
+		com_logToStdErr->integer = originalErrorOutput;
+	}
+}
+
+/*
+=================
 Sys_Error
 =================
 */
@@ -391,6 +422,8 @@ void Sys_Error( const char *error, ... )
 	va_start (argptr,error);
 	Q_vsnprintf (string, sizeof(string), error, argptr);
 	va_end (argptr);
+
+	Sys_ForceErrorOutput();
 
 	Sys_ErrorDialog( string );
 
@@ -473,7 +506,7 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 		Com_Printf("Trying to load \"%s\"...\n", name);
 		dllhandle = Sys_LoadLibrary(name);
 	}
-	
+
 	if(!dllhandle)
 	{
 		const char *topDir;
@@ -499,10 +532,10 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 		if(!dllhandle)
 		{
 			const char *basePath = Cvar_VariableString("fs_basepath");
-			
+
 			if(!basePath || !*basePath)
 				basePath = ".";
-			
+
 			if(FS_FilenameCompare(topDir, basePath))
 			{
 				len = Com_sprintf(libPath, sizeof(libPath), "%s%c%s", basePath, PATH_SEP, name);
@@ -516,12 +549,12 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 					Com_Printf("Skipping trying to load \"%s\" from \"%s\", file name is too long.\n", name, basePath);
 				}
 			}
-			
+
 			if(!dllhandle)
 				Com_Printf("Loading \"%s\" failed\n", name);
 		}
 	}
-	
+
 	return dllhandle;
 }
 

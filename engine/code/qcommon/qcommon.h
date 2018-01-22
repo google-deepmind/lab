@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -1095,6 +1095,8 @@ void	Sys_Quit (void) __attribute__ ((noreturn));
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 
 void	Sys_Print( const char *msg );
+int		Sys_ForceErrorOutput();
+void	Sys_ResumeErrorOutput( int originalErrorOutput );
 
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
