@@ -963,11 +963,11 @@ go to a random point that doesn't telefrag
 ================
 */
 #define	MAX_TEAM_SPAWN_POINTS	32
-gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team ) {
-	gentity_t	*spot;
-	int			count;
-	int			selection;
-	gentity_t	*spots[MAX_TEAM_SPAWN_POINTS];
+gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team, qboolean isbot) {
+	gentity_t *spot = NULL;
+	gentity_t *best_spot = NULL;
+	float spot_count = 0;
+
 	char		*classname;
 
 	if (teamstate == TEAM_BEGIN) {
@@ -985,25 +985,26 @@ gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team ) {
 		else
 			return NULL;
 	}
-	count = 0;
 
-	spot = NULL;
+	while ( ( spot = G_Find( spot, FOFS(classname), classname ) ) != NULL ) {
+		if ( ( (spot->flags & FL_NO_BOTS) && isbot) || ((spot->flags & FL_NO_HUMANS) && !isbot) )
+			continue;
 
-	while ((spot = G_Find (spot, FOFS(classname), classname)) != NULL) {
 		if ( SpotWouldTelefrag( spot ) ) {
+			// Ensure we have one good spot, in case they're all telefrag spots.
+			if ( best_spot == NULL ) {
+				best_spot = spot;
+			}
 			continue;
 		}
-		spots[ count ] = spot;
-		if (++count == MAX_TEAM_SPAWN_POINTS)
-			break;
+
+		spot_count += 1.0f;
+		if ( random() * spot_count <= 1.0f ) {
+			best_spot = spot;
+		}
 	}
 
-	if ( !count ) {	// no spots that won't telefrag
-		return G_Find( NULL, FOFS(classname), classname);
-	}
-
-	selection = rand() % count;
-	return spots[ selection ];
+	return best_spot;
 }
 
 
@@ -1016,15 +1017,22 @@ SelectCTFSpawnPoint
 gentity_t *SelectCTFSpawnPoint ( team_t team, int teamstate, vec3_t origin, vec3_t angles, qboolean isbot ) {
 	gentity_t	*spot;
 
-	spot = SelectRandomTeamSpawnPoint ( teamstate, team );
+	spot = SelectRandomTeamSpawnPoint ( teamstate, team, isbot );
 
 	if (!spot) {
 		return SelectSpawnPoint( vec3_origin, origin, angles, isbot );
 	}
 
-	VectorCopy (spot->s.origin, origin);
-	origin[2] += 9;
-	VectorCopy (spot->s.angles, angles);
+	VectorCopy(spot->s.origin, origin);
+	origin[2] += 9.0f;
+	VectorCopy(spot->s.angles, angles);
+	if ( spot->randomAngleRange == 360.0f ) {
+		angles[1] = random() * 360.0f;
+	} else {
+		// Pick random orientation within segment: angles[1] +/- 0.5 * segment.
+		float segment = ( random() - 0.5f ) * spot->randomAngleRange;
+		angles[1] += segment;
+	}
 
 	return spot;
 }
@@ -1161,6 +1169,7 @@ void CheckTeamStatus(void) {
 Only in CTF games.  Red players spawn here at game start.
 */
 void SP_team_CTF_redplayer( gentity_t *ent ) {
+	G_SpawnFloat( "randomAngleRange", "360.0", &ent->randomAngleRange );
 }
 
 
@@ -1168,6 +1177,7 @@ void SP_team_CTF_redplayer( gentity_t *ent ) {
 Only in CTF games.  Blue players spawn here at game start.
 */
 void SP_team_CTF_blueplayer( gentity_t *ent ) {
+	G_SpawnFloat( "randomAngleRange", "360.0", &ent->randomAngleRange );
 }
 
 
@@ -1176,6 +1186,7 @@ potential spawning position for red team in CTF games.
 Targets will be fired when someone spawns in on them.
 */
 void SP_team_CTF_redspawn(gentity_t *ent) {
+	G_SpawnFloat( "randomAngleRange", "360.0", &ent->randomAngleRange );
 }
 
 /*QUAKED team_CTF_bluespawn (0 0 1) (-16 -16 -24) (16 16 32)
@@ -1183,6 +1194,7 @@ potential spawning position for blue team in CTF games.
 Targets will be fired when someone spawns in on them.
 */
 void SP_team_CTF_bluespawn(gentity_t *ent) {
+	G_SpawnFloat( "randomAngleRange", "360.0", &ent->randomAngleRange );
 }
 
 
