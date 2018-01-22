@@ -1756,3 +1756,28 @@ void	R_SkinList_f( void ) {
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
 
+/*
+===============
+Api_UpdateTexture
+===============
+*/
+bool dmlab_update_rgba_texture( const char* name, int width, int height, const unsigned char* data ) {
+	image_t* image;
+	long hash = generateHashValue(name);
+	for (image=hashTable[hash]; image; image=image->next) {
+		if ( !strcmp( name, image->imgName ) ) {
+			qboolean picmip = image->flags & IMGFLAG_PICMIP;
+			qboolean mipmap = image->flags & IMGFLAG_MIPMAP;
+      qboolean capMaxSize = width != image->uploadWidth || height !=image-> uploadHeight;
+			glState.currenttextures[glState.currenttmu] = image->texnum;
+			qglBindTexture( GL_TEXTURE_2D,  image->texnum );
+			Upload32( (unsigned *)data, width, height, 0, mipmap, picmip, qfalse, qfalse, capMaxSize,
+								&image->internalFormat,
+								&image->uploadWidth,
+								&image->uploadHeight,
+								&image->uploadMips );
+			return true;
+		}
+	}
+	return false;
+}

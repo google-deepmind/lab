@@ -99,6 +99,14 @@ struct DeepmindCalls_s {
       void* model_data,                           //
       const char* model_path);
 
+  // Update the texture 'name' with the raw RGBA stream in 'data', using the
+  // specified 'width' and 'height'.
+  bool (*update_rgba_texture)(  //
+      const char* name,         //
+      int width,                //
+      int height,               //
+      const unsigned char* data);
+
   float (*raycast)(const float start[3], const float end[3]);
 
   bool (*in_fov)(const float start[3],   //

@@ -69,6 +69,7 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
         {"addScore", Member<&LuaGameModule::AddScore>},
         {"finishMap", Member<&LuaGameModule::FinishMap>},
         {"playerInfo", Member<&LuaGameModule::PlayerInfo>},
+        {"updateTexture", Member<&LuaGameModule::UpdateTexture>},
         {"episodeTimeSeconds", Member<&LuaGameModule::EpisodeTimeSeconds>},
         {"tempFolder", Member<&LuaGameModule::TempFolder>},
         {"runFiles", Member<&LuaGameModule::ExecutableRunfiles>},
@@ -194,6 +195,38 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     table.Insert("otherTeamScore", pv.other_team_score);
     lua::Push(L, table);
     return 1;
+  }
+
+  lua::NResultsOr UpdateTexture(lua_State* L) {
+    std::string name;
+    if (!lua::Read(L, 2, &name)) {
+      std::string error = "Invalid argument name: ";
+      error += lua::ToString(L, 2);
+      return std::move(error);
+    }
+    auto* data = tensor::LuaTensor<unsigned char>::ReadObject(L, 3);
+    if (data == nullptr) {
+      std::string error = "Invalid argument data: ";
+      error += lua::ToString(L, 3);
+      return std::move(error);
+    }
+    const auto& tensor_view = data->tensor_view();
+    const auto& shape = tensor_view.shape();
+    if (shape.size() != 3 || shape[2] != 4) {
+      return "Invalid dimensions for argument data";
+    }
+    if (!tensor_view.IsContiguous()) {
+      return "Tensor must be contiguous.";
+    }
+    bool success = ctx_->Calls()->update_rgba_texture(
+        name.c_str(), shape[1], shape[0], tensor_view.storage());
+    if (!success) {
+      std::string error = "The texture named: '";
+      error += name;
+      error += "' has not been updated";
+      return error;
+    }
+    return 0;
   }
 
   lua::NResultsOr EpisodeTimeSeconds(lua_State* L) {

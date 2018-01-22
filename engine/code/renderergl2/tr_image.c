@@ -3262,4 +3262,26 @@ void	R_SkinList_f( void ) {
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
 
+/*
+===============
+Api_UpdateTexture
+===============
+*/
+bool dmlab_update_rgba_texture( const char* name, int width, int height, const unsigned char* data ) {
+	image_t* image;
+	long hash = generateHashValue(name);
+	for (image=hashTable[hash]; image; image=image->next) {
+		if ( !strcmp( name, image->imgName ) ) {
+			qglBindTexture( GL_TEXTURE_2D,  image->texnum );
+			Upload32( (unsigned char*)data, 0, 0, width, height,
+								GL_RGBA8,
+								1,
+								image,
+								qfalse,
+								qfalse );
+			return true;
+		}
+	}
+	return false;
+}
 

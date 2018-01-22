@@ -1121,6 +1121,9 @@ static void dmlab_render_custom_view(
   qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
+bool dmlab_update_rgba_texture(const char* name, int width, int height,
+                               const unsigned char* data);
+
 int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
                   void** context) {
   DeepmindContext* dm_ctx = get_context_once();
@@ -1195,6 +1198,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.serialised_model_size = dmlab_serialised_model_size;
   gc->dm_ctx->calls.serialise_model = dmlab_serialise_model;
   gc->dm_ctx->calls.save_model = dmlab_save_model;
+  gc->dm_ctx->calls.update_rgba_texture = dmlab_update_rgba_texture;
   gc->dm_ctx->calls.raycast = dmlab_raycast;
   gc->dm_ctx->calls.in_fov = dmlab_in_fov;
   gc->dm_ctx->calls.is_map_loading = dmlab_is_map_loading;
