@@ -281,6 +281,7 @@ void SetModelNumbers( void ){
 void SetLightStyles( void ){
 	int i, j, style, numStyles;
 	qboolean keepLights;
+	qboolean noRadiosityLight;
 	const char  *t;
 	entity_t    *e;
 	epair_t     *ep, *next;
@@ -303,10 +304,14 @@ void SetLightStyles( void ){
 		if ( Q_strncasecmp( t, "light", 5 ) ) {
 			continue;
 		}
+		t = ValueForKey( e, "noradiosity" );
+		noRadiosityLight = ( t[ 0 ] == '1' ) ? qtrue : qfalse;
 		t = ValueForKey( e, "targetname" );
 		if ( t[ 0 ] == '\0' ) {
 			/* ydnar: strip the light from the BSP file */
-			if ( keepLights == qfalse ) {
+			/* neumond: pass all dynamic lights to BSP regardless of keepLights.
+				pass all lights (radiosity+dynamic) to BSP if keepLights */
+			if ( keepLights == qfalse && noRadiosityLight == qfalse ) {
 				ep = e->epairs;
 				while ( ep != NULL )
 				{

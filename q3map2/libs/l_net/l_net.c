@@ -80,9 +80,10 @@ void Net_SetAddressPort( address_t *address, int port ){
 int Net_AddressCompare( address_t *addr1, address_t *addr2 ){
 #ifdef _WIN32
 	return stricmp( addr1->ip, addr2->ip );
-#endif
-#if __linux__ || __APPLE__
+#elif defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __APPLE__ )
 	return strcasecmp( addr1->ip, addr2->ip );
+#else
+	#error unknown architecture
 #endif
 } //end of the function Net_AddressCompare
 //===========================================================================

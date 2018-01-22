@@ -226,6 +226,7 @@ void CreateEntityLights( void ){
 	entity_t        *e, *e2;
 	const char      *name;
 	const char      *target;
+	const char      *noradiosity;
 	vec3_t dest;
 	const char      *_color;
 	float intensity, scale, deviance, filterRadius;
@@ -248,6 +249,12 @@ void CreateEntityLights( void ){
 			junior = qfalse;
 		}
 		else{
+			continue;
+		}
+
+		/* neumond: skip dynamic lights */
+		noradiosity = ValueForKey( e, "noradiosity" );
+		if ( noradiosity[ 0 ] == '1' ) {
 			continue;
 		}
 

@@ -326,7 +326,6 @@ void InitPaths( int *argc, char **argv ){
 	int i, j, k, len, len2;
 	char temp[ MAX_OS_PATH ];
 
-
 	/* note it */
 	Sys_FPrintf( SYS_VRB, "--- InitPaths ---\n" );
 

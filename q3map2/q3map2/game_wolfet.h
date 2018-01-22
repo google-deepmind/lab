@@ -119,6 +119,7 @@
 		{ "clusterportal",  W_CONT_CLUSTERPORTAL,       W_CONT_SOLID,               0,                          0,                          C_TRANSLUCENT,              C_SOLID },
 		{ "donotenter",     W_CONT_DONOTENTER,          W_CONT_SOLID,               0,                          0,                          C_TRANSLUCENT,              C_SOLID },
 		{ "nonotenterlarge",W_CONT_DONOTENTER_LARGE,    W_CONT_SOLID,               0,                          0,                          C_TRANSLUCENT,              C_SOLID },
+		{ "donotenterlarge",W_CONT_DONOTENTER_LARGE,    W_CONT_SOLID,               0,                          0,                          C_TRANSLUCENT,              C_SOLID },
 
 		{ "fog",            W_CONT_FOG,                 W_CONT_SOLID,               0,                          0,                          C_FOG,                      C_SOLID },
 		{ "sky",            0,                          0,                          W_SURF_SKY,                 0,                          C_SKY,                      0 },

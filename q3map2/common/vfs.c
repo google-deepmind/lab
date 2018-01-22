@@ -43,7 +43,7 @@
 
 #include <stdio.h>
 
-#if defined ( __linux__ ) || defined ( __APPLE__ )
+#if defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __APPLE__ )
 #include <dirent.h>
 #include <unistd.h>
 #else
@@ -198,8 +198,21 @@ void vfsInitDirectory( const char *path ){
 				dirlist = g_strdup( name );
 
 				{
+
 					char *ext = strrchr( dirlist, '.' );
-					if ( ( ext == NULL ) || ( Q_stricmp( ext, ".pk3" ) != 0 ) ) {
+
+					if ( ext != NULL && ( !Q_stricmp( ext, ".pk3dir" ) || !Q_stricmp( ext, ".dpkdir" ) ) ) {
+						if ( g_numDirs == VFS_MAXDIRS ) {
+							continue;
+						}
+						snprintf( g_strDirs[g_numDirs], PATH_MAX, "%s/%s", path, name );
+						g_strDirs[g_numDirs][PATH_MAX-1] = '\0';
+						vfsFixDOSName( g_strDirs[g_numDirs] );
+						vfsAddSlash( g_strDirs[g_numDirs] );
+						++g_numDirs;
+					}
+
+					if ( ext == NULL || ( Q_stricmp( ext, ".pk3" ) != 0 && Q_stricmp( ext, ".dpk" ) != 0 ) ) {
 						continue;
 					}
 				}

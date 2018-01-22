@@ -7,6 +7,8 @@
    Ernie Wright  17 Sep 00
    ====================================================================== */
 
+#include <limits.h>
+
 #include "../picointernal.h"
 #include "lwo2.h"
 
@@ -22,7 +24,6 @@
    read requests until flen is reset.
    ====================================================================== */
 
-#define INT_MIN     ( -2147483647 - 1 ) /* minimum (signed) int value */
 #define FLEN_ERROR INT_MIN
 
 static int flen;

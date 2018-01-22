@@ -57,7 +57,7 @@ extern int unz_GAME_QL;
    ------------------------------------------------------------------------------- */
 
 /* platform-specific */
-#if defined( __linux__ ) || defined( __APPLE__ )
+#if defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __APPLE__ )
 	#define Q_UNIX
 #endif
 
@@ -896,7 +896,7 @@ typedef struct brush_s
 	vec3_t mins, maxs;
 	int numsides;
 
-	side_t sides[];                         /* variably sized */
+	side_t sides[];
 }
 brush_t;
 
@@ -1889,6 +1889,8 @@ Q_EXTERN game_t games[]
 								#include "game_nexuiz.h" /* most be after game_quake3.h as they share defines! */
 	,
 								#include "game_tremulous.h" /*LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
+	,
+								#include "game_unvanquished.h" /* must be after game_quake3.h as they share defines! */
 	,
 								#include "game_tenebrae.h"
 	,

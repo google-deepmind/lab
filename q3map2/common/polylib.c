@@ -68,7 +68,7 @@ winding_t   *AllocWinding( int points ){
 			c_peak_windings = c_active_windings;
 		}
 	}
-	s = sizeof( winding_t ) + points * sizeof( vec3_t );
+	s = sizeof( *w ) + points * sizeof( *w->p );
 	w = safe_malloc( s );
 	memset( w, 0, s );
 	return w;
@@ -96,7 +96,7 @@ winding_accu_t *AllocWindingAccu( int points ){
 			c_peak_windings = c_active_windings;
 		}
 	}
-	s = sizeof( winding_accu_t ) + points * sizeof( vec3_accu_t );
+	s = sizeof( *w ) + points * sizeof( *w->p );
 	w = safe_malloc( s );
 	memset( w, 0, s );
 	return w;
@@ -469,7 +469,7 @@ winding_t   *CopyWinding( winding_t *w ){
 	}
 
 	c = AllocWinding( w->numpoints );
-	size = offsetof( winding_t, p ) + sizeof( *w->p ) * w->numpoints;
+	size = sizeof( *w ) + sizeof( *w->p ) * w->numpoints;
 	memcpy( c, w, size );
 	return c;
 }

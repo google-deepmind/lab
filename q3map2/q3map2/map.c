@@ -1644,9 +1644,16 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 	classname = ValueForKey( mapEnt, "classname" );
 
 	/* ydnar: only lights? */
-	if ( onlyLights && Q_strncasecmp( classname, "light", 5 ) ) {
-		numEntities--;
-		return qtrue;
+	if ( onlyLights ) {
+		if ( Q_strncasecmp( classname, "light", 5 ) ) {
+			numEntities--;
+			return qtrue;
+		}
+		value = ValueForKey( mapEnt, "noradiosity" );
+		if ( value[ 0 ] == '1' ) {
+			numEntities--;
+			return qtrue;
+		}
 	}
 
 	/* ydnar: determine if this is a func_group */

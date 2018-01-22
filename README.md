@@ -104,10 +104,8 @@ with those projects are best fixed upstream and then merged into *DeepMind Lab*.
 
 * *q3map2* is taken from
   [github.com/TTimo/GtkRadiant](https://github.com/TTimo/GtkRadiant),
-  revision 69972f94582f0723c9ceaabf6751a911bf1fdcc3. A few minor local
-  modifications add synchronization and use C99 constructs to replace
-  formerly non-portable or undefined behaviour. We also expect this code to be
-  stable.
+  revision d3d00345c542c8d7cc74e2e8a577bdf76f79c701. A few minor local
+  modifications add synchronization. We also expect this code to be stable.
 
 * *ioquake3* is taken from
   [github.com/ioquake/ioq3](https://github.com/ioquake/ioq3),
