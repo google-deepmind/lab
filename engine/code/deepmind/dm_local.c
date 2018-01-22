@@ -172,6 +172,12 @@ void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
                         (intptr_t)playerVelocityDelta, 0, 0, 0, 0, 0, 0);
 }
 
+void dmlab_game_event(const char* event_name, int count, const float vals[]) {
+  trap_DeepmindCallback(DEEPMIND_GAME_EVENT, (intptr_t)event_name,
+                        (intptr_t)count, (intptr_t)vals, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0);
+}
+
 void dmlab_spawn_inventory(playerState_t* player_state) {
   trap_DeepmindCallback(DEEPMIND_SPAWN_INVENTORY, (intptr_t)player_state, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0);

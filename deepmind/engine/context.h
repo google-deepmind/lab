@@ -332,6 +332,9 @@ class Context {
                        int powerup_time[], int gadget_held, float height,
                        float position[3], float view_angles[3]);
 
+  // Calls `gameEvent` with the event name and an array of data.
+  void GameEvent(const char* event_name, int count, const float* data);
+
   // Generates a pk3 from the map in `map_path` named `map_name`.
   // `gen_aas` should be set if bots are used with level.
   void MakePk3FromMap(const char* map_path, const char* map_name, bool gen_aas);

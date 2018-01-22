@@ -380,6 +380,11 @@ static void lua_mover(void* userdata, int entity_id,
       player_position_delta, player_velocity_delta);
 }
 
+static void game_event(void* userdata, const char* event_name, int count,
+                         const float* data) {
+  static_cast<Context*>(userdata)->GameEvent(event_name, count, data);
+}
+
 static void make_pk3_from_map(void* userdata, const char* map_path,
                               const char* map_name, bool gen_aas) {
   static_cast<Context*>(userdata)->MakePk3FromMap(map_path, map_name, gen_aas);
@@ -526,6 +531,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->get_temporary_folder = get_temporary_folder;
   hooks->make_pk3_from_map = make_pk3_from_map;
   hooks->lua_mover = lua_mover;
+  hooks->game_event = game_event;
   hooks->events.clear = events_clear;
   hooks->events.type_count = events_type_count;
   hooks->events.type_name = events_type_name;
@@ -1465,6 +1471,28 @@ void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
   std::copy_n(pos_delta.data(), pos_delta.size(), player_pos_delta);
   std::copy_n(vel_delta.data(), vel_delta.size(), player_vel_delta);
 
+  lua_pop(L, result.n_results());
+}
+
+void Context::GameEvent(const char* event_name, int count,
+                        const float* data) {
+  lua_State* L = script_table_ref_.LuaState();
+  script_table_ref_.PushMemberFunction("gameEvent");
+    // Check function exists.
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return;
+  }
+
+  lua::Push(L, event_name);
+  lua_createtable(L, count, 0);
+  for (std::size_t i = 0; i < count; ++i) {
+    lua::Push(L, i + 1);
+    lua::Push(L, data[i]);
+    lua_settable(L, -3);
+  }
+  auto result = lua::Call(L, 3);
+  CHECK(result.ok()) << result.error() << '\n';
   lua_pop(L, result.n_results());
 }
 

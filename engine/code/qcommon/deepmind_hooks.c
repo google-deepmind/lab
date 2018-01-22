@@ -130,6 +130,11 @@ int dmlab_callback(
           /*player_pos_delta=*/VM_ArgPtr(a5),
           /*player_vel_delta=*/VM_ArgPtr(a6));
       break;
+    case DEEPMIND_GAME_EVENT:
+      ctx->hooks.game_event(ctx->userdata, /*event_name=*/VM_ArgPtr(a1),
+                            /*count=*/a2,
+                            /*data=*/VM_ArgPtr(a3));
+      break;
     case DEEPMIND_SPAWN_INVENTORY:
     case DEEPMIND_UPDATE_INVENTORY: {
       playerState_t* ps = VM_ArgPtr(a1);

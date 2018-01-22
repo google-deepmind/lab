@@ -154,6 +154,12 @@ void dmlab_lua_mover(int entity_id, const vec3_t entityPosition,
                      const vec3_t playerPosition, const vec3_t playerVelocity,
                      vec3_t playerPositionDelta, vec3_t playerVelocityDelta);
 
+// Calls script with a game event and associated data.
+// 'event_name' is the name of the event.
+// 'count' is then number of vals.
+// 'vals' is data associated with the event.
+void dmlab_game_event(const char* event_name, int count, const float vals[]);
+
 // Called on the spawning of each player.
 void dmlab_spawn_inventory(playerState_t* player_state);
 
