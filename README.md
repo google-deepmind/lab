@@ -97,7 +97,7 @@ as described in [docs/lua_api.md](docs/lua_api.md).
 with those projects are best fixed upstream and then merged into *DeepMind Lab*.
 
 * *bspc* is taken from [github.com/TTimo/bspc](https://github.com/TTimo/bspc),
-  revision e6f90a2dc02916aa2298da6ace70a8333b3f2405. There are virtually no
+  revision d9a372db3fb6163bc49ead41c76c801a3d14cf80. There are virtually no
   local modifications, although we integrate this code with the main ioq3 code
   and do not use their copy in the `deps` directory. We expect this code to be
   stable.

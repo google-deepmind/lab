@@ -35,6 +35,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4305)     // truncate from double to float
+
+// Disable these: warning C4996: 'stricmp': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _stricmp. See online help for details.
+#pragma warning( disable: 4996 )
+
 #endif
 
 #include <stdio.h>
