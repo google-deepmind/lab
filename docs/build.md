@@ -16,7 +16,7 @@ files might be required, see below.
 *DeepMind Lab* is written in C99 and C++11, and you will need a sufficiently
 modern compiler. GCC 4.8 should suffice.
 
-### Step-by-step instructions for Debian or Ubuntu
+### Step-by-step instructions for Debian or Ubuntu using Python 2
 
 Tested on Debian 8.6 (Jessie) and Ubuntu 14.04 (Trusty) and newer.
 
@@ -56,6 +56,53 @@ arguments. Run
 
 ``` shell
 lab$ bazel run :random_agent -- --help
+```
+
+to see those.
+
+### Step-by-step instructions for Debian or Ubuntu using Python 3 (Experimental)
+
+Tested on Ubuntu 16.10 (yakkety).
+
+1. Install Bazel by adding a custom APT repository, as described
+	[on the Bazel homepage](http://bazel.io/docs/install.html#ubuntu) or using
+   an [installer](https://github.com/bazelbuild/bazel/releases).
+   This should also install GCC and zip.
+
+2. Install *DeepMind Lab*'s dependencies:
+
+   ```shell
+   $ sudo apt-get install lua5.1 liblua5.1-0-dev libffi-dev gettext \
+       freeglut3-dev libsdl2-dev libosmesa6-dev python3-dev python3-numpy realpath
+   ```
+
+3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
+
+4. Edit `python3.BUILD` so it maps to the correct python version (defaults to 3.5).
+	Specifically, change lines 8 and 9 to point to "include/python<your python version>".
+
+4. Build *DeepMind Lab* and run a random agent:
+
+   ```shell
+   $ cd lab
+   # Build the Python interface to DeepMind Lab with OpenGL
+   lab$ bazel build :deepmind_lab_py3.so --define headless=glx
+   # Build and run the tests for it
+   lab$ bazel run :python3_module_test --define headless=glx
+   # Rebuild the Python interface in non-headless mode and run a random agent
+   lab$ bazel run :random_agent_py3 --define headless=false
+   ```
+
+The Bazel target `:deepmind_lab_py3.so` builds the Python module that interfaces
+*DeepMind Lab*. It can be build in headless hardware rendering mode (`--define
+headless=glx`), headless software rendering mode (`--define headless=osmesa`) or
+non-headless mode (`--define headless=false`).
+
+The random agent target `:random_agent_py3` has a number of optional command line
+arguments. Run
+
+``` shell
+lab$ bazel run :random_agent_py3 -- --help
 ```
 
 to see those.

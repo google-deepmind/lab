@@ -961,3 +961,67 @@ py_test(
     main = "python/random_agent_test.py",
     deps = [":random_agent"],
 )
+
+cc_binary(
+    name = "deepmind_lab_py3.so",
+    srcs = [
+        "public/dmlab.h",
+        "python3/dmlab_module.c",
+    ],
+    copts = [
+        "-fno-strict-aliasing",  ## ick ick ick
+        "-std=c99",
+        "-DDEEPMIND_LAB_MODULE_RUNFILES_DIR",
+    ],
+    data = [
+        ":assets_bots_pk3",
+        ":assets_oa_pk3",
+        ":assets_pk3",
+        ":map_assets",
+        ":non_pk3_assets",
+        ":vm_pk3",
+    ],
+    linkshared = 1,
+    linkstatic = 1,
+    deps = [
+        ":dmlablib",
+        "@python3_system//:python3",
+    ],
+)
+
+py_test(
+    name = "python3_module_test",
+    srcs = ["python3/dmlab_module_test.py"],
+    data = [":deepmind_lab_py3.so"],
+    imports = ["python3"],
+    main = "python3/dmlab_module_test.py",
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+)
+
+py_binary(
+    name = "python3_benchmark",
+    srcs = ["python3/benchmark.py"],
+    data = [":deepmind_lab_py3.so"],
+    main = "python3/benchmark.py",
+    default_python_version = 'PY3',
+    srcs_version = 'PY3',
+)
+
+py_binary(
+    name = "random_agent_py3",
+    srcs = ["python3/random_agent.py"],
+    data = [":deepmind_lab_py3.so"],
+    main = "python3/random_agent.py",
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+)
+
+py_test(
+    name = "random_agent_py3_test",
+    srcs = ["python3/random_agent_test.py"],
+    main = "python3/random_agent_test.py",
+    deps = [":random_agent_py3"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+)

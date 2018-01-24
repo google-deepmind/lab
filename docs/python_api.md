@@ -12,6 +12,8 @@ Constructing the environment, doing one step and retrieving one observation:
 
 ```python
 import deepmind_lab
+#For Python 3:
+#import deepmind_lab_py3 as deepmind_lab
 
 # Construct and start the environment.
 env = deepmind_lab.Lab('seekavoid_arena_01', ['RGB_INTERLACED'])
