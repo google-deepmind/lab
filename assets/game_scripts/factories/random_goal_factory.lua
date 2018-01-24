@@ -23,8 +23,8 @@ function factory.createLevelApi(kwargs)
   local maze = maze_gen.MazeGeneration{entity = kwargs.entityLayer}
   local api = {}
 
-  function api:createPickup(class_name)
-    return pickups.defaults[class_name]
+  function api:createPickup(classname)
+    return pickups.defaults[classname]
   end
 
   function api:start(episode, seed, params)

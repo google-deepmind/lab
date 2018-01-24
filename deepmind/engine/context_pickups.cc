@@ -172,8 +172,8 @@ bool ContextPickups::FindItem(const char* class_name, int* index) {
 
   PickupItem item = {};
   CHECK(table.LookUp("name", &item.name));
-  CHECK(table.LookUp("class_name", &item.class_name));
-  CHECK(table.LookUp("model_name", &item.model_name));
+  CHECK(table.LookUp("classname", &item.class_name));
+  CHECK(table.LookUp("model", &item.model_name));
   CHECK(table.LookUp("quantity", &item.quantity));
   CHECK(table.LookUp("type", &item.type));
 
