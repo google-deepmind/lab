@@ -38,15 +38,9 @@
 #include <string>
 #include <unordered_map>
 
-#ifndef DMLAB_SO_LOCATION
-#error Must define DMLAB_SO_LOCATION dynamic library path.
-#endif
-
 namespace {
 
 std::mutex connect_mutex;
-
-constexpr const char kLibraryName[] = "/" DMLAB_SO_LOCATION;
 
 struct InternalContext {
   void (*release_context)(void* context);
@@ -111,7 +105,18 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   std::string so_path;
   if (params->runfiles_path != nullptr && params->runfiles_path[0] != '\0') {
     so_path = params->runfiles_path;
-    so_path += kLibraryName;
+
+    switch (params->renderer) {
+      case DeepMindLabRenderer_Software:
+        so_path += "/libdmlab_headless_sw.so";
+        break;
+      case DeepMindLabRenderer_Hardware:
+        so_path += "/libdmlab_headless_hw.so";
+        break;
+      default:
+        std::cerr << "Invalid renderer!\n";
+        return 1;
+    }
   } else {
     std::cerr << "Require runfiles_diectory!\n";
     return 1;

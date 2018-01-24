@@ -32,9 +32,17 @@ extern "C" {
 
 typedef struct DeepMindLabLaunchParams_s DeepMindLabLaunchParams;
 
+// Enum depicting which renderer to use for DMLab.
+enum DeepMindLabRenderer_Enum {
+  DeepMindLabRenderer_Software,
+  DeepMindLabRenderer_Hardware,
+};
+typedef enum DeepMindLabRenderer_Enum DeepMindLabRenderer;
+
 struct DeepMindLabLaunchParams_s {
   // Path to where DeepMind Lab assets are stored.
   const char* runfiles_path;
+  DeepMindLabRenderer renderer;
   DeepMindLabLevelCacheParams level_cache_params;
 
   // Optional function for reading from the file system. If set, a call returns

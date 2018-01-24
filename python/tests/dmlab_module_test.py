@@ -30,28 +30,28 @@ class DeepMindLabTest(unittest.TestCase):
 
   def testInitArgs(self):
     with self.assertRaisesRegexp(TypeError, 'must be dict, not list'):
-      deepmind_lab.Lab('tests/demo_map', [], ['wrongconfig'])
+      deepmind_lab.Lab('tests/empty_room_test', [], ['wrongconfig'])
     with self.assertRaisesRegexp(TypeError, 'str'):
-      deepmind_lab.Lab('tests/demo_map', [], {'wrongtype': 3})
+      deepmind_lab.Lab('tests/empty_room_test', [], {'wrongtype': 3})
     with self.assertRaisesRegexp(TypeError, 'must be list, not None'):
-      deepmind_lab.Lab('tests/demo_map', None, {})
+      deepmind_lab.Lab('tests/empty_room_test', None, {})
     with self.assertRaisesRegexp(ValueError, 'Unknown observation'):
-      deepmind_lab.Lab('tests/demo_map', ['nonexisting_obs'], {})
+      deepmind_lab.Lab('tests/empty_room_test', ['nonexisting_obs'], {})
 
   def testReset(self):
-    lab = deepmind_lab.Lab('tests/demo_map', [], {})
+    lab = deepmind_lab.Lab('tests/empty_room_test', [], {})
     with self.assertRaisesRegexp(ValueError,
                                  '\'seed\' must be int or None, was \'str\''):
       lab.reset(seed='invalid')
 
   def testSpecs(self):
-    lab = deepmind_lab.Lab('tests/demo_map', [])
+    lab = deepmind_lab.Lab('tests/empty_room_test', [])
     observation_spec = lab.observation_spec()
-    observation_names = {o['name'] for o in observation_spec}
+    observation_spec_names = {o['name'] for o in observation_spec}
     observation_spec_lookup = {o['name']: o for o in observation_spec}
     action_names = {a['name'] for a in lab.action_spec()}
     observation_set = {'RGB_INTERLACED', 'RGB', 'RGBD_INTERLACED', 'RGBD'}
-    self.assertGreaterEqual(observation_names, observation_set)
+    self.assertGreaterEqual(observation_spec_names, observation_set)
     for k in observation_set:
       o = observation_spec_lookup[k]
       self.assertIn('shape', o)
@@ -75,7 +75,7 @@ class DeepMindLabTest(unittest.TestCase):
 
   def testOpenClose(self):
     labs = [
-        deepmind_lab.Lab('tests/demo_map', []) for _ in range(5)]
+        deepmind_lab.Lab('tests/empty_room_test', []) for _ in range(5)]
     for lab in labs:
       self.assertTrue(lab.close())
 
@@ -121,12 +121,75 @@ class DeepMindLabTest(unittest.TestCase):
       self.assertEqual(obs[observations[0]].shape, (4, width, height))
       self.assertEqual(reward, 0.0)
 
+  def testStringObervations(self):
+    observation = 'CUSTOM_TEXT'
+    env = deepmind_lab.Lab(
+        'tests/text_observation_test', [observation],
+        config={'height': str(32),
+                'width': str(32)})
+    observation_spec = env.observation_spec()
+    observation_spec_lookup = {o['name']: o for o in observation_spec}
+    spec = observation_spec_lookup[observation]
+    self.assertEqual(spec['name'], observation)
+    self.assertEqual(spec['shape'], ())
+    self.assertEqual(spec['dtype'], str)
+    env.reset()
+    self.assertEqual(env.observations()[observation], 'Example Output')
+
+  def testEvents(self):
+    env = deepmind_lab.Lab(
+        'tests/event_test', [], config={'height': str(32),
+                                              'width': str(32)})
+    env.reset(episode=1, seed=7)
+    events = env.events()
+    self.assertEqual(len(events), 4)
+
+    name, obs = events[0]
+    self.assertEqual(name, 'TEXT')
+    self.assertEqual(obs[0], 'EPISODE 1')
+
+    name, obs = events[1]
+    self.assertEqual(name, 'DOUBLE')
+    np.testing.assert_array_equal(obs[0], np.array([[1., 0.], [0., 1.]]))
+
+    name, obs = events[2]
+    self.assertEqual(name, 'BYTE')
+    np.testing.assert_array_equal(obs[0], np.array([2, 2], dtype=np.uint8))
+
+    name, obs = events[3]
+    self.assertEqual(name, 'ALL')
+    self.assertEqual(obs[0], 'Text')
+    np.testing.assert_array_equal(obs[1], np.array([3], dtype=np.uint8))
+    np.testing.assert_array_equal(obs[2], np.array([7.]))
+
+    action = np.zeros((7,), dtype=np.intc)
+    env.step(action, num_steps=1)
+    self.assertEqual(len(env.events()), 0)
+    env.step(action, num_steps=58)
+    self.assertEqual(len(env.events()), 0)
+    env.step(action, num_steps=1)
+    self.assertFalse(env.is_running())
+
+    events = env.events()
+    self.assertEqual(len(events), 1)
+    name, obs = events[0]
+    self.assertEqual(name, 'LOG')
+    self.assertEqual(obs[0], 'Episode ended')
+
+    env.reset(episode=2, seed=8)
+
+    events = env.events()
+    self.assertEqual(len(events), 4)
+
+    name, obs = events[0]
+    self.assertEqual(name, 'TEXT')
+    self.assertEqual(obs[0], 'EPISODE 2')
+
   def testVeloctyObservations(self, width=80, height=80):
     noop_action = np.zeros((7,), dtype=np.intc)
     forward_action = np.array([0, 0, 0, 1, 0, 0, 0], dtype=np.intc)
     backward_action = - forward_action
     look_sideways_action = np.array([512, 0, 0, 0, 0, 0, 0], dtype=np.intc)
-
 
     env = deepmind_lab.Lab('seekavoid_arena_01', ['VEL.TRANS', 'VEL.ROT'],
                            config={'height': str(height),

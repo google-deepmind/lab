@@ -851,26 +851,21 @@ cc_binary(
 
 config_setting(
     name = "dmlab_graphics_sdl",
-    define_values = {"headless": "false"},
+    define_values = {"graphics": "sdl"},
 )
 
 config_setting(
-    name = "dmlab_graphics_osmesa",
-    define_values = {"headless": "osmesa"},
+    name = "dmlab_graphics_osmesa_or_glx",
+    define_values = {"graphics": "osmesa_or_glx"},
 )
 
 config_setting(
-    name = "dmlab_graphics_glx",
-    define_values = {"headless": "glx"},
-)
-
-config_setting(
-    name = "dmlab_graphics_egl",
-    define_values = {"headless": "egl"},
+    name = "dmlab_graphics_osmesa_or_egl",
+    define_values = {"graphics": "osmesa_or_egl"},
 )
 
 cc_binary(
-    name = "libdmlab_headless.so",
+    name = "libdmlab_headless_hw.so",
     linkopts = [
         "-Wl,--version-script",
         ":dmlab.lds",
@@ -879,19 +874,35 @@ cc_binary(
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
     deps = [":dmlab.lds"] + select({
-        "dmlab_graphics_osmesa": [":game_lib_headless_osmesa"],
-        "dmlab_graphics_glx": [":game_lib_headless_glx"],
-        "dmlab_graphics_egl": [":game_lib_headless_egl"],
-        "//conditions:default": [":game_lib_headless_osmesa"],
+        "dmlab_graphics_osmesa_or_egl": [":game_lib_headless_egl"],
+        "dmlab_graphics_osmesa_or_glx": [":game_lib_headless_glx"],
+        "//conditions:default": [":game_lib_headless_egl"],
     }),
+)
+
+cc_binary(
+    name = "libdmlab_headless_sw.so",
+    linkopts = [
+        "-Wl,--version-script",
+        ":dmlab.lds",
+    ],
+    linkshared = 1,
+    linkstatic = 1,
+    visibility = ["//testing:__subpackages__"],
+    deps = [
+        ":dmlab.lds",
+        ":game_lib_headless_osmesa",
+    ],
 )
 
 cc_library(
     name = "dmlab_so_loader",
     srcs = ["public/dmlab_so_loader.cc"],
     hdrs = ["public/dmlab.h"],
-    copts = ["-DDMLAB_SO_LOCATION=\\\"libdmlab_headless.so\\\""],
-    data = [":libdmlab_headless.so"],
+    data = [
+        ":libdmlab_headless_hw.so",
+        ":libdmlab_headless_sw.so",
+    ],
     linkopts = ["-ldl"],
     visibility = ["//testing:__subpackages__"],
     deps = [
@@ -927,37 +938,17 @@ cc_binary(
     ],
     linkshared = 1,
     linkstatic = 1,
+    visibility = ["//python/tests:__subpackages__"],
     deps = [
         ":dmlablib",
         "@python_system//:python",
     ],
 )
 
-py_test(
-    name = "python_module_test",
-    srcs = ["python/dmlab_module_test.py"],
-    data = [":deepmind_lab.so"],
-    imports = ["python"],
-    main = "python/dmlab_module_test.py",
-)
-
 py_binary(
-    name = "python_benchmark",
-    srcs = ["python/benchmark.py"],
-    data = [":deepmind_lab.so"],
-    main = "python/benchmark.py",
-)
-
-py_binary(
-    name = "random_agent",
+    name = "python_random_agent",
     srcs = ["python/random_agent.py"],
     data = [":deepmind_lab.so"],
     main = "python/random_agent.py",
-)
-
-py_test(
-    name = "random_agent_test",
-    srcs = ["python/random_agent_test.py"],
-    main = "python/random_agent_test.py",
-    deps = [":random_agent"],
+    visibility = ["//python/tests:__subpackages__"],
 )

@@ -22,15 +22,15 @@ from __future__ import print_function
 import os
 import unittest
 
+from python import random_agent
 import deepmind_lab
-import random_agent
 
 
 class RandomAgentsTest(unittest.TestCase):
 
   def test_spring_agent_run(self, length=100):
     env = deepmind_lab.Lab(
-        'tests/demo_map', ['RGB_INTERLACED'],
+        'tests/empty_room_test', ['RGB_INTERLACED'],
         config={
             'fps': '60',
             'controls': 'external',
@@ -54,7 +54,7 @@ class RandomAgentsTest(unittest.TestCase):
 
   def test_discretized_random_agent_run(self, length=100):
     env = deepmind_lab.Lab(
-        'tests/demo_map', ['RGB_INTERLACED'],
+        'tests/empty_room_test', ['RGB_INTERLACED'],
         config={
             'fps': '60',
             'width': '80',
@@ -74,6 +74,27 @@ class RandomAgentsTest(unittest.TestCase):
       action = agent.step(reward, obs['RGB_INTERLACED'])
       reward = env.step(action, 1)
       self.assertIsInstance(reward, float)
+
+  def test_map_frame_count(self, length=100):
+    env = deepmind_lab.Lab(
+        'tests/empty_room_test', ['MAP_FRAME_NUMBER'],
+        config={'fps': '60',
+                'width': '80',
+                'height': '80'})
+
+    env.reset()
+    agent = random_agent.DiscretizedRandomAgent()
+
+    reward = 0
+    for frame in xrange(length):
+      if not env.is_running():
+        print('Environment stopped early')
+        env.reset()
+      obs = env.observations()
+      action = agent.step(reward, None)
+      env.step(action, 1)
+      frame_number = int(obs['MAP_FRAME_NUMBER'])
+      self.assertEquals(frame, frame_number)
 
 
 if __name__ == '__main__':

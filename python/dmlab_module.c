@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2017 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -59,11 +59,12 @@ static int env_close(LabObject* self) {
   return false;
 }
 
-static void LabObject_dealloc(LabObject* self) {
+static void LabObject_dealloc(PyObject* pself) {
+  LabObject* self = (LabObject*)pself;
   env_close(self);
   free(self->env_c_api);
   free(self->observation_indices);
-  self->ob_type->tp_free((PyObject*)self);
+  self->ob_type->tp_free(pself);
 }
 
 static PyObject* LabObject_new(PyTypeObject* type, PyObject* args,
@@ -78,56 +79,27 @@ static PyObject* LabObject_new(PyTypeObject* type, PyObject* args,
       PyErr_SetString(PyExc_MemoryError, "malloc failed.");
       return NULL;
     }
-
-    DeepMindLabLaunchParams params = {};
-    params.runfiles_path = runfiles_path;
-
-    if (dmlab_connect(&params, self->env_c_api, &self->context) != 0) {
-      PyErr_SetString(PyExc_RuntimeError, "Failed to connect RL API");
-      free(self->env_c_api);
-      return NULL;
-    }
-
-    if (self->env_c_api->setting(self->context, "actionSpec", "Integers")
-        != 0) {
-      PyErr_SetString(PyExc_RuntimeError,
-                      "Failed to apply 'actionSpec' setting.");
-      free(self->env_c_api);
-      return NULL;
-    }
-
-    if (self->context == NULL) {
-      Py_DECREF(self);
-      free(self->env_c_api);
-      return NULL;
-    }
-
-    self->status = ENV_STATUS_UNINITIALIZED;
-    self->episode = 0;
+    self->status = ENV_STATUS_CLOSED;
   }
-
   return (PyObject*)self;
 }
 
-static int Lab_init(LabObject* self, PyObject* args, PyObject* kwds) {
+static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
   char* level;
+  char* renderer = NULL;
   PyObject *observations = NULL, *config = NULL;
 
-  static char* kwlist[] = {"level", "observations", "config", NULL};
+  static char* kwlist[] = {"level", "observations", "config", "renderer", NULL};
 
   if (self->env_c_api == NULL) {
     PyErr_SetString(PyExc_RuntimeError, "RL API not setup");
     return -1;
   }
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!", kwlist, &level,
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!s", kwlist, &level,
                                    &PyList_Type, &observations, &PyDict_Type,
-                                   &config)) {
-    return -1;
-  }
-
-  if (self->env_c_api->setting(self->context, "levelName", level) != 0) {
-    PyErr_Format(PyExc_RuntimeError, "Invalid levelName flag '%s'", level);
+                                   &config, &renderer)) {
     return -1;
   }
 
@@ -137,9 +109,57 @@ static int Lab_init(LabObject* self, PyObject* args, PyObject* kwds) {
     PyErr_NoMemory();
     return -1;
   }
+  {
+    DeepMindLabLaunchParams params = {};
+    params.runfiles_path = runfiles_path;
+    params.renderer = DeepMindLabRenderer_Software;
+    if (renderer != NULL && renderer[0] != '\0') {
+      if (strcmp(renderer, "hardware") == 0) {
+        params.renderer = DeepMindLabRenderer_Hardware;
+      } else if (strcmp(renderer, "software") != 0) {
+        PyErr_Format(PyExc_RuntimeError,
+                     "Failed to set renderer must be \"hardware\" or "
+                     "\"software\" actual \"%s\"!",
+                     renderer);
+        return -1;
+      }
+    }
+
+    if (dmlab_connect(&params, self->env_c_api, &self->context) != 0) {
+      PyErr_SetString(PyExc_RuntimeError, "Failed to connect RL API");
+      return -1;
+    }
+
+// When running under TSAN, switch to the interpreted VM, which is
+// instrumentable.
+//
+// It might be a better idea add __attribute__((no_sanitize("thread"))) to
+// vm_x86.c, but I have not managed to make that work.
+#ifndef __has_feature
+#  define __has_feature(x) 0
+#endif
+#if __has_feature(thread_sanitizer)
+    if (self->env_c_api->setting(self->context, "vmMode", "interpreted") != 0) {
+      PyErr_Format(PyExc_RuntimeError,
+                   "Failed to apply 'vmMode' setting - \"%s\"",
+                   self->env_c_api->error_message(self->context));
+      return -1;
+    }
+#endif
+    self->status = ENV_STATUS_UNINITIALIZED;
+    self->episode = 0;
+  }
+
+  if (self->env_c_api->setting(self->context, "levelName", level) != 0) {
+    PyErr_Format(PyExc_RuntimeError, "Invalid levelName flag '%s' - \"%s\"",
+                 level, self->env_c_api->error_message(self->context));
+    return -1;
+  }
 
   if (self->env_c_api->setting(self->context, "fps", "60") != 0) {
-    PyErr_SetString(PyExc_RuntimeError, "Failed to set fps");
+    PyErr_Format(PyExc_RuntimeError, "Failed to set fps - \"%s\"",
+                 self->env_c_api->error_message(self->context));
+    return -1;
   }
 
   if (config != NULL) {
@@ -154,32 +174,36 @@ static int Lab_init(LabObject* self, PyObject* args, PyObject* kwds) {
         return -1;
       }
       if (self->env_c_api->setting(self->context, key, value) != 0) {
-        PyErr_Format(PyExc_RuntimeError, "Failed to apply setting '%s = %s'.",
-                     key, value);
+        PyErr_Format(PyExc_RuntimeError,
+                     "Failed to apply setting '%s = %s' - \"%s\"", key, value,
+                     self->env_c_api->error_message(self->context));
+        return -1;
       }
     }
   }
 
   if (self->env_c_api->init(self->context) != 0) {
-    PyErr_Format(PyExc_RuntimeError, "Failed to init environment.");
+    PyErr_Format(PyExc_RuntimeError, "Failed to init environment - \"%s\"",
+                 self->env_c_api->error_message(self->context));
     return -1;
   }
 
   char* observation_name;
+  int api_observation_count = self->env_c_api->observation_count(self->context);
   for (int i = 0; i < self->observation_count; ++i) {
     observation_name = PyString_AsString(PyList_GetItem(observations, i));
     if (observation_name == NULL) {
       return -1;
     }
     int j;
-    for (j = 0; j < self->env_c_api->observation_count(self->context); ++j) {
+    for (j = 0; j < api_observation_count; ++j) {
       if (strcmp(self->env_c_api->observation_name(self->context, j),
                  observation_name) == 0) {
         self->observation_indices[i] = j;
         break;
       }
     }
-    if (j == self->env_c_api->observation_count(self->context)) {
+    if (j == api_observation_count) {
       PyErr_Format(PyExc_ValueError, "Unknown observation '%s'.",
                    observation_name);
       return -1;
@@ -189,7 +213,8 @@ static int Lab_init(LabObject* self, PyObject* args, PyObject* kwds) {
   return 0;
 }
 
-static PyObject* Lab_reset(LabObject* self, PyObject* args, PyObject* kwds) {
+static PyObject* Lab_reset(PyObject* pself, PyObject* args, PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
   int episode = -1;
   int seed;
   PyObject* seed_arg = NULL;
@@ -216,7 +241,8 @@ static PyObject* Lab_reset(LabObject* self, PyObject* args, PyObject* kwds) {
   }
 
   if (self->env_c_api->start(self->context, self->episode, seed) != 0) {
-    PyErr_SetString(PyExc_RuntimeError, "Failed to start environment.");
+    PyErr_Format(PyExc_RuntimeError, "Failed to start environment - \"%s\"",
+                 self->env_c_api->error_message(self->context));
     return NULL;
   }
   self->num_steps = 0;
@@ -225,8 +251,8 @@ static PyObject* Lab_reset(LabObject* self, PyObject* args, PyObject* kwds) {
   Py_RETURN_TRUE;
 }
 
-static PyObject* Lab_num_steps(LabObject* self) {
-  return PyInt_FromLong(self->num_steps);
+static PyObject* Lab_num_steps(PyObject* self, PyObject* no_arg) {
+  return PyInt_FromLong(((LabObject*)self)->num_steps);
 }
 
 // Helper function to determine if we're ready to step or give an observation.
@@ -240,15 +266,16 @@ static int is_running(LabObject* self) {
   }
 }
 
-static PyObject* Lab_is_running(LabObject* self) {
-  if (is_running(self)) {
+static PyObject* Lab_is_running(PyObject* self, PyObject* no_arg) {
+  if (is_running((LabObject*)self)) {
     Py_RETURN_TRUE;
   } else {
     Py_RETURN_FALSE;
   }
 }
 
-static PyObject* Lab_step(LabObject* self, PyObject* args, PyObject* kwds) {
+static PyObject* Lab_step(PyObject* pself, PyObject* args, PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
   PyObject* action_obj = NULL;
   int num_steps = 1;
 
@@ -268,11 +295,12 @@ static PyObject* Lab_step(LabObject* self, PyObject* args, PyObject* kwds) {
 
   PyArrayObject* discrete = (PyArrayObject*)action_obj;
 
+  int action_discrete_count =
+      self->env_c_api->action_discrete_count(self->context);
   if (PyArray_NDIM(discrete) != 1 ||
-      PyArray_DIM(discrete, 0) !=
-          self->env_c_api->action_discrete_count(self->context)) {
+      PyArray_DIM(discrete, 0) != action_discrete_count) {
     PyErr_Format(PyExc_ValueError, "action must have shape (%i)",
-                 self->env_c_api->action_discrete_count(self->context));
+                 action_discrete_count);
     return NULL;
   }
 
@@ -285,6 +313,11 @@ static PyObject* Lab_step(LabObject* self, PyObject* args, PyObject* kwds) {
 
   self->status = self->env_c_api->advance(self->context, num_steps, &reward);
   self->num_steps += num_steps;
+  if (self->status == EnvCApi_EnvironmentStatus_Error) {
+    PyErr_Format(PyExc_ValueError, "Failed to advance environment \"%s\"",
+                 self->env_c_api->error_message(self->context));
+    return NULL;
+  }
   return PyFloat_FromDouble(reward);
 }
 
@@ -295,12 +328,14 @@ static int ObservationType2typenum(EnvCApi_ObservationType type) {
       return NPY_DOUBLE;
     case EnvCApi_ObservationBytes:
       return NPY_UINT8;
-    default:
+    case EnvCApi_ObservationString:
       return -1;
   }
+  return -1;
 }
 
-static PyObject* Lab_observation_spec(LabObject* self) {
+static PyObject* Lab_observation_spec(PyObject* pself, PyObject* no_arg) {
+  LabObject* self = (LabObject*)pself;
   int count = self->env_c_api->observation_count(self->context);
   PyObject* result = PyList_New(count);
   if (result == NULL) {
@@ -311,10 +346,28 @@ static PyObject* Lab_observation_spec(LabObject* self) {
   PyObject* type;
   PyObject* shape;
 
-  for (int i = 0; i < count; ++i) {
-    self->env_c_api->observation_spec(self->context, i, &spec);
-    type = (PyObject*)PyArray_DescrFromType(ObservationType2typenum(spec.type))
-               ->typeobj;
+  for (int idx = 0; idx < count; ++idx) {
+    self->env_c_api->observation_spec(self->context, idx, &spec);
+    if (spec.type == EnvCApi_ObservationString) {
+      type = (PyObject*)(&PyString_Type);
+      shape = PyTuple_New(0);
+      if (PyList_SetItem(result, idx,
+                         Py_BuildValue("{s:s,s:N,s:O}", "name",
+                                       self->env_c_api->observation_name(
+                                           self->context, idx),
+                                       "shape", shape, "dtype", type)) != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Unable to populate list");
+        return NULL;
+      }
+      continue;
+    }
+    int observation_type = ObservationType2typenum(spec.type);
+    if (observation_type == -1) {
+      PyErr_SetString(PyExc_RuntimeError, "Invalid observation spec.");
+      return NULL;
+    }
+
+    type = (PyObject*)PyArray_DescrFromType(observation_type)->typeobj;
     shape = PyTuple_New(spec.dims);
     for (int j = 0; j < spec.dims; ++j) {
       if (PyTuple_SetItem(shape, j, PyInt_FromLong(spec.shape[j])) != 0) {
@@ -323,9 +376,9 @@ static PyObject* Lab_observation_spec(LabObject* self) {
       }
     }
     if (PyList_SetItem(
-            result, i,
+            result, idx,
             Py_BuildValue("{s:s,s:N,s:O}", "name",
-                          self->env_c_api->observation_name(self->context, i),
+                          self->env_c_api->observation_name(self->context, idx),
                           "shape", shape, "dtype", type)) != 0) {
       PyErr_SetString(PyExc_RuntimeError, "Unable to populate list");
       return NULL;
@@ -334,11 +387,13 @@ static PyObject* Lab_observation_spec(LabObject* self) {
   return result;
 }
 
-static PyObject* Lab_fps(LabObject* self) {
-  return PyInt_FromLong(self->env_c_api->fps(self->context));
+static PyObject* Lab_fps(PyObject* self, PyObject* no_arg) {
+  return PyInt_FromLong(
+      ((LabObject*)self)->env_c_api->fps(((LabObject*)self)->context));
 }
 
-static PyObject* Lab_action_spec(LabObject* self) {
+static PyObject* Lab_action_spec(PyObject* pself, PyObject* no_arg) {
+  LabObject* self = (LabObject*)pself;
   PyObject* discrete;
 
   int count = self->env_c_api->action_discrete_count(self->context);
@@ -364,62 +419,143 @@ static PyObject* Lab_action_spec(LabObject* self) {
   return discrete;
 }
 
-static PyObject* Lab_observations(LabObject* self) {
-  PyObject* result = NULL;
-  PyArrayObject* array = NULL;
+static PyObject* make_observation(const EnvCApi_Observation* observation) {
+  if (observation->spec.type == EnvCApi_ObservationString) {
+    PyObject* result = PyString_FromStringAndSize(observation->payload.string,
+                                                  observation->spec.shape[0]);
+    if (result == NULL) PyErr_NoMemory();
+    return result;
+  }
 
-  if (!is_running(self)) {
+  int observation_type = ObservationType2typenum(observation->spec.type);
+  if (observation_type == -1) {
+    PyErr_SetString(PyExc_RuntimeError, "Invalid observation spec.");
+    return NULL;
+  }
+
+  long* bounds = calloc(observation->spec.dims, sizeof(long));
+  if (bounds == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  for (int j = 0; j < observation->spec.dims; ++j) {
+    bounds[j] = observation->spec.shape[j];
+  }
+
+  PyArrayObject* array = (PyArrayObject*)PyArray_SimpleNew(
+      observation->spec.dims, bounds, observation_type);
+  free(bounds);
+
+  if (array == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  const void* src_mem = observation->spec.type == EnvCApi_ObservationDoubles
+                            ? (void*)observation->payload.doubles
+                            : (void*)observation->payload.bytes;
+  memcpy(PyArray_BYTES(array), src_mem, PyArray_NBYTES(array));
+  return (PyObject*)array;
+}
+
+static PyObject* Lab_observations(PyObject* pself, PyObject* no_arg) {
+  LabObject* self = (LabObject*)pself;
+
+  if (!is_running((self))) {
     PyErr_SetString(PyExc_RuntimeError,
                     "Environment in wrong status for call to observations()");
     return NULL;
   }
 
-  result = PyDict_New();
+  PyObject* result = PyDict_New();
   if (result == NULL) {
     PyErr_NoMemory();
     return NULL;
   }
 
   EnvCApi_Observation observation;
-  long* bounds = NULL;
 
   for (int i = 0; i < self->observation_count; ++i) {
     self->env_c_api->observation(self->context, self->observation_indices[i],
                                  &observation);
-    bounds = calloc(observation.spec.dims, sizeof(long));
-    if (bounds == NULL) {
-      PyErr_NoMemory();
-      return NULL;
-    }
-    for (int j = 0; j < observation.spec.dims; ++j) {
-      bounds[j] = observation.spec.shape[j];
-    }
-    const void* src_mem = observation.spec.type == EnvCApi_ObservationDoubles
-                              ? (void*)observation.payload.doubles
-                              : (void*)observation.payload.bytes;
-    array = (PyArrayObject*)PyArray_SimpleNew(
-        observation.spec.dims, bounds,
-        ObservationType2typenum(observation.spec.type));
-    free(bounds);
-
-    if (array == NULL) {
-      PyErr_NoMemory();
+    PyObject* entry = make_observation(&observation);
+    if (entry == NULL) {
+      Py_DECREF(result);
       return NULL;
     }
 
-    memcpy(PyArray_BYTES(array), src_mem, PyArray_NBYTES(array));
+    // PyDict_SetItemString increments reference count.
     PyDict_SetItemString(result,
                          self->env_c_api->observation_name(
                              self->context, self->observation_indices[i]),
-                         (PyObject*)array);
-    Py_DECREF((PyObject*)array);
+                         entry);
+    Py_DECREF(entry);
+  }
+  return result;
+}
+
+static PyObject* Lab_events(PyObject* pself, PyObject* no_arg) {
+  LabObject* self = (LabObject*)pself;
+
+  switch (self->status) {
+    case ENV_STATUS_INITIALIZED:
+    case EnvCApi_EnvironmentStatus_Running:
+    case EnvCApi_EnvironmentStatus_Terminated:
+      break;
+    default:
+      PyErr_SetString(PyExc_RuntimeError,
+                      "Environment in wrong status for call to events()");
+      return NULL;
+  }
+
+  int event_type_count = self->env_c_api->event_type_count(self->context);
+  int event_count = self->env_c_api->event_count(self->context);
+  PyObject* result = PyList_New(event_count);
+  if (result == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  for (int event_id = 0; event_id < event_count; ++event_id) {
+    EnvCApi_Event event;
+    self->env_c_api->event(self->context, event_id, &event);
+    if (0 > event.id || event.id >= event_type_count) {
+      PyErr_Format(PyExc_RuntimeError,
+                   "Environment generated invalid event id. "
+                   "Event id(%d) must be in range [0, %d).",
+                   event.id, event_type_count);
+      Py_DECREF(result);
+      return NULL;
+    }
+    PyObject* entry = PyTuple_New(2);
+    PyTuple_SetItem(entry, 0,
+                    PyString_FromString(self->env_c_api->event_type_name(
+                        self->context, event.id)));
+
+    PyObject* observation_list = PyList_New(event.observation_count);
+    if (observation_list == NULL) {
+      Py_DECREF(result);
+      return NULL;
+    }
+    for (int obs_id = 0; obs_id < event.observation_count; ++obs_id) {
+      PyObject* obs_enty = make_observation(&event.observations[obs_id]);
+      if (obs_enty == NULL) {
+        Py_DECREF(observation_list);
+        Py_DECREF(result);
+        return NULL;
+      }
+      PyList_SetItem(observation_list, obs_id, obs_enty);
+    }
+    PyTuple_SetItem(entry, 1, observation_list);
+    PyList_SetItem(result, event_id, entry);
   }
 
   return result;
 }
 
-static PyObject* Lab_close(LabObject* self) {
-  if (env_close(self)) {
+static PyObject* Lab_close(PyObject* self, PyObject* no_arg) {
+  if (env_close((LabObject*)self)) {
     Py_RETURN_TRUE;
   } else {
     Py_RETURN_FALSE;
@@ -429,23 +565,22 @@ static PyObject* Lab_close(LabObject* self) {
 static PyMethodDef LabObject_methods[] = {
     {"reset", (PyCFunction)Lab_reset, METH_VARARGS | METH_KEYWORDS,
      "Reset the environment"},
-    {"num_steps", (PyCFunction)Lab_num_steps, METH_NOARGS,
+    {"num_steps", Lab_num_steps, METH_NOARGS,
      "Number of frames since the last reset() call"},
-    {"is_running", (PyCFunction)Lab_is_running, METH_NOARGS,
+    {"is_running", Lab_is_running, METH_NOARGS,
      "If the environment is in status RUNNING"},
     {"step", (PyCFunction)Lab_step, METH_VARARGS | METH_KEYWORDS,
      "Advance the environment a number of steps"},
-    {"observation_spec", (PyCFunction)Lab_observation_spec, METH_NOARGS,
+    {"observation_spec", Lab_observation_spec, METH_NOARGS,
      "The shape of the observations"},
-    {"fps", (PyCFunction)Lab_fps, METH_NOARGS,
+    {"fps", Lab_fps, METH_NOARGS,
      "An advisory metric that correlates discrete environment steps "
      "(\"frames\") with real (wallclock) time: the number of frames per (real) "
      "second."},
-    {"action_spec", (PyCFunction)Lab_action_spec, METH_NOARGS,
-     "The shape of the actions"},
-    {"observations", (PyCFunction)Lab_observations, METH_NOARGS,
-     "Get the observations"},
-    {"close", (PyCFunction)Lab_close, METH_NOARGS, "Close the environment"},
+    {"action_spec", Lab_action_spec, METH_NOARGS, "The shape of the actions"},
+    {"observations", Lab_observations, METH_NOARGS, "Get the observations"},
+    {"events", Lab_events, METH_NOARGS, "Get the events"},
+    {"close", Lab_close, METH_NOARGS, "Close the environment"},
     {NULL} /* Sentinel */
 };
 
@@ -454,7 +589,7 @@ static PyTypeObject deepmind_lab_LabType = {
     "deepmind_lab.Lab",            /* tp_name */
     sizeof(LabObject),             /* tp_basicsize */
     0,                             /* tp_itemsize */
-    (destructor)LabObject_dealloc, /* tp_dealloc */
+    LabObject_dealloc,             /* tp_dealloc */
     0,                             /* tp_print */
     0,                             /* tp_getattr */
     0,                             /* tp_setattr */
@@ -485,12 +620,12 @@ static PyTypeObject deepmind_lab_LabType = {
     0,                             /* tp_descr_get */
     0,                             /* tp_descr_set */
     0,                             /* tp_dictoffset */
-    (initproc)Lab_init,            /* tp_init */
+    Lab_init,                      /* tp_init */
     0,                             /* tp_alloc */
     LabObject_new,                 /* tp_new */
 };
 
-static PyObject* module_runfiles_path(PyObject* self) {
+static PyObject* module_runfiles_path(PyObject* self, PyObject* no_arg) {
   return Py_BuildValue("s", runfiles_path);
 }
 
@@ -499,24 +634,27 @@ static PyObject* module_set_runfiles_path(PyObject* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &new_path)) {
     return NULL;
   }
-  if (sizeof(runfiles_path) < strlen(new_path)) {
+
+  if (strlen(new_path) < sizeof(runfiles_path)) {
+    strcpy(runfiles_path, new_path);
+  } else {
     PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
     return NULL;
   }
-  strcpy(runfiles_path, new_path);
+
   Py_RETURN_TRUE;
 }
 
-static PyObject* module_version(PyObject* self) {
+static PyObject* module_version(PyObject* self, PyObject* no_arg) {
   return Py_BuildValue("s", DEEPMIND_LAB_WRAPPER_VERSION);
 }
 
 static PyMethodDef module_methods[] = {
-    {"version", (PyCFunction)module_version, METH_NOARGS,
+    {"version", module_version, METH_NOARGS,
      "Module version number."},
-    {"runfiles_path", (PyCFunction)module_runfiles_path, METH_NOARGS,
+    {"runfiles_path", module_runfiles_path, METH_NOARGS,
      "Get the module-wide runfiles path."},
-    {"set_runfiles_path", (PyCFunction)module_set_runfiles_path, METH_VARARGS,
+    {"set_runfiles_path", module_set_runfiles_path, METH_VARARGS,
      "Set the module-wide runfiles path."},
     {NULL, NULL, 0, NULL} /* sentinel */
 };
@@ -532,17 +670,38 @@ PyMODINIT_FUNC initdeepmind_lab(void) {
   PyModule_AddObject(m, "Lab", (PyObject*)&deepmind_lab_LabType);
 
 #ifdef DEEPMIND_LAB_MODULE_RUNFILES_DIR
-  static const char kRunfiles[] = ".";
+  PyObject *v = PyObject_GetAttrString(m, "__file__");
+  if (v && PyString_Check(v)) {
+    const char* file = PyString_AsString(v);
+    if (strlen(file) < sizeof(runfiles_path)) {
+      strcpy(runfiles_path, file);
+    } else {
+      PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
+      return;
+    }
+
+    char* last_slash = strrchr(runfiles_path, '/');
+    if (last_slash != NULL) {
+      *last_slash = '\0';
+    } else {
+      PyErr_SetString(PyExc_RuntimeError,
+                      "Unable to determine runfiles directory!");
+      return;
+    }
+  } else {
+    strcpy(runfiles_path, ".");
+  }
 #else
   static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
-  if (sizeof(runfiles_path) <
-      strlen(Py_GetProgramFullPath()) + sizeof(kRunfiles)) {
+  if (strlen(Py_GetProgramFullPath()) + strlen(kRunfiles) <
+      sizeof(runfiles_path)) {
+    strcpy(runfiles_path, Py_GetProgramFullPath());
+    strcat(runfiles_path, kRunfiles);
+  } else {
     PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
     return;
   }
-  strcpy(runfiles_path, Py_GetProgramFullPath());
 #endif
-  strcat(runfiles_path, kRunfiles);
 
   srand(time(NULL));
 
