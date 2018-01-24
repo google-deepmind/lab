@@ -637,11 +637,6 @@ IOQ3_COMMON_DEFINES = [
     "_GNU_SOURCE",
 ]
 
-ASSETS = [
-    "assets/default.cfg",
-    "assets/q3config.cfg",
-] + glob(["assets/game_scripts/**/*.lua"])
-
 MAPS = glob(["assets/maps/*.map"])
 
 genrule(
@@ -666,6 +661,11 @@ genrule(
     visibility = ["//testing:__subpackages__"],
 )
 
+ASSETS = [
+    "assets/default.cfg",
+    "assets/q3config.cfg",
+]
+
 genrule(
     name = "non_pk3_assets",
     srcs = ASSETS,
@@ -675,6 +675,23 @@ genrule(
           "  B=$${A/assets/}; " +
           "  mkdir -p $(@D)/baselab$${B}; " +
           "  ln -s -L -t $(@D)/baselab$${B} $$(realpath $${s}); " +
+          "done",
+    visibility = ["//visibility:public"],
+)
+
+GAME_SCRIPTS = glob([
+    "game_scripts/**/*.lua",
+    "game_scripts/**/*.png",
+])
+
+genrule(
+    name = "game_script_assets",
+    srcs = GAME_SCRIPTS,
+    outs = ["baselab/" + f for f in GAME_SCRIPTS],
+    cmd = "for s in $(SRCS); do " +
+          "  A=$$(dirname $$s); " +
+          "  mkdir -p $(@D)/baselab/$${A}; " +
+          "  ln -s -L -t $(@D)/baselab/$${A} $$(realpath $${s}); " +
           "done",
     visibility = ["//visibility:public"],
 )
@@ -732,6 +749,7 @@ GAME_ASSETS = [
     ":assets_bots_pk3",
     ":assets_oa_pk3",
     ":assets_pk3",
+    ":game_script_assets",
     ":map_assets",
     ":non_pk3_assets",
     ":vm_pk3",

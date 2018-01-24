@@ -143,7 +143,10 @@ cc_library(
 cc_library(
     name = "callbacks",
     srcs = ["callbacks.cc"],
-    data = ["//:non_pk3_assets"],
+    data = [
+        "//:game_script_assets",
+        "//:non_pk3_assets",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":context",

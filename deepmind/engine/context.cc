@@ -429,6 +429,7 @@ namespace lab {
 namespace {
 
 constexpr char kGameScriptPath[] = "/baselab/game_scripts";
+constexpr char kLevelsDirectory[] = "/levels";
 constexpr double kDefaultEpisodeLengthSeconds = 5 * 30.0;
 
 constexpr const char* const kTeamNames[] = {
@@ -563,8 +564,8 @@ int Context::SetScriptName(std::string script_name) {
     script_name.compare(script_name.length() - 4, 4, ".lua", 4) == 0) {
     script_path_ = std::move(script_name);
   } else if (!script_name.empty()) {
-    script_path_ = absl::StrCat(ExecutableRunfiles(), kGameScriptPath, "/",
-                                script_name, ".lua");
+    script_path_ = absl::StrCat(ExecutableRunfiles(), kGameScriptPath,
+                                kLevelsDirectory, "/",  script_name, ".lua");
   }
   auto result = PushScript();
   lua_State* L = lua_vm_.get();

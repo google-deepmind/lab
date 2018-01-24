@@ -14,6 +14,9 @@
 8.  Add customisable themes. Note: This change renames helpers in
     `maze_generation` to be in lowerCamelCase (e.g. `MazeGeneration` ->
     `mazeGeneration`).
+9.  The directory `game_scripts` has moved out of the `assets` directory, and
+    level scripts now live separately from the library code in the `levels`
+    subdirectory.
 
 ### Minor Improvements:
 
