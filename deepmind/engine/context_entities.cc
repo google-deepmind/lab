@@ -104,4 +104,3 @@ void ContextEntities::Add(int entity_id, int user_id, int type, int flags,
 
 }  // namespace lab
 }  // namespace deepmind
-

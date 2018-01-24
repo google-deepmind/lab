@@ -857,7 +857,6 @@ char Context::TeamSelect(int player_id, const char* player_name) {
 
   LOG(FATAL) << "[team] - must return one of 'r', 'b', 'p' and 's'; actual"
              << lua::ToString(L, -1);
-  return '\0';
 }
 
 void Context::SetActions(double look_down_up, double look_left_right,
