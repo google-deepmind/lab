@@ -15,13 +15,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local maze_gen = require 'dmlab.system.maze_generation'
+local maze_generation = require 'dmlab.system.maze_generation'
 local tensor = require 'dmlab.system.tensor'
 local random = require 'common.random'
 local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
-local timeout = require 'decorators.timeout'
+local setting_overrides = require 'decorators.setting_overrides'
 
 -- Generates a random maze with thick walls.
 -- Apples are placed near the goal and spawn points away from it.
@@ -30,8 +30,8 @@ local api = {}
 
 local function getRandomEvenCoodinate(rows, cols)
   -- Shape must be bigger than 3 and odd.
-  assert (rows > 2 and rows % 2 == 1)
-  assert (cols > 2 and cols % 2 == 1)
+  assert(rows > 2 and rows % 2 == 1)
+  assert(cols > 2 and cols % 2 == 1)
   return {
       random:uniformInt(1, math.floor(rows / 2)) * 2,
       random:uniformInt(1, math.floor(cols / 2)) * 2
@@ -76,19 +76,19 @@ local function generateTensorMaze(rows, cols)
   return maze
 end
 
-function api:createPickup(className)
-  return pickups.defaults[className]
+function api:createPickup(classname)
+  return pickups.defaults[classname]
 end
 
 function api:start(episode, seed, params)
   random:seed(seed)
   local rows, cols = 15, 15
   local mazeT = generateTensorMaze(rows, cols)
-  local maze = maze_gen.mazeGeneration{height = rows, width = cols}
+  local maze = maze_generation.mazeGeneration{height = rows, width = cols}
   local variations = {'.', 'A', 'B', 'C'}
   mazeT:applyIndexed(function(val, index)
     local row, col = unpack(index)
-    if 1 < row and row < rows and 1 < col and row < rows and
+    if 1 < row and row < rows and 1 < col and col < cols and
         random:uniformReal(0, 1) < 0.15 then
       maze:setEntityCell(row, col, ' ')
     else
@@ -123,9 +123,9 @@ function api:start(episode, seed, params)
   print(maze:entityLayer())
   io.flush()
   api._maze_name = make_map.makeMap{
-      mapName = 'map_' .. episode .. '_' .. seed,
+      mapName = 'map_random_maze',
       mapEntityLayer = maze:entityLayer(),
-      mapVariationsLayer = maze:variationsLayer(),
+      mapVariationsLayer = maze:variationsLayer()
   }
 end
 
@@ -134,6 +134,10 @@ function api:nextMap()
 end
 
 custom_observations.decorate(api)
-timeout.decorate(api, 3 * 60)
+setting_overrides.decorate{
+    api = api,
+    apiParams = {episodeLengthSeconds = 3 * 60, camera = {750, 750, 750}},
+    decorateWithTimeout = true
+}
 
 return api

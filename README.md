@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="DeepMind Lab">
+# <img src="/docs/template/logo.png" alt="DeepMind Lab">
 
 *DeepMind Lab* is a 3D learning environment based on id Software's
 [Quake III Arena](https://github.com/id-Software/Quake-III-Arena) via
@@ -59,7 +59,7 @@ lab$ bazel run :python_random_agent --define graphics=sdl -- \
                --length=10000 --width=640 --height=480
 ```
 
-Here is some [more detailed build documentation](docs/build.md),
+Here is some [more detailed build documentation](/docs/users/build.md),
 including how to install dependencies if you don't have them.
 
 ### Play as a human
@@ -85,12 +85,12 @@ this agent interact with DeepMind Lab for training, run
 lab$ bazel run :python_random_agent
 ```
 
-The Python API for the agent-environment interaction is described
-in [docs/python_api.md](docs/python_api.md).
+The [Python API](/docs/users/python_api.md)
+is used for agent-environment interactions.
 
 *DeepMind Lab* ships with different levels implementing different tasks. These
-tasks can be configured using Lua scripts,
-as described in [docs/lua_api.md](docs/lua_api.md).
+tasks can be configured using Lua scripts, as described in the
+[Lua API](/docs/developers/reference/lua_api.md).
 
 -----------------
 

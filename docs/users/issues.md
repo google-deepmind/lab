@@ -1,9 +1,3 @@
-(Switch to: [Lua](lua_api.md) &middot; [Python](python_api.md) &middot;
- [Level Generation](level_generation.md) &middot;
- [Tensor](tensor.md) &middot; [Text Levels](text_level.md) &middot;
- [Build](build.md) &middot;
- Known Issues)
-
 # Known Issues
 
 Please take note of the following subtleties when modifying *DeepMind Lab* or
@@ -48,3 +42,11 @@ Individual render modes have their own special exceptions:
 *   Hardware rendering - The environment can be only called from the *same*
     thread in which it was constructed.
 *   SDL rendering - The environment can only be called from the main thread.
+
+## Randomness and procedural generation
+
+The procedural generation algorithms are not portably deterministic. Different
+platforms may produce different random mazes even when given the same random
+seed. In particular, some unit tests that compare the result with a hard-coded
+expected output may fail on some platforms. (The hardcoded output was produced
+by GCC using libstd++ at version 4.9.)

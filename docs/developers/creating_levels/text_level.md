@@ -1,9 +1,3 @@
-(Switch to: [Lua](lua_api.md) &middot; [Python](python_api.md) &middot;
- [Level Generation](level_generation.md) &middot;
- [Tensor](tensor.md) &middot; Text Levels &middot;
- [Build](build.md) &middot;
- [Known Issues](issues.md))
-
 # Text Levels
 
 Text levels are DeepMind Lab levels that are compiled from a simple text format,
@@ -94,6 +88,21 @@ be configurable or extensible.
    * A *theme*, a collection of textures used to decorate the map.
    * Decal frequencies: Random decals are added to adorn the map at a given
      rate.
+   * A *skybox*, a textured cube which is always rendered as if its faces were
+     at an infinite distance from the agent. Whenever the skybox is present the
+     ceiling of the cells is open.
+
+### Themes
+
+These are the themes currently supported:
+
+   * MISHMASH (default)
+   * TRON
+   * MINESWEEPER
+   * TETRIS
+   * GO
+   * PACMAN
+   * INVISIBLE_WALLS
 
 ## Randomness
 
@@ -139,15 +148,15 @@ The following default cell values are recognized:
 **Variation layer:**
 
 ```
-        
-            
-        AAA 
-        AAA 
-        AAA 
-            
-         
-              
- CCCCCCCC BBB 
+
+
+        AAA
+        AAA
+        AAA
+
+
+
+ CCCCCCCC BBB
 ```
 
 This example shows a small map with four rooms separated by doors. The top-left

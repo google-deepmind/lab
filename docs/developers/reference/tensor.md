@@ -1,9 +1,3 @@
-(Switch to: [Lua](lua_api.md) &middot; [Python](python_api.md) &middot;
- [Level Generation](level_generation.md) &middot;
- Tensor &middot; [Text Levels](text_level.md) &middot;
- [Build](build.md) &middot;
- [Known Issues](issues.md))
-
 # Tensor
 
 This is a small tensor library for manipulating numerical data in DeepMind Lab.
@@ -307,6 +301,28 @@ z1 = tensor.DoubleTensor{...}
 z2 = z1:clone()   -- same as z1:double()
 ```
 
+## Metadata
+
+### `size`()
+
+Returns the number of elements in the tensor.
+
+```Lua
+> z = tensor.DoubleTensor{{1, 2}, {3, 4}, {5, 6}}
+> z:size()
+6
+```
+
+### `shape`()
+
+Returns the shape of the tensor.
+
+```Lua
+> z = tensor.DoubleTensor{{1, 2}, {3, 4}, {5, 6}}
+> z:shape()
+{3, 2}
+```
+
 ## Rounding
 
 Rounding operations can be applied to nonintegral types.
@@ -460,6 +476,68 @@ Shape: [4, 3]
 Shape: [2, 4]
 [[ 9, 10, 11, 12],
  [13, 14, 15, 16]]
+```
+
+### `reverse`(*dim*)
+
+Returns a new Tensor with a reversed the dimension `dim`. The dimension `dim`
+must be a valid dimension.
+
+```Lua
+> v = 0
+> z = tensor.DoubleTensor(3, 4):apply(function() v = v + 1 return v end)
+> z
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 4]
+[[ 1,  2,  3,  4],
+ [ 5,  6,  7,  8],
+ [ 9, 10, 11, 12]]
+> z:reverse(1)  -- Reverse major dimension.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 4]
+[[ 9, 10, 11, 12],
+ [ 5,  6,  7,  8],
+ [ 1,  2,  3,  4]]
+> z:reverse(2)  -- Reverse minor dimension.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 4]
+[[ 4,  3,  2,  1],
+ [ 8,  7,  6,  5],
+ [12, 11, 10,  9]]
+> z:reverse(1):reverse(2)  -- Rotate 180 degrees.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 4]
+[[12, 11, 10,  9],
+ [ 8,  7,  6,  5],
+ [ 4,  3,  2,  1]]
+```
+
+This can also be combined with transpose to create 90 degree rotations.
+
+```Lua
+> v = 0
+> z = tensor.DoubleTensor(3, 4):apply(function() v = v + 1 return v end)
+> z
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 4]
+[[ 1,  2,  3,  4],
+ [ 5,  6,  7,  8],
+ [ 9, 10, 11, 12]]
+> z:transpose(1, 2):reverse(1)  -- Rotate 90 degrees clockwise.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [4, 3]
+[[  9,  5,  1],
+ [ 10,  6,  2],
+ [ 11,  7,  3],
+ [ 12,  8,  4]]
+
+> z:transpose(1, 2):reverse(2)  -- Rotate 90 degrees counterclockwise.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [4, 3]
+[[ 4,  8, 12]
+ [ 3,  7, 11],
+ [ 2,  6, 10],
+ [ 1,  5,  9]],
 ```
 
 ## Scalar Operations

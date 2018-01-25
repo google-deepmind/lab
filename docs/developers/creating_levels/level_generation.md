@@ -1,9 +1,3 @@
-(Switch to: [Lua](lua_api.md) &middot; [Python](python_api.md) &middot;
- Level Generation &middot;
- [Tensor](tensor.md) &middot; [Text Levels](text_level.md) &middot;
- [Build](build.md) &middot;
- [Known Issues](issues.md))
-
 # Level generation
 
 Levels for DeepMind Lab are _Quake III Arena_ levels. They are packaged into `.pk3`

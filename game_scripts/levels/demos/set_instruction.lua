@@ -17,10 +17,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
+local custom_observations = require 'decorators.custom_observations'
+
 local api = {}
 
 function api:start(episode, seed)
-  make_map.seedRng(seed)
+  make_map.seedRng(0)  -- Use a fixed seed since this is a simple demo level.
   api._count = 0
 end
 
@@ -28,16 +30,30 @@ function api:createPickup(className)
   return pickups.defaults[className]
 end
 
-function api:nextMap()
-  map = "G I A P"
-  api._count = api._count + 1
-  for i = 0, api._count do
-    map = map.." A"
+function api:updateSpawnVars(spawnVars)
+  if spawnVars.classname == 'info_player_start' then
+    -- Spawn facing the apples.
+    spawnVars.angle = '0'
+    spawnVars.randomAngleRange = '0'
   end
+  return spawnVars
+end
+
+function api:nextMap()
+  api._count = api._count + 1
+  local map = 'P'
+  for i = 1, api._count do
+    map = map .. 'A'
+  end
+  map = map .. 'G'
+  local str = api._count == 1 and ' apple' or ' apples'
+  api.setInstruction(api._count .. str)
   return make_map.makeMap{
-      mapName = "demo_map_" .. api._count,
-      mapEntityLayer = map,
+      mapName = 'instruction_map',
+      mapEntityLayer = map
   }
 end
+
+custom_observations.decorate(api)
 
 return api
