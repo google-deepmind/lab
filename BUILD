@@ -952,3 +952,23 @@ py_binary(
     main = "python/random_agent.py",
     visibility = ["//python/tests:__subpackages__"],
 )
+
+LOAD_TEST_SCRIPTS = [
+    level_script[len("game_scripts/levels"):-len(".lua")]
+    for level_script in glob(["game_scripts/levels/*.lua"])
+]
+
+test_suite(
+    name = "load_level_test",
+    tests = ["load_level_test_" + level_name for level_name in LOAD_TEST_SCRIPTS],
+)
+
+[
+    cc_test(
+        name = "load_level_test_" + level_name,
+        size = "large",
+        args = [level_name],
+        deps = ["//testing:load_level_test_lib"],
+    )
+    for level_name in LOAD_TEST_SCRIPTS
+]
