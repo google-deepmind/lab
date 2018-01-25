@@ -17,4 +17,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local factory = require 'factories.lt_factory'
 
-return factory.createLevelApi{mapName = 'lt_hallway_slope'}
+return factory.createLevelApi{
+    mapName = 'lt_hallway_slope',
+    botCount = 4,
+    camera = {-30, 10, 750},
+}

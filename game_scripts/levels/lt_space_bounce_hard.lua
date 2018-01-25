@@ -20,5 +20,7 @@ local factory = require 'factories.lt_factory'
 return factory.createLevelApi{
     mapName = 'lt_space_bounce_01',
     skill = 5,
-    color = true
+    color = true,
+    botCount = 4,
+    camera = {20, 90, 1600},
 }

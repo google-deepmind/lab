@@ -17,4 +17,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local factory = require 'factories.lt_factory'
 
-return factory.createLevelApi{mapName = 'lt_horseshoe_color', color = true}
+return factory.createLevelApi{
+    mapName = 'lt_horseshoe_color',
+    color = true,
+    botCount = 4,
+    camera = {-50, 450, 900},
+}

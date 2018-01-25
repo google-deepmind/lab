@@ -71,24 +71,6 @@ models/players/crash_color/skin_base //crash color shader
         alphaFunc GE128
         depthwrite
     }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_a.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_b.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
-
-    {
-        map models/players/crash_color/dm_character_skin_mask_c.tga
-        blendfunc blend
-        rgbGen lightingDiffuse
-    }
     {
         map models/players/crash/skin1_scroll.tga
         blendfunc add
