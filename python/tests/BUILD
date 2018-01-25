@@ -29,3 +29,98 @@ py_test(
     main = "random_agent_test.py",
     deps = ["//:python_random_agent"],
 )
+
+py_test(
+    name = "raycast_test",
+    size = "large",  # for TSAN
+    srcs = ["raycast_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "in_fov_test",
+    size = "large",  # for TSAN
+    srcs = ["in_fov_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "lookat_test",
+    srcs = ["lookat_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "player_info_test",
+    srcs = ["player_info_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = ["//python/tests/utils:math_utils"],
+)
+
+py_test(
+    name = "extra_entities_test",
+    srcs = ["extra_entities_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "extra_entities_with_bots_test",
+    srcs = ["extra_entities_with_bots_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "episode_time_test",
+    srcs = ["episode_time_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "determinism_test",
+    srcs = ["determinism_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "spawn_inventory_test",
+    srcs = ["spawn_inventory_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "update_inventory_test",
+    srcs = ["update_inventory_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "entity_info_test",
+    srcs = ["entity_info_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "debug_observation_test",
+    srcs = ["debug_observation_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)
+
+py_test(
+    name = "custom_view_test",
+    srcs = ["custom_view_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = ["//python/tests/utils:math_utils"],
+)

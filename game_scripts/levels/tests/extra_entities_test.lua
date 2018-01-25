@@ -37,10 +37,10 @@ local MAP_ENTITIES = [[
 function api:init(params)
   make_map.seedRng(1)
   api._map = make_map.makeMap{
-      mapName = "empty_room",
+      mapName = 'empty_room',
       mapEntityLayer = MAP_ENTITIES,
       useSkybox = true,
-      theme = "TETRIS"
+      theme = 'TETRIS'
   }
 end
 
@@ -49,12 +49,47 @@ function api:nextMap()
 end
 
 function api:updateSpawnVars(spawnVars)
-  if spawnVars.classname == "info_player_start" then
+  if spawnVars.classname == 'info_player_start' then
     -- Spawn facing East.
-    spawnVars.angle = "0"
-    spawnVars.randomAngleRange = "0"
+    spawnVars.angle = '0'
+    spawnVars.randomAngleRange = '0'
   end
   return spawnVars
+end
+
+function api:extraEntities()
+  return {
+      {
+          classname = 'apple_reward',
+          origin = '550 450 30',
+          count = '1',
+      },
+      {
+          classname = 'apple_reward',
+          origin = '600 450 30',
+          count = '2',  -- Override reward for testing purposes.
+      },
+      {
+          classname = 'apple_reward',
+          origin = '650 450 30',
+          count = '3',
+      },
+      {
+          classname = 'apple_reward',
+          origin = '700 450 30',
+          count = '4',
+      },
+      {
+          classname = 'apple_reward',
+          origin = '750 450 30',
+          count = '5',
+      }
+  }
+end
+
+-- Create apple explicitly
+function api:createPickup(classname)
+  return pickups.defaults[classname]
 end
 
 timeout.decorate(api, 60 * 60)

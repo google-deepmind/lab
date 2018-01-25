@@ -15,46 +15,75 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local helpers = require 'common.helpers'
 local make_map = require 'common.make_map'
-local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
+local events = require 'dmlab.system.events'
 local game = require 'dmlab.system.game'
 local timeout = require 'decorators.timeout'
 local api = {}
 
-local MAP_ENTITIES = [[
+local MAP_NO_WEAPON = [[
 *********
-*       *
-*       *
-*       *
-*   P   *
-*       *
-*       *
-*       *
+*      P*
+* ***** *
+* ***** *
+* ***** *
+* ***** *
+* ***** *
+*P      *
 *********
 ]]
 
 function api:init(params)
   make_map.seedRng(1)
   api._map = make_map.makeMap{
-      mapName = "empty_room",
-      mapEntityLayer = MAP_ENTITIES,
+      mapName = 'empty_room',
+      mapEntityLayer = MAP_NO_WEAPON,
       useSkybox = true,
-      theme = "TETRIS"
+      theme = 'TETRIS',
+      allowBots = true
   }
+  self._spawnWeapons = params.spawnWeapons
 end
 
 function api:nextMap()
   return self._map
 end
 
-function api:updateSpawnVars(spawnVars)
-  if spawnVars.classname == "info_player_start" then
-    -- Spawn facing East.
-    spawnVars.angle = "0"
-    spawnVars.randomAngleRange = "0"
+function api:addBots()
+  local bots = {
+    {name = 'Cygni', skill = 5.0}
+  }
+  return bots
+end
+
+function api:extraEntities()
+  if helpers.fromString(self._spawnWeapons) then
+    -- List of entities to create.
+    local vars = {
+        {
+            classname = 'weapon_rocketlauncher',
+            origin = '750 150 30',
+            spawnflags = "1"
+        },
+        {
+            classname = 'weapon_lightning',
+            origin = '150 750 30',
+            spawnflags = "1"
+        }
+    }
+    return vars
+  else
+    return nil
   end
-  return spawnVars
+end
+
+function api:rewardOverride(args)
+  if args.reason == "TAG_PLAYER" and args.playerId == 1 and
+    args.otherPlayerId == 0 then
+    events:add('PLAYER_TAGGED', 'Player tagged by bot')
+  end
 end
 
 timeout.decorate(api, 60 * 60)

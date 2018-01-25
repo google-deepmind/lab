@@ -15,34 +15,25 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local events = require 'dmlab.system.events'
+local game = require 'dmlab.system.game'
 local tensor = require 'dmlab.system.tensor'
 
 local api = {}
 
-local map = 'seekavoid_arena_01'
+function api:customObservationSpec()
+  return {
+    {name = 'EPISODE_TIME_SECONDS', type = 'Doubles', shape = {1}},
+  }
+end
+
+function api:customObservation(name)
+  if name == 'EPISODE_TIME_SECONDS' then
+    return tensor.Tensor{game:episodeTimeSeconds()}
+  end
+end
 
 function api:nextMap()
-  local result = map
-  map = ''
-  return result
-end
-
-function api:start(episode, seed)
-  events:add('TEXT', 'EPISODE ' .. episode)
-  events:add('DOUBLE', tensor.DoubleTensor{{1, 0}, {0, 1}})
-  events:add('BYTE', tensor.ByteTensor{2, 2})
-  events:add('ALL', 'Text', tensor.ByteTensor{3}, tensor.DoubleTensor{7})
-end
-
-
-function api:hasEpisodeFinished(time)
-  if time >= 1.0 then
-    events:add('LOG', 'Episode ended')
-    return true
-  else
-    return false
-  end
+  return 'lookat_test'
 end
 
 return api

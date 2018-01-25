@@ -15,10 +15,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local game = require 'dmlab.system.game'
 local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
+local inventory = require 'common.inventory'
 local custom_observations = require 'decorators.custom_observations'
-local game = require 'dmlab.system.game'
 local timeout = require 'decorators.timeout'
 local api = {}
 
@@ -55,6 +56,13 @@ function api:updateSpawnVars(spawnVars)
     spawnVars.randomAngleRange = "0"
   end
   return spawnVars
+end
+
+function api:spawnInventory(loadOut)
+  local view = inventory.View(loadOut)
+  view:setGadgetAmount(inventory.GADGETS.ORB, inventory.UNLIMITED)
+  view:setGadgets{inventory.GADGETS.ORB}
+  return view:loadOut()
 end
 
 timeout.decorate(api, 60 * 60)

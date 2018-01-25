@@ -19,45 +19,64 @@ local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
 local game = require 'dmlab.system.game'
-local timeout = require 'decorators.timeout'
+local tensor = require 'dmlab.system.tensor'
+local helpers = require 'common.helpers'
 local api = {}
 
 local MAP_ENTITIES = [[
-*********
-*       *
-*       *
-*       *
-*   P   *
-*       *
-*       *
-*       *
-*********
+*****
+*A A*
+* * *
+*P*A*
+*****
 ]]
+
 
 function api:init(params)
   make_map.seedRng(1)
-  api._map = make_map.makeMap{
+  self._map = make_map.makeMap{
       mapName = "empty_room",
       mapEntityLayer = MAP_ENTITIES,
       useSkybox = true,
-      theme = "TETRIS"
+      theme = "MISHMASH"
   }
+  self.rewards = {}
 end
 
 function api:nextMap()
   return self._map
 end
 
+function api:createPickup(classname)
+  return pickups.defaults[classname]
+end
+
 function api:updateSpawnVars(spawnVars)
   if spawnVars.classname == "info_player_start" then
-    -- Spawn facing East.
-    spawnVars.angle = "0"
+    -- Spawn facing north.
+    spawnVars.angle = "90"
     spawnVars.randomAngleRange = "0"
+  else
+    self.rewards[#self.rewards + 1] =
+      helpers.spawnVarToNumberTable(spawnVars.origin)
   end
   return spawnVars
 end
 
-timeout.decorate(api, 60 * 60)
+function api:customObservationSpec()
+  return {{name = 'RAYCASTS', type = 'Doubles', shape = {0}}}
+end
+
+function api:customObservation(name)
+  assert(name == 'RAYCASTS', 'Bad observation name')
+  local playerInfo = game:playerInfo()
+  local result = tensor.DoubleTensor(#self.rewards)
+  for i, pos in ipairs(self.rewards) do
+    result(i):val(game:raycast(playerInfo.pos, pos))
+  end
+  return result
+end
+
 custom_observations.decorate(api)
 
 return api
