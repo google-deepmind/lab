@@ -19,23 +19,23 @@ local pickups = {}
 
 -- Must match itemType_t in engine/code/game/bg_public.h.
 pickups.type = {
-    kInvalid = 0,
-    kWeapon = 1,
-    kAmmo = 2,
-    kArmor = 3,
-    kHealth = 4,
-    kPowerUp = 5,
-    kHoldable = 6,
-    kPersistant_PowerUp = 7,
-    kTeam = 8,
-    kReward = 9,
-    kGoal = 10
+    INVALID = 0,
+    WEAPON = 1,
+    AMMO = 2,
+    ARMOR = 3,
+    HEALTH = 4,
+    POWER_UP = 5,
+    HOLDABLE = 6,
+    PERSISTANT_POWERUP = 7,
+    TEAM = 8,
+    REWARD = 9,
+    GOAL = 10
 }
 
 -- Must match reward_mv_t in engine/code/game/bg_public.h.
-pickups.move_type = {
-    kBob = 0,
-    kStatic = 1
+pickups.moveType = {
+    BOB = 0,
+    STATIC = 1
 }
 
 pickups.defaults = {
@@ -44,49 +44,49 @@ pickups.defaults = {
       classname = 'apple_reward',
       model = 'models/apple.md3',
       quantity = 1,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   },
   lemon_reward = {
       name = 'Lemon',
       classname = 'lemon_reward',
       model = 'models/lemon.md3',
       quantity = -1,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   },
   strawberry_reward = {
       name = 'Strawberry',
       classname = 'strawberry_reward',
       model = 'models/strawberry.md3',
       quantity = 2,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   },
   fungi_reward = {
       name = 'Fungi',
       classname = 'fungi_reward',
       model = 'models/toadstool.md3',
       quantity = -10,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   },
   watermelon_goal = {
       name = 'Watermelon',
       classname = 'watermelon_goal',
       model = 'models/watermelon.md3',
       quantity = 20,
-      type = pickups.type.kGoal
+      type = pickups.type.GOAL
   },
   goal = {
       name = 'Goal',
       classname = 'goal',
       model = 'models/goal_object_02.md3',
       quantity = 10,
-      type = pickups.type.kGoal
+      type = pickups.type.GOAL
   },
-  goal_mango = {
+  mango_goal = {
       name = 'Mango',
-      classname = 'goal',
+      classname = 'mango_goal',
       model = 'models/mango.md3',
       quantity = 100,
-      type = pickups.type.kGoal
+      type = pickups.type.GOAL
   }
 }
 

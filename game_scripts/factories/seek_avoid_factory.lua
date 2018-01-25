@@ -16,11 +16,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local game = require 'dmlab.system.game'
-local random = require 'common.random'
 local pickups = require 'common.pickups'
 local helpers = require 'common.helpers'
 local custom_observations = require 'decorators.custom_observations'
+local setting_overrides = require 'decorators.setting_overrides'
 local timeout = require 'decorators.timeout'
+local random = require 'common.random'
+local map_maker = require 'dmlab.system.map_maker'
+local randomMap = random(map_maker:randomGen())
 
 local factory = {}
 
@@ -41,6 +44,7 @@ function factory.createLevelApi(kwargs)
 
   function api:start(episode, seed, params)
     random:seed(seed)
+    randomMap:seed(random:mapGenerationSeed())
     api._has_goal = false
     api._count = 0
     api._finish_count = 0
@@ -59,16 +63,16 @@ function factory.createLevelApi(kwargs)
       local possibleClassNames = helpers.split(spawnVars.random_items, ',')
       if #possibleClassNames > 0 then
         classname = possibleClassNames[
-          random:uniformInt(1,  #possibleClassNames)]
+          random:uniformInt(1, #possibleClassNames)]
       end
     end
     local pickup = pickups.defaults[spawnVars.classname]
     if pickup then
-      if pickup.type == pickups.type.kReward and pickup.quantity > 0 then
+      if pickup.type == pickups.type.REWARD and pickup.quantity > 0 then
         api._finish_count = api._finish_count + 1
         spawnVars.id = tostring(api._finish_count)
       end
-      if pickup.type == pickups.type.kGoal then
+      if pickup.type == pickups.type.GOAL then
         api._has_goal = true
       end
     end
@@ -77,11 +81,18 @@ function factory.createLevelApi(kwargs)
   end
 
   function api:nextMap()
-    return kwargs.mapName
+    -- Fast map restarts.
+    local map = kwargs.mapName
+    kwargs.mapName = ''
+    return map
   end
 
   custom_observations.decorate(api)
-  timeout.decorate(api, kwargs.episodeLengthSeconds)
+  setting_overrides.decorate{
+      api = api,
+      apiParams = kwargs,
+      decorateWithTimeout = true
+  }
   return api
 end
 
