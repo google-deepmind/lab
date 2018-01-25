@@ -43,7 +43,7 @@ You can reach us at [lab@deepmind.com](mailto:lab@deepmind.com).
 
 ## Getting started on Linux
 
-* Get [Bazel from bazel.io](http://bazel.io/docs/install.html).
+* Get [Bazel from bazel.io](https://docs.bazel.build/versions/master/install.html).
 
 * Clone DeepMind Lab, e.g. by running
 
@@ -52,10 +52,10 @@ $ git clone https://github.com/deepmind/lab
 $ cd lab
 ```
 
-* For a live example of a random agent, run
+For a live example of a random agent, run
 
 ```shell
-lab$ bazel run :random_agent --define headless=false -- \
+lab$ bazel run :python_random_agent --define graphics=sdl -- \
                --length=10000 --width=640 --height=480
 ```
 
@@ -67,8 +67,12 @@ including how to install dependencies if you don't have them.
 To test the game using human input controls, run
 
 ```shell
-lab$ bazel run :game -- --level_script tests/demo_map
+lab$ bazel run :game -- --level_script=tests/empty_room_test --level_setting=logToStdErr=true
+# or:
+lab$ bazel run :game -- -l tests/empty_room_test -s logToStdErr=true
 ```
+
+Leave the `logToStdErr` setting off to disable most log output.
 
 ### Train an agent
 
@@ -78,7 +82,7 @@ which can be used as a starting point for implementing a learning agent. To let
 this agent interact with DeepMind Lab for training, run
 
 ```shell
-lab$ bazel run :random_agent
+lab$ bazel run :python_random_agent
 ```
 
 The Python API for the agent-environment interaction is described
