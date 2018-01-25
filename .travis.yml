@@ -19,6 +19,7 @@ addons:
       - libosmesa6-dev
       - python-dev
       - python-numpy
+      - python-pil
       - realpath
 
 before_install:
