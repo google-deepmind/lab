@@ -15,13 +15,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local maze_gen = require 'dmlab.system.maze_generation'
 local game = require 'dmlab.system.game'
-local random = require 'common.random'
-local pickups = require 'common.pickups'
+local map_maker = require 'dmlab.system.map_maker'
+local maze_generation = require 'dmlab.system.maze_generation'
 local helpers = require 'common.helpers'
+local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
-local timeout = require 'decorators.timeout'
+local setting_overrides = require 'decorators.setting_overrides'
+local random = require 'common.random'
+local map_maker = require 'dmlab.system.map_maker'
+local randomMap = random(map_maker:randomGen())
 
 local factory = {}
 
@@ -37,16 +40,17 @@ Keyword arguments:
 function factory.createLevelApi(kwargs)
   kwargs.scatteredRewardDensity = kwargs.scatteredRewardDensity or 0.1
   kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or 600
-  local maze = maze_gen.MazeGeneration{entity = kwargs.entityLayer}
+  local maze = maze_generation.mazeGeneration{entity = kwargs.entityLayer}
   local api = {}
 
-  function api:createPickup(classname)
-    return pickups.defaults[classname]
+  function api:createPickup(class)
+    return pickups.defaults[class]
   end
 
   function api:start(episode, seed, params)
-    api._time_remaining = kwargs.episodeLengthSeconds
     random:seed(seed)
+    randomMap:seed(seed)
+    api._timeRemaining = kwargs.episodeLengthSeconds
     local height, width = maze:size()
     height = (height - 1) / 2
     width = (width - 1) / 2
@@ -54,10 +58,9 @@ function factory.createLevelApi(kwargs)
     api._goal = {random:uniformInt(1, height) * 2,
                  random:uniformInt(1, width) * 2}
 
-    local goal_location
-    local all_spawn_locations = {}
-    local fruit_locations = {}
-    local fruit_locations_reverse = {}
+    local goalLocation
+    local allSpawnLocations = {}
+    local fruitLocations = {}
     maze:visitFill{cell = api._goal, func = function(row, col, distance)
       if row % 2 == 1 or col % 2 == 1 then
         return
@@ -66,29 +69,22 @@ function factory.createLevelApi(kwargs)
       col = col / 2 - 1
       -- Axis is flipped in DeepMind Lab.
       row = height - row - 1
-      local key = ''.. (col * 100 + 50) .. ' ' .. (row * 100 + 50) .. ' '
+      local key = '' .. (col * 100 + 50) .. ' ' .. (row * 100 + 50) .. ' '
 
       if distance == 0 then
-        goal_location = key .. '20'
+        goalLocation = key .. '20'
       end
       if distance > 0 then
-        fruit_locations[#fruit_locations + 1] = key .. '20'
+        fruitLocations[#fruitLocations + 1] = key .. '20'
       end
       if distance > 8 then
-        all_spawn_locations[#all_spawn_locations + 1] = key .. '30'
+        allSpawnLocations[#allSpawnLocations + 1] = key .. '30'
       end
     end}
-    helpers.shuffleInPlace(fruit_locations)
-    api._goal_location = goal_location
-    api._fruit_locations = fruit_locations
-    api._all_spawn_locations = all_spawn_locations
-  end
-
-  function api:pickup(spawn_id)
-    api._count = api._count + 1
-    if api._count == api._finish_count then
-      game:finishMap()
-    end
+    random:shuffleInPlace(fruitLocations)
+    api._goalLocation = goalLocation
+    api._fruitLocations = fruitLocations
+    api._allSpawnLocations = allSpawnLocations
   end
 
   function api:updateSpawnVars(spawnVars)
@@ -101,43 +97,44 @@ function factory.createLevelApi(kwargs)
     return spawnVars
   end
 
-  function api:hasEpisodeFinished(time_seconds)
-    api._time_remaining = kwargs.episodeLengthSeconds - time_seconds
-    return api._time_remaining <= 0
-  end
-
   function api:nextMap()
     api._newSpawnVars = {}
 
     local maxFruit = math.floor(kwargs.scatteredRewardDensity *
-                                #api._fruit_locations + 0.5)
-    for i, fruit_location in ipairs(api._fruit_locations) do
+                                #api._fruitLocations + 0.5)
+    for i, fruitLocation in ipairs(api._fruitLocations) do
       if i > maxFruit then
         break
       end
-      api._newSpawnVars[fruit_location] = {
+      api._newSpawnVars[fruitLocation] = {
           classname = 'apple_reward',
-          origin = fruit_location
+          origin = fruitLocation
       }
     end
 
-    local spawn_location = api._all_spawn_locations[
-                                random:uniformInt(1, #api._all_spawn_locations)]
+    local spawnLocation = api._allSpawnLocations[
+                                 random:uniformInt(1, #api._allSpawnLocations)]
     api._newSpawnVarsPlayerStart = {
         classname = 'info_player_start',
-        origin = spawn_location
+        origin = spawnLocation
     }
 
-    api._newSpawnVars[api._goal_location] = {
+    api._newSpawnVars[api._goalLocation] = {
         classname = 'goal',
-        origin = api._goal_location
+        origin = api._goalLocation
     }
-
-    return kwargs.mapName
+    -- Fast map restarts.
+    local map = kwargs.mapName
+    kwargs.mapName = ''
+    return map
   end
 
   custom_observations.decorate(api)
-  timeout.decorate(api, kwargs.episodeLengthSeconds)
+  setting_overrides.decorate{
+      api = api,
+      apiParams = kwargs,
+      decorateWithTimeout = true
+  }
   return api
 end
 

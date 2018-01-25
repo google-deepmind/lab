@@ -15,13 +15,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local tensor = require 'dmlab.system.tensor'
+local debug_observations = require 'decorators.debug_observations'
 local game = require 'dmlab.system.game'
-local custom_observations = {}
+local inventory = require 'common.inventory'
+local timeout = require 'decorators.timeout'
+local tensor = require 'dmlab.system.tensor'
+
 local obs = {}
 local obsSpec = {}
+local instructionObservation = ''
 
-function custom_observations.add_spec(name, type, shape, callback)
+local custom_observations = {}
+
+custom_observations.playerNames = {''}
+custom_observations.playerInventory = {}
+custom_observations.playerTeams = {}
+
+function custom_observations.addSpec(name, type, shape, callback)
   obsSpec[#obsSpec + 1] = {name = name, type = type, shape = shape}
   obs[name] = callback
 end
@@ -40,14 +50,42 @@ local function angularVelocity()
   return tensor.DoubleTensor(game:playerInfo().anglesVel)
 end
 
--- Decorate the api with a player translation velocity and angular velocity
--- observation. These observations are relative to the player.
+local function languageChannel()
+  return instructionObservation or ''
+end
+
+local function teamScore()
+  local info = game:playerInfo()
+  return tensor.DoubleTensor{info.teamScore, info.otherTeamScore}
+end
+
+local framesRemainingTensor = tensor.DoubleTensor(1)
+local function framesRemainingAt60()
+  framesRemainingTensor:val(timeout.timeRemainingSeconds() * 60)
+end
+
+--[[ Decorate the api to support custom observations:
+
+1.  Player translational velocity (VEL.TRANS).
+2.  Player angular velocity (VEL.ROT).
+3.  Language channel for, e.g. giving instructions to the agent (INSTR).
+4.  See debug_observations.lua for those.
+]]
 function custom_observations.decorate(api)
   local init = api.init
   function api:init(params)
-    custom_observations.add_spec('VEL.TRANS', 'Doubles', {3}, velocity)
-    custom_observations.add_spec('VEL.ROT', 'Doubles', {3}, angularVelocity)
-    return init and init(params)
+    custom_observations.addSpec('VEL.TRANS', 'Doubles', {3}, velocity)
+    custom_observations.addSpec('VEL.ROT', 'Doubles', {3}, angularVelocity)
+    custom_observations.addSpec('INSTR', 'String', {0}, languageChannel)
+    custom_observations.addSpec('TEAM.SCORE', 'Doubles', {0}, teamScore)
+    custom_observations.addSpec('FRAMES_REMAINING_AT_60', 'Doubles', {1},
+                                framesRemainingAt60)
+    api.setInstruction('')
+    debug_observations.extend(custom_observations)
+    if params.enableCameraMovement == 'true' then
+      debug_observations.enableCameraMovement(api)
+    end
+    return init and init(api, params)
   end
 
   local customObservationSpec = api.customObservationSpec
@@ -59,9 +97,37 @@ function custom_observations.decorate(api)
     return specs
   end
 
+  local team = api.team
+  function api:team(playerId, playerName)
+    custom_observations.playerNames[playerId] = playerName
+    local result = team and team(self, playerId, playerName) or 'p'
+    custom_observations.playerTeams[playerId] = result
+    return result
+  end
+
+  local spawnInventory = api.spawnInventory
+  function api:spawnInventory(loadOut)
+    local view = inventory.View(loadOut)
+    custom_observations.playerInventory[view:playerId()] = view
+    return spawnInventory and spawnInventory(self, loadOut)
+  end
+
+  local updateInventory = api.updateInventory
+  function api:updateInventory(loadOut)
+    local view = inventory.View(loadOut)
+    custom_observations.playerInventory[view:playerId()] = view
+    return updateInventory and updateInventory(self, loadOut)
+  end
+
   local customObservation = api.customObservation
   function api:customObservation(name)
     return obs[name] and obs[name]() or customObservation(api, name)
+  end
+
+  -- Levels can call this to define the language channel observation string
+  -- returned to the agent.
+  function api.setInstruction(text)
+    instructionObservation = text
   end
 end
 

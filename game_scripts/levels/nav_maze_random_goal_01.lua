@@ -34,5 +34,6 @@ local entityLayer = [[
 return factory.createLevelApi{
     mapName = 'nav_maze_random_goal_01',
     entityLayer = entityLayer,
-    episodeLengthSeconds = 60
+    episodeLengthSeconds = 60,
+    camera = {500, 250, 600}
 }

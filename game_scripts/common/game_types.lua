@@ -15,10 +15,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local factory = require 'factories.seek_avoid_factory'
-
-return factory.createLevelApi{
-    mapName = 'nav_maze_static_03',
-    episodeLengthSeconds = 300,
-    camera = {1000, 650, 1100}
+-- These must match gametype_t found in 'engine/code/game/bg_public.h'
+return {
+    FREE_FOR_ALL = 0,
+    TOURNAMENT = 1,
+    SINGLE_PLAYER_FREE_FOR_ALL = 2,
+    TEAM_DEATHMATCH = 3,
+    CAPTURE_THE_FLAG = 4,
+    ONE_FLAG_CAPTURE_THE_FLAG = 5,
 }

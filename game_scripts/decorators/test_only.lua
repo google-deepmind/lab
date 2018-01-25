@@ -15,10 +15,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local factory = require 'factories.seek_avoid_factory'
+local test_only = {}
 
-return factory.createLevelApi{
-    mapName = 'nav_maze_static_03',
-    episodeLengthSeconds = 300,
-    camera = {1000, 650, 1100}
-}
+--[[ Decorate the api so that an error is raised if the environment is not
+invoked in an evaluation context (e.g. from the Testbed or a human agent).
+
+This may be used to prevent researchers from accidentally training agents
+against evaluation levels that they are not meant to train against.
+]]
+function test_only.decorate(api)
+  local init = api.init
+  function api:init(params)
+    assert(params.invocationMode == "testbed",
+           "This level must only be used during evaluation. " ..
+           "For training, use the *_train.lua version of the level.")
+    return init and init(api, params)
+  end
+  return api
+end
+
+return test_only

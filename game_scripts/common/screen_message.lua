@@ -17,12 +17,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local screen_message = {
     -- Alignment for screen_message alignment parameter.
-    kAlignLeft = 0,
-    kAlignRight = 1,
-    kAlignCenter = 2,
+    ALIGN_LEFT = 0,
+    ALIGN_RIGHT = 1,
+    ALIGN_CENTER = 2,
 
     -- Default border to stop text from being to close to the edge.
-    kBorderSize = 5,
+    BORDER_SIZE = 5,
 }
 
 return screen_message

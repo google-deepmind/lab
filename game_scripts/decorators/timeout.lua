@@ -15,39 +15,42 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local helpers = require 'common.helpers'
 local screen_message = require 'common.screen_message'
 
 local timeout = {}
 
--- Function for displaying a timer in the top right of the screen.
--- 'args' is a table which can be passed through from api:screenMessages(args).
---    'width' (number) Screen width.
--- 'time_seconds' (number). Rounded up and if greater than 60, then minutes are
---     displayed, too.
--- Returns
---    A table, suitable for use as an entry in the array returned by
---        api:screenMessages
-local function timeDisplay(args, time_seconds)
-  local s = math.ceil(time_seconds)
-  local time_remaining
-  if s < 60 then
-    time_remaining = string.format('%.2d', s % 60)
-  else
-    time_remaining = string.format('%.2d:%.2d', s / 60 % 60, s % 60)
-  end
+--[[ Function for displaying a timer in the top right of the screen.
+
+Arguments:
+
+*   'args' (table) Passed through from api:screenMessages(args).
+*   'timeSeconds' (number). Rounded up and if greater than 60, then minutes are
+    displayed, too.
+
+Returns:
+
+*   A table, suitable for use as an entry in the array returned by
+    api:screenMessages.
+]]
+local function timeDisplay(args, timeSeconds)
   return {
-      message = time_remaining,
-      x = args.width - screen_message.kBorderSize,
+      message = helpers.secondsToTimeString(timeSeconds),
+      x = args.width - screen_message.BORDER_SIZE,
       y = 0,
-      alignment = screen_message.kAlignRight
+      alignment = screen_message.ALIGN_RIGHT
   }
+end
+
+local timeRemaining = 0.0
+
+function timeout.timeRemainingSeconds()
+  return timeRemaining
 end
 
 -- Adds a timeout to the level and displays a timer in top right of the screen.
 -- 'episodeLength' is the episode length in seconds.
 function timeout.decorate(api, episodeLength)
-  local timeRemaining
-
   local start = api.start
   function api:start(...)
     timeRemaining = episodeLength
@@ -62,9 +65,9 @@ function timeout.decorate(api, episodeLength)
   end
 
   local hasEpisodeFinished = api.hasEpisodeFinished
-  function api:hasEpisodeFinished(time_seconds)
-    timeRemaining = episodeLength - time_seconds
-    return hasEpisodeFinished and hasEpisodeFinished(api, time_seconds) or
+  function api:hasEpisodeFinished(timeSeconds)
+    timeRemaining = episodeLength - timeSeconds
+    return hasEpisodeFinished and hasEpisodeFinished(api, timeSeconds) or
            timeRemaining <= 0
   end
 end
