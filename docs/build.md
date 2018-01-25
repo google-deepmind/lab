@@ -29,7 +29,8 @@ Tested on Debian 8.6 (Jessie) and Ubuntu 14.04 (Trusty) and newer.
 
    ```shell
    $ sudo apt-get install lua5.1 liblua5.1-0-dev libffi-dev gettext \
-       freeglut3-dev libsdl2-dev libosmesa6-dev python-dev python-numpy realpath
+       freeglut3-dev libsdl2-dev libosmesa6-dev python-dev python-numpy \
+       python-pil realpath
    ```
 
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
@@ -62,7 +63,8 @@ to see those.
 
 ### Building on Red Hat Enterprise Linux Server
 
-Tested on release 7.2 (Maipo).
+Tested on release 7.2 (Maipo). This should also work on Centos 7, and with some
+modifications of the package installation commands on Centos 6.
 
 1. Add the Extra Packages as described on
    [fedoraproject.org](http://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F)
@@ -71,7 +73,7 @@ Tested on release 7.2 (Maipo).
    ```shell
    sudo yum -y install unzip java-1.8.0-openjdk lua lua-devel libffi-devel zip \
      java-1.8.0-openjdk-devel gcc gcc-c++ freeglut-devel SDL2 SDL2-devel \
-     mesa-libOSMesa-devel python-devel numpy
+     mesa-libOSMesa-devel python-devel python-imaging numpy
    ```
 3. Download and run
    a [Bazel binary installer](https://github.com/bazelbuild/bazel/releases),
@@ -105,7 +107,7 @@ Tested on SUSE Linux Enterprise Server 12.
    ```shell
    sudo zypper --non-interactive install java-1_8_0-openjdk \
      java-1_8_0-openjdk-devel gcc gcc-c++ lua lua-devel python-devel \
-     python-numpy-devel libSDL-devel libOSMesa-devel freeglut-devel
+     python-numpy-devel python-imaging libSDL-devel libOSMesa-devel freeglut-devel
    ```
 2. Download and run
    a [Bazel binary installer](https://github.com/bazelbuild/bazel/releases),
