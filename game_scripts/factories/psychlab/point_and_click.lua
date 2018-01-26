@@ -1,0 +1,378 @@
+--[[ Copyright (C) 2018 Google Inc.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+]]
+
+local tensor = require 'dmlab.system.tensor'
+
+--[[ This is the interface for Point and Click environments. All co-ordinates
+are normalised to [0, 1]. Hover and callback times are in seconds as floating
+points.
+]]
+local pac = {}
+pac.__index = pac
+
+setmetatable(pac, {
+    __call = function (cls, ...)
+      local self = setmetatable({}, cls)
+      self:_init(...)
+      return self
+    end
+})
+
+--[[ Initialise with the opts provided.
+
+Keyword arguments:
+
+*   `environment` (function) Needs to returns an environment constructed with
+    self. The constructed environment can have two optional callbacks.
+    environment:reset() and environment:step().
+*   `screenSize` (table) {width=width, height=height} The screen size.
+]]
+function pac:_init(opts)
+  local screen = opts.screenSize
+  self._surface = tensor.ByteTensor(screen.height, screen.width, 4):fill(255)
+  self._surfaceDirty = true
+  self._reward = 0
+  self._pcontinue = 0
+  self._stepCount = 0
+  self._widgets = {}
+  self._timers = {}
+  self._backgroundColor = {0, 0, 0}
+  self._env = opts.environment(self, opts)
+end
+
+-- Rewards should be integer values, otherwise they may get floored. This will
+-- always be the case when running inside Labyrinth.
+function pac:addReward(reward)
+  local _, fraction = math.modf(reward)
+  if fraction ~= 0 then
+    print('Fractional rewards may get floored: ' .. reward)
+  end
+  self._reward = self._reward + reward
+end
+
+-- End the episode.
+function pac:endEpisode()
+  self._pcontinue = 0
+end
+
+--[[ set the color with which to fill the background of the surface.
+*   `rgbTable` (table) Three numbers, red, green, and blue, each in [0, 255].
+]]
+function pac:setBackgroundColor(rgbTable)
+  assert(#rgbTable == 3, 'Incorrect color format, should be RGB.')
+  for i = 1, 3 do
+    assert(rgbTable[i] >= 0 and rgbTable[i] <= 255, 'color must be in [0, 255]')
+  end
+  self._backgroundColor = rgbTable
+end
+
+--[[ Add a widget.
+
+Keyword arguments:
+
+*   `name` Name of the widget - must be unique.
+*   `pos` = {xPos, yPos} Widget position relative to screen.
+*   `size` = {width, height} The widget size relative to screen.
+*   `image` (ByteTensor{3xhxw}, optional).
+*   `imageLayer` (int, default = 1) Order to draw the images, 1 being the
+    bottom.
+*   `userData` (optional) Passed back in callbacks.
+*   `mouseClickCallback` (function(self, name, mousePos, userData), optional)
+    Called on mouse click events.
+*   `mouseHoverCallback` (function(self, name, mousePos, hoverTime, userData),
+    optional) Called on mouse over events.
+*   `mouseHoverEndCallback` (function(self, name, userData),
+    optional) Called on mouse no-longer-over events.
+]]
+function pac:addWidget(opts)
+  local name = opts.name
+  assert(self._widgets[name] == nil, 'Widget ' .. opts.name ..
+         ' already exists!')
+  self._surfaceDirty = true
+
+  local widget = {}
+  widget.bounds = {
+    xMin = opts.pos[1],
+    yMin = opts.pos[2],
+    xMax = opts.pos[1] + opts.size[1],
+    yMax = opts.pos[2] + opts.size[2]
+  }
+
+  -- Return an error if widget bounds are too large.
+  assert(widget.bounds.xMax <= 1, 'Widget ' .. opts.name .. ' is too wide!')
+  assert(widget.bounds.yMax <= 1, 'Widget ' .. opts.name .. ' is too high!')
+
+  widget.image = opts.image
+  widget.mouseClickCallback = opts.mouseClickCallback
+  widget.mouseHoverCallback = opts.mouseHoverCallback
+  widget.mouseHoverEndCallback = opts.mouseHoverEndCallback
+  widget.userData = opts.userData
+  widget.hoverTime = 0
+  widget.imageLayer = opts.imageLayer or 1
+  self._widgets[name] = widget
+end
+
+--[[ Remove a widget.
+Arguments:
+
+*   `name` The widget to remove.
+]]
+function pac:removeWidget(name)
+  self._surfaceDirty = true
+  self._widgets[name] = nil
+end
+
+-- Removes all widgets.
+function pac:clearWidgets()
+  self._surfaceDirty = true
+  self._widgets = {}
+end
+
+--[[ Update a widget's image.
+Arguments:
+
+*   `name` Name of the widget.
+*   `image` (ByteTensor{hxwx3}) The new image.
+*   `imageLayer` (optional int) Images are drawn in order of their imageLayer
+]]
+function pac:updateWidget(name, image, imageLayer)
+  local widget = self._widgets[name]
+  assert(widget, 'Widget ' .. name .. ' does not exist!')
+  imageLayer = imageLayer or widget.imageLayer
+  if imageLayer ~= widget.imageLayer or image ~= widget.image then
+    self._surfaceDirty = true
+    widget.image = image
+    widget.imageLayer = imageLayer
+  end
+end
+
+--[[ Add a timer.
+
+Keyword Arguments:
+
+*   `name` - Name of the timer.
+*   `timeout` (integer)- Time in frames.
+*   `callback` (function(self, timer))- the function to call on timeout.
+*   `userData` (optional) - user data to pass back with the callback.
+]]
+function pac:addTimer(opts)
+  assert(self._timers[opts.name] == nil, 'Timer ' .. opts.name ..
+    ' already exists!')
+  assert(opts.callback ~= nil and opts.timeout ~= nil,
+    'Must pass a callback function and timeout to addTimer!')
+
+  self._timers[opts.name] = opts
+end
+
+-- Remove all timers.
+function pac:clearTimers()
+  self._timers = {}
+end
+
+-- Calculate if co-ordinates are within the widget.
+local function _containsPoint(widget, mouseX, mouseY)
+  return widget.bounds.xMin <= mouseX and mouseX <= widget.bounds.xMax and
+    widget.bounds.yMin <= mouseY and mouseY <= widget.bounds.yMax
+end
+
+-- Calculate normalised co-ordinates with respect to the widget.
+local function _normaliseCoord(widget, mouseX, mouseY)
+  return {
+    (mouseX - widget.bounds.xMin) / (widget.bounds.xMax - widget.bounds.xMin),
+    (mouseY - widget.bounds.yMin) / (widget.bounds.yMax - widget.bounds.yMin)
+  }
+end
+
+-- Calculates which widgets the mouse is over and invokes any callbacks.
+function pac:onMouseOver(mouseX, mouseY)
+  local deferredCallbacks = {}
+  for name, widget in pairs(self._widgets) do
+    if widget.mouseHoverCallback ~= nil or
+        widget.mouseHoverEndCallback ~= nil then
+      if _containsPoint(widget, mouseX, mouseY) then
+        local hoverTime = widget.hoverTime + 1
+        widget.hoverTime = hoverTime
+        if widget.mouseHoverCallback then
+          table.insert(deferredCallbacks,
+            function()
+              local thisWidget = self._widgets[name]
+              if thisWidget then
+                thisWidget.mouseHoverCallback(self._env,
+                  name, _normaliseCoord(thisWidget, mouseX, mouseY),
+                  hoverTime, thisWidget.userData)
+              end
+            end
+          )
+        end
+      elseif widget.hoverTime > 0 then
+        if widget.mouseHoverEndCallback then
+          table.insert(deferredCallbacks,
+            function()
+              local thisWidget = self._widgets[name]
+              if thisWidget then
+                thisWidget.mouseHoverEndCallback(self._env, name,
+                  thisWidget.userData)
+              end
+            end
+          )
+        end
+        widget.hoverTime = 0
+      end
+    end
+  end
+  for _, f in ipairs(deferredCallbacks) do f() end
+end
+
+-- Calculates which widgets the mouse click is on and invokes any callbacks.
+function pac:onMouseClick(mouseX, mouseY)
+  for name, widget in pairs(self._widgets) do
+    if widget.mouseClickCallback ~= nil then
+      if _containsPoint(widget, mouseX, mouseY) then
+        widget.mouseClickCallback(self._env,
+          name, _normaliseCoord(widget, mouseX, mouseY), widget.userData)
+      end
+    end
+  end
+end
+
+function pac:_drawBackgroundColor()
+  for dim = 1, 3 do
+    self._surface:select(3, dim):fill(self._backgroundColor[dim])
+  end
+end
+
+--[[ Draws all widgets that contain images into the screen tensor, which needs
+to have format {height, width, depth} and a depth of at least 3.
+]]
+function pac:_drawWidgets()
+  local imageLayers = {{}}
+  local numLayers = 1
+  for name, widget in pairs(self._widgets) do
+    if widget.image ~= nil then
+      if not imageLayers[widget.imageLayer] then
+        imageLayers[widget.imageLayer] = {}
+        numLayers = numLayers + 1
+      end
+      imageLayers[widget.imageLayer][name] = widget
+    end
+  end
+
+  assert(numLayers == #imageLayers,
+         'Layers must start from 1 and be consecutive')
+
+  self:_drawBackgroundColor()
+  local shape = self._surface:shape()
+  for i, layer in ipairs(imageLayers) do
+    for name, widget in pairs(layer) do
+      local offsetx = widget.bounds.xMin * shape[2]
+      local offsety = widget.bounds.yMin * shape[1]
+      local sizex = (widget.bounds.xMax - widget.bounds.xMin) * shape[1]
+      local sizey = (widget.bounds.yMax - widget.bounds.yMin) * shape[1]
+      -- Narrow the screen to the region for the image and do the copy.
+      local narrow = self._surface:
+        narrow(1, offsety + 1, sizey):
+        narrow(2, offsetx + 1, sizex):
+        narrow(3, 1, 3)
+      narrow:copy(widget.image)
+    end
+  end
+  self._surfaceDirty = false
+end
+
+function pac:_observations()
+  local reward = self._reward
+  local pcontinue = self._pcontinue
+  self._reward = 0
+  self._pcontinue = 1
+
+  local wasDirty = self._surfaceDirty
+  if wasDirty then
+    self:_drawWidgets()
+  end
+  return self._surface, reward, pcontinue, wasDirty
+end
+
+-- Environment Interface --
+
+-- Clear all widgets and timers.
+function pac:reset(episode_id, seed)
+  if self._env.reset then
+    self._env:reset(episode_id, seed)
+  end
+  self._stepCount = 0
+  return self:_observations()
+end
+
+function pac:actionSpec()
+  return {
+      scheme = "Mixed",
+      discrete_actions = {{0, 1}},
+      contiguous_actions = {{0, 1}, {0, 1}},
+  }
+end
+
+function pac:observationSpec()
+  return {
+      scheme = "Bytes",
+      size = {self.self.screen.height, self.screen.width, 3}
+  }
+end
+
+function pac:step(action)
+  assert(self._pcontinue > 0, 'step called before reset')
+
+  -- Fire any timer callbacks that have been reached.
+  local timer_callbacks = {}
+  for key, timer in pairs(self._timers) do
+    timer.timeout = timer.timeout - 1
+    if timer.timeout <= 0 then
+      self._timers[key] = nil
+      -- Defer call as the callback may remove timers.
+      table.insert(timer_callbacks, timer)
+    end
+  end
+  for _, timer in ipairs(timer_callbacks) do
+    timer.callback(self._env, timer)
+  end
+
+  -- Process the action.
+  local isClick = action[1] == 1
+  local pos = action[2]
+  if isClick then
+    self:onMouseClick(pos[1], pos[2])
+  else
+    self:onMouseOver(pos[1], pos[2])
+  end
+
+  -- Step the environment.
+  if self._env.step then
+    local lookingAtScreen = pos[1] ~= -1 and pos[2] ~= -1
+    self._env:step(lookingAtScreen)
+  end
+  self._stepCount = self._stepCount + 1
+  return self:_observations()
+end
+
+function pac:resetSteps()
+  self._stepCount = 0
+end
+
+function pac:elapsedSteps()
+  return self._stepCount
+end
+
+return pac

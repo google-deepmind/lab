@@ -2,6 +2,14 @@
 
 ## Current Release
 
+### New Levels:
+
+1.  Psychlab, a platform for implementing classical experimental paradigms from
+    cognitive psychology.
+
+    1.  contributed/psychlab/sequential_comparison
+    2.  contributed/psychlab/visual_search
+
 ### New Features:
 
 1.  Extend functionality of the built-in `tensor` Lua library.
