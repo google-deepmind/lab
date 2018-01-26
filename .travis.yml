@@ -32,4 +32,4 @@ before_install:
   - sudo apt-get install bazel
 
 script:
-  - bazel test -c opt --show_progress_rate_limit 300 //... --define headless=osmesa
+  - bazel test -c opt --show_progress_rate_limit 300 //...
