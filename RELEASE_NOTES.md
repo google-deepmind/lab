@@ -2,6 +2,10 @@
 
 ## Current Release
 
+(nothing yet)
+
+## release-2018-01-26 January 2018 release
+
 ### New Levels:
 
 1.  Psychlab, a platform for implementing classical experimental paradigms from
