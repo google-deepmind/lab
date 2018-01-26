@@ -439,7 +439,7 @@ int AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalor
 	//VectorSubtract(absmaxs, bbmins, absmaxs);
 	//link an invalid (-1) entity
 	areas = AAS_LinkEntityClientBBox(absmins, absmaxs, -1, PRESENCE_CROUCH);
-	//get the reachable link arae
+	//get the reachable link area
 	areanum = AAS_BestReachableLinkArea(areas);
 	//unlink the invalid entity
 	AAS_UnlinkFromAreas(areas);
@@ -1416,7 +1416,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 		//if there IS water the sv_maxwaterjump height below the bestend point
 		if (aasworld.areasettings[AAS_PointAreaNum(testpoint)].areaflags & AREA_LIQUID)
 		{
-			//don't create rediculous water jump reachabilities from areas very far below
+			//don't create ridiculous water jump reachabilities from areas very far below
 			//the water surface
 			if (water_bestdist < aassettings.phys_maxwaterjump + 24)
 			{
@@ -3054,7 +3054,7 @@ void AAS_Reachability_Elevator(void)
 					bottomorg[2] += 24;
 				} //end else
 				//look at adjacent areas around the top of the plat
-				//make larger steps to outside the plat everytime
+				//make larger steps to outside the plat every time
 				for (n = 0; n < 3; n++)
 				{
 					for (k = 0; k < 3; k++)

@@ -321,7 +321,7 @@ void CL_KeyMove( usercmd_t *cmd ) {
 
 	//
 	// adjust for speed key / running
-	// the walking flag is to keep animations consistant
+	// the walking flag is to keep animations consistent
 	// even during acceleration and develeration
 	//
 	if ( in_speed.active ^ cl_run->integer ) {
