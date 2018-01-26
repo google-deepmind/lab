@@ -1053,13 +1053,13 @@ int Context::RewardOverride(const char* optional_reason, int player_id,
     if (!lua_isnil(L, -2)) {
       auto args = lua::TableRef::Create(L);
       args.Insert("reason", optional_reason);
-      args.Insert("playerId", player_id);
+      args.Insert("playerId", player_id + 1);
       if (team >= 0 && team
           < std::distance(std::begin(kTeamNames), std::end(kTeamNames))) {
         args.Insert("team", kTeamNames[team]);
       }
       if (optional_other_player_id != nullptr) {
-        args.Insert("otherPlayerId", *optional_other_player_id);
+        args.Insert("otherPlayerId", *optional_other_player_id + 1);
       }
       if (optional_origin != nullptr) {
         std::array<float, 3> float_array3 = {

@@ -80,8 +80,8 @@ function api:extraEntities()
 end
 
 function api:rewardOverride(args)
-  if args.reason == "TAG_PLAYER" and args.playerId == 1 and
-    args.otherPlayerId == 0 then
+  if args.reason == "TAG_PLAYER" and args.playerId == 2 and
+    args.otherPlayerId == 1 then
     events:add('PLAYER_TAGGED', 'Player tagged by bot')
   end
 end
