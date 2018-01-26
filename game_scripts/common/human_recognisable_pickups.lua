@@ -165,6 +165,30 @@ function hrp.getPatternTexture(patternName, width, height)
   return hrp._patternTextures[patternName]
 end
 
+
+--[[ Create a single object.
+
+The keywords are an object specification returned from specifyUniquePickups()
+or similar functions.
+
+Keyword arguments:
+
+    * `color1` (table, required) Red-green-blue color triplet e.g.
+       {0, 128, 255}.
+    * `color2` (table, required) Ignored if `pattern` is solid. If equal to
+      `color1`, the object will be solid-colored regardless of the value of
+      `pattern`.
+    * `moveType` (number, default=pickups.moveType.BOB) Whether the object
+      stays exactly still or bobs up and down slightly.
+    * `pattern` (string, required) Must occur in PATTERNS.
+    * `quantity` (number, default=0) For some levels, the reward for picking
+      up this object.
+    * `scale` (number or string, default=1) Uniform scale transformation
+      applied to object; can be 'small', 'medium', or 'large'.
+    * `shape` (string, required) Must occur in SHAPES.
+
+Returns a table of {name, classname, model, quantity, type, tag}.
+--]]
 function hrp.create(kwargs)
   local shape = kwargs.shape or error("Missing shape")
   if not SHAPES_SET[shape] then error("Unknown shape: " .. tostring(shape)) end
