@@ -5290,7 +5290,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	char buf[256];
 
 	// this should be the ONLY way the menu system is brought up
-	// enusure minumum menu data is cached
+	// ensure minimum menu data is cached
   if (Menu_Count() > 0) {
 		vec3_t v;
 		v[0] = v[1] = v[2] = 0;
@@ -6025,7 +6025,7 @@ static void UI_StartServerRefresh(qboolean full, qboolean force)
 	}
 
 	trap_RealTime(&q);
- 	trap_Cvar_Set( va("ui_lastServerRefresh_%i", ui_netSource.integer), va("%s-%i, %i at %i:%i", MonthAbbrev[q.tm_mon],q.tm_mday, 1900+q.tm_year,q.tm_hour,q.tm_min));
+	trap_Cvar_Set( va("ui_lastServerRefresh_%i", ui_netSource.integer), va("%s-%i, %i at %i:%02i", MonthAbbrev[q.tm_mon],q.tm_mday, 1900+q.tm_year,q.tm_hour,q.tm_min));
 
 	if (!full) {
 		UI_UpdatePendingPings();
