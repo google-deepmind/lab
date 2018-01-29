@@ -34,13 +34,12 @@ constexpr int kMaxDevices = 32;
 // Helper function for loading EGL extensions.
 template <typename T>
 T LoadEGLFunction(const char* func_name) {
-  using VoidFunc = void();
-  T func;
-  *reinterpret_cast<VoidFunc**>(&func) = eglGetProcAddress(func_name);
-  if (func == nullptr) {
+  if (T func = reinterpret_cast<T>(eglGetProcAddress(func_name))) {
+    return func;
+  } else {
     std::cerr << "Failed to load EGL function " << func_name << "\n";
+    return nullptr;
   }
-  return func;
 }
 
 // Mutex used to lock the display_reference_map and eglInitialize/egTerminate
