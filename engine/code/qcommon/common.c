@@ -2448,16 +2448,7 @@ Expose possibility to change current running mod to the user
 
 void Com_GameRestart_f(void)
 {
-	if(!FS_FilenameCompare(Cmd_Argv(1), com_basegame->string))
-	{
-		// This is the standard base game. Servers and clients should
-		// use "" and not the standard basegame name because this messes
-		// up pak file negotiation and lots of other stuff
-		
-		Cvar_Set("fs_game", "");
-	}
-	else
-		Cvar_Set("fs_game", Cmd_Argv(1));
+	Cvar_Set("fs_game", Cmd_Argv(1));
 
 	Com_GameRestart(0, qtrue);
 }
@@ -2717,10 +2708,7 @@ void Com_Init( char *commandLine ) {
 
 	com_standalone = Cvar_Get("com_standalone", "0", CVAR_ROM);
 	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
-	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
-	
-	if(!com_basegame->string[0])
-		Cvar_ForceReset("com_basegame");
+	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT|CVAR_PROTECTED);
 
 	FS_InitFilesystem ();
 
@@ -2962,9 +2950,6 @@ Writes key bindings and archived cvars to config file if modified
 ===============
 */
 void Com_WriteConfiguration( void ) {
-#if !defined(DEDICATED) && !defined(STANDALONE)
-	cvar_t	*fs;
-#endif
 	// if we are quiting without fully initializing, make sure
 	// we don't write out anything
 	if ( !com_fullyInitialized ) {
@@ -2984,12 +2969,12 @@ void Com_WriteConfiguration( void ) {
 
 	// not needed for dedicated or standalone
 #if !defined(DEDICATED) && !defined(STANDALONE)
-	fs = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
-
 	if(!com_standalone->integer)
 	{
-		if (UI_usesUniqueCDKey() && fs && fs->string[0] != 0) {
-			Com_WriteCDKey( fs->string, &cl_cdkey[16] );
+		const char *gamedir;
+		gamedir = Cvar_VariableString( "fs_game" );
+		if (UI_usesUniqueCDKey() && gamedir[0] != 0) {
+			Com_WriteCDKey( gamedir, &cl_cdkey[16] );
 		} else {
 			Com_WriteCDKey( BASEGAME, cl_cdkey );
 		}
