@@ -938,7 +938,10 @@ cc_binary(
     ],
     linkshared = 1,
     linkstatic = 1,
-    visibility = ["//python/tests:__subpackages__"],
+    visibility = [
+        "//python/pip_package:__subpackages__",
+        "//python/tests:__subpackages__",
+    ],
     deps = [
         ":dmlablib",
         "@python_system//:python",
