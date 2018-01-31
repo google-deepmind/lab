@@ -284,7 +284,7 @@ Iter2 averagingMinify(         //
     }
     if (top_idx_f > top_idx_i) {
       double top_wgt = top_idx_f - top_idx_i;
-      std::size_t k = top_idx_i * num_channels;
+      std::size_t k = std::min(top_idx_i, source_len - 1) * num_channels;
       for (std::size_t c = 0; c < num_channels; ++c) {
         acc[c] += top_wgt * source[k + c];
       }

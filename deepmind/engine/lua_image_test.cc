@@ -18,6 +18,8 @@
 
 #include "deepmind/engine/lua_image.h"
 
+#include <algorithm>
+#include <random>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -369,6 +371,57 @@ TEST_F(LuaImageTest, NearestScaleLineXMaxYMax) {
                               "kLuaImageNearestScaleLineXMaxYMax"),
               IsOkAndHolds(1));
   EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kLuaImageScaleRandom[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local s, t = ...
+local src = tensor.ByteTensor(s, 1, 3)
+local tgt = image.scale(src, t, 1, 'nearest')
+assert(tgt == tensor.ByteTensor(t, 1, 3))
+)";
+
+TEST_F(LuaImageTest, kLuaImageScaleRandom) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kLuaImageScaleRandom, sizeof(kLuaImageScaleRandom) - 1,
+                      "kLuaImageScaleRandom"),
+      IsOkAndHolds(1));
+
+  std::mt19937 gen(1234);
+  std::uniform_int_distribution<int> dist(1, 256);
+  for (int i = 0; i < 1000; ++i) {
+    lua_pushvalue(L, -1);
+    lua::Push(L, dist(gen));
+    lua::Push(L, dist(gen));
+    EXPECT_THAT(lua::Call(L, 2), IsOkAndHolds(0));
+  }
+  lua_pop(L, 1);
+}
+
+constexpr char kLuaImageScaleDown1Pix[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local t = ...
+local src = tensor.ByteTensor(t + 1, 1, 3)
+local tgt = image.scale(src, t, 1, 'nearest')
+assert(tgt == tensor.ByteTensor(t, 1, 3))
+)";
+
+TEST_F(LuaImageTest, kLuaImageScaleDown1Pix) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLuaImageScaleDown1Pix,
+                              sizeof(kLuaImageScaleDown1Pix) - 1,
+                              "kLuaImageScaleDown1Pix"),
+              IsOkAndHolds(1));
+  for (int i : {6, 20, 24, 6388, 6758}) {
+    lua_pushvalue(L, -1);
+    lua::Push(L, i);
+    EXPECT_THAT(lua::Call(L, 1), IsOkAndHolds(0))
+        << "Size: " << i + 1 << " " << i;
+  }
+  lua_pop(L, 1);
 }
 
 }  // namespace lab

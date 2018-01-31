@@ -2,7 +2,9 @@
 
 ## Current Release
 
-(nothing yet)
+### Bug Fixes:
+
+1.  Fix out-of-bounds access in Lua 'image' library.
 
 ## release-2018-01-26 January 2018 release
 
