@@ -5,6 +5,7 @@
 ### Bug Fixes:
 
 1.  Fix out-of-bounds access in Lua 'image' library.
+2.  Fix off-by-one error in renderergl1 grid mesh rendering.
 
 ## release-2018-01-26 January 2018 release
 
