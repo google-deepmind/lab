@@ -336,10 +336,10 @@ static void custom_observation(void* userdata, int idx,
 static void player_state(void* userdata, const float origin[3],
                          const float velocity[3], const float viewangles[3],
                          float height, int team_score, int other_team_score,
-                         int player_id, int timestamp_msec) {
+                         int player_id, bool teleported, int timestamp_msec) {
   return static_cast<Context*>(userdata)->MutableGame()->SetPlayerState(
       origin, velocity, viewangles, height, team_score, other_team_score,
-      player_id, timestamp_msec);
+      player_id, teleported, timestamp_msec);
 }
 
 static int make_screen_messages(void* userdata, int screen_width,

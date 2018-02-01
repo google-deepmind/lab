@@ -124,3 +124,11 @@ py_test(
     imports = ["python"],
     deps = ["//python/tests/utils:math_utils"],
 )
+
+py_test(
+    name = "teleporter_test",
+    srcs = ["teleporter_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = ["//python/tests/utils:math_utils"],
+)

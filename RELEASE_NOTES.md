@@ -6,7 +6,10 @@
 
 1.  Add a mechanism to build DeepMind Lab as a PIP package.
 2.  Extend basic testing to all levels under game_scripts/levels.
-3.  Add settings `minimalUI` and `reducedUI` to avoid rendering parts of the HUD.
+3.  Add settings `minimalUI` and `reducedUI` to avoid rendering parts of the
+    HUD.
+4.  Add `teleported` flag to `game:playerInfo()` to tell whether a player has
+    teleported that frame.
 
 ### Bug Fixes:
 

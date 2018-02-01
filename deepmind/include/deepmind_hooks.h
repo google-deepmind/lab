@@ -295,7 +295,7 @@ struct DeepmindHooks_s {
   void (*player_state)(void* userdata, const float origin[3],
                        const float velocity[3], const float viewangles[3],
                        float height, int team_score, int other_team_score,
-                       int player_id, int timestamp_msec);
+                       int player_id, bool teleporter_flip, int timestamp_msec);
 
   // See MakeScreenMessages in deepmind/engine/context.h.
   int (*make_screen_messages)(void* userdata, int width, int height,

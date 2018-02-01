@@ -42,6 +42,8 @@ struct PlayerView {
   int player_id;
   int timestamp_msec;               // Engine time in msec of the view.
   double height;                    // View height.
+  bool teleporter_flip[2];  // If flags are different the player has teleported
+                            // this frame.
 };
 
 // Receive calls from lua_script.
@@ -90,9 +92,9 @@ class ContextGame {
 
   // Set latest player state.
   void SetPlayerState(const float pos[3], const float vel[3],
-                             const float angles[3], float height,
-                             int team_score, int other_team_score,
-                             int player_id, int timestamp_msec);
+                      const float angles[3], float height, int team_score,
+                      int other_team_score, int player_id, bool teleporter_flip,
+                      int timestamp_msec);
 
   // Get latest predicted player view. (This is where the game renders from.)
   const PlayerView& GetPlayerView() {

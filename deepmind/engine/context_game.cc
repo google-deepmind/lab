@@ -193,6 +193,7 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     table.Insert("playerId", pv.player_id + 1);
     table.Insert("teamScore", pv.team_score);
     table.Insert("otherTeamScore", pv.other_team_score);
+    table.Insert("teleported", pv.teleporter_flip[0] != pv.teleporter_flip[1]);
     lua::Push(L, table);
     return 1;
   }
@@ -382,7 +383,8 @@ lua::NResultsOr ContextGame::Module(lua_State* L) {
 void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
                                  const float angles[3], float height,
                                  int team_score, int other_team_score,
-                                 int player_id, int timestamp_msec) {
+                                 int player_id, bool teleporter_flip,
+                                 int timestamp_msec) {
   PlayerView before = player_view_;
   std::copy_n(pos, 3, player_view_.pos.begin());
   std::copy_n(vel, 3, player_view_.vel.begin());
@@ -392,6 +394,8 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
   player_view_.player_id = player_id;
   player_view_.team_score = team_score;
   player_view_.other_team_score = other_team_score;
+  player_view_.teleporter_flip[0] = before.teleporter_flip[1];
+  player_view_.teleporter_flip[1] = teleporter_flip;
   int delta_time_msec = player_view_.timestamp_msec - before.timestamp_msec;
 
   // When delta_time_msec < 3 the velocities become inaccurate.

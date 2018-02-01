@@ -20,6 +20,7 @@
 #include "../deepmind/context.h"
 #include "../deepmind/dm_public.h"
 #include "../renderercommon/tr_types.h"
+#include "../game/bg_public.h"
 #include "qcommon.h"
 
 int dmlab_callback(
@@ -91,11 +92,13 @@ int dmlab_callback(
     case DEEPMIND_SET_PLAYER_STATE: {
       const playerState_t* ps = VM_ArgPtr(a1);
       int timestamp_msec = ctx->calls.total_engine_time_msec();
-      ctx->hooks.player_state(ctx->userdata, ps->origin, ps->velocity,
-                              ps->viewangles, ps->viewheight,
-                              /*team_score=*/a2,
-                              /*other_team_score=*/a3, ps->clientNum,
-                              timestamp_msec);
+      ctx->hooks.player_state(
+          ctx->userdata, ps->origin, ps->velocity, ps->viewangles,
+          ps->viewheight,
+          /*team_score=*/a2,
+          /*other_team_score=*/a3, ps->clientNum,
+          /*teleporter_flip=*/(ps->eFlags & EF_TELEPORT_BIT),
+          timestamp_msec);
       break;
     }
     case DEEPMIND_MAKE_SCREEN_MESSAGES:
