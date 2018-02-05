@@ -27,7 +27,7 @@ function tests.testSeed()
 
   local seed = 2
 
-  local api = require('levels.' .. testLevelScript)
+  local api = require('levels.' .. testLevelScript:gsub('/', '.'))
   api:init{invocationMode = "testbed"}
   api:start(0, seed)
   local rand1 = random:uniformReal(0, 1)

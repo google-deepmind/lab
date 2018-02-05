@@ -957,8 +957,15 @@ py_binary(
 )
 
 LOAD_TEST_SCRIPTS = [
-    level_script[len("game_scripts/levels"):-len(".lua")]
-    for level_script in glob(["game_scripts/levels/*.lua"])
+    level_script[len("game_scripts/levels/"):-len(".lua")]
+    for level_script in glob(
+        ["game_scripts/levels/**/*.lua"],
+        exclude = [
+            "**/demos/**",
+            "**/tests/**",
+            "**/factories/**",
+        ],
+    )
 ]
 
 test_suite(

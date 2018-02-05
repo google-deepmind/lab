@@ -51,17 +51,17 @@ function factory.createLevelApi(kwargs)
     random:seed(seed)
     if kwargs.color then
       -- Pick a random angle.
-      api._botHueDegrees = random:uniformInt(0, 359)
+      self._botHueDegrees = random:uniformInt(0, 359)
     end
   end
 
   if kwargs.color then
     function api:modifyTexture(name, skin)
-      return color_bots:modifySkin(name, skin, api._botHueDegrees)
+      return color_bots:modifySkin(name, skin, self._botHueDegrees)
     end
 
     function api:mapLoaded()
-      color_bots:colorizeBots(api._botHueDegrees)
+      color_bots:colorizeBots(self._botHueDegrees)
     end
   end
 

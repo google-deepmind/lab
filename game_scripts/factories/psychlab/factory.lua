@@ -36,9 +36,6 @@ function factory.createLevelApi(kwargs)
   kwargs.envOpts.episodeLengthSeconds = kwargs.episodeLengthSeconds or 300
   kwargs.envOpts.camera = kwargs.envOpts.camera or {0, -30, 150}
   kwargs.envOpts.cameraLook = kwargs.envOpts.cameraLook or {2, 90, 0}
-  -- Option to disable idle timeout, true by default.
-  kwargs.envOpts.timeoutIfIdle = kwargs.envOpts.timeoutIfIdle == nil or
-                                 kwargs.envOpts.timeoutIfIdle
 
   local api = {
       _mouseDown = nil,
@@ -48,6 +45,11 @@ function factory.createLevelApi(kwargs)
 
   function string.starts(String, Start)
    return string.sub(String, 1, string.len(Start)) == Start
+  end
+
+  function api:init(params)
+    -- Option to disable idle timeout, false for test runs.
+    api.opts.timeoutIfIdle = params.invocationMode ~= 'testbed'
   end
 
   function api:loadTexture(textureName)

@@ -15,8 +15,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local factory = require 'factories.lt_factory'
+local debug_observations = require 'decorators.debug_observations'
+local factory = require 'factories.lasertag.factory'
 local make_map = require 'common.make_map'
+local maze_generation = require 'dmlab.system.maze_generation'
 local tensor = require 'dmlab.system.tensor'
 
 local MAP = [[
@@ -46,6 +48,8 @@ function api:updateSpawnVars(spawnVars)
 end
 
 function api:nextMap()
+  local maze = maze_generation:mazeGeneration{entity = MAP}
+  debug_observations.setMaze(maze)
   return make_map.makeMap{
       mapName = 'empty_room',
       mapEntityLayer = MAP,

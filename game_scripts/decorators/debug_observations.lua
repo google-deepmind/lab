@@ -28,6 +28,8 @@ local inventories = {}
 local teams = {}
 local camera = {pos = {0, 0, 500}, look = {90, 90, 0}}
 
+local mazeLayout = ''
+
 local ASPECT = SCREEN_SHAPE.height / SCREEN_SHAPE.width
 local function cameraUp(x, y, maxHeight)
   return math.max(x - maxHeight, (y - maxHeight) / ASPECT) + maxHeight
@@ -199,12 +201,21 @@ local function blueFlagHome()
   return tensor.DoubleTensor{0, 0, 0, HOME_FLAG_STATE.NONE}
 end
 
-function debug_observations.setMazeShape(width, height)
+local function setMazeShape(width, height)
   debug_observations.setCameraPos{
       width * 50,
       height * 50,
       cameraUp(width * 50, height * 50, 100)
   }
+end
+
+local function getMazeLayout()
+  return mazeLayout
+end
+
+function debug_observations.setMaze(maze)
+  mazeLayout = maze:entityLayer()
+  setMazeShape(unpack{maze:size()})
 end
 
 function debug_observations.setCameraPos(pos, look)
@@ -262,6 +273,10 @@ function debug_observations.extend(custom_observations)
              {3, SCREEN_SHAPE.height, SCREEN_SHAPE.width}, playerView(3))
   co.addSpec('DEBUG.CAMERA.PLAYER_VIEW_NO_RETICLE', 'Bytes',
              {3, SCREEN_SHAPE.height, SCREEN_SHAPE.width}, playerView(0))
+
+  -- Maze layout
+  co.addSpec('DEBUG.MAZE.LAYOUT', 'String', {0}, getMazeLayout)
+
   co.addSpec('DEBUG.POS.TRANS', 'Doubles', {3}, playerPosition)
   co.addSpec('DEBUG.POS.ROT', 'Doubles', {3}, playerOrientation)
   co.addSpec('DEBUG.PLAYER_ID', 'Doubles', {1}, playerId)

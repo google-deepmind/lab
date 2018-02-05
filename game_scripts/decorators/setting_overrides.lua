@@ -28,6 +28,8 @@ local PARAMS_WHITELIST = {
     levelGenerator = true,
     playerId = true,
     players = true,
+    randomSeed = true,
+    datasetPath = true,
     enableCameraMovement = true,
 }
 
