@@ -652,6 +652,25 @@ static void CG_DrawStatusBar( void ) {
 #endif
 
 /*
+================
+CG_DrawStatusBarMinimal
+
+================
+*/
+
+static void CG_DrawStatusBarReduced( void ) {
+	CG_DrawStatusBarHead( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE );
+
+	if( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
+		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
+	} else if( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
+		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
+	} else if( cg.predictedPlayerState.powerups[PW_NEUTRALFLAG] ) {
+		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_FREE );
+	}
+}
+
+/*
 ===========================================================================================
 
   UPPER RIGHT CORNER
@@ -2531,6 +2550,14 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	}
 
 	if ( cg_draw2D.integer == 0 ) {
+		if (cg_drawCrosshairAlways.integer != 0 && stereoFrame == STEREO_CENTER)
+				CG_DrawCrosshair();
+		return;
+	}
+
+	if (cg_drawReducedUI.integer != 0) {
+		CG_DrawCrosshair();
+		CG_DrawStatusBarReduced();
 		return;
 	}
 
