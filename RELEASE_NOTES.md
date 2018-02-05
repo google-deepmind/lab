@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### Minor Improvements:
+
+1.  Add a mechanism to build DeepMind Lab as a PIP package.
+2.  Extend basic testing to all levels under game_scripts/levels.
+
 ### Bug Fixes:
 
 1.  Fix out-of-bounds access in Lua 'image' library.
