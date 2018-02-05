@@ -10,6 +10,9 @@
     HUD.
 4.  Add `teleported` flag to `game:playerInfo()` to tell whether a player has
     teleported that frame.
+5.  Add Lua functions `countEntities` and `countVariations` to the maze
+    generation API to count the number of occurrences of a specific entity or
+    variation, respectively
 
 ### Bug Fixes:
 

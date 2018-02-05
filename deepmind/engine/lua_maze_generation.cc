@@ -472,6 +472,30 @@ lua::NResultsOr LuaMazeGeneration::FromWorldPos(lua_State* L) {
   return 2;
 }
 
+lua::NResultsOr LuaMazeGeneration::CountCharacters(
+    lua_State* L, maze_generation::TextMaze::Layer layer) {
+  std::string characters;
+  if (!lua::Read(L, -1, &characters)) {
+    return "Must supply a <string> as first argument.";
+  }
+
+  std::size_t sum = 0;
+  const auto& text = text_maze_.Text(layer);
+  for (const char ent : characters) {
+    sum += std::count(text.begin(), text.end(), ent);
+  }
+  lua::Push(L, sum);
+  return 1;
+}
+
+lua::NResultsOr LuaMazeGeneration::CountEntities(lua_State* L) {
+  return CountCharacters(L, maze_generation::TextMaze::kEntityLayer);
+}
+
+lua::NResultsOr LuaMazeGeneration::CountVariations(lua_State* L) {
+  return CountCharacters(L, maze_generation::TextMaze::kVariationsLayer);
+}
+
 lua::NResultsOr LuaMazeGeneration::VisitFill(lua_State* L) {
   lua::TableRef table;
   if (lua_gettop(L) < 2 || !lua::Read(L, 2, &table)) {
@@ -577,6 +601,8 @@ void LuaMazeGeneration::Register(lua_State* L) {
        Class::Member<&LuaMazeGeneration::GetVariationsCell>},
       {"setVariationsCell",
        Class::Member<&LuaMazeGeneration::SetVariationsCell>},
+      {"countEntities", Class::Member<&LuaMazeGeneration::CountEntities>},
+      {"countVariations", Class::Member<&LuaMazeGeneration::CountVariations>},
       {"rotate", Class::Member<&LuaMazeGeneration::Rotate>},
       {"paste", Class::Member<&LuaMazeGeneration::Paste>},
       {"findRooms", Class::Member<&LuaMazeGeneration::FindRooms>},

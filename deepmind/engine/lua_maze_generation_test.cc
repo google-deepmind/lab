@@ -541,6 +541,58 @@ TEST_F(LuaMazeGenerationTest, kVisitRandomPath) {
   lua_pop(L, 1);
 }
 
+constexpr char kCountEntities[] = R"(
+local maze_generation = require 'dmlab.system.maze_generation'
+local entityLayer = [[
+*****
+ABCDE
+ABCD*
+ABC**
+AB***
+A****
+*****
+]]
+local variationsLayer = [[
+.....
+ABCDE
+ABCD.
+ABC..
+AB...
+A....
+.....
+]]
+
+local maze = maze_generation.mazeGeneration{
+  entity = entityLayer,
+  variations = variationsLayer,
+}
+
+assert(maze:countEntities('A') == 5, 'Incorrect A count')
+assert(maze:countEntities('B') == 4, 'Incorrect B count')
+assert(maze:countEntities('C') == 3, 'Incorrect C count')
+assert(maze:countEntities('D') == 2, 'Incorrect D count')
+assert(maze:countEntities('E') == 1, 'Incorrect E count')
+assert(maze:countEntities('ABCDE') == 15, 'Incorrect letter count')
+assert(maze:countEntities('*') == 20, 'Incorrect wall count')
+
+assert(maze:countVariations('A') == 5, 'Incorrect A count')
+assert(maze:countVariations('B') == 4, 'Incorrect B count')
+assert(maze:countVariations('C') == 3, 'Incorrect C count')
+assert(maze:countVariations('D') == 2, 'Incorrect D count')
+assert(maze:countVariations('E') == 1, 'Incorrect E count')
+assert(maze:countVariations('ABCDE') == 15, 'Incorrect letter count')
+assert(maze:countVariations('.') == 20, 'Incorrect dot count')
+local status, msg = pcall(maze.countEntities, maze, 10)
+assert(status == false, 'Failed to raise error with invalid input.')
+assert(msg:match('string'), 'Message does not mention type: ' .. msg)
+)";
+
+TEST_F(LuaMazeGenerationTest, kCountEntities) {
+  lua::PushScript(L, kCountEntities, std::strlen(kCountEntities),
+                  "kCountEntities");
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
 }  // namespace
 
 }  // namespace lab

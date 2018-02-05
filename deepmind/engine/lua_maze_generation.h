@@ -179,6 +179,23 @@ class LuaMazeGeneration : public lua::Class<LuaMazeGeneration> {
   // [1, 1, e]
   lua::NResultsOr VisitRandomPath(lua_State* L);
 
+  // Implementation of CountEntities and CountVariations.
+  // [1, 1, e]
+  lua::NResultsOr CountCharacters(lua_State* L,
+                                  maze_generation::TextMaze::Layer layer);
+
+  // Implements countEntities(entities), where entities is a string of entities
+  // to be counted.
+  // Returns the count.
+  // [1, 1, e]
+  lua::NResultsOr CountEntities(lua_State* L);
+
+  // Implements countVariations(varations), where varations is a string of
+  // varations to be counted.
+  // Returns the count.
+  // [1, 1, e]
+  lua::NResultsOr CountVariations(lua_State* L);
+
   maze_generation::TextMaze text_maze_;
 };
 
