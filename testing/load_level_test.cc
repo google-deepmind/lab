@@ -36,7 +36,8 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
   ASSERT_EQ(env_c_api.setting(context, "logToStdErr", "true"), 0);
   ASSERT_EQ(env_c_api.setting(context, "fps", "15"), 0);
   ASSERT_EQ(env_c_api.setting(context, "invocationMode", "testbed"), 0);
-  ASSERT_EQ(env_c_api.setting(context, "levelName", test_script), 0);
+  ASSERT_EQ(env_c_api.setting(context, "levelName", test_script), 0)
+      << env_c_api.error_message(context);
 
 // When running under TSAN, switch to the interpreted VM ("1"), which is
 // instrumentable.
@@ -47,7 +48,7 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
   ASSERT_EQ(env_c_api.setting(context, "vmMode", "interpreted"), 0);
 #endif
 
-  ASSERT_EQ(env_c_api.init(context), 0);
+  ASSERT_EQ(env_c_api.init(context), 0) << env_c_api.error_message(context);
   env_c_api.start(context, 0 /*episode*/, 1 /*seed*/);
 
   double reward;
@@ -72,9 +73,10 @@ TEST(LoadLevelTest, RandomSeedTest) {
   EnvCApi env_c_api;
   void* context;
   ASSERT_EQ(dmlab_connect(&params, &env_c_api, &context), 0);
-  ASSERT_EQ(env_c_api.setting(context, "levelName", "tests/seed_test"),
-            0);
-  ASSERT_EQ(env_c_api.setting(context, "testLevelScript", test_script), 0);
+  ASSERT_EQ(env_c_api.setting(context, "levelName", "tests/seed_test"), 0)
+      << env_c_api.error_message(context);
+  ASSERT_EQ(env_c_api.setting(context, "testLevelScript", test_script), 0)
+      << env_c_api.error_message(context);
 
 // When running under TSAN, switch to the interpreted VM ("1"), which is
 // instrumentable.
@@ -82,12 +84,11 @@ TEST(LoadLevelTest, RandomSeedTest) {
 #define __has_feature(x) 0
 #endif
 #if __has_feature(thread_sanitizer)
-  ASSERT_EQ(env_c_api.setting(context, "vmMode", "interpreted"), 0);
+  ASSERT_EQ(env_c_api.setting(context, "vmMode", "interpreted"), 0)
+      << env_c_api.error_message(context);
 #endif
 
-  if (env_c_api.init(context) != 0) {
-    FAIL() << "Inspect output for errors.";
-  }
+  ASSERT_EQ(env_c_api.init(context), 0) << env_c_api.error_message(context);
   env_c_api.release_context(context);
 }
 
