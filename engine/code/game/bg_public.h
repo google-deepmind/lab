@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define	GIB_HEALTH			-40
 #define	ARMOR_PROTECTION	0.66
 
-#define	MAX_ITEMS			256
+#define	MAX_ITEMS			512
 
 #define	RANK_TIED_FLAG		0x4000
 
