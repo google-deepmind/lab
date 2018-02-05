@@ -35,13 +35,21 @@ class EnvironmentStub(object):
   def __init__(self):
     self.test_observation_spec = _OBSERVATION_SPEC
     self.test_observations = [
-        {'RGB_INTERLACED': np.array([[[255, 0, 0], [128, 0, 0], [0, 0, 255]],
-                                     [[0, 255, 0], [128, 0, 0], [0, 255, 0]]],
-                                    dtype=np.uint8)},
-        {'RGB_INTERLACED': np.array([[[0, 255, 0], [0, 128, 0]]],
-                                    dtype=np.uint8)},
-        {'RGB_INTERLACED': np.array([[[0, 0, 255], [0, 0, 128]]],
-                                    dtype=np.uint8)},
+        {
+            'RGB_INTERLACED':
+                np.array(
+                    [[[255, 0, 0], [128, 0, 0], [0, 0, 255]],
+                     [[0, 255, 0], [128, 0, 0], [0, 255, 0]]],
+                    dtype=np.uint8)
+        },
+        {
+            'RGB_INTERLACED':
+                np.array([[[0, 255, 0], [0, 128, 0]]], dtype=np.uint8)
+        },
+        {
+            'RGB_INTERLACED':
+                np.array([[[0, 0, 255], [0, 0, 128]]], dtype=np.uint8)
+        },
     ]
     self.test_rewards = [0, 1, 2, 3]
     self._frame_index = 0
@@ -107,6 +115,17 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
     self._decorator.step(None, 1)
     self._decorator.reset()
     self.assertEqual(self._decorator.accumulated_reward(), 0)
+
+  def testRewardHistory(self):
+    self._decorator.step(None, 1)
+    self._decorator.step(None, 1)
+    self.assertItemsEqual(self._decorator.reward_history(),
+                          self._env.test_rewards[0:2])
+
+  def testResetRewardHistory(self):
+    self._decorator.step(None, 1)
+    self._decorator.reset()
+    self.assertItemsEqual(self._decorator.reward_history(), [])
 
   def testAccumulatedEvents(self):
     events = ['event1', 'event2', 'event3']

@@ -41,8 +41,8 @@ class TestEnvironmentDecorator(object):
     self._rgb_shape = spec['shape']
     self._rgb_history = []
     self._frame_index = 0
-    self._accumulated_reward = 0
     self._events = []
+    self._reward_history = []
 
   def step(self, actions, steps):
     """Advance the environment a number of steps."""
@@ -50,12 +50,16 @@ class TestEnvironmentDecorator(object):
     observations = self._environment.observations()
     self._rgb_history.append(observations['RGB_INTERLACED'])
     self._accumulate_events(self._environment.events())
-    self._accumulated_reward += reward
+    self._reward_history.append(reward)
     return reward
 
   def accumulated_reward(self):
     """Return the reward accumulated since the reset call."""
-    return self._accumulated_reward
+    return np.sum(self._reward_history)
+
+  def reward_history(self):
+    """Return the reward history accumulated since the reset call."""
+    return self._reward_history
 
   def accumulated_events(self):
     """Return events accumulated since the reset call."""
@@ -95,6 +99,7 @@ class TestEnvironmentDecorator(object):
     self._accumulate_events(self._environment.events())
     observations = self._environment.observations()
     self._rgb_history = [observations['RGB_INTERLACED']]
+    self._reward_history = []
     return result
 
   def _accumulate_events(self, events):

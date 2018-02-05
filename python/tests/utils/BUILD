@@ -56,3 +56,26 @@ py_test(
         ":test_environment_decorator",
     ],
 )
+
+py_library(
+    name = "maze_game_controller",
+    testonly = 1,
+    srcs = ["maze_game_controller.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = [
+        ":game_controller",
+        ":math_utils",
+    ],
+)
+
+py_test(
+    name = "maze_game_controller_test",
+    srcs = ["maze_game_controller_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = [
+        ":maze_game_controller",
+        ":test_environment_decorator",
+    ],
+)
