@@ -38,13 +38,13 @@ Tested on Debian 8.6 (Jessie) and Ubuntu 14.04 (Trusty) and newer.
    $ cd lab
 
    # Build the Python interface to DeepMind Lab
-   lab$ bazel build :deepmind_lab.so
+   lab$ bazel build //:deepmind_lab.so
 
    # Build and run the tests for it
-   lab$ bazel run :python_module_test
+   lab$ bazel test //python/tests:python_module_test
 
    # Run a random agent
-   lab$ bazel run :python_random_agent
+   lab$ bazel run //:python_random_agent
    ```
 
 The Bazel target `:deepmind_lab.so` builds the Python module that interfaces
