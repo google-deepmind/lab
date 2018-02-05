@@ -136,15 +136,20 @@ class SpringAgent(object):
     self.action = np.zeros([len(self.action_spec)])
 
 
-def run(length, width, height, fps, level):
+def run(length, width, height, fps, level, record, demo, video):
   """Spins up an environment and runs the random agent."""
-  env = deepmind_lab.Lab(
-      level, ['RGB_INTERLACED'],
-      config={
-          'fps': str(fps),
-          'width': str(width),
-          'height': str(height)
-      })
+  config = {
+      'fps': str(fps),
+      'width': str(width),
+      'height': str(height)
+  }
+  if record:
+    config['record'] = record
+  if demo:
+    config['demo'] = demo
+  if video:
+    config['video'] = video
+  env = deepmind_lab.Lab(level, ['RGB_INTERLACED'], config=config)
 
   env.reset()
 
@@ -182,8 +187,15 @@ if __name__ == '__main__':
   parser.add_argument('--level_script', type=str,
                       default='tests/empty_room_test',
                       help='The environment level script to load')
+  parser.add_argument('--record', type=str, default=None,
+                      help='Record the run to a demo file')
+  parser.add_argument('--demo', type=str, default=None,
+                      help='Play back a recorded demo file')
+  parser.add_argument('--video', type=str, default=None,
+                      help='Record the demo run as a video')
 
   args = parser.parse_args()
   if args.runfiles_path:
     deepmind_lab.set_runfiles_path(args.runfiles_path)
-  run(args.length, args.width, args.height, args.fps, args.level_script)
+  run(args.length, args.width, args.height, args.fps, args.level_script,
+      args.record, args.demo, args.video)

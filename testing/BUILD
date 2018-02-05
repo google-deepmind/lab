@@ -3,6 +3,29 @@
 
 licenses(["restricted"])  # GPLv2
 
+cc_test(
+    name = "recording_test",
+    srcs = ["recording_test.cc"],
+    data = [
+        "//:assets_bots_pk3",
+        "//:assets_oa_pk3",
+        "//:assets_pk3",
+        "//:game_script_assets",
+        "//:libdmlab_headless_hw.so",
+        "//:map_assets",
+        "//:non_pk3_assets",
+        "//:vm_pk3",
+    ],
+    deps = [
+        ":env_observation",
+        ":env_observation_util",
+        "//:dmlablib",
+        "//deepmind/support:test_srcdir",
+        "//deepmind/util:files",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "env_observation",
     srcs = ["env_observation.cc"],
@@ -10,6 +33,16 @@ cc_library(
     deps = [
         "//:dmlablib",
         "//third_party/rl_api:env_c_api",
+    ],
+)
+
+cc_library(
+    name = "env_observation_util",
+    srcs = ["env_observation_util.cc"],
+    hdrs = ["env_observation_util.h"],
+    deps = [
+        ":env_observation",
+        "@jpeg_archive//:jpeg",
     ],
 )
 

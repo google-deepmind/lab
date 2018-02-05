@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### New Features:
+
+1.  Basic support for demo recording and playback.
+
 ### Minor Improvements:
 
 1.  Add a mechanism to build DeepMind Lab as a PIP package.
