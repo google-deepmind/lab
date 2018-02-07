@@ -2,6 +2,39 @@
 
 ## Current Release
 
+### New Levels:
+
+1.  DMLab-30.
+
+     1.  contributed/dmlab30/rooms_collect_good_objects_{test,train}
+     2.  contributed/dmlab30/rooms_exploit_deferred_effects_{test,train}
+     3.  contributed/dmlab30/rooms_select_nonmatching_object
+     4.  contributed/dmlab30/rooms_watermaze
+     5.  contributed/dmlab30/rooms_keys_doors_puzzle
+     6.  contributed/dmlab30/language_select_described_object
+     7.  contributed/dmlab30/language_select_located_object
+     8.  contributed/dmlab30/language_execute_random_task
+     9.  contributed/dmlab30/language_answer_quantitative_question
+    10.  contributed/dmlab30/lasertag_one_opponent_small
+    11.  contributed/dmlab30/lasertag_three_opponents_small
+    12.  contributed/dmlab30/lasertag_one_opponent_large
+    13.  contributed/dmlab30/lasertag_three_opponents_large
+    14.  contributed/dmlab30/natlab_fixed_large_map
+    15.  contributed/dmlab30/natlab_varying_map_regrowth
+    16.  contributed/dmlab30/natlab_varying_map_randomized
+    17.  contributed/dmlab30/skymaze_irreversible_path_hard
+    18.  contributed/dmlab30/skymaze_irreversible_path_varied
+    19.  contributed/dmlab30/psychlab_sequential_comparison
+    20.  contributed/dmlab30/psychlab_visual_search
+    21.  contributed/dmlab30/explore_object_locations_small
+    22.  contributed/dmlab30/explore_object_locations_large
+    23.  contributed/dmlab30/explore_obstructed_goals_small
+    24.  contributed/dmlab30/explore_obstructed_goals_large
+    25.  contributed/dmlab30/explore_goal_locations_small
+    26.  contributed/dmlab30/explore_goal_locations_large
+    27.  contributed/dmlab30/explore_object_rewards_few
+    28.  contributed/dmlab30/explore_object_rewards_many
+
 ### New Features:
 
 1.  Basic support for demo recording and playback.

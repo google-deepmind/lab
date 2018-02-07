@@ -679,19 +679,35 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
-GAME_SCRIPTS = glob([
+GAME_SCRIPT_ASSETS = glob([
     "game_scripts/**/*.lua",
     "game_scripts/**/*.png",
 ])
 
 genrule(
     name = "game_script_assets",
-    srcs = GAME_SCRIPTS,
-    outs = ["baselab/" + f for f in GAME_SCRIPTS],
+    srcs = GAME_SCRIPT_ASSETS,
+    outs = ["baselab/" + f for f in GAME_SCRIPT_ASSETS],
     cmd = "for s in $(SRCS); do " +
           "  A=$$(dirname $$s); " +
           "  mkdir -p $(@D)/baselab/$${A}; " +
           "  ln -s -L -t $(@D)/baselab/$${A} $$(realpath $${s}); " +
+          "done",
+    visibility = ["//visibility:public"],
+)
+
+RAW_BSP_ASSETS = glob([
+    "assets/bsps/*.aas",
+    "assets/bsps/*.bsp",
+])
+
+genrule(
+    name = "raw_bsp_assets",
+    srcs = RAW_BSP_ASSETS,
+    outs = ["baselab/maps" + f[len("assets/bsps"):] for f in RAW_BSP_ASSETS],
+    cmd = "for s in $(SRCS); do " +
+          "  mkdir -p $(@D)/baselab/maps; " +
+          "  ln -s -L -t $(@D)/baselab/maps $$(realpath $${s}); " +
           "done",
     visibility = ["//visibility:public"],
 )
@@ -752,6 +768,7 @@ GAME_ASSETS = [
     ":game_script_assets",
     ":map_assets",
     ":non_pk3_assets",
+    ":raw_bsp_assets",
     ":vm_pk3",
     "//deepmind/level_generation:compile_map_sh",
 ]
