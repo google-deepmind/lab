@@ -59,6 +59,7 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
   EnvObservation<unsigned char> test_observation(observation);
 
   EXPECT_THAT(test_observation.shape(), ElementsAre(36, 64, 3));
+  env_c_api.release_context(context);
 }
 
 // Invokes seed_test.lua to check that the random seed is initialised in the
