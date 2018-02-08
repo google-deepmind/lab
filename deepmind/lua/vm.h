@@ -32,12 +32,12 @@ namespace lab {
 namespace lua {
 namespace internal {
 
-struct EmbededLuaFile {
+struct EmbeddedLuaFile {
   const char* buff;
   std::size_t size;
 };
 
-struct EmbededClosure {
+struct EmbeddedClosure {
   lua_CFunction function;
   std::vector<void*> up_values;
 };
@@ -97,10 +97,10 @@ class Vm {
   std::unique_ptr<lua_State, internal::Close> lua_state_;
   // These are unique_ptrs as the pointers are stored in upvalues for a Lua
   // module search function.
-  std::unique_ptr<std::unordered_map<std::string, internal::EmbededClosure>>
-      embeded_c_modules_;
-  std::unique_ptr<std::unordered_map<std::string, internal::EmbededLuaFile>>
-      embeded_lua_modules_;
+  std::unique_ptr<std::unordered_map<std::string, internal::EmbeddedClosure>>
+      embedded_c_modules_;
+  std::unique_ptr<std::unordered_map<std::string, internal::EmbeddedLuaFile>>
+      embedded_lua_modules_;
 };
 
 inline Vm CreateVm() { return Vm::Create(); }

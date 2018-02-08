@@ -28,8 +28,8 @@ static constexpr char kSearcher[] = "searchers";
 #error Only Lua 5.1 and 5.2 are supported
 #endif
 
-using deepmind::lab::lua::internal::EmbededLuaFile;
-using deepmind::lab::lua::internal::EmbededClosure;
+using deepmind::lab::lua::internal::EmbeddedLuaFile;
+using deepmind::lab::lua::internal::EmbeddedClosure;
 
 extern "C" {
 static int PackageLoader(lua_State* L) {
@@ -42,11 +42,11 @@ static int PackageLoader(lua_State* L) {
       break;
     }
 
-    auto* embeded_c_modules =
-        static_cast<const std::unordered_map<std::string, EmbededClosure>*>(
+    auto* embedded_c_modules =
+        static_cast<const std::unordered_map<std::string, EmbeddedClosure>*>(
             lua_touserdata(L, upidx_c));
-    auto* embeded_lua_modules =
-        static_cast<const std::unordered_map<std::string, EmbededLuaFile>*>(
+    auto* embedded_lua_modules =
+        static_cast<const std::unordered_map<std::string, EmbeddedLuaFile>*>(
             lua_touserdata(L, upidx_lua));
 
     if (lua_type(L, 1) != LUA_TSTRING) {
@@ -58,16 +58,16 @@ static int PackageLoader(lua_State* L) {
     std::size_t length = 0;
     const char* result_cstr = lua_tolstring(L, 1, &length);
     std::string name(result_cstr, length);
-    auto it = embeded_c_modules->find(name);
-    if (it != embeded_c_modules->end()) {
+    auto it = embedded_c_modules->find(name);
+    if (it != embedded_c_modules->end()) {
       for (void* light_value_data : it->second.up_values) {
         lua_pushlightuserdata(L, light_value_data);
       }
       lua_pushcclosure(L, it->second.function, it->second.up_values.size());
       return 1;
     } else {
-      auto it = embeded_lua_modules->find(name);
-      if (it != embeded_lua_modules->end()) {
+      auto it = embedded_lua_modules->find(name);
+      if (it != embedded_lua_modules->end()) {
         if (luaL_loadbuffer(L, it->second.buff, it->second.size,
                             name.c_str())) {
           // Error message is on stack. Let caller deal with it.
@@ -108,20 +108,22 @@ void Vm::AddCModuleToSearchers(
     std::string module_name,
     lua_CFunction F,
     std::vector<void*> up_values) {
-  (*embeded_c_modules_)[std::move(module_name)] = {F, std::move(up_values) };
+  (*embedded_c_modules_)[std::move(module_name)] = {F, std::move(up_values) };
 }
 
 void Vm::AddLuaModuleToSearchers(
     std::string module_name,
     const char* buf,
     std::size_t size) {
-  (*embeded_lua_modules_)[std::move(module_name)] = {buf, size};
+  (*embedded_lua_modules_)[std::move(module_name)] = {buf, size};
 }
 
 Vm::Vm(lua_State* L)
     : lua_state_(L),
-      embeded_c_modules_(new std::unordered_map<std::string, EmbededClosure>()),
-      embeded_lua_modules_(new std::unordered_map<std::string, EmbededLuaFile>()) {
+      embedded_c_modules_(
+          new std::unordered_map<std::string, EmbeddedClosure>()),
+      embedded_lua_modules_(
+          new std::unordered_map<std::string, EmbeddedLuaFile>()) {
   lua_getglobal(L, "package");
   lua_getfield(L, -1, kSearcher);
   int array_size = ArrayLength(L, -1);
@@ -130,8 +132,8 @@ Vm::Vm(lua_State* L)
     lua_rawseti(L, -2, e);
   }
 
-  lua_pushlightuserdata(L, embeded_c_modules_.get());
-  lua_pushlightuserdata(L, embeded_lua_modules_.get());
+  lua_pushlightuserdata(L, embedded_c_modules_.get());
+  lua_pushlightuserdata(L, embedded_lua_modules_.get());
   lua_pushcclosure(L, &PackageLoader, 2);
   lua_rawseti(L, -2, 1);
   lua_pop(L, 2);
