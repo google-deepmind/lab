@@ -69,8 +69,12 @@ static void set_level_cache_settings(
       local, global, level_cache_params);
 }
 
-static int set_script_name(void* userdata, const char* script_name) {
-  return static_cast<Context*>(userdata)->SetScriptName(script_name);
+static void set_level_name(void* userdata, const char* level_name) {
+  static_cast<Context*>(userdata)->SetLevelName(level_name);
+}
+
+static void set_level_directory(void* userdata, const char* level_directory) {
+  static_cast<Context*>(userdata)->SetLevelDirectory(level_directory);
 }
 
 static int init(void* userdata) {
@@ -460,7 +464,7 @@ namespace lab {
 namespace {
 
 constexpr char kGameScriptPath[] = "/baselab/game_scripts";
-constexpr char kLevelsDirectory[] = "/levels";
+constexpr char kLevelDirectory[] = "levels";
 constexpr double kDefaultEpisodeLengthSeconds = 5 * 30.0;
 
 constexpr const char* const kTeamNames[] = {
@@ -510,7 +514,8 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   CHECK(lua_vm_ != nullptr);
   hooks->add_setting = add_setting;
   hooks->set_level_cache_settings = set_level_cache_settings;
-  hooks->set_script_name = set_script_name;
+  hooks->set_level_name = set_level_name;
+  hooks->set_level_directory = set_level_directory;
   hooks->start = start;
   hooks->map_loaded = map_loaded;
   hooks->init = init;
@@ -586,31 +591,27 @@ void Context::AddSetting(const char* key, const char* value) {
   settings_.emplace(key, value);
 }
 
-lua::NResultsOr Context::PushScript() {
-  lua_State* L = lua_vm_.get();
-  if (script_path_.empty()) {
-    return "Must have level script!";
-  }
-  return lua::PushScriptFile(L, script_path_);
+void Context::SetLevelName(std::string level_name) {
+  level_name_ = std::move(level_name);
 }
 
-int Context::SetScriptName(std::string script_name) {
-  if (script_name.length() > 4 &&
-    // size_t pos, size_t len, const char* s, size_t n
-    script_name.compare(script_name.length() - 4, 4, ".lua", 4) == 0) {
-    script_path_ = std::move(script_name);
-  } else if (!script_name.empty()) {
-    script_path_ = absl::StrCat(ExecutableRunfiles(), kGameScriptPath,
-                                kLevelsDirectory, "/",  script_name, ".lua");
-  }
-  auto result = PushScript();
-  lua_State* L = lua_vm_.get();
-  if (result.ok()) {
-    lua_pop(L, result.n_results());
-    return 0;
+void Context::SetLevelDirectory(std::string level_directory) {
+  level_directory_ = std::move(level_directory);
+}
+
+std::string Context::GetLevelPath() {
+  if (level_name_.empty() ||
+      (level_name_.length() > 4 &&
+       level_name_.compare(level_name_.length() - 4, 4, ".lua", 4) == 0)) {
+    return level_name_;
   } else {
-    error_message_ = absl::StrCat("Level not found: ", result.error());
-    return 1;
+    if (!level_directory_.empty() && level_directory_[0] == '/') {
+      return absl::StrCat(level_directory_, "/", level_name_, ".lua");
+    } else {
+      return absl::StrCat(ExecutableRunfiles(), kGameScriptPath, "/",
+                          kLevelDirectory, "/", level_directory_, "/",
+                          level_name_, ".lua");
+    }
   }
 }
 
@@ -622,10 +623,16 @@ int Context::Init() {
   }
 
   lua_State* L = lua_vm_.get();
-  auto result = PushScript();
+  std::string level_path = GetLevelPath();
+  if (level_path.empty()) {
+    error_message_ = "Missing level script must set setting 'levelName'!";
+    return 1;
+  }
+
+  auto result = lua::PushScriptFile(L, level_path);
 
   if (!result.ok()) {
-    error_message_ = result.error();
+    error_message_ = absl::StrCat("Level not found: ", result.error());
     return 1;
   }
 
@@ -635,10 +642,10 @@ int Context::Init() {
   lua_vm_.AddPathToSearchers(scripts_folder);
 
   // Add the current running script to the search path.
-  auto last_slash_pos = script_path_.find_last_of('/');
+  auto last_slash_pos = level_path.find_last_of('/');
   if (last_slash_pos != std::string::npos) {
-    auto running_script_folder = script_path_.substr(0, last_slash_pos);
-    lua_vm_.AddPathToSearchers(running_script_folder);
+    auto running_level_folder = level_path.substr(0, last_slash_pos);
+    lua_vm_.AddPathToSearchers(running_level_folder);
   }
 
   lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire);
@@ -668,7 +675,7 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.transform", LuaTransform::Require);
 
-  lua::Push(L, script_path_);
+  lua::Push(L, level_path);
   result = lua::Call(L, 1);
   if (!result.ok()) {
     error_message_ = result.error();

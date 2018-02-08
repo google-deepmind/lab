@@ -43,8 +43,7 @@ TEST(DeepmindModelLibTest, CreateCone) {
   DeepmindContext ctx{};
   ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
                                     nullptr));
-  ASSERT_EQ(0,
-            ctx.hooks.set_script_name(ctx.userdata, "tests/model_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "cone"));
@@ -71,8 +70,7 @@ TEST(DeepmindModelLibTest, CreateCube) {
   DeepmindContext ctx{};
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(0,
-            ctx.hooks.set_script_name(ctx.userdata, "tests/model_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "cube"));
@@ -99,8 +97,7 @@ TEST(DeepmindModelLibTest, CreateCylinder) {
   DeepmindContext ctx{};
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(0,
-            ctx.hooks.set_script_name(ctx.userdata, "tests/model_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "cylinder"));
@@ -121,8 +118,7 @@ TEST(DeepmindModelLibTest, CreateSphere) {
   DeepmindContext ctx{};
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(0,
-            ctx.hooks.set_script_name(ctx.userdata, "tests/model_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "sphere"));
@@ -149,8 +145,7 @@ TEST(DeepmindModelLibTest, CreateHierarchy) {
   DeepmindContext ctx{};
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(0,
-            ctx.hooks.set_script_name(ctx.userdata, "tests/model_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "hierarchy"));

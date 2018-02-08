@@ -32,8 +32,7 @@ TEST(DeepmindCallbackTest, CreateAndDestroyContext) {
   const char arg0[] = "dmlab";
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(
-      0, ctx.hooks.set_script_name(ctx.userdata, "tests/callbacks_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/callbacks_test");
 
   ctx.hooks.add_setting(ctx.userdata, "command", "hello");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
@@ -55,7 +54,7 @@ TEST(DeepmindCallbackTest, CustomObservations) {
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
   ctx.hooks.add_setting(ctx.userdata, "order", order);
-  ASSERT_EQ(0, ctx.hooks.set_script_name(ctx.userdata, callbacks_test));
+  ctx.hooks.set_level_name(ctx.userdata, callbacks_test);
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
   ASSERT_EQ(3, ctx.hooks.custom_observation_count(ctx.userdata));
   EnvCApi_ObservationSpec spec;
@@ -107,8 +106,7 @@ TEST(DeepmindCallbackTest, CreateModel) {
   DeepmindContext ctx{};
   ASSERT_EQ(0,
             dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
-  ASSERT_EQ(
-      0, ctx.hooks.set_script_name(ctx.userdata, "tests/callbacks_test"));
+  ctx.hooks.set_level_name(ctx.userdata, "tests/callbacks_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
   ASSERT_TRUE(ctx.hooks.find_model(ctx.userdata, "cube"));

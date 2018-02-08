@@ -139,8 +139,11 @@ struct DeepmindHooks_s {
 
   // Sets the name of the script that is ran during the first init.
   // Must be called before the first init.
-  // Returns zero if successful and non-zero on error.
-  int (*set_script_name)(void* userdata, const char* script_name);
+  void (*set_level_name)(void* userdata, const char* level_name);
+
+  // Sets the name of the script that is ran during the first init.
+  // Must be called before the first init.
+  void (*set_level_directory)(void* userdata, const char* level_directory);
 
   // Sets the path to where DeepMind Lab assets are stored.
   void (*set_executable_runfiles)(void* userdata,

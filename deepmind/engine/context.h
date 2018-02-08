@@ -75,13 +75,17 @@ class Context {
   // Must be called before Init.
   void AddSetting(const char* key, const char* value);
 
-  // 'script_name': name of a Lua file; this script is run during first call to
+  // 'level_name': name of a Lua file; this script is run during first call to
   // Init.
   // Must be called before Init.
-  // Returns zero if successful and non-zero on error.
-  int SetScriptName(std::string script_name);
+  void SetLevelName(std::string level_name);
 
-  // Runs the script named script_name_ and stores the result in
+  // 'level_directory': Sets the directory to find level scripts in. If a local
+  // path is used it will be relative to the 'games_cripts' directory. (Default
+  // is 'levels'.)
+  void SetLevelDirectory(std::string level_directory);
+
+  // Runs the script named level_name_ and stores the result in
   // script_table_ref_.
   // Calls "init" member function on the script_table_ref_ with settings_.
   // Returns zero if successful and non-zero on error.
@@ -425,11 +429,9 @@ class Context {
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
-  // Pushes script_name_ (see Init above) on to Lua stack ready for calling.
-  // Fails if there is a syntax error in the script. Can be used for early
-  // detection of syntax errors, too.
-  // [1, 0, e]
-  lua::NResultsOr PushScript();
+  // Returns the path to the level if a level name is set. Otherwise returns an
+  // empty string.
+  std::string GetLevelPath();
 
   // The context's Lua VM. The top of the stack of the VM is zero before and
   // after any call.
@@ -441,8 +443,12 @@ class Context {
   // The settings to run the script with.
   std::unordered_map<std::string, std::string> settings_;
 
+  // When a levelName is set without the suffix '.lua' the level is found
+  // relative to this directory.
+  std::string level_directory_;
+
   // The name of the script to run on first Init.
-  std::string script_path_;
+  std::string level_name_;
 
   // The result of the script that was run when Init was first called.
   lua::TableRef script_table_ref_;

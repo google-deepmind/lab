@@ -23,12 +23,14 @@ name in the list *observations*.
 The `config` dict specifies additional settings as key-value string pairs. The
 following options are recognized:
 
-Option          | Description                                     | Default
---------------- | ----------------------------------------------- | ------:
-`width`         | horizontal resolution of the observation frames | `'320'`
-`height`        | vertical resolution of the observation frames   | `'240'`
-`fps`           | frames per second                               | `'60'`
-`appendCommand` | Commands for the internal Quake console\*       | `''`
+| Option           | Description                                     | Default |
+| ---------------- | ----------------------------------------------- | ------: |
+| `width`          | horizontal resolution of the observation frames | `'320'` |
+| `height`         | vertical resolution of the observation frames   | `'240'` |
+| `fps`            | frames per second                               | `'60'`  |
+| `levelDirectory` | optional path to level directory (relative      | `''`    |
+:                  : paths are relative to game_scripts/levels)      :         :
+| `appendCommand`  | Commands for the internal Quake console\*       | `''`    |
 
 \* See also [Lua map API](/docs/developers/reference/lua_api.md#commandlineold-commandline-string).
 

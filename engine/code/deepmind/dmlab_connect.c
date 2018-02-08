@@ -493,7 +493,11 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
   bool v_bool;
 
   if (strcmp(key, "levelName") == 0) {
-    return ctx->hooks.set_script_name(ctx->userdata, value);
+    ctx->hooks.set_level_name(ctx->userdata, value);
+    return 0;
+  } else if (strcmp(key, "levelDirectory") == 0) {
+    ctx->hooks.set_level_directory(ctx->userdata, value);
+    return 0;
   } else if (strcmp(key, "width") == 0) {
     int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
