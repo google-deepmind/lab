@@ -969,6 +969,12 @@ void Com_Frame( void );
 void Com_Shutdown( void );
 
 
+// A function to free all "permanent" dynamic memory allocations used by ioq3's
+// memory system. This is generally unnecessary in single-instance game runs,
+// but it is useful when loading and unloading ioq3 repeatedly as an in-process
+// module.
+void DMLabUnloadIOQ3Module( void );
+
 /*
 ==============================================================
 

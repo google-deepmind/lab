@@ -801,19 +801,19 @@ typedef struct {
 } memzone_t;
 
 // main zone for all "dynamic" memory allocation
-memzone_t	*mainzone;
+static memzone_t	*mainzone;
 // we also have a small zone for small allocations that would only
 // fragment the main zone (think of cvar and cmd strings)
-memzone_t	*smallzone;
+static memzone_t	*smallzone;
 
-void Z_CheckHeap( void );
+static void Z_CheckHeap( void );
 
 /*
 ========================
 Z_ClearZone
 ========================
 */
-void Z_ClearZone( memzone_t *zone, int size ) {
+static void Z_ClearZone( memzone_t *zone, int size ) {
 	memblock_t	*block;
 	
 	// set the entire zone to one free block
@@ -838,7 +838,7 @@ void Z_ClearZone( memzone_t *zone, int size ) {
 Z_AvailableZoneMemory
 ========================
 */
-int Z_AvailableZoneMemory( memzone_t *zone ) {
+static int Z_AvailableZoneMemory( memzone_t *zone ) {
 	return zone->size - zone->used;
 }
 
@@ -1085,7 +1085,7 @@ void *S_Malloc( int size ) {
 Z_CheckHeap
 ========================
 */
-void Z_CheckHeap( void ) {
+static void Z_CheckHeap( void ) {
 	memblock_t	*block;
 	
 	for (block = mainzone->blocklist.next ; ; block = block->next) {
@@ -1278,6 +1278,7 @@ static	hunkblock_t *hunkblocks;
 static	hunkUsed_t	hunk_low, hunk_high;
 static	hunkUsed_t	*hunk_permanent, *hunk_temp;
 
+static	byte	*s_hunkDataRaw = NULL;
 static	byte	*s_hunkData = NULL;
 static	int		s_hunkTotal;
 
@@ -1581,12 +1582,12 @@ void Com_InitHunkMemory( void ) {
 		s_hunkTotal = cv->integer * 1024 * 1024;
 	}
 
-	s_hunkData = calloc( s_hunkTotal + 31, 1 );
-	if ( !s_hunkData ) {
+	s_hunkDataRaw = calloc( s_hunkTotal + 31, 1 );
+	if ( !s_hunkDataRaw ) {
 		Com_Error( ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024*1024) );
 	}
 	// cacheline align
-	s_hunkData = (byte *) ( ( (intptr_t)s_hunkData + 31 ) & ~31 );
+	s_hunkData = (byte *) ( ( (intptr_t)s_hunkDataRaw + 31 ) & ~31 );
 	Hunk_Clear();
 
 	Cmd_AddCommand( "meminfo", Com_Meminfo_f );
@@ -3803,4 +3804,11 @@ int QDECL Com_strCompare( const void *a, const void *b )
     const char **pa = (const char **)a;
     const char **pb = (const char **)b;
     return strcmp( *pa, *pb );
+}
+
+void DMLabUnloadIOQ3Module( void )
+{
+	free(mainzone);
+	free(smallzone);
+	free(s_hunkDataRaw);
 }
