@@ -982,7 +982,6 @@ LOAD_TEST_SCRIPTS = [
     for level_script in glob(
         ["game_scripts/levels/**/*.lua"],
         exclude = [
-            "**/demos/**",
             "**/tests/**",
             "**/factories/**",
         ],
@@ -1002,4 +1001,31 @@ test_suite(
         deps = ["//testing:load_level_test_lib"],
     )
     for level_name in LOAD_TEST_SCRIPTS
+]
+
+SEED_TEST_SCRIPTS = [
+    level_script[len("game_scripts/levels/"):-len(".lua")]
+    for level_script in glob(
+        ["game_scripts/levels/**/*.lua"],
+        exclude = [
+            "**/demos/**",
+            "**/factories/**",
+            "**/tests/**",
+        ],
+    )
+]
+
+test_suite(
+    name = "seed_level_test",
+    tests = ["seed_level_test_" + level_name for level_name in SEED_TEST_SCRIPTS],
+)
+
+[
+    cc_test(
+        name = "seed_level_test_" + level_name,
+        size = "large",
+        args = [level_name],
+        deps = ["//testing:seed_level_test_lib"],
+    )
+    for level_name in SEED_TEST_SCRIPTS
 ]
