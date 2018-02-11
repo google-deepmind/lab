@@ -42,11 +42,13 @@ class LuaMazeGenerationTest : public lua::testing::TestWithVm {
  protected:
   LuaMazeGenerationTest() {
     LuaMazeGeneration::Register(L);
-    vm()->AddCModuleToSearchers("dmlab.system.maze_generation",
-                                LuaMazeGeneration::Require);
+    vm()->AddCModuleToSearchers(
+        "dmlab.system.maze_generation", &lua::Bind<LuaMazeGeneration::Require>,
+        {reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
     LuaRandom::Register(L);
-    vm()->AddCModuleToSearchers("dmlab.system.sys_random",
-                                &lua::Bind<LuaRandom::Require>, {&prbg_});
+    vm()->AddCModuleToSearchers(
+        "dmlab.system.sys_random", &lua::Bind<LuaRandom::Require>,
+        {&prbg_, reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
   }
 
   std::mt19937_64 prbg_;

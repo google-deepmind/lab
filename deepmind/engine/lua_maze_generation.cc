@@ -37,7 +37,8 @@ namespace lab {
 namespace {
 
 std::mt19937_64* GetRandomNumberGenerator(lua::TableRef* table,
-                                          std::mt19937_64* seeded_rng) {
+                                          std::mt19937_64* seeded_rng,
+                                          std::uint64_t mixer_seq) {
   std::mt19937_64* prng = nullptr;
   lua_State* L = table->LuaState();
   table->LookUpToStack("random");
@@ -51,7 +52,7 @@ std::mt19937_64* GetRandomNumberGenerator(lua::TableRef* table,
   if (prng == nullptr) {
     int seed = 0;
     if (table->LookUp("seed", &seed)) {
-      seeded_rng->seed(seed);
+      seeded_rng->seed(static_cast<std::uint64_t>(seed) ^ mixer_seq);
       prng = seeded_rng;
     }
   }
@@ -112,11 +113,19 @@ class LuaRoom : public lua::Class<LuaRoom> {
   std::vector<maze_generation::Pos> room_;
 };
 
+// Bit toggle sequence applied to the 32 MSB of the 64bit seeds fed to the maze
+// generation PRBGs, with the intention of creating disjoint seed subspaces for
+// each different mixer_seed value as described in python_api.md
+std::uint64_t LuaMazeGeneration::mixer_seq_ = 0;
+
 const char* LuaMazeGeneration::ClassName() {
   return "deepmind.lab.LuaMazeGeneration";
 }
 
-int LuaMazeGeneration::Require(lua_State* L) {
+lua::NResultsOr LuaMazeGeneration::Require(lua_State* L) {
+  std::uintptr_t mixer_seed =
+      reinterpret_cast<std::uintptr_t>(lua_touserdata(L, lua_upvalueindex(1)));
+  mixer_seq_ = static_cast<std::uint64_t>(mixer_seed) << 32;
   auto table = lua::TableRef::Create(L);
   table.Insert("mazeGeneration", &lua::Bind<LuaMazeGeneration::Create>);
   table.Insert("randomMazeGeneration",
@@ -162,7 +171,8 @@ lua::NResultsOr LuaMazeGeneration::CreateRandom(lua_State* L) {
   lua::Read(L, -1, &table);
 
   std::mt19937_64 seeded_rng;
-  std::mt19937_64* prng = GetRandomNumberGenerator(&table, &seeded_rng);
+  std::mt19937_64* prng =
+      GetRandomNumberGenerator(&table, &seeded_rng, mixer_seq_);
   if (prng == nullptr) {
     return "[randomMazeGeneration] - Must construct with 'random' a random "
            "number generator. ('seed' is deprecated.)";
@@ -544,7 +554,8 @@ lua::NResultsOr LuaMazeGeneration::VisitRandomPath(lua_State* L) {
     return "[visitRandomPath] - must supply table";
   }
   std::mt19937_64 seeded_rng;
-  std::mt19937_64* prng = GetRandomNumberGenerator(&table, &seeded_rng);
+  std::mt19937_64* prng =
+      GetRandomNumberGenerator(&table, &seeded_rng, mixer_seq_);
   if (prng == nullptr) {
     return "[visitRandomPath] - must supply 'random' with random number "
            "generator. ('seed' is deprecated.)";

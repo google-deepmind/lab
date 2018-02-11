@@ -191,6 +191,10 @@ struct DeepmindHooks_s {
   // allowed to set actions.
   bool (*get_native_app)(void* userdata);
 
+  // This is a bit toggle sequence applied to the most significant bits of the
+  // seed.
+  void (*set_mixer_seed)(void* userdata, int v);
+
   // Sets the actions of the player.
   void (*set_actions)(void* userdata,                 //
                       double look_down_up,            //

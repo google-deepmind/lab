@@ -158,6 +158,11 @@ static bool get_native_app(void* userdata) {
   return static_cast<Context*>(userdata)->NativeApp();
 }
 
+static void set_mixer_seed(void* userdata, int v) {
+  return static_cast<Context*>(userdata)->SetMixerSeed(
+      static_cast<std::uint32_t>(v));
+}
+
 static void set_actions(void* userdata, double look_down_up,
                         double look_left_right, signed char move_back_forward,
                         signed char strafe_left_right, signed char crouch_jump,
@@ -480,7 +485,7 @@ lua::NResultsOr MapMakerModule(lua_State* L) {
     LuaTextLevelMaker::CreateObject(
         L, ctx->ExecutableRunfiles(), ctx->TempDirectory(),
         ctx->UseLocalLevelCache(), ctx->UseGlobalLevelCache(),
-        ctx->LevelCacheParams());
+        ctx->LevelCacheParams(), ctx->MixerSeed());
     return 1;
   } else {
     return "Missing context!";
@@ -507,6 +512,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
     : lua_vm_(std::move(lua_vm)),
       native_app_(false),
       actions_{},
+      mixer_seed_(0),
       level_cache_params_{},
       game_(executable_runfiles, calls, file_reader_override,
             temp_folder != nullptr ? temp_folder : ""),
@@ -528,6 +534,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->run_lua_snippet = run_lua_snippet;
   hooks->set_native_app = set_native_app;
   hooks->get_native_app = get_native_app;
+  hooks->set_mixer_seed = set_mixer_seed;
   hooks->set_actions = set_actions;
   hooks->get_actions = get_actions;
   hooks->find_model = find_model;
@@ -652,7 +659,8 @@ int Context::Init() {
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.tensor", tensor::LuaTensorConstructors);
   lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.maze_generation", LuaMazeGeneration::Require);
+      "dmlab.system.maze_generation", &lua::Bind<LuaMazeGeneration::Require>,
+      {reinterpret_cast<void*>(static_cast<std::uintptr_t>(mixer_seed_))});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.map_maker", &lua::Bind<MapMakerModule>, {this});
   lua_vm_.AddCModuleToSearchers(
@@ -668,7 +676,9 @@ int Context::Init() {
                                 &lua::Bind<ContextPickups::Module>,
                                 {MutablePickups()});
   lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
+      "dmlab.system.random", &lua::Bind<LuaRandom::Require>,
+      {UserPrbg(),
+       reinterpret_cast<void*>(static_cast<std::uintptr_t>(mixer_seed_))});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.model", &lua::Bind<ModelModule>,
       {const_cast<DeepmindCalls*>(Game().Calls())});
@@ -704,7 +714,8 @@ int Context::Init() {
 }
 
 int Context::Start(int episode, int seed) {
-  EnginePrbg()->seed(seed);
+  EnginePrbg()->seed(static_cast<std::uint64_t>(seed) ^
+                     (static_cast<std::uint64_t>(mixer_seed_) << 32));
   MutableGame()->NextMap();
   lua_State* L = lua_vm_.get();
   script_table_ref_.PushMemberFunction("start");

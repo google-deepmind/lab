@@ -43,7 +43,8 @@ class LuaRandom : public lua::Class<LuaRandom> {
 
  public:
   // Constructed with a non-owning view of a PRBG instance.
-  explicit LuaRandom(std::mt19937_64* prbg) : prbg_(prbg) {}
+  explicit LuaRandom(std::mt19937_64* prbg, std::uint32_t mixer_seed)
+      : prbg_(prbg), mixer_seq_(static_cast<std::uint64_t>(mixer_seed) << 32) {}
 
   // Registers the class as well as member functions:
   //
@@ -124,6 +125,7 @@ class LuaRandom : public lua::Class<LuaRandom> {
 
  private:
   std::mt19937_64* prbg_;
+  std::uint64_t mixer_seq_;
 };
 
 }  // namespace lab

@@ -12,6 +12,7 @@
     Added further pre-built maps, which removes the need for the expensive
     :map_assets build step.
 2.  Allow game to be renderered with top-left as origin instead of bottom-left.
+3.  Add 'mixerSeed' setting to change behaviour of all random number generators.
 
 ## release-2018-02-07 February 2018 release
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ class LuaMazeGeneration : public lua::Class<LuaMazeGeneration> {
 
   // Returns table of constructors and standalone functions.
   // [0, 1, -]
-  static int Require(lua_State* L);
+  static lua::NResultsOr Require(lua_State* L);
 
  private:
   // Constructs a LuaMazeGeneration.
@@ -197,6 +197,8 @@ class LuaMazeGeneration : public lua::Class<LuaMazeGeneration> {
   lua::NResultsOr CountVariations(lua_State* L);
 
   maze_generation::TextMaze text_maze_;
+
+  static std::uint64_t mixer_seq_;
 };
 
 }  // namespace lab

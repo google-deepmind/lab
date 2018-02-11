@@ -227,6 +227,15 @@ class Context {
   // generate new positive integers.
   int MakeRandomSeed();
 
+  // Specifies a mixer value to be combined with all the seeds passed to this
+  // environment, before using them with the internal PRBGs. This is done in
+  // a way which guarantees that the resulting seeds span disjoint subsets of
+  // the integers in [0, 2^64) for each different mixer value. However, the
+  // sequences produced by the environment's PRBGs are not necessarily disjoint.
+  void SetMixerSeed(std::uint32_t s) { mixer_seed_ = s; }
+
+  std::uint32_t MixerSeed() const { return mixer_seed_; }
+
   std::mt19937_64* UserPrbg() { return &user_prbg_; }
 
   std::mt19937_64* EnginePrbg() { return &engine_prbg_; }
@@ -479,6 +488,9 @@ class Context {
 
   // A pseudo-random-bit generator for exclusive use by users.
   std::mt19937_64 user_prbg_;
+
+  // Stores the mixer seed for the PRBG.
+  std::uint32_t mixer_seed_;
 
   // A pseudo-random-bit generator for exclusive use of the engine. Seeded each
   // episode with the episode start seed.

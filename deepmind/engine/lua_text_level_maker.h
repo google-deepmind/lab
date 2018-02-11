@@ -47,7 +47,8 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
                              const std::string& output_folder,
                              bool use_local_level_cache,
                              bool use_global_level_cache,
-                             DeepMindLabLevelCacheParams level_cache_params);
+                             DeepMindLabLevelCacheParams level_cache_params,
+                             std::uint32_t mixer_seed);
 
   // Registers MapFromTextLevel as "mapFromTextLevel".
   static void Register(lua_State* L);
@@ -85,6 +86,7 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
 
  private:
   std::mt19937_64 prng_;
+  std::uint32_t mixer_seed_;
   MapCompileSettings settings_;
   const std::string rundir_;
   const std::string output_folder_;

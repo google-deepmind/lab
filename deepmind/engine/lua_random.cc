@@ -60,7 +60,9 @@ bool ReadLargeNumber(lua_State* L, int idx, RbgNumType* num) {
 lua::NResultsOr LuaRandom::Require(lua_State* L) {
   if (auto* prbg = static_cast<std::mt19937_64*>(
           lua_touserdata(L, lua_upvalueindex(1)))) {
-    LuaRandom::CreateObject(L, prbg);
+    std::uintptr_t mixer_seed = reinterpret_cast<std::uintptr_t>(
+        lua_touserdata(L, lua_upvalueindex(2)));
+    LuaRandom::CreateObject(L, prbg, mixer_seed);
     return 1;
   } else {
     return "Missing std::mt19937_64 pointer in up value!";
@@ -87,7 +89,7 @@ lua::NResultsOr LuaRandom::Seed(lua_State* L) {
   RbgNumType k;
 
   if (ReadLargeNumber(L, -1, &k)) {
-    prbg_->seed(k);
+    prbg_->seed(k ^ mixer_seq_);
     return 0;
   } else if (lua::Read(L, -1, &s)) {
     auto& err = errno;  // cache TLS-lookup
@@ -96,7 +98,7 @@ lua::NResultsOr LuaRandom::Seed(lua_State* L) {
     unsigned long long int n = std::strtoull(s.data(), &ep, 0);
     if (ep != s.data() && *ep == '\0' && err == 0 &&
         n <= std::numeric_limits<RbgNumType>::max()) {
-      prbg_->seed(n);
+      prbg_->seed(n ^ mixer_seq_);
       return 0;
     }
   }

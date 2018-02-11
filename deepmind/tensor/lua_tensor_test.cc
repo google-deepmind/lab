@@ -47,13 +47,15 @@ class LuaTensorTest : public ::testing::Test {
   LuaTensorTest() : lua_vm_(lua::CreateVm()) {
     auto* L = lua_vm_.get();
     LuaRandom::Register(L);
-    lua_vm_.AddCModuleToSearchers("dmlab.system.sys_random",
-                                  &lua::Bind<LuaRandom::Require>, {&prbg_});
+    lua_vm_.AddCModuleToSearchers(
+        "dmlab.system.sys_random", &lua::Bind<LuaRandom::Require>,
+        {&prbg_, reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
     tensor::LuaTensorRegister(L);
     lua_vm_.AddCModuleToSearchers("dmlab.system.tensor",
                                   tensor::LuaTensorConstructors);
   }
   std::mt19937_64 prbg_;
+  uint32_t mixer_seed_;
   lua::Vm lua_vm_;
 };
 

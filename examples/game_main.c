@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -68,24 +69,26 @@ static const char kUsage[] =
     "  -r, --random_seed:    A seed value used for randomly generated content; using\n"
     "                        the same seed should result in the same content. Defaults\n"
     "                        to a fixed value.\n"
+    "  -m, --mixer_seed:     A XOR mask applied to the most significant bits of the seed.\n"
     ;
 
 static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
                                 void* context, int* num_episodes, int* seed,
-                                bool* log_events) {
+                                int* mixer_seed, bool* log_events) {
   static struct option long_options[] = {
       {"help", no_argument, NULL, 'h'},
       {"level_script", required_argument, NULL, 'l'},
       {"level_setting", required_argument, NULL, 's'},
       {"num_episodes", required_argument, NULL, 'e'},
       {"random_seed", required_argument, NULL, 'r'},
+      {"mixer_seed", required_argument, NULL, 'm'},
       {"print_events", no_argument, NULL, 'p'},
       {NULL, 0, NULL, 0}};
 
   char *key, *value;
 
   for (int c;
-       (c = getopt_long(argc, argv, "hl:s:e:r:p", long_options, 0)) != -1;) {
+       (c = getopt_long(argc, argv, "hl:s:e:r:m:p", long_options, 0)) != -1;) {
     switch (c) {
       case 'h':
         fputs(kUsage, stdout);
@@ -117,6 +120,15 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
       case 'r':
         if (!parse_int(optarg, seed)) {
           sys_error("Failed to set random_seed to '%s'.", optarg);
+        }
+        break;
+      case 'm':
+        if (!parse_int(optarg, mixer_seed)) {
+          sys_error("Failed to set mixer_seed to '%s'.", optarg);
+        }
+        if (*mixer_seed < 0 || *mixer_seed > UINT32_MAX) {
+          sys_error("Invalid 'mixerSeed' setting. Must be a positive integer "
+                    "not greater than %" PRIu32 ".", UINT32_MAX);
         }
         break;
       case 'p':
@@ -228,8 +240,15 @@ int main(int argc, char** argv) {
 
   int num_episodes = 1;
   int seed = 1;
+  int mixer_seed = 0;
   process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed,
-                      &log_events);
+                      &mixer_seed, &log_events);
+  static char mixer_seed_str[16];
+  snprintf(mixer_seed_str, sizeof(mixer_seed_str), "%d", mixer_seed);
+  if (env_c_api.setting(context, "mixerSeed", mixer_seed_str) != 0) {
+    sys_error("Failed to apply 'mixerSeed' setting. Internal error: %s",
+              env_c_api.error_message(context));
+  }
 
   if (env_c_api.init(context) != 0) {
     sys_error("Failed to init RL API: %s", env_c_api.error_message(context));

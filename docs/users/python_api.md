@@ -23,14 +23,15 @@ name in the list *observations*.
 The `config` dict specifies additional settings as key-value string pairs. The
 following options are recognized:
 
-| Option           | Description                                     | Default |
-| ---------------- | ----------------------------------------------- | ------: |
-| `width`          | horizontal resolution of the observation frames | `'320'` |
-| `height`         | vertical resolution of the observation frames   | `'240'` |
-| `fps`            | frames per second                               | `'60'`  |
-| `levelDirectory` | optional path to level directory (relative      | `''`    |
-:                  : paths are relative to game_scripts/levels)      :         :
-| `appendCommand`  | Commands for the internal Quake console\*       | `''`    |
+| Option           | Description                                                                                    | Default |
+| ---------------- | ---------------------------------------------------------------------------------------------- | ------: |
+| `width`          | horizontal resolution of the observation frames                                                | `'320'` |
+| `height`         | vertical resolution of the observation frames                                                  | `'240'` |
+| `fps`            | frames per second                                                                              | `'60'`  |
+| `levelDirectory` | optional path to level directory (relative                                                     | `''`    |
+:                  : paths are relative to game_scripts/levels)                                                     :         :
+| `appendCommand`  | Commands for the internal Quake console\*                                                      | `''`    |
+| `mixerSeed`      | value combined with each of the seeds fed to the environment to define unique subsets of seeds | `'0'`   |
 
 \* See also [Lua map API](/docs/developers/reference/lua_api.md#commandlineold-commandline-string).
 
@@ -87,6 +88,12 @@ numerical order.
 The optional integer argument `seed` can be supplied to seed the environment's
 random number generator. If `seed` is omitted or `None`, a random number is
 used.
+
+The optional integer argument `mixerSeed` provided with the environment is
+combined with every seed passed to this function. The resulting seeds span a
+unique subset of the integers in \[0, 2^64\) for each different `mixerSeed`
+value. However, the sequences produced by the environment's random number
+generator are not necessarily disjoint.
 
 ### `num_steps`()
 

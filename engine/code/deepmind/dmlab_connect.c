@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
@@ -636,6 +637,17 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     }
     Q_strcat(gc->command_line, sizeof(gc->command_line),
              va(" +set name \"%s\"", value));
+  } else if (strcmp(key, "mixerSeed") == 0) {
+    int res = parse_int(value, &v, ctx);
+    if (res != 0) return res;
+    if (v < 0 || v > UINT32_MAX) {
+      ctx->hooks.set_error_message(ctx->userdata,
+                                   va("Invalid mixerSeed value, must be a "
+                                      "positive integer not greater than '%"
+                                      PRIu32 "'.", UINT32_MAX));
+      return 1;
+    }
+    ctx->hooks.set_mixer_seed(ctx->userdata, (uint32_t)v);
   } else {
     ctx->hooks.add_setting(ctx->userdata, key, value);
   }
