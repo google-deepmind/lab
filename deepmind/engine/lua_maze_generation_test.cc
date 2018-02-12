@@ -29,6 +29,7 @@
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/n_results_or_test_util.h"
 #include "deepmind/lua/push_script.h"
+#include "deepmind/lua/table_ref.h"
 #include "deepmind/lua/vm_test_util.h"
 
 namespace deepmind {
@@ -45,13 +46,19 @@ class LuaMazeGenerationTest : public lua::testing::TestWithVm {
     vm()->AddCModuleToSearchers(
         "dmlab.system.maze_generation", &lua::Bind<LuaMazeGeneration::Require>,
         {reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
+    vm()->AddCModuleToSearchers(
+        "dmlab.system.maze_generation1", &lua::Bind<LuaMazeGeneration::Require>,
+        {reinterpret_cast<void*>(static_cast<std::uintptr_t>(1))});
     LuaRandom::Register(L);
     vm()->AddCModuleToSearchers(
         "dmlab.system.sys_random", &lua::Bind<LuaRandom::Require>,
-        {&prbg_, reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
+        {&prbg_[0], reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
+    vm()->AddCModuleToSearchers(
+        "dmlab.system.sys_random1", &lua::Bind<LuaRandom::Require>,
+        {&prbg_[1], reinterpret_cast<void*>(static_cast<std::uintptr_t>(1))});
   }
 
-  std::mt19937_64 prbg_;
+  std::mt19937_64 prbg_[2];
 };
 
 constexpr char kCreateMaze[] = R"(
@@ -466,6 +473,65 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMazeNoRandom) {
                   sizeof(kCreateRandomMazeNoRandom) - 1,
                   "kCreateRandomMazeNoRandom");
   ASSERT_FALSE(lua::Call(L, 0).ok());
+}
+
+constexpr int kRandomMazeSeedCount = 10000;
+constexpr char kCreateRandomMazes[] = R"(
+local seed, maps, vers = ...
+local sys_random = require('dmlab.system.sys_random' .. vers)
+local maze_generation = require('dmlab.system.maze_generation' .. vers)
+sys_random:seed(seed)
+local maze = maze_generation.randomMazeGeneration{
+      random = sys_random,
+      width = 17,
+      height = 17,
+      extraConnectionProbability = 0.0,
+      hasDoors = false,
+      roomCount = 4,
+      maxRooms = 4,
+      roomMaxSize = 5,
+      roomMinSize = 3
+}
+local key = maze:entityLayer()
+local count = maps[key] or 0
+maps[key] = count + 1
+)";
+
+TEST_F(LuaMazeGenerationTest, CreateRandomMazes) {
+  auto maps = lua::TableRef::Create(L);
+  lua::PushScript(L, kCreateRandomMazes, sizeof(kCreateRandomMazes) - 1,
+                  "kCreateRandomMazes");
+  for (int i = 0; i < kRandomMazeSeedCount; ++i) {
+    LOG(INFO) << "Phase 1: step " << i + 1 << " out of "
+              << kRandomMazeSeedCount;
+    lua_pushvalue(L, -1);
+    lua::Push(L, i);
+    lua::Push(L, maps);
+    lua::Push(L, "");
+    ASSERT_THAT(lua::Call(L, 3), IsOkAndHolds(0));
+  }
+  const auto mixer_seed_0_maps = maps.KeyCount();
+  const auto mixer_seed_0_repeat_ratio =
+      (kRandomMazeSeedCount - mixer_seed_0_maps) /
+      static_cast<float>(kRandomMazeSeedCount);
+  ASSERT_GE(mixer_seed_0_repeat_ratio, 0.0);
+  ASSERT_LE(mixer_seed_0_repeat_ratio, 0.01);
+  for (int i = 0; i < kRandomMazeSeedCount; ++i) {
+    LOG(INFO) << "Phase 2: step " << i + 1 << " out of "
+              << kRandomMazeSeedCount;
+    lua_pushvalue(L, -1);
+    lua::Push(L, i);
+    lua::Push(L, maps);
+    lua::Push(L, "1");
+    ASSERT_THAT(lua::Call(L, 3), IsOkAndHolds(0));
+  }
+  const auto mixer_seed_1_maps = maps.KeyCount() - mixer_seed_0_maps;
+  const auto mixer_seed_1_repeat_ratio =
+      (kRandomMazeSeedCount - mixer_seed_1_maps) /
+      static_cast<float>(kRandomMazeSeedCount);
+  ASSERT_GE(mixer_seed_1_repeat_ratio, 0.0);
+  ASSERT_LE(mixer_seed_1_repeat_ratio, 0.01);
+  lua_pop(L, 1);
 }
 
 constexpr char kVisitRandomPath[] = R"(

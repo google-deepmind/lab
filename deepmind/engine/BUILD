@@ -200,7 +200,7 @@ cc_library(
 
 cc_test(
     name = "lua_maze_generation_test",
-    size = "small",
+    size = "large",
     srcs = ["lua_maze_generation_test.cc"],
     tags = ["manual"],  # Platform specific tests.
     deps = [
@@ -210,6 +210,7 @@ cc_test(
         "//deepmind/lua:call",
         "//deepmind/lua:n_results_or_test_util",
         "//deepmind/lua:push_script",
+        "//deepmind/lua:table_ref",
         "//deepmind/lua:vm_test_util",
         "@com_google_googletest//:gtest_main",
     ],
