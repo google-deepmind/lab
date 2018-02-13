@@ -36,7 +36,7 @@ class GameControllerTest(unittest.TestCase):
   def setUp(self):
     self._env = test_environment_decorator.TestEnvironmentDecorator(
         deepmind_lab.Lab('seekavoid_arena_01', [
-            'RGB_INTERLACED', 'VEL.ROT', 'VEL.TRANS', 'DEBUG.POS.ROT',
+            'RGB_INTERLEAVED', 'VEL.ROT', 'VEL.TRANS', 'DEBUG.POS.ROT',
             'DEBUG.POS.TRANS'
         ]))
     self._controller = game_controller.GameController(self._env)

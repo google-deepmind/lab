@@ -9,27 +9,32 @@ There several built-in observations:
 Some observations depend on setting `width` (Default 320) and `height` (Default
 180).
 
-| Observation Name       | Type/Shape               | Description             |
-| :--------------------- | :----------------------- | :---------------------- |
-| `RGB_INTERLACED`       | Bytes (height, width, 3) | Player view interlaced. |
-| `RGBD_INTERLACED`      | Bytes (height, width, 4) | Player view with depth  |
-:                        :                          : interlaced.             :
-| `RGB`                  | Bytes (3, height, width) | Player view planar.     |
-| `RGBD`                 | Bytes (4, height, width) | Player view with depth  |
-:                        :                          : planar.                 :
-| FRAMES_REMAINING_AT_60 | Doubles (1)              | Frames remaining in     |
-:                        :                          : episode, unless ended   :
-:                        :                          : early. (Assumed frame   :
-:                        :                          : rate of 60 fps.)        :
+| Observation Name       | Type/Shape               | Description              |
+| :--------------------- | :----------------------- | :----------------------- |
+| `RGB_INTERLEAVED`      | Bytes (height, width, 3) | Player view interleaved. |
+| `RGBD_INTERLEAVED`     | Bytes (height, width, 4) | Player view with depth   |
+:                        :                          : interleaved.             :
+| `RGB`                  | Bytes (3, height, width) | Player view planar.      |
+| `RGBD`                 | Bytes (4, height, width) | Player view with depth   |
+:                        :                          : planar.                  :
+| FRAMES_REMAINING_AT_60 | Doubles (1)              | Frames remaining in      |
+:                        :                          : episode, unless ended    :
+:                        :                          : early. (Assumed frame    :
+:                        :                          : rate of 60 fps.)         :
 
 Note:
 
 1.  Planar - Each channel is on the major rank. (Bytes are arranged RRR...
     GGG... BBB...)
-2.  Interlaced - Each color is on the minor rank. (Bytes are arranged
+2.  Interleaved - Each color is on the minor rank. (Bytes are arranged
     RGBRGB....)
 
-Prefer RGB_INTERLACED as this is a little faster as it requires less processing.
+Prefer RGB_INTERLEAVED as this is a little faster as it requires less processing
+.
+
+For historical reasons, observation names RGB_INTERLACED and RGBD_INTERLACED are
+currently supported as synonyms for RGB_INTERLEAVED and RGBD_INTERLEAVED,
+respectively. However, their use is deprecated and support will be discontinued.
 
 ## Custom observations (Player only)
 

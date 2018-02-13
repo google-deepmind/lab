@@ -45,7 +45,7 @@ class RandomAgent(object):
 def run(width, height, level_script, frame_count):
   """Spins up an environment and runs the random agent."""
   config = {'width': str(width), 'height': str(height)}
-  env = deepmind_lab.Lab(level_script, ['RGB_INTERLACED'], config=config)
+  env = deepmind_lab.Lab(level_script, ['RGB_INTERLEAVED'], config=config)
   env.reset()
 
   reward = 0

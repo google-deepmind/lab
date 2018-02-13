@@ -121,8 +121,8 @@ env = deepmind_lab.Lab('tests/empty_room_test', [])
 observation_spec = env.observation_spec()
 pprint.pprint(observation_spec)
 # Outputs:
-[{'dtype': <type 'numpy.uint8'>, 'name': 'RGB_INTERLACED', 'shape': (180, 320, 3)},
- {'dtype': <type 'numpy.uint8'>, 'name': 'RGBD_INTERLACED', 'shape': (180, 320, 4)},
+[{'dtype': <type 'numpy.uint8'>, 'name': 'RGB_INTERLEAVED', 'shape': (180, 320, 3)},
+ {'dtype': <type 'numpy.uint8'>, 'name': 'RGBD_INTERLEAVED', 'shape': (180, 320, 4)},
  {'dtype': <type 'numpy.uint8'>, 'name': 'RGB', 'shape': (3, 180, 320)},
  {'dtype': <type 'numpy.uint8'>, 'name': 'RGBD', 'shape': (4, 180, 320)},
  {'dtype': <type 'numpy.float64'>, 'name': 'MAP_FRAME_NUMBER', 'shape': (1,)},
@@ -142,7 +142,7 @@ Example:
 
 ```python
 {
-    'name': 'RGB_INTERLACED',       ## Name of observation.
+    'name': 'RGB_INTERLEAVED',      ## Name of observation.
     'dtype': <type 'numpy.uint8'>,  ## Data type array.
     'shape': (180, 320, 3)          ## Shape of array. (Height, Width, Colors)
 }

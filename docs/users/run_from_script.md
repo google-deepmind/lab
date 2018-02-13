@@ -23,7 +23,7 @@ Construct the environment, step once, and retrieve an observation,
 import deepmind_lab
 
 # Construct and start the environment.
-env = deepmind_lab.Lab('seekavoid_arena_01', ['RGB_INTERLACED'])
+env = deepmind_lab.Lab('seekavoid_arena_01', ['RGB_INTERLEAVED'])
 env.reset()
 
 # Create all-zeros vector for actions.
@@ -34,7 +34,7 @@ reward = env.step(action, num_steps=4)
 
 # Retrieve the observations of the environment in its new state.
 obs = env.observations()  # dict of Numpy arrays
-rgb_i = obs['RGB_INTERLACED']
+rgb_i = obs['RGB_INTERLEAVED']
 assert rgb_i.shape == (240, 320, 3)
 ```
 
@@ -47,10 +47,10 @@ observation_spec = env.observation_spec()
 pprint.pprint(observation_spec)
 # Outputs:
 # [{'dtype': <type 'numpy.uint8'>,
-#   'name': 'RGB_INTERLACED',
+#   'name': 'RGB_INTERLEAVED',
 #   'shape': (240, 320, 3)},
 #  {'dtype': <type 'numpy.uint8'>,
-#   'name': 'RGBD_INTERLACED',
+#   'name': 'RGBD_INTERLEAVED',
 #   'shape': (240, 320, 4)},
 #  {'dtype': <type 'numpy.uint8'>, 'name': 'RGB', 'shape': (3, 240, 320)},
 #  {'dtype': <type 'numpy.uint8'>, 'name': 'RGBD', 'shape': (4, 240, 320)},

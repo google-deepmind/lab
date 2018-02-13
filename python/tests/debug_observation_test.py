@@ -116,7 +116,7 @@ class DebugObservationTest(unittest.TestCase):
   def test_debug_camera(self):
     env = deepmind_lab.Lab(
         'tests/debug_observation_test',
-        [DEBUG_CAMERA_OBSERVATION, 'RGB_INTERLACED'],
+        [DEBUG_CAMERA_OBSERVATION, 'RGB_INTERLEAVED'],
         config={'width': '320', 'height': '180'})
 
     env.reset()

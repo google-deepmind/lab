@@ -79,19 +79,23 @@ const char* const kActionNames[] = {
 };
 
 enum ObservationsEnum {
-  kObservations_RgbInterlaced,
-  kObservations_RgbdInterlaced,
+  kObservations_RgbInterleaved,
+  kObservations_RgbdInterleaved,
   kObservations_RgbPlanar,
   kObservations_RgbdPlanar,
   kObservations_MapFrameNumber,
+  kObservations_RgbInterlaced,    // Deprecated.
+  kObservations_RgbdInterlaced,   // Deprecated.
 };
 
 const char* const kObservationNames[] = {
-    "RGB_INTERLACED",    //
-    "RGBD_INTERLACED",   //
+    "RGB_INTERLEAVED",   //
+    "RGBD_INTERLEAVED",  //
     "RGB",               //
     "RGBD",              //
     "MAP_FRAME_NUMBER",  //
+    "RGB_INTERLACED",    //
+    "RGBD_INTERLACED",   //
 };
 
 typedef enum PixelBufferTypeEnum_e {
@@ -845,11 +849,19 @@ static void dmlab_observation_spec(
 
     switch (observation_idx) {
       case kObservations_RgbInterlaced:
+        fprintf(stderr, "Using deprecated observation format: '%s'\n",
+                kObservationNames[observation_idx]);
+        // FALLTHROUGH_INTENDED
+      case kObservations_RgbInterleaved:
         gc->image_shape[0] = gc->height;
         gc->image_shape[1] = gc->width;
         gc->image_shape[2] = 3;
         break;
       case kObservations_RgbdInterlaced:
+        fprintf(stderr, "Using deprecated observation format: '%s'\n",
+                kObservationNames[observation_idx]);
+        // FALLTHROUGH_INTENDED
+      case kObservations_RgbdInterleaved:
         gc->image_shape[0] = gc->height;
         gc->image_shape[1] = gc->width;
         gc->image_shape[2] = 4;
@@ -903,6 +915,7 @@ static void dmlab_observation(
     }
 
     bool render_depth = observation_idx == kObservations_RgbdInterlaced ||
+                        observation_idx == kObservations_RgbdInterleaved ||
                         observation_idx == kObservations_RgbdPlanar;
 
     const int width = gc->width;
@@ -917,12 +930,16 @@ static void dmlab_observation(
     byte* temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Rgb);
 
     switch (observation_idx) {
-      case kObservations_RgbInterlaced: {
+      case kObservations_RgbInterlaced:
+        // FALLTHROUGH_INTENDED
+      case kObservations_RgbInterleaved: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 3);
         memcpy(gc->image_buffer, temp_buffer, window_size * 3);
         break;
       }
-      case kObservations_RgbdInterlaced: {
+      case kObservations_RgbdInterlaced:
+        // FALLTHROUGH_INTENDED
+      case kObservations_RgbdInterleaved: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 4);
         unsigned char* const image_buffer = gc->image_buffer;
         for (int i = 0; i < height; ++i) {
@@ -970,16 +987,21 @@ static void dmlab_observation(
     if (render_depth) {
       unsigned char* const image_buffer = gc->image_buffer;
       temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Depth);
-      if (observation_idx == kObservations_RgbdInterlaced) {
-        for (int i = 0; i < height; ++i) {
-          for (int j = 0; j < width; ++j) {
-            int loc = i * width + j;
-            int y = i * width + j;
-            image_buffer[y * 4 + 3] = temp_buffer[loc];
+      switch (observation_idx) {
+        case kObservations_RgbdInterlaced:
+          // FALLTHROUGH_INTENDED
+        case kObservations_RgbdInterleaved:
+          for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+              int loc = i * width + j;
+              int y = i * width + j;
+              image_buffer[y * 4 + 3] = temp_buffer[loc];
+            }
           }
-        }
-      } else {
-        memcpy(image_buffer + window_size * 3, temp_buffer, window_size);
+          break;
+        default:
+          memcpy(image_buffer + window_size * 3, temp_buffer, window_size);
+          break;
       }
       unbind_pixel_observation(gc);
     }

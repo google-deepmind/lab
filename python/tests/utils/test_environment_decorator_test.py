@@ -27,7 +27,7 @@ from PIL import Image
 
 from python.tests.utils import test_environment_decorator
 
-_OBSERVATION_SPEC = [{'name': 'RGB_INTERLACED', 'shape': [1, 2, 3]}]
+_OBSERVATION_SPEC = [{'name': 'RGB_INTERLEAVED', 'shape': [1, 2, 3]}]
 
 
 class EnvironmentStub(object):
@@ -36,18 +36,18 @@ class EnvironmentStub(object):
     self.test_observation_spec = _OBSERVATION_SPEC
     self.test_observations = [
         {
-            'RGB_INTERLACED':
+            'RGB_INTERLEAVED':
                 np.array(
                     [[[255, 0, 0], [128, 0, 0], [0, 0, 255]],
                      [[0, 255, 0], [128, 0, 0], [0, 255, 0]]],
                     dtype=np.uint8)
         },
         {
-            'RGB_INTERLACED':
+            'RGB_INTERLEAVED':
                 np.array([[[0, 255, 0], [0, 128, 0]]], dtype=np.uint8)
         },
         {
-            'RGB_INTERLACED':
+            'RGB_INTERLEAVED':
                 np.array([[[0, 0, 255], [0, 0, 128]]], dtype=np.uint8)
         },
     ]
@@ -176,7 +176,7 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
     self._decorator.save_frames(temp_dir)
 
     for index, observation in enumerate(self._env.test_observations):
-      expected_image = observation['RGB_INTERLACED']
+      expected_image = observation['RGB_INTERLEAVED']
       image_file_name = os.path.join(temp_dir, 'frame{0}.png'.format(index))
       image = np.asarray(Image.open(image_file_name))
       self.assertTrue(np.array_equal(image, expected_image))

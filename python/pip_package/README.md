@@ -130,7 +130,7 @@ import deepmind_lab
 import numpy as np
 
 # Create a new environment object.
-lab = deepmind_lab.Lab("tests/empty_room_test", ['RGB_INTERLACED'],
+lab = deepmind_lab.Lab("tests/empty_room_test", ['RGB_INTERLEAVED'],
                        {'fps': '30', 'width': '80', 'height': '60'})
 lab.reset(seed=1)
 

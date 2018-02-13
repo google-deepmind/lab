@@ -149,7 +149,7 @@ def run(length, width, height, fps, level, record, demo, video):
     config['demo'] = demo
   if video:
     config['video'] = video
-  env = deepmind_lab.Lab(level, ['RGB_INTERLACED'], config=config)
+  env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
 
   env.reset()
 
@@ -165,7 +165,7 @@ def run(length, width, height, fps, level, record, demo, video):
       env.reset()
       agent.reset()
     obs = env.observations()
-    action = agent.step(reward, obs['RGB_INTERLACED'])
+    action = agent.step(reward, obs['RGB_INTERLEAVED'])
     reward = env.step(action, num_steps=1)
 
   print('Finished after %i steps. Total reward received is %f'

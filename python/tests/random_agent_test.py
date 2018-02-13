@@ -30,7 +30,7 @@ class RandomAgentsTest(unittest.TestCase):
 
   def test_spring_agent_run(self, length=100):
     env = deepmind_lab.Lab(
-        'tests/empty_room_test', ['RGB_INTERLACED'],
+        'tests/empty_room_test', ['RGB_INTERLEAVED'],
         config={
             'fps': '60',
             'controls': 'external',
@@ -48,13 +48,13 @@ class RandomAgentsTest(unittest.TestCase):
         print('Environment stopped early')
         env.reset()
       obs = env.observations()
-      action = agent.step(reward, obs['RGB_INTERLACED'])
+      action = agent.step(reward, obs['RGB_INTERLEAVED'])
       reward = env.step(action, 1)
       self.assertIsInstance(reward, float)
 
   def test_discretized_random_agent_run(self, length=100):
     env = deepmind_lab.Lab(
-        'tests/empty_room_test', ['RGB_INTERLACED'],
+        'tests/empty_room_test', ['RGB_INTERLEAVED'],
         config={
             'fps': '60',
             'width': '80',
@@ -71,7 +71,7 @@ class RandomAgentsTest(unittest.TestCase):
         print('Environment stopped early')
         env.reset()
       obs = env.observations()
-      action = agent.step(reward, obs['RGB_INTERLACED'])
+      action = agent.step(reward, obs['RGB_INTERLEAVED'])
       reward = env.step(action, 1)
       self.assertIsInstance(reward, float)
 

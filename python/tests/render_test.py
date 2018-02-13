@@ -32,7 +32,7 @@ class RenderTest(unittest.TestCase):
     noop = np.array([0, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
     env0 = deepmind_lab.Lab(
-        'tests/render_test', ['RGB', 'RGB_INTERLACED'],
+        'tests/render_test', ['RGB', 'RGB_INTERLEAVED'],
         config={
             'fps': '60',
             'width': '512',
@@ -45,7 +45,7 @@ class RenderTest(unittest.TestCase):
     image0 = np.transpose(env0.observations()['RGB'], (1, 2, 0))
 
     env1 = deepmind_lab.Lab(
-        'tests/render_test', ['RGB', 'RGB_INTERLACED'],
+        'tests/render_test', ['RGB', 'RGB_INTERLEAVED'],
         config={
             'fps': '60',
             'width': '512',
@@ -61,8 +61,10 @@ class RenderTest(unittest.TestCase):
     np.testing.assert_array_equal(image1[0, 0], [150, 224, 255])
     np.testing.assert_array_equal(image1[0, 511], [150, 224, 255])
 
-    np.testing.assert_array_equal(image0, env0.observations()['RGB_INTERLACED'])
-    np.testing.assert_array_equal(image1, env1.observations()['RGB_INTERLACED'])
+    np.testing.assert_array_equal(
+        image0, env0.observations()['RGB_INTERLEAVED'])
+    np.testing.assert_array_equal(
+        image1, env1.observations()['RGB_INTERLEAVED'])
 
     # Delta between original and reversed flipped observations.
     # Images won't be identical due to texture sampling and aliasing biases

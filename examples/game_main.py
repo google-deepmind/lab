@@ -29,7 +29,7 @@ import deepmind_lab
 
 def run(level_script, config, num_episodes):
   """Construct and start the environment."""
-  env = deepmind_lab.Lab(level_script, ['RGB_INTERLACED'], config)
+  env = deepmind_lab.Lab(level_script, ['RGB_INTERLEAVED'], config)
   env.reset()
 
   observation_spec = env.observation_spec()
@@ -41,7 +41,7 @@ def run(level_script, config, num_episodes):
   pprint.pprint(action_spec)
 
   obs = env.observations()  # dict of Numpy arrays
-  rgb_i = obs['RGB_INTERLACED']
+  rgb_i = obs['RGB_INTERLEAVED']
   print('Observation shape:', rgb_i.shape)
   sys.stdout.flush()
 

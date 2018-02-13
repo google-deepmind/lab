@@ -14,6 +14,12 @@
 2.  Allow game to be renderered with top-left as origin instead of bottom-left.
 3.  Add 'mixerSeed' setting to change behaviour of all random number generators.
 
+### Deprecated Features:
+
+1.  Observation format names `RGB_INTERLEAVED` and `RGBD_INTERLEAVED` replace
+    `RGB_INTERLACED` and `RGBD_INTERLACED`, respectively. The old format names
+    are deprecated and will be removed in a future release.
+
 ## release-2018-02-07 February 2018 release
 
 ### New Levels:

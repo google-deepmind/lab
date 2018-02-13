@@ -36,8 +36,8 @@ class TestEnvironmentDecorator(object):
   def __init__(self, environment):
     """Initializes the decorator."""
     self._environment = environment
-    spec = self._find_observation_spec('RGB_INTERLACED')
-    assert spec, 'The environment has to provide RGB_INTERLACED observations.'
+    spec = self._find_observation_spec('RGB_INTERLEAVED')
+    assert spec, 'The environment has to provide RGB_INTERLEAVED observations.'
     self._rgb_shape = spec['shape']
     self._rgb_history = []
     self._frame_index = 0
@@ -48,7 +48,7 @@ class TestEnvironmentDecorator(object):
     """Advance the environment a number of steps."""
     reward = self._environment.step(actions, steps)
     observations = self._environment.observations()
-    self._rgb_history.append(observations['RGB_INTERLACED'])
+    self._rgb_history.append(observations['RGB_INTERLEAVED'])
     self._accumulate_events(self._environment.events())
     self._reward_history.append(reward)
     return reward
@@ -98,7 +98,7 @@ class TestEnvironmentDecorator(object):
     self._events = []
     self._accumulate_events(self._environment.events())
     observations = self._environment.observations()
-    self._rgb_history = [observations['RGB_INTERLACED']]
+    self._rgb_history = [observations['RGB_INTERLEAVED']]
     self._reward_history = []
     return result
 
@@ -107,7 +107,7 @@ class TestEnvironmentDecorator(object):
       self._events.append(events)
 
   def save_frames(self, folder):
-    """Save RGB_INTERLAGED observations collacted since the last reset call."""
+    """Save RGB_INTERLEAVED observations collacted since the last reset call."""
     if not os.path.exists(folder):
       os.makedirs(folder)
 

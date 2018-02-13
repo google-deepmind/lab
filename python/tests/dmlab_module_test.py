@@ -51,7 +51,7 @@ class DeepMindLabTest(unittest.TestCase):
     observation_spec_names = {o['name'] for o in observation_spec}
     observation_spec_lookup = {o['name']: o for o in observation_spec}
     action_names = {a['name'] for a in lab.action_spec()}
-    observation_set = {'RGB_INTERLACED', 'RGB', 'RGBD_INTERLACED', 'RGBD'}
+    observation_set = {'RGB_INTERLEAVED', 'RGB', 'RGBD_INTERLEAVED', 'RGBD'}
     self.assertGreaterEqual(observation_spec_names, observation_set)
     for k in observation_set:
       o = observation_spec_lookup[k]
@@ -80,7 +80,7 @@ class DeepMindLabTest(unittest.TestCase):
     for lab in labs:
       self.assertTrue(lab.close())
 
-  def testRun(self, steps=10, observation='RGB_INTERLACED'):
+  def testRun(self, steps=10, observation='RGB_INTERLEAVED'):
     env = deepmind_lab.Lab('lt_chasm', [observation])
     env.reset()
 
@@ -93,7 +93,7 @@ class DeepMindLabTest(unittest.TestCase):
       self.assertEqual(reward, 0.0)
 
   def testRunClosed(self):
-    env = deepmind_lab.Lab('lt_chasm', ['RGB_INTERLACED'])
+    env = deepmind_lab.Lab('lt_chasm', ['RGB_INTERLEAVED'])
     env.reset(episode=42, seed=7)
     env.close()
 
