@@ -77,7 +77,7 @@ function custom_observations.decorate(api)
     custom_observations.addSpec('VEL.TRANS', 'Doubles', {3}, velocity)
     custom_observations.addSpec('VEL.ROT', 'Doubles', {3}, angularVelocity)
     custom_observations.addSpec('INSTR', 'String', {0}, languageChannel)
-    custom_observations.addSpec('TEAM.SCORE', 'Doubles', {0}, teamScore)
+    custom_observations.addSpec('TEAM.SCORE', 'Doubles', {2}, teamScore)
     custom_observations.addSpec('FRAMES_REMAINING_AT_60', 'Doubles', {1},
                                 framesRemainingAt60)
     api.setInstruction('')
