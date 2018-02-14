@@ -133,9 +133,7 @@ function setting_overrides.decorate(kwargs)
       assert(apiParams.episodeLengthSeconds ~= nil,
              'Time out must have episodeLengthSeconds set. ' ..
              '(Set to false to disable)')
-      if apiParams.episodeLengthSeconds ~= false then
-        timeout.decorate(api, apiParams.episodeLengthSeconds)
-      end
+      timeout.decorate(api, apiParams.episodeLengthSeconds)
     end
 
     -- Call version of `init` that existed before decoration.

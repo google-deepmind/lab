@@ -25,8 +25,8 @@ local timeout = {}
 Arguments:
 
 *   'args' (table) Passed through from api:screenMessages(args).
-*   'timeSeconds' (number). Rounded up and if greater than 60, then minutes are
-    displayed, too.
+*   'timeSeconds' (number or boolean). Rounded up and if greater than 60, then
+    minutes are displayed. Set to false to disable.
 
 Returns:
 
@@ -51,24 +51,32 @@ end
 -- Adds a timeout to the level and displays a timer in top right of the screen.
 -- 'episodeLength' is the episode length in seconds.
 function timeout.decorate(api, episodeLength)
-  local start = api.start
-  function api:start(...)
-    timeRemaining = episodeLength
-    return start and start(api, ...)
-  end
+  if episodeLength then
+    local start = api.start
+    function api:start(...)
+      timeRemaining = episodeLength
+      return start and start(api, ...)
+    end
 
-  local screenMessages = api.screenMessages
-  function api:screenMessages(args)
-    local messages = screenMessages and screenMessages(api, args) or {}
-    messages[#messages + 1] = timeDisplay(args, timeRemaining)
-    return messages
-  end
+    local screenMessages = api.screenMessages
+    function api:screenMessages(args)
+      local messages = screenMessages and screenMessages(api, args) or {}
+      messages[#messages + 1] = timeDisplay(args, timeRemaining)
+      return messages
+    end
 
-  local hasEpisodeFinished = api.hasEpisodeFinished
-  function api:hasEpisodeFinished(timeSeconds)
-    timeRemaining = episodeLength - timeSeconds
-    return hasEpisodeFinished and hasEpisodeFinished(api, timeSeconds) or
-           timeRemaining <= 0
+    local hasEpisodeFinished = api.hasEpisodeFinished
+    function api:hasEpisodeFinished(timeSeconds)
+      timeRemaining = episodeLength - timeSeconds
+      return hasEpisodeFinished and hasEpisodeFinished(api, timeSeconds) or
+             timeRemaining <= 0
+    end
+  else
+    local hasEpisodeFinished = api.hasEpisodeFinished
+    function api:hasEpisodeFinished(timeSeconds)
+      return hasEpisodeFinished and hasEpisodeFinished(api, timeSeconds) or
+             false
+    end
   end
 end
 
