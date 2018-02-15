@@ -20,8 +20,8 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,8 @@
 
 #include "public/dmlab.h"
 
-static void __attribute__((noreturn, format(printf, 1, 2))) sys_error(const char* fmt, ...) {
+static void __attribute__((noreturn, format(printf, 1, 2)))
+sys_error(const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
@@ -70,11 +71,14 @@ static const char kUsage[] =
     "                        the same seed should result in the same content. Defaults\n"
     "                        to a fixed value.\n"
     "  -m, --mixer_seed:     A XOR mask applied to the most significant bits of the seed.\n"
+    "  -f, --fps:            Set the frames per second the game runs at. Note\n"
+    "                        com_maxFPS is set to this value too (default 250).\n"
     ;
 
 static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
                                 void* context, int* num_episodes, int* seed,
-                                int* mixer_seed, bool* log_events) {
+                                int* mixer_seed, bool* log_events,
+                                const char** fps) {
   static struct option long_options[] = {
       {"help", no_argument, NULL, 'h'},
       {"level_script", required_argument, NULL, 'l'},
@@ -83,12 +87,13 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
       {"random_seed", required_argument, NULL, 'r'},
       {"mixer_seed", required_argument, NULL, 'm'},
       {"print_events", no_argument, NULL, 'p'},
+      {"fps", no_argument, NULL, 'f'},
       {NULL, 0, NULL, 0}};
 
   char *key, *value;
 
-  for (int c;
-       (c = getopt_long(argc, argv, "hl:s:e:r:m:p", long_options, 0)) != -1;) {
+  for (int c; (c = getopt_long(argc, argv, "hl:s:e:r:m:pf:", long_options,
+                               0)) != -1;) {
     switch (c) {
       case 'h':
         fputs(kUsage, stdout);
@@ -108,8 +113,8 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
         value[0] = '\0';
         ++value;
         if (env_c_api->setting(context, key, value) != 0) {
-          sys_error("Invalid level_setting '%s=%s'. Internal error: %s",
-                    key, value, env_c_api->error_message(context));
+          sys_error("Invalid level_setting '%s=%s'. Internal error: %s", key,
+                    value, env_c_api->error_message(context));
         }
         break;
       case 'e':
@@ -122,6 +127,13 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
           sys_error("Failed to set random_seed to '%s'.", optarg);
         }
         break;
+      case 'f': {
+        int fps_int = 0;
+        if (!parse_int(optarg, &fps_int)) {
+          sys_error("Failed to set fps to '%s'.", optarg);
+        }
+        *fps = optarg;
+      } break;
       case 'm':
         if (!parse_int(optarg, mixer_seed)) {
           sys_error("Failed to set mixer_seed to '%s'.", optarg);
@@ -157,8 +169,7 @@ static int print_events(EnvCApi* env_c_api, void* context) {
       const EnvCApi_Observation* obs = &event.observations[obs_id];
       switch (obs->spec.type) {
         case EnvCApi_ObservationString:
-          printf("\"%.*s\"", obs->spec.shape[0],
-                 obs->payload.string);
+          printf("\"%.*s\"", obs->spec.shape[0], obs->payload.string);
           break;
         case EnvCApi_ObservationDoubles:
           if (obs->spec.dims == 1) {
@@ -232,17 +243,31 @@ int main(int argc, char** argv) {
               env_c_api.error_message(context));
   }
 
-  if (env_c_api.setting(context, "appendCommand", " +set com_maxfps \"250\"")
-      != 0) {
+  int num_episodes = 1;
+  int seed = 1;
+  int mixer_seed = 0;
+  const char* fps = NULL;
+  process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed,
+                      &mixer_seed, &log_events, &fps);
+  if (env_c_api.setting(context, "appendCommand", " +set com_maxfps ") != 0) {
     sys_error("Failed to apply 'appendCommand' setting. Internal error: %s",
               env_c_api.error_message(context));
   }
 
-  int num_episodes = 1;
-  int seed = 1;
-  int mixer_seed = 0;
-  process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed,
-                      &mixer_seed, &log_events);
+  env_c_api.setting(context, "appendCommand", " +set com_maxfps ");
+  if (fps != NULL) {
+    if (env_c_api.setting(context, "appendCommand", fps) != 0) {
+      sys_error("Failed to apply 'appendCommand' setting. Internal error: %s",
+                env_c_api.error_message(context));
+    }
+    if (env_c_api.setting(context, "fps", fps) != 0) {
+      sys_error("Failed to apply 'fps' setting. Internal error: %s",
+                env_c_api.error_message(context));
+    }
+  } else {
+    env_c_api.setting(context, "appendCommand", "250");
+  }
+
   static char mixer_seed_str[16];
   snprintf(mixer_seed_str, sizeof(mixer_seed_str), "%d", mixer_seed);
   if (env_c_api.setting(context, "mixerSeed", mixer_seed_str) != 0) {
