@@ -17,6 +17,9 @@ Some observations depend on setting `width` (Default 320) and `height` (Default
 | `RGB`                  | Bytes (3, height, width) | Player view planar.      |
 | `RGBD`                 | Bytes (4, height, width) | Player view with depth   |
 :                        :                          : planar.                  :
+| `BGR_INTERLEAVED`      | Bytes (height, width, 3) | Player view interleaved. |
+| `BGRD_INTERLEAVED`     | Bytes (height, width, 4) | Player view with depth   |
+:                        :                          : interleaved.             :
 | FRAMES_REMAINING_AT_60 | Doubles (1)              | Frames remaining in      |
 :                        :                          : episode, unless ended    :
 :                        :                          : early. (Assumed frame    :
@@ -27,7 +30,7 @@ Note:
 1.  Planar - Each channel is on the major rank. (Bytes are arranged RRR...
     GGG... BBB...)
 2.  Interleaved - Each color is on the minor rank. (Bytes are arranged
-    RGBRGB....)
+    RGBRGB... or BGRBGR...)
 
 Prefer RGB_INTERLEAVED as this is a little faster as it requires less processing
 .

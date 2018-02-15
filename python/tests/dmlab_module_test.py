@@ -51,7 +51,8 @@ class DeepMindLabTest(unittest.TestCase):
     observation_spec_names = {o['name'] for o in observation_spec}
     observation_spec_lookup = {o['name']: o for o in observation_spec}
     action_names = {a['name'] for a in lab.action_spec()}
-    observation_set = {'RGB_INTERLEAVED', 'RGB', 'RGBD_INTERLEAVED', 'RGBD'}
+    observation_set = {'RGB_INTERLEAVED', 'RGB', 'RGBD_INTERLEAVED', 'RGBD',
+                       'BGR_INTERLEAVED', 'BGRD_INTERLEAVED'}
     self.assertGreaterEqual(observation_spec_names, observation_set)
     for k in observation_set:
       o = observation_spec_lookup[k]

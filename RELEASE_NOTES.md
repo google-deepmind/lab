@@ -13,6 +13,7 @@
     :map_assets build step.
 2.  Allow game to be renderered with top-left as origin instead of bottom-left.
 3.  Add 'mixerSeed' setting to change behaviour of all random number generators.
+4.  Support for BGR_INTERLEAVED and BGRD_INTERLEAVED observation formats.
 
 ### Deprecated Features:
 

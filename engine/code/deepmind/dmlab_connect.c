@@ -83,6 +83,8 @@ enum ObservationsEnum {
   kObservations_RgbdInterleaved,
   kObservations_RgbPlanar,
   kObservations_RgbdPlanar,
+  kObservations_BgrInterleaved,
+  kObservations_BgrdInterleaved,
   kObservations_MapFrameNumber,
   kObservations_RgbInterlaced,    // Deprecated.
   kObservations_RgbdInterlaced,   // Deprecated.
@@ -93,6 +95,8 @@ const char* const kObservationNames[] = {
     "RGBD_INTERLEAVED",  //
     "RGB",               //
     "RGBD",              //
+    "BGR_INTERLEAVED",   //
+    "BGRD_INTERLEAVED",  //
     "MAP_FRAME_NUMBER",  //
     "RGB_INTERLACED",    //
     "RGBD_INTERLACED",   //
@@ -100,6 +104,7 @@ const char* const kObservationNames[] = {
 
 typedef enum PixelBufferTypeEnum_e {
   kPixelBufferTypeEnum_Rgb,
+  kPixelBufferTypeEnum_Bgr,
   kPixelBufferTypeEnum_Depth,
 } PixelBufferTypeEnum;
 
@@ -225,6 +230,11 @@ static void request_pixel_observations(GameContext* gc,
         qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
         qglReadPixels(0, 0, gc->width, gc->height, GL_RGB, GL_UNSIGNED_BYTE, 0);
         break;
+      case kPixelBufferTypeEnum_Bgr:
+        qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
+        qglReadPixels(0, 0, gc->width, gc->height, GL_BGR_EXT, GL_UNSIGNED_BYTE,
+                      0);
+        break;
       case kPixelBufferTypeEnum_Depth:
         qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.depth.id);
         qglReadPixels(0, 0, gc->width, gc->height, GL_DEPTH_COMPONENT,
@@ -240,6 +250,7 @@ static void* bind_pixel_observation(GameContext* gc, PixelBufferTypeEnum type) {
   if (use_pbo_rendering(gc)) {
     switch (type) {
       case kPixelBufferTypeEnum_Rgb:
+      case kPixelBufferTypeEnum_Bgr:
         qglBindBuffer(GL_PIXEL_PACK_BUFFER, gc->pbos.rgb.id);
         break;
       case kPixelBufferTypeEnum_Depth:
@@ -255,6 +266,10 @@ static void* bind_pixel_observation(GameContext* gc, PixelBufferTypeEnum type) {
     switch (type) {
       case kPixelBufferTypeEnum_Rgb:
         qglReadPixels(0, 0, gc->width, gc->height, GL_RGB, GL_UNSIGNED_BYTE,
+                      gc->temp_buffer);
+        break;
+      case kPixelBufferTypeEnum_Bgr:
+        qglReadPixels(0, 0, gc->width, gc->height, GL_BGR_EXT, GL_UNSIGNED_BYTE,
                       gc->temp_buffer);
         break;
       case kPixelBufferTypeEnum_Depth:
@@ -853,6 +868,7 @@ static void dmlab_observation_spec(
                 kObservationNames[observation_idx]);
         // FALLTHROUGH_INTENDED
       case kObservations_RgbInterleaved:
+      case kObservations_BgrInterleaved:
         gc->image_shape[0] = gc->height;
         gc->image_shape[1] = gc->width;
         gc->image_shape[2] = 3;
@@ -862,6 +878,7 @@ static void dmlab_observation_spec(
                 kObservationNames[observation_idx]);
         // FALLTHROUGH_INTENDED
       case kObservations_RgbdInterleaved:
+      case kObservations_BgrdInterleaved:
         gc->image_shape[0] = gc->height;
         gc->image_shape[1] = gc->width;
         gc->image_shape[2] = 4;
@@ -916,30 +933,35 @@ static void dmlab_observation(
 
     bool render_depth = observation_idx == kObservations_RgbdInterlaced ||
                         observation_idx == kObservations_RgbdInterleaved ||
-                        observation_idx == kObservations_RgbdPlanar;
+                        observation_idx == kObservations_RgbdPlanar ||
+                        observation_idx == kObservations_BgrdInterleaved;
 
     const int width = gc->width;
     const int height = gc->height;
     const int window_size = height * width;
+    const enum PixelBufferTypeEnum_e pixelBufferType =
+        (observation_idx == kObservations_BgrdInterleaved ||
+         observation_idx == kObservations_BgrInterleaved) ?
+            kPixelBufferTypeEnum_Bgr : kPixelBufferTypeEnum_Rgb;
 
-    request_pixel_observations(gc, kPixelBufferTypeEnum_Rgb);
+    request_pixel_observations(gc, pixelBufferType);
     if (render_depth) {
       request_pixel_observations(gc, kPixelBufferTypeEnum_Depth);
     }
 
-    byte* temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Rgb);
+    byte* temp_buffer = bind_pixel_observation(gc, pixelBufferType);
 
     switch (observation_idx) {
       case kObservations_RgbInterlaced:
-        // FALLTHROUGH_INTENDED
-      case kObservations_RgbInterleaved: {
+      case kObservations_RgbInterleaved:
+      case kObservations_BgrInterleaved: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 3);
         memcpy(gc->image_buffer, temp_buffer, window_size * 3);
         break;
       }
       case kObservations_RgbdInterlaced:
-        // FALLTHROUGH_INTENDED
-      case kObservations_RgbdInterleaved: {
+      case kObservations_RgbdInterleaved:
+      case kObservations_BgrdInterleaved: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 4);
         unsigned char* const image_buffer = gc->image_buffer;
         for (int i = 0; i < height; ++i) {
@@ -989,8 +1011,8 @@ static void dmlab_observation(
       temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Depth);
       switch (observation_idx) {
         case kObservations_RgbdInterlaced:
-          // FALLTHROUGH_INTENDED
         case kObservations_RgbdInterleaved:
+        case kObservations_BgrdInterleaved:
           for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
               int loc = i * width + j;
