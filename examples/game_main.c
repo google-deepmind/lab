@@ -157,7 +157,7 @@ static int print_events(EnvCApi* env_c_api, void* context) {
               fputs("{", stdout);
               for (int i = 0; i < obs->spec.shape[0]; ++i) {
                 if (i != 0) fputs(", ", stdout);
-                printf("%f", obs->payload.doubles[0]);
+                printf("%f", obs->payload.doubles[i]);
               }
               fputs("}", stdout);
               break;
