@@ -20,6 +20,23 @@ local FILE_NAME = ...
 local image = image.load(helpers.dirname(FILE_NAME) .. "path/to/image.png")
 ```
 
+## `load`('content:.png', content)
+
+Loads a PNG image into a tensor from the bytes of a PNG file.
+
+The shape of the tensor will be either {height, width, 3} or {height, width, 4}
+depending whether the png has 3 or 4 channels. It doesn't support paletted PNGs.
+
+```lua
+local image = require 'dmlab.system.image'
+local game = require 'dmlab.system.game'
+local helpers = require 'common.helpers'
+
+local filename = helpers.dirname(FILE_NAME) .. "path/to/image.png"
+local pngContents = game:loadFileToString(filename)
+local image = image.load('content:.png', pngContents)
+```
+
 ## `scale`(*src*, *tgt_height*, *tgt_width*)
 
 Scales an image tensor, using bilinear interpolation for upsampling and the

@@ -1,4 +1,5 @@
 local image = require 'dmlab.system.image'
+local game = require 'dmlab.system.game'
 local asserts = require 'testing.asserts'
 local test_runner = require 'testing.test_runner'
 local tensor = require 'dmlab.system.tensor'
@@ -35,5 +36,15 @@ function tests:loadImageL()
   assert(expected == image)
 end
 
+function tests:loadImageLFromString()
+  local filename = helpers.dirname(FILE_NAME) .. "data/testL.png"
+  local contents = game:loadFileToString(filename)
+  local image = image.load('content:.png', contents)
+  local expected = tensor.ByteTensor(32, 32, 1)
+  expected:applyIndexed(function (val, index)
+      return index[1] + index[2] - 2
+    end)
+  assert(expected == image)
+end
 
 return test_runner.run(tests)

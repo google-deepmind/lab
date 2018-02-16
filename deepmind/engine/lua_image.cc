@@ -153,7 +153,13 @@ lua::NResultsOr Load(lua_State* L) {
   }
 
   std::string contents;
-  if (!util::GetContents(file_name, &contents)) {
+
+  if (file_name.compare(0, file_name.length() - 4, "content:") == 0) {
+    if (!lua::Read(L, 2, &contents)) {
+      std::string error = absl::StrCat("[image.load] - Missing contents.");
+      return error;
+    }
+  } else if (!util::GetContents(file_name, &contents)) {
     std::string error =
         absl::StrCat("[image.load] - \"", file_name, "\" could not be read.");
     return error;
