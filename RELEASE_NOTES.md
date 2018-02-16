@@ -15,6 +15,8 @@
 3.  Add 'mixerSeed' setting to change behaviour of all random number generators.
 4.  Support for BGR_INTERLEAVED and BGRD_INTERLEAVED observation formats.
 5.  Add a Lua API to load PNGs from file contents.
+6.  Add 'eyePos' to playerInfo() for a more accurate eye position of player.
+    Used in place of player pos + height.
 
 ### Deprecated Features:
 

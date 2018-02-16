@@ -34,6 +34,7 @@ namespace lab {
 // Represents a player's state in world units.
 struct PlayerView {
   std::array<double, 3> pos;        // Position (forward, left, up).
+  std::array<double, 3> eyePos;     // Eye Position (forward, left, up).
   std::array<double, 3> vel;        // World velocity (forward, left, up).
   std::array<double, 3> angles;     // Orientation degrees (pitch, yaw, roll).
   std::array<double, 3> anglesVel;  // Angular velocity in degrees.
@@ -92,7 +93,8 @@ class ContextGame {
 
   // Set latest player state.
   void SetPlayerState(const float pos[3], const float vel[3],
-                      const float angles[3], float height, int team_score,
+                      const float angles[3], float height,
+                      const float eyePos[3], int team_score,
                       int other_team_score, int player_id, bool teleporter_flip,
                       int timestamp_msec);
 

@@ -106,8 +106,8 @@ int dmlab_reward_override(const char* reason_opt, int player_id, int team,
 int dmlab_player_score(void);
 
 // Sets the player info.
-void dmlab_player_state(const playerState_t* ps, int team_score,
-                        int other_team_score);
+void dmlab_player_state(const playerState_t* ps, const float eyePos[3],
+                        int team_score, int other_team_score);
 
 // Make screen messages. Returns the number of messages that were made.
 // 'screen_width' and 'screen_height' are the virtual screen size and the top

@@ -322,7 +322,8 @@ struct DeepmindHooks_s {
   // Called from client game with current players state.
   void (*player_state)(void* userdata, const float origin[3],
                        const float velocity[3], const float viewangles[3],
-                       float height, int team_score, int other_team_score,
+                       float height,  const float eyePos[3],
+                       int team_score, int other_team_score,
                        int player_id, bool teleporter_flip, int timestamp_msec);
 
   // See MakeScreenMessages in deepmind/engine/context.h.

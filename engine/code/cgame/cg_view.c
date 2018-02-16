@@ -392,7 +392,7 @@ static void CG_OffsetFirstPersonView( void ) {
 	// smooth out duck height changes
 	timeDelta = cg.time - cg.duckTime;
 	if ( timeDelta < DUCK_TIME) {
-		cg.refdef.vieworg[2] -= cg.duckChange 
+		origin[2] -= cg.duckChange 
 			* (DUCK_TIME - timeDelta) / DUCK_TIME;
 	}
 
@@ -409,11 +409,11 @@ static void CG_OffsetFirstPersonView( void ) {
 	delta = cg.time - cg.landTime;
 	if ( delta < LAND_DEFLECT_TIME ) {
 		f = delta / LAND_DEFLECT_TIME;
-		cg.refdef.vieworg[2] += cg.landChange * f;
+		origin[2] += cg.landChange * f;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
 		delta -= LAND_DEFLECT_TIME;
 		f = 1.0 - ( delta / LAND_RETURN_TIME );
-		cg.refdef.vieworg[2] += cg.landChange * f;
+		origin[2] += cg.landChange * f;
 	}
 
 	// add step offset
@@ -425,10 +425,10 @@ static void CG_OffsetFirstPersonView( void ) {
 #define	NECK_LENGTH		8
 	vec3_t			forward, up;
  
-	cg.refdef.vieworg[2] -= NECK_LENGTH;
+	origin[2] -= NECK_LENGTH;
 	AngleVectors( cg.refdefViewAngles, forward, NULL, up );
-	VectorMA( cg.refdef.vieworg, 3, forward, cg.refdef.vieworg );
-	VectorMA( cg.refdef.vieworg, NECK_LENGTH, up, cg.refdef.vieworg );
+	VectorMA( origin, 3, forward, origin );
+	VectorMA( origin, NECK_LENGTH, up, origin );
 	}
 #endif
 }
@@ -771,6 +771,7 @@ Generates and draws a game scene and status information at the given time.
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, qboolean skipRendering ) {
 	int		inwater;
 	int		team = -1;
+	int		score1 = 0, score2 = 0;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -817,22 +818,23 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// update cg.predictedPlayerState
 	CG_PredictPlayerState();
 
-	// Inform context of latest player state.
-	team = cg.snap->ps.persistant[PERS_TEAM];
-	if ( team == TEAM_RED ) {
-		dmlab_player_state( &cg.predictedPlayerState, cgs.scores1, cgs.scores2 );
-	} else if ( team == TEAM_BLUE ) {
-		dmlab_player_state( &cg.predictedPlayerState, cgs.scores2, cgs.scores1 );
-	} else {
-		dmlab_player_state( &cg.predictedPlayerState, 0, 0 );
-	}
-
 	// decide on third person view
 	cg.renderingThirdPerson = team != TEAM_SPECTATOR
 							&& (cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0));
 
 	// build cg.refdef
 	inwater = CG_CalcViewValues();
+
+	// Inform context of latest player state.
+	team = cg.snap->ps.persistant[PERS_TEAM];
+	if ( team == TEAM_RED ) {
+		score1 = cgs.scores1;
+		score2 = cgs.scores2;
+	} else if ( team == TEAM_BLUE ) {
+		score2 = cgs.scores1;
+		score1 = cgs.scores2;
+	}
+	dmlab_player_state( &cg.predictedPlayerState, cg.refdef.vieworg, score1, score2 );
 
 	if ( skipRendering ) return;
 

@@ -117,8 +117,9 @@ int dmlab_callback(
       ctx->hooks.player_state(
           ctx->userdata, ps->origin, ps->velocity, ps->viewangles,
           ps->viewheight,
-          /*team_score=*/a2,
-          /*other_team_score=*/a3, ps->clientNum,
+          /*eyePos=*/VM_ArgPtr(a2),
+          /*team_score=*/a3,
+          /*other_team_score=*/a4, ps->clientNum,
           /*teleporter_flip=*/(ps->eFlags & EF_TELEPORT_BIT),
           timestamp_msec);
       break;

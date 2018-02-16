@@ -40,8 +40,7 @@ end
 local function angleLook(yaw)
   local function look()
     local info = game:playerInfo()
-    local pos = info.pos
-    pos[3] = pos[3] + info.height
+    local pos = info.eyePos
     local look = game:playerInfo().angles
     look[2] = look[2] + yaw
     local buffer = game:renderCustomView{

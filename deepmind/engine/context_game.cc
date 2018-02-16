@@ -186,6 +186,7 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     const auto& pv = ctx_->GetPlayerView();
     auto table = lua::TableRef::Create(L);
     table.Insert("pos", pv.pos);
+    table.Insert("eyePos", pv.eyePos);
     table.Insert("vel", pv.vel);
     table.Insert("angles", pv.angles);
     table.Insert("anglesVel", pv.anglesVel);
@@ -382,6 +383,7 @@ lua::NResultsOr ContextGame::Module(lua_State* L) {
 
 void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
                                  const float angles[3], float height,
+                                 const float eyePos[3],
                                  int team_score, int other_team_score,
                                  int player_id, bool teleporter_flip,
                                  int timestamp_msec) {
@@ -389,6 +391,7 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
   std::copy_n(pos, 3, player_view_.pos.begin());
   std::copy_n(vel, 3, player_view_.vel.begin());
   std::copy_n(angles, 3, player_view_.angles.begin());
+  std::copy_n(eyePos, 3, player_view_.eyePos.begin());
   player_view_.height = height;
   player_view_.timestamp_msec = timestamp_msec;
   player_view_.player_id = player_id;

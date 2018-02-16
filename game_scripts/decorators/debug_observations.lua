@@ -240,11 +240,10 @@ end
 local function playerView(reticleSize)
   local function view()
     local info = game:playerInfo()
-    local pos = {info.pos[1], info.pos[2], info.pos[3] + info.height}
     local buffer = game:renderCustomView{
         width = SCREEN_SHAPE.width,
         height = SCREEN_SHAPE.height,
-        pos = pos,
+        pos = info.eyePos,
         look = info.angles,
         renderPlayer = false,
     }
