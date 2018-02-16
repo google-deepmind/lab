@@ -254,14 +254,14 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
       size_t size = 0;
       char* buff = nullptr;
       if (!ctx_->FileReaderOverride()(file_name.c_str(), &buff, &size)) {
-        return "File not found!";
+        return "[loadFileToString] Failed to read file! - " + file_name;
       }
       lua_pushlstring(L, buff, size);
       free(buff);
     } else {
       std::string contents;
       if (!util::GetContents(file_name, &contents)) {
-        return "File not found!";
+        return "[loadFileToString] Failed to read file! - " + file_name;
       }
       lua::Push(L, contents);
     }
