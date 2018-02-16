@@ -18,5 +18,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local factory = require 'factories.psychlab.visual_search_factory'
 
 return factory.createLevelApi{
+    schema = 'visual_search',
     episodeLengthSeconds = 180,
 }

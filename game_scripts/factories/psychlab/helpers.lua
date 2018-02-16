@@ -16,6 +16,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local common = require 'common.random'
+local events = require 'dmlab.system.events'
 local image = require 'dmlab.system.image'
 local random = require 'common.random'
 local tensor = require 'dmlab.system.tensor'
@@ -115,6 +116,22 @@ terminate after it either times out or completes this many trials.
 function helpers.setTrialsPerEpisodeCap(env, trialsPerEpisodeCap)
   env._maxTrialsPerEpisode = trialsPerEpisodeCap
   env._currNumTrialsThisEpisode = 0
+end
+
+--[[ Publishes trial data using dmlab events.
+'trialData' (table) All the data items to be published.
+'schema' (optional string) Name of the experiment schema (normally the
+same as the name of the level). This can be used by the event receiver
+to separate trial data from different experiments in a setup where
+an agent is doing multiple experiments at the same time.
+]]
+function helpers.publishTrialData(trialData, schema)
+  trialData = helpers.tostring(trialData)
+  if schema then
+    events:add('xdata:psychlab', trialData, schema)
+  else
+    events:add('xdata:psychlab', trialData)
+  end
 end
 
 --[[ Provides common logic for tasks finishing a trial in an episode.

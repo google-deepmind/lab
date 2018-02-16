@@ -15,7 +15,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local events = require 'dmlab.system.events'
 local game = require 'dmlab.system.game'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
@@ -346,7 +345,7 @@ function factory.createLevelApi(kwargs)
     self.staircase:step(self.currentTrial.correct)
 
     self.currentTrial.stepCount = self.pac:elapsedSteps()
-    events:add('xdata:psychlab', psychlab_helpers.tostring(self.currentTrial))
+    psychlab_helpers.publishTrialData(self.currentTrial, kwargs.schema)
     psychlab_helpers.finishTrialCommon(self, delay, kwargs.fixationSize)
   end
 

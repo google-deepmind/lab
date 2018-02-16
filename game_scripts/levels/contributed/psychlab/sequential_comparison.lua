@@ -18,5 +18,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local factory = require 'factories.psychlab.sequential_comparison_factory'
 
 return factory.createLevelApi{
+    schema = 'sequential_comparison',
     episodeLengthSeconds = 180,
 }
