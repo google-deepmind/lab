@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/span.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
@@ -185,11 +186,14 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
   lua::NResultsOr PlayerInfo(lua_State* L) {
     const auto& pv = ctx_->GetPlayerView();
     auto table = lua::TableRef::Create(L);
-    table.Insert("pos", pv.pos);
-    table.Insert("eyePos", pv.eyePos);
-    table.Insert("vel", pv.vel);
-    table.Insert("angles", pv.angles);
-    table.Insert("anglesVel", pv.anglesVel);
+    table.Insert("pos", absl::MakeConstSpan(pv.pos.data(), pv.pos.size()));
+    table.Insert("eyePos",
+                 absl::MakeConstSpan(pv.eyePos.data(), pv.eyePos.size()));
+    table.Insert("vel", absl::MakeConstSpan(pv.vel.data(), pv.vel.size()));
+    table.Insert("angles",
+                 absl::MakeConstSpan(pv.angles.data(), pv.angles.size()));
+    table.Insert("anglesVel",
+                 absl::MakeConstSpan(pv.anglesVel.data(), pv.anglesVel.size()));
     table.Insert("height", pv.height);
     table.Insert("playerId", pv.player_id + 1);
     table.Insert("teamScore", pv.team_score);
@@ -388,10 +392,10 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
                                  int player_id, bool teleporter_flip,
                                  int timestamp_msec) {
   PlayerView before = player_view_;
-  std::copy_n(pos, 3, player_view_.pos.begin());
-  std::copy_n(vel, 3, player_view_.vel.begin());
-  std::copy_n(angles, 3, player_view_.angles.begin());
-  std::copy_n(eyePos, 3, player_view_.eyePos.begin());
+  std::copy_n(pos, 3, player_view_.pos.data());
+  std::copy_n(vel, 3, player_view_.vel.data());
+  std::copy_n(angles, 3, player_view_.angles.data());
+  std::copy_n(eyePos, 3, player_view_.eyePos.data());
   player_view_.height = height;
   player_view_.timestamp_msec = timestamp_msec;
   player_view_.player_id = player_id;
@@ -399,11 +403,20 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
   player_view_.other_team_score = other_team_score;
   player_view_.teleporter_flip[0] = before.teleporter_flip[1];
   player_view_.teleporter_flip[1] = teleporter_flip;
+  if (player_view_.teleporter_flip[0] != player_view_.teleporter_flip[1]) {
+    before.eyePos = player_view_.eyePos;
+  }
   int delta_time_msec = player_view_.timestamp_msec - before.timestamp_msec;
 
   // When delta_time_msec < 3 the velocities become inaccurate.
   if (before.timestamp_msec > 0 && delta_time_msec > 0) {
-    double inv_delta_time = 1000.0 / delta_time_msec;
+    double dt = delta_time_msec * (1.0 / 1000.0);
+    double inv_delta_time = 1.0 / dt;
+    Eigen::Vector3d vel =
+        (player_view_.eyePos - before.eyePos) * inv_delta_time;
+    velocity_smoother_.set_target(vel);
+    velocity_smoother_.Update(dt);
+
     for (int i : {0, 1, 2}) {
       player_view_.anglesVel[i] =
           CanonicalAngle360(player_view_.angles[i] - before.angles[i]) *

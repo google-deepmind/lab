@@ -24,25 +24,27 @@
 #include <string>
 #include <unordered_map>
 
+#include "Eigen/Dense"
 #include "deepmind/include/deepmind_calls.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
+#include "deepmind/util/smoother.h"
 
 namespace deepmind {
 namespace lab {
 
 // Represents a player's state in world units.
 struct PlayerView {
-  std::array<double, 3> pos;        // Position (forward, left, up).
-  std::array<double, 3> eyePos;     // Eye Position (forward, left, up).
-  std::array<double, 3> vel;        // World velocity (forward, left, up).
-  std::array<double, 3> angles;     // Orientation degrees (pitch, yaw, roll).
-  std::array<double, 3> anglesVel;  // Angular velocity in degrees.
-  int team_score;                   // Number of times we captured a flag.
-  int other_team_score;             // Number of times others captured a flag.
+  Eigen::Vector3d pos;        // Position (forward, left, up).
+  Eigen::Vector3d eyePos;     // Eye Position (forward, left, up).
+  Eigen::Vector3d vel;        // World velocity (forward, left, up).
+  Eigen::Vector3d angles;     // Orientation degrees (pitch, yaw, roll).
+  Eigen::Vector3d anglesVel;  // Angular velocity in degrees.
+  int team_score;             // Number of times we captured a flag.
+  int other_team_score;       // Number of times others captured a flag.
   int player_id;
-  int timestamp_msec;               // Engine time in msec of the view.
-  double height;                    // View height.
+  int timestamp_msec;       // Engine time in msec of the view.
+  double height;            // View height.
   bool teleporter_flip[2];  // If flags are different the player has teleported
                             // this frame.
 };
@@ -59,6 +61,9 @@ class ContextGame {
       : deepmind_calls_(deepmind_calls),
         map_finished_(false),
         player_view_{},
+        velocity_smoother_(
+            /*smooth_time=*/util::ConvertExpAt60FpsToSmoothTime(0.1),
+            /*start=*/{0.0, 0.0, 0.0}),
         executable_runfiles_(executable_runfiles),
         file_reader_override_(file_reader_override),
         temp_folder_(std::move(temp_folder)) {}
@@ -103,6 +108,10 @@ class ContextGame {
     return player_view_;
   }
 
+  const Eigen::Vector3d& SmoothedAcceleration() {
+    return velocity_smoother_.velocity();
+  }
+
   Reader* FileReaderOverride() { return file_reader_override_; }
 
   // Retrieves what to render when render_custom_view engine command is called.
@@ -123,6 +132,7 @@ class ContextGame {
   bool map_finished_;
 
   PlayerView player_view_;
+  util::SmoothExponentialDecayAt60<Eigen::Vector3d> velocity_smoother_;
 
   // Path to executables runfiles.
   std::string executable_runfiles_;

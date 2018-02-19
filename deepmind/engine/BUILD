@@ -74,6 +74,9 @@ cc_library(
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//deepmind/util:files",
+        "//deepmind/util:smoother",
+        "@com_google_absl//absl/types:span",
+        "@eigen_archive//:eigen",
     ],
 )
 
