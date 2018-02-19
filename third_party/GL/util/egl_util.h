@@ -33,13 +33,21 @@ extern "C" {
 EGLDisplay CreateInitializedEGLDisplayAtIndex(int device_index);
 
 // Helper function to create EGL display at device index 0.
-EGLDisplay CreateInitializedEGLDisplay();
+EGLDisplay CreateInitializedEGLDisplay(void);
 
 // Helper function to only call eglTerminate() once all instances created from
 // CreateInitializedEGLDisplay() have been terminated. This is necessary because
 // calling eglTerminate will invalidate *all* contexts associated with a given
 // display within the same address space.
 EGLBoolean TerminateInitializedEGLDisplay(EGLDisplay display);
+
+// Helper function that unloads any remaining resources used for internal
+// bookkeeping. Ordinary user code generally should not need to call this,
+// but it is useful when, say, using this code as part of a DSO that is
+// loaded and unloaded repeatedly. This function must not be called more
+// than once per process (or DSO load). It should generally be called just
+// before exit.
+void ShutDownEGLSubsystem(void);
 
 #ifdef __cplusplus
 }  // extern "C"

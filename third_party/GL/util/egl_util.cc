@@ -156,3 +156,8 @@ extern "C" EGLBoolean TerminateInitializedEGLDisplay(EGLDisplay display) {
   std::lock_guard<std::mutex> display_guard(*get_display_mutex());
   return TerminateInitializedEGLDisplayNoLock(display);
 }
+
+extern "C" void ShutDownEGLSubsystem() {
+  delete get_display_reference_map();
+  delete get_display_mutex();
+}
