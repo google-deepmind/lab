@@ -22,6 +22,22 @@
 
 #include "../qcommon/q_shared.h"
 
+enum dmlabRecordingError {
+  DMLAB_RECORDING_ERROR_NONE,
+  DMLAB_RECORDING_ERROR_DEMOFILES_NOT_SPECIFIED,
+  DMLAB_RECORDING_ERROR_DEMOFILES_NOT_FOUND,
+
+  DMLAB_RECORDING_ERROR_CREATE_DEMO_PATH,
+  DMLAB_RECORDING_ERROR_MOVE_DEMO_FILE,
+  DMLAB_RECORDING_ERROR_OVERWRITE_DEMO_FILE,
+
+  DMLAB_RECORDING_ERROR_CREATE_VIDEO_PATH,
+  DMLAB_RECORDING_ERROR_MOVE_VIDEO_FILE,
+  DMLAB_RECORDING_ERROR_OVERWRITE_VIDEO_FILE,
+
+  DMLAB_RECORDING_ERROR_FLUSH_OUTPUT_STREAM,
+};
+
 typedef struct dmlabRecordingContext_s {
   // The name of the recording to be stored in the demos directory in runfiles.
   // [runfiles_dir]/demos/[recording_name]/[recording_number].dm_71
@@ -51,6 +67,15 @@ typedef struct dmlabRecordingContext_s {
   // The path where the demo files are located when is_demo or the path to
   // where the files should be moved when is_recording.
   char demofiles_path[MAX_STRING_CHARS];
+
+  // The error field is set by calls to recording functions using the
+  // dmlabRecordingContext to indicate what went wrong.
+  enum dmlabRecordingError error;
+
+  // The error_message field is set by calls to recording functions using the
+  // dmlabRecordingContext to provide a detailed description of what went wrong.
+  // It is only valid when the error field is not DMLAB_RECORDING_ERROR_NONE.
+  char error_message[MAX_STRING_CHARS];
 } dmlabRecordingContext;
 
 // Copies |name| into the context as the recording name.

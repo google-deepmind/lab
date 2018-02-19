@@ -322,6 +322,28 @@ TEST_F(RecordingTest, TotalScorePreserved) {
   EXPECT_EQ(demo_reward_2, recording_reward_2);
 }
 
+TEST_F(RecordingTest, MissingDemoFilesSetsError) {
+  DeepMindLabLaunchParams params = {};
+  params.runfiles_path = runfiles_path.c_str();
+  params.renderer = DeepMindLabRenderer_Software;
+
+  EnvCApi env_c_api;
+  void* context;
+
+  // Start the context for the demo
+  dmlab_connect(&params, &env_c_api, &context);
+
+  SettingsMap settings = DefaultSettings();
+  settings["levelName"] = "tests/recording_test";
+  settings["demo"] = test_name;
+  ASSERT_TRUE(ApplyAllSettingsSuccessfully(settings, &env_c_api, context));
+  ASSERT_EQ(0, ConfigureVM(&env_c_api, context));
+
+  env_c_api.init(context);
+  ASSERT_EQ(env_c_api.start(context, 0 /*episode*/, 1 /*seed*/), 1)
+      << "Should have failed to start demo";
+}
+
 }  // namespace
 }  // namespace lab
 }  // namespace deepmind

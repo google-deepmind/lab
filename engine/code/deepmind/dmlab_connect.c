@@ -391,8 +391,12 @@ static bool load_map(GameContext* gc) {
   if (gc->recording_ctx->is_demo) {
     demo_ok &= dmlab_start_demo(gc->recording_ctx);
   }
-  if (gc->recording_ctx->is_video) {
+  if (demo_ok && gc->recording_ctx->is_video) {
     demo_ok &= dmlab_start_video(gc->recording_ctx);
+  }
+  if (gc->recording_ctx->error != DMLAB_RECORDING_ERROR_NONE) {
+    gc->dm_ctx->hooks.set_error_message(gc->dm_ctx->userdata,
+                                        gc->recording_ctx->error_message);
   }
   fflush(stdout);
   return demo_ok;
@@ -674,15 +678,19 @@ static void connect_client(GameContext* gc) {
   gc->map_loaded = false;
 }
 
-static void start_server(GameContext* gc) {
+static bool start_server(GameContext* gc) {
   dev_map(gc);
-  if (gc->recording_ctx->is_recording &&
-      !dmlab_start_recording(gc->recording_ctx)) {
-    fprintf(stderr, "Recording failed: '%s' already exists.\n",
-            gc->recording_ctx->recording_name);
+  if (gc->recording_ctx->is_recording) {
+    dmlab_start_recording(gc->recording_ctx);
+    if (gc->recording_ctx->error != DMLAB_RECORDING_ERROR_NONE) {
+      gc->dm_ctx->hooks.set_error_message(gc->dm_ctx->userdata,
+                                          gc->recording_ctx->error_message);
+      return false;
+    }
   }
   gc->is_connecting = true;
   gc->map_loaded = false;
+  return true;
 }
 
 static int dmlab_start(void* context, int episode_id, int seed) {
@@ -722,9 +730,13 @@ static int dmlab_start(void* context, int episode_id, int seed) {
   if (gc->is_client_only) {
     connect_client(gc);
   } else if (gc->is_server) {
-    start_server(gc);
+    if (!start_server(gc)) {
+      return 1;
+    }
   } else {
-    load_map(gc);
+    if (!load_map(gc)) {
+      return 1;
+    }
     if (ctx->hooks.map_loaded(ctx->userdata) != 0) {
       return 1;
     }
@@ -1031,7 +1043,11 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
       // Capture any rewards given during map_finished().
       double final_reward_score = get_engine_score();
 
-      if (!load_map(gc)) {
+      bool map_loaded = load_map(gc);
+      if (gc->recording_ctx->error != DMLAB_RECORDING_ERROR_NONE) {
+        return EnvCApi_EnvironmentStatus_Error;
+      }
+      if (!map_loaded) {
         return EnvCApi_EnvironmentStatus_Terminated;
       }
       if (ctx->hooks.map_loaded(ctx->userdata) != 0) {
@@ -1086,6 +1102,9 @@ static void dmlab_destroy_context(void* context) {
   }
   if (gc->recording_ctx->is_video) {
     dmlab_stop_video(gc->recording_ctx);
+  }
+  if (gc->recording_ctx->error != DMLAB_RECORDING_ERROR_NONE) {
+    fprintf(stderr, "ERROR: %s", gc->recording_ctx->error_message);
   }
 
   if (gc->pbos.rgb.id || gc->pbos.depth.id || gc->pbos.custom_view.id) {

@@ -21,8 +21,8 @@
 #include "../qcommon/qcommon.h"
 
 #include <errno.h>
-#include <sys/stat.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static const char* homefiles_file(const char* file_name) {
@@ -38,34 +38,34 @@ static const char* homefiles_demo_path(const char* demo_name, int demo_number) {
   const char* demoext = "dm_";  // DEMOEXT, from qshared.h
   const char* protocol = Cvar_VariableString("com_protocol");
 
-  char* file = va("demos/%s/%05d.%s%s", demo_name, demo_number,
-                  demoext, protocol);
+  char* file =
+      va("demos/%s/%05d.%s%s", demo_name, demo_number, demoext, protocol);
   return homefiles_file(file);
 }
 
-static const char* homefiles_video_path(
-    const char* video_name, int demo_number) {
+static const char* homefiles_video_path(const char* video_name,
+                                        int demo_number) {
   const char* videoext = "avi";
 
   char* file = va("videos/%s/%05d.%s", video_name, demo_number, videoext);
   return homefiles_file(file);
 }
 
-static const char* demofiles_demo_path(
-    const char* demofiles_path, const char* demo_name, int demo_number) {
+static const char* demofiles_demo_path(const char* demofiles_path,
+                                       const char* demo_name, int demo_number) {
   static char path[MAX_STRING_CHARS];
   const char* demoext = "dm_";  // DEMOEXT, from qshared.h
   const char* protocol = Cvar_VariableString("com_protocol");
 
-  char* file = va("demos/%s/%05d.%s%s",
-                  demo_name, demo_number, demoext, protocol);
-  Q_strncpyz(path, FS_BuildOSPath(demofiles_path, ".", file),
-             sizeof(path));
+  char* file =
+      va("demos/%s/%05d.%s%s", demo_name, demo_number, demoext, protocol);
+  Q_strncpyz(path, FS_BuildOSPath(demofiles_path, ".", file), sizeof(path));
   return path;
 }
 
-static const char* demofiles_video_path(
-  const char* demofiles_path, const char* video_name, int demo_number) {
+static const char* demofiles_video_path(const char* demofiles_path,
+                                        const char* video_name,
+                                        int demo_number) {
   static char path[MAX_STRING_CHARS];
 
   const char* videoext = "avi";
@@ -75,9 +75,14 @@ static const char* demofiles_video_path(
   return path;
 }
 
-static bool file_exists(const char *path) {
+static bool file_exists(const char* path) {
   struct stat path_stat;
   return stat(path, &path_stat) == 0 && S_ISREG(path_stat.st_mode);
+}
+
+static bool dir_exists(const char* path) {
+  struct stat path_stat;
+  return stat(path, &path_stat) == 0 && S_ISDIR(path_stat.st_mode);
 }
 
 // Copies the file contents from one file pointer to another.
@@ -134,6 +139,8 @@ static int move_file(const char* src, const char* dest) {
 }
 
 void dmlab_set_recording_name(dmlabRecordingContext* ctx, const char* name) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
   if (name == NULL || name[0] == '\0') {
     ctx->is_recording = false;
   } else {
@@ -144,6 +151,8 @@ void dmlab_set_recording_name(dmlabRecordingContext* ctx, const char* name) {
 }
 
 void dmlab_set_demo_name(dmlabRecordingContext* ctx, const char* name) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
   if (name == NULL || name[0] == '\0') {
     ctx->is_recording = false;
   } else {
@@ -153,7 +162,9 @@ void dmlab_set_demo_name(dmlabRecordingContext* ctx, const char* name) {
   }
 }
 
-void dmlab_set_video_name(dmlabRecordingContext *ctx, const char* name) {
+void dmlab_set_video_name(dmlabRecordingContext* ctx, const char* name) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
   if (name == NULL || name[0] == '\0') {
     ctx->is_video = false;
   } else {
@@ -162,49 +173,82 @@ void dmlab_set_video_name(dmlabRecordingContext *ctx, const char* name) {
   }
 }
 
-void dmlab_set_demofiles_path(
-    dmlabRecordingContext* context, const char* path) {
+void dmlab_set_demofiles_path(dmlabRecordingContext* context,
+                              const char* path) {
+  context->error = DMLAB_RECORDING_ERROR_NONE;
+
   Q_strncpyz(context->demofiles_path, path, sizeof(context->demofiles_path));
 }
 
 bool dmlab_start_recording(dmlabRecordingContext* ctx) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
+  // Demofiles path is needed to know where to store demos.
   if (ctx->demofiles_path[0] == '\0') {
-    fprintf(stderr, "Recording failed: demofiles_path not specified.\n");
+    ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_SPECIFIED;
+    Q_strncpyz(ctx->error_message,
+               va("Recording failed: demofiles path not specified.\n"),
+               sizeof(ctx->error_message));
     return false;
   }
+
+  // Begin recording the next run of the episode.
   ctx->demo_number++;
   if (file_exists(demofiles_demo_path(ctx->demofiles_path, ctx->recording_name,
                                       ctx->demo_number)) ||
       file_exists(homefiles_demo_path(ctx->recording_name, ctx->demo_number))) {
-    fprintf(stderr, "Recording failed: '%s' already exists.\n",
-            ctx->recording_name);
+    ctx->error = DMLAB_RECORDING_ERROR_OVERWRITE_DEMO_FILE;
+    Q_strncpyz(
+        ctx->error_message,
+        va("Recording failed: '%s' already exists.\n", ctx->recording_name),
+        sizeof(ctx->error_message));
+
     return false;
   } else {
     Cvar_Set("ui_recordSPDemo", "1");
     Cvar_Set("g_synchronousClients", "1");
-    Cbuf_AddText(va("record \"%s/%05d\"\n", ctx->recording_name,
-                    ctx->demo_number));
+    Cbuf_AddText(
+        va("record \"%s/%05d\"\n", ctx->recording_name, ctx->demo_number));
     return true;
   }
 }
 
 bool dmlab_stop_recording(dmlabRecordingContext* ctx) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
   // Make sure recordings are completely written out at shutdown.
   if (fflush(NULL) != 0) {
-    fprintf(stderr, "Error flushing output streams: %s\n", strerror(errno));
+    ctx->error = DMLAB_RECORDING_ERROR_FLUSH_OUTPUT_STREAM;
+    Q_strncpyz(ctx->error_message,
+               va("Error flushing output streams: %s\n", strerror(errno)),
+               sizeof(ctx->error_message));
+    return false;
   }
 
-  FS_CreatePath(
-      (char *)demofiles_demo_path(ctx->demofiles_path, ctx->recording_name, 0));
+  // Attempt to create the path to where the demos should be moved.
+  const char* demofiles_dir =
+      demofiles_demo_path(ctx->demofiles_path, ctx->recording_name, 0);
+  if (!FS_CreatePath((char*)demofiles_dir) && errno != EEXIST) {
+    ctx->error = DMLAB_RECORDING_ERROR_CREATE_DEMO_PATH;
+    Q_strncpyz(ctx->error_message,
+               va("Creating demo path failed: %s %s\n", strerror(errno),
+                  demofiles_dir),
+               sizeof(ctx->error_message));
+    return false;
+  }
 
+  // Attempt to move demo files.
   for (int demo_number = 1; demo_number <= ctx->demo_number; demo_number++) {
     const char* demofiles_path = demofiles_demo_path(
         ctx->demofiles_path, ctx->recording_name, demo_number);
-    const char* homefiles_path = homefiles_demo_path(
-        ctx->recording_name, demo_number);
+    const char* homefiles_path =
+        homefiles_demo_path(ctx->recording_name, demo_number);
     if (move_file(homefiles_path, demofiles_path)) {
-      fprintf(stderr, "Moving demo file failed: %s %s %s\n",
-              strerror(errno), homefiles_path, demofiles_path);
+      ctx->error = DMLAB_RECORDING_ERROR_MOVE_DEMO_FILE;
+      Q_strncpyz(ctx->error_message,
+                 va("Moving demo file failed: %s %s %s\n", strerror(errno),
+                    homefiles_path, demofiles_path),
+                 sizeof(ctx->error_message));
       return false;
     }
   }
@@ -212,23 +256,63 @@ bool dmlab_stop_recording(dmlabRecordingContext* ctx) {
 }
 
 bool dmlab_start_demo(dmlabRecordingContext* ctx) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
+  // Demofiles path is needed to know where to load demos from.
   if (ctx->demofiles_path[0] == '\0') {
-    fprintf(stderr, "Demo playback failed: demofiles_path not specified.\n");
+    ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_SPECIFIED;
+    Q_strncpyz(ctx->error_message,
+               va("Demo playback failed: demofiles path not specified.\n"),
+               sizeof(ctx->error_message));
     return false;
   }
+  if (!dir_exists(ctx->demofiles_path)) {
+    ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_FOUND;
+    Q_strncpyz(
+        ctx->error_message,
+        va("Demo playback failed: demofiles path '%s' could not be found.\n",
+           ctx->demofiles_path),
+        sizeof(ctx->error_message));
+    return false;
+  }
+
+  // Move all demos from the specified demofiles dir to the homepath required
+  // for the engine to read.
   if (ctx->demo_number == 0) {
-    FS_CreatePath((char *)homefiles_demo_path(ctx->demo_name, 0));
+    const char* first_demofile =
+        demofiles_demo_path(ctx->demofiles_path, ctx->demo_name, 1);
+    if (!file_exists(first_demofile)) {
+      ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_FOUND;
+      Q_strncpyz(ctx->error_message,
+                 va("Demo playback failed: Demo '%s' could not be found.\n",
+                    first_demofile),
+                 sizeof(ctx->error_message));
+      return false;
+    }
+
+    const char* demofiles_dir = homefiles_demo_path(ctx->demo_name, 0);
+    if (!FS_CreatePath((char*)demofiles_dir) && errno != EEXIST) {
+      ctx->error = DMLAB_RECORDING_ERROR_CREATE_DEMO_PATH;
+      Q_strncpyz(ctx->error_message,
+                 va("Creating demo path failed: %s %s\n", strerror(errno),
+                    demofiles_dir),
+                 sizeof(ctx->error_message));
+      return false;
+    }
 
     int demo_number = 1;
-    while (file_exists(demofiles_demo_path(
-        ctx->demofiles_path, ctx->demo_name, demo_number))) {
-      const char* demofiles_path = demofiles_demo_path(
-          ctx->demofiles_path, ctx->demo_name, demo_number);
-      const char* homefiles_path = homefiles_demo_path(
-          ctx->demo_name, demo_number);
+    while (file_exists(demofiles_demo_path(ctx->demofiles_path, ctx->demo_name,
+                                           demo_number))) {
+      const char* demofiles_path =
+          demofiles_demo_path(ctx->demofiles_path, ctx->demo_name, demo_number);
+      const char* homefiles_path =
+          homefiles_demo_path(ctx->demo_name, demo_number);
       if (move_file(demofiles_path, homefiles_path)) {
-        fprintf(stderr, "Moving demo file failed: %s %s %s\n",
-                strerror(errno), homefiles_path, demofiles_path);
+        ctx->error = DMLAB_RECORDING_ERROR_MOVE_DEMO_FILE;
+        Q_strncpyz(ctx->error_message,
+                   va("Moving demo file failed: %s %s %s\n", strerror(errno),
+                      homefiles_path, demofiles_path),
+                   sizeof(ctx->error_message));
         return false;
       }
       demo_number++;
@@ -236,8 +320,8 @@ bool dmlab_start_demo(dmlabRecordingContext* ctx) {
   }
 
   ctx->demo_number++;
-  const char* homefiles_path = homefiles_demo_path(
-      ctx->demo_name, ctx->demo_number);
+  const char* homefiles_path =
+      homefiles_demo_path(ctx->demo_name, ctx->demo_number);
   if (file_exists(homefiles_path)) {
     Cbuf_AddText(va("demo \"%s/%05d\"\n", ctx->demo_name, ctx->demo_number));
     return true;
@@ -247,13 +331,33 @@ bool dmlab_start_demo(dmlabRecordingContext* ctx) {
 }
 
 bool dmlab_start_video(dmlabRecordingContext* ctx) {
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
+  // Demofiles path is needed to know where to store videos.
   if (ctx->demofiles_path[0] == '\0') {
-    fprintf(stderr, "Video recording failed: demofiles_path not specified.\n");
+    ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_SPECIFIED;
+    Q_strncpyz(ctx->error_message,
+               va("Video recording failed: demofiles path not specified.\n"),
+               sizeof(ctx->error_message));
     return false;
   }
+  if (!dir_exists(ctx->demofiles_path)) {
+    ctx->error = DMLAB_RECORDING_ERROR_DEMOFILES_NOT_FOUND;
+    Q_strncpyz(
+        ctx->error_message,
+        va("Video recording failed: demofiles path '%s' could not be found.\n",
+           ctx->demofiles_path),
+        sizeof(ctx->error_message));
+    return false;
+  }
+
+  // Attempt recording a video.
   if (file_exists(homefiles_video_path(ctx->video_name, ctx->demo_number))) {
-    fprintf(stderr, "Video recording failed: '%s' already exists.\n",
-            ctx->video_name);
+    ctx->error = DMLAB_RECORDING_ERROR_OVERWRITE_VIDEO_FILE;
+    Q_strncpyz(
+        ctx->error_message,
+        va("Video recording failed: '%s' already exists.\n", ctx->video_name),
+        sizeof(ctx->error_message));
     return false;
   } else {
     // Demo number is incremented by dmlab_start_demo (since video must be
@@ -264,16 +368,32 @@ bool dmlab_start_video(dmlabRecordingContext* ctx) {
 }
 
 bool dmlab_stop_video(dmlabRecordingContext* ctx) {
-  FS_CreatePath((char *)demofiles_video_path(
-      ctx->demofiles_path, ctx->video_name, 0));
+  ctx->error = DMLAB_RECORDING_ERROR_NONE;
+
+  // Attempt to create the path to where the videos should be copied.
+  const char* video_files_path =
+      demofiles_video_path(ctx->demofiles_path, ctx->video_name, 0);
+  if (!FS_CreatePath((char*)video_files_path) && errno != EEXIST) {
+    ctx->error = DMLAB_RECORDING_ERROR_CREATE_VIDEO_PATH;
+    Q_strncpyz(ctx->error_message,
+               va("Creating video path failed: %s %s\n", strerror(errno),
+                  video_files_path),
+               sizeof(ctx->error_message));
+    return false;
+  }
+
+  // Copy each of the demo files to the destination.
   for (int demo_number = 1; demo_number <= ctx->demo_number; demo_number++) {
-    const char* demofiles_path = demofiles_video_path(
-        ctx->demofiles_path, ctx->video_name, demo_number);
-    const char* homefiles_path = homefiles_video_path(
-        ctx->video_name, demo_number);
+    const char* demofiles_path =
+        demofiles_video_path(ctx->demofiles_path, ctx->video_name, demo_number);
+    const char* homefiles_path =
+        homefiles_video_path(ctx->video_name, demo_number);
     if (move_file(homefiles_path, demofiles_path)) {
-      fprintf(stderr, "Moving video file failed: %s %s %s\n",
-              strerror(errno), homefiles_path, demofiles_path);
+      ctx->error = DMLAB_RECORDING_ERROR_MOVE_VIDEO_FILE;
+      Q_strncpyz(ctx->error_message,
+                 va("Moving video file failed: %s %s %s\n", strerror(errno),
+                    homefiles_path, demofiles_path),
+                 sizeof(ctx->error_message));
       return false;
     }
   }
