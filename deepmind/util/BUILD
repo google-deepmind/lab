@@ -41,3 +41,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+# Generic smoothing routines.
+cc_library(
+    name = "smoother",
+    hdrs = ["smoother.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "smoother_test",
+    srcs = ["smoother_test.cc"],
+    deps = [
+        ":smoother",
+        "@com_google_googletest//:gtest_main",
+        "@eigen_archive//:eigen",
+    ],
+)
