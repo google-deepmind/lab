@@ -15,9 +15,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
--- Selectors return a choice from a list of possible choices when called.
 local random = require 'common.random'
 
+-- Selectors return a choice from a list of possible choices when called.
 local selectors = {}
 
 local function validateChoices(choices, name)

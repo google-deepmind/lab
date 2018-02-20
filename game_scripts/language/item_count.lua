@@ -33,11 +33,10 @@ are called and expected to return a list which is copied in the same manner.
 
 Examples:
 
-  combine({1, 1}, {2, 4, 2}) => {1, 1, 2, 4, 2}
-  combine({1}, function() return {2, 3, 4} end) => {1, 2, 3, 4}
+    concat({1, 1}, {2, 4, 2}) => {1, 1, 2, 4, 2}
+    concat({1}, function() return {2, 3, 4} end) => {1, 2, 3, 4}
 
-Returns:
-  Nullary function which returns combined list of input parts.
+Returns a nullary function which returns combined list of input parts.
 ]]
 function item_count.concat(...)
   local inputs = {...}

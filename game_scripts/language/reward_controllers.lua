@@ -15,6 +15,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local game = require 'dmlab.system.game'
+local helpers = require 'common.helpers'
+local random = require 'common.random'
+
 --[[ Customise the pickup actions and reward logic for language levels.
 
 See language_factory for a more complete picture.
@@ -31,11 +35,6 @@ A reward controller is expected to implement the following API:
     this function will be called with the table describing the pickup object
     passed as an argument.
 ]]
-
-local game = require 'dmlab.system.game'
-local helpers = require 'common.helpers'
-local random = require 'common.random'
-
 local reward_controllers = {}
 
 -- Supports mocking 'game' for tests.
@@ -180,130 +179,6 @@ function reward_controllers.createBalancedCounting()
   return createCountingImpl(true)
 end
 
--- BEGIN-INTERNAL
--- This is AGI-3 specific code, so don't release yet.
-
---[[ Collect a target number of objects from multiple groups.
-
-*   Keep track of the number of each object collected, for multiple groups.
-*   For each group, have a target number of objects to collect.
-*   When an object is collected, give positive reward if that object group is
-    at or below the target count. Give negative reward if we've now collected
-    too many.
-*   When a group above kwargs.numGroups is collected, finish the map and give
-    positive reward if we have perfect counts for each group, and negative
-    reward if any of the group counts is incorrect.
-
-Keyword Arguments:
-
-*   finishOnPerfection -- if perfectCount() is true, terminate (with 0
-    additional reward) rather than waiting for one additional object to be
-    collected.
-*   finishOnOverage -- if 'over' is true in handlePickup(), terminate.
-*   numGroups -- number of different types of objects being collected.
-*   minTargetCount -- lower bound on the number of objects required to be
-    collected. The actual target count is selected randomly between min and max
-    bounds. Either a number, in which case its the same for every group, or an
-    array of length `numGroups`.
-*   maxTargetCount -- upper bound on the number of objects required to be
-    collected. The actual target count is selected randomly between min and max
-    bounds. Either a number, in which case its the same for every group, or an
-    array of length `numGroups`.
-*   keyAttribute -- the attribute to use when generating the key.
-    e.g. `color`, `shape`
-]]
-function reward_controllers.createMultiCount(kwargs)
-  assert(kwargs.numGroups > 0)
-  assert(type(kwargs.minTargetCount) == 'number' or
-         #kwargs.minTargetCount == kwargs.numGroups)
-  assert(type(kwargs.maxTargetCount) == 'number' or
-         #kwargs.maxTargetCount == kwargs.numGroups)
-
-  local multiCountController = {}
-
-  local function ReadNumberOrArray(value, index)
-    return type(value) == 'number' and value or value[index]
-  end
-
-  function multiCountController:perfectCount()
-    for i = 1, kwargs.numGroups do
-      if self._counts[i] ~= self._targetCounts[i] then
-        return false
-      end
-    end
-    return true
-  end
-
-  function multiCountController:init(task, taskData)
-    self._counts = {}
-    self._targetCounts = {}
-    for i = 1, kwargs.numGroups do
-      self._counts[i] = 0
-
-      local min = ReadNumberOrArray(kwargs.minTargetCount, i)
-      local max = ReadNumberOrArray(kwargs.maxTargetCount, i)
-      self._targetCounts[i] = random:uniformInt(min, max)
-    end
-  end
-
-  function multiCountController:handlePickup(description)
-    if description._group > kwargs.numGroups then
-      -- Add the final reward and end the map.
-      game:addScore(0, self:perfectCount() and description.reward
-                                            or description.reward2)
-      game:finishMap()
-    else
-      -- Increment the count and reward appropriately.
-      self._counts[description._group] = self._counts[description._group] + 1
-      local over = self._counts[description._group] >
-                   self._targetCounts[description._group]
-      game:addScore(0, over and description.reward2 or description.reward)
-
-      if (kwargs.finishOnOverage and over) or
-         (kwargs.finishOnPerfection and self:perfectCount()) then
-        game:finishMap()
-      end
-    end
-
-    return -1 -- Prevent re-spawning of pickup
-  end
-
-  -- Return a string specifying the goal. Something of the form,
-  -- 'Get 1 [objects.1.1.color] and 2 [objects.2.1.color] objects.'
-  function multiCountController:key()
-    -- Get a list of groups with positive target counts.
-    local groupsToCollect = {}
-    for i = 1, kwargs.numGroups do
-      if self._targetCounts[i] > 0 then
-        groupsToCollect[#groupsToCollect + 1] = i
-      end
-    end
-
-    -- Degenerate case that all target counts are zero.
-    if #groupsToCollect == 0 then
-      return 'Get no objects.'
-    end
-
-    -- Assemble them into a cohesive sentence of the form,
-    -- 'Get 1 red, 2 green, and 3 blue objects.'
-    local key = ''
-    for j = 1, #groupsToCollect do
-      local i = groupsToCollect[j]
-      local joiner = j == 1 and 'Get ' or
-                    (#groupsToCollect == 2 and ' and ' or
-                    (j < #groupsToCollect and ', ' or ', and '))
-      key = key .. joiner .. self._targetCounts[i] ..
-            ' [objects.' .. i .. '.1.' .. kwargs.keyAttribute .. ']'
-    end
-    key = key .. ' object' ..
-          ((self._targetCounts[1] > 1 or #groupsToCollect > 1) and 's' or '') ..
-          '.'
-    return key
-  end
-
-  return multiCountController
-end
--- END-INTERNAL
 
 
 --[[ The ordered controller is for tasks like 'get the hat and then the pig'. It

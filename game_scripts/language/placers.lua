@@ -15,6 +15,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local random = require 'common.random'
+local set = require 'common.set'
+
 --[[ Object placement strategies
 
 A placer is a function which will be called to decide on the mapping between
@@ -29,10 +32,6 @@ Placers are called with the following keyword arguments:
 
 Returns nothing, mapIdToPickupId is modified in place.
 ]]
-
-local random = require 'common.random'
-local set = require 'common.set'
-
 local placers = {}
 
 function placers.createStatic()

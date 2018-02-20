@@ -15,6 +15,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local random = require 'common.random'
+
+
 --[[ Region (aka room) coloring.
 
 Defines functions which will be called to decide on the mapping between map
@@ -28,9 +31,6 @@ Returns a table, keyed by region.  Values are tables indicating how to color
 components of that region.  Currently 'floor' is the only supported component.
 Note that these methods should return color names, not RGB values.
 ]]
-
-local random = require 'common.random'
-
 local region_colors = {}
 
 function region_colors.createShuffledFloors(colorNames)

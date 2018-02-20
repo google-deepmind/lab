@@ -31,9 +31,6 @@ tables represent the attribute-value pairs already chosen for members of this
 group.
 ]]
 
--- TODO(simongreen): Consider changing function signatures to be table based.
-
--- ----------------------------------------------------------------------------
 local random = require 'common.random'
 local set = require 'common.set'
 

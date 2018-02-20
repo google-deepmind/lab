@@ -99,8 +99,8 @@ function make.commonRandom()
   return constraints.commonRandom
 end
 
--- With chance probabilty, range 0-1, pick same value as groupNumber.
--- Otherwise pick randomly excluding that value.
+-- With chance probabilty, range 0-1 (default 0.5), pick same value as
+-- groupNumber. Otherwise pick randomly excluding that value.
 function make.maybeSameAs(groupNumber, chance)
   return function(src, context, attr, groupNum)
     local groupNumber = groupNumber or groupNum

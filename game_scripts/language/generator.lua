@@ -145,7 +145,7 @@ function generator.createContext(kwargs)
   Arguments:
 
   *   `spec` (various types) Used to determine a value for `attribute`.
-      *   Used literally when number, string, boolean.
+      Used literally when number, string or boolean.
   *   If function, call with (candidates, self, attribute, groupNum) and use
       result as attribute value.
   *   If table, sequentially call this function again, passing each element in
