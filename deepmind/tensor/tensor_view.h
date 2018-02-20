@@ -222,7 +222,7 @@ class Layout {
       auto l_it = MakeIterator();
       auto r_it = rhs.MakeIterator();
       for (std::size_t i = 0; i < l_num_elements;
-           ++i, Next(&r_it), rhs.Next(&r_it)) {
+           ++i, Next(&l_it), rhs.Next(&r_it)) {
         f(l_it.offset, r_it.offset);
       }
     }

@@ -224,6 +224,29 @@ TEST(TensorViewTest, TestAssign) {
   EXPECT_EQ(storage1, storage2);
 }
 
+TEST(TensorViewTest, TestAssignNonContig) {
+  ShapeVector shape1 = {6, 6};
+  std::vector<float> storage1(Layout::num_elements(shape1));
+  TensorView<float> view1(Layout(std::move(shape1)), storage1.data());
+  view1.Assign(2.0);
+
+  ShapeVector shape2 = {6, 6};
+  std::vector<float> storage2 =
+      MakeSequence<float>(Layout::num_elements(shape2));
+  TensorView<float> view2(Layout(std::move(shape2)), storage2.data());
+
+  ASSERT_TRUE(view2.Narrow(0, 2, 3));
+  ASSERT_TRUE(view2.Narrow(1, 2, 3));
+
+  ASSERT_TRUE(view1.Narrow(0, 2, 3));
+  ASSERT_TRUE(view1.Narrow(1, 2, 3));
+
+  ASSERT_TRUE(view2.CAssign(view1));
+  view2.ForEach([] (float val) {
+    EXPECT_EQ(val, 2.0f);
+  });
+}
+
 TEST(TensorViewTest, TestAdd) {
   ShapeVector shape = {2, 2};
   std::vector<int> storage = MakeSequence<int>(Layout::num_elements(shape));
