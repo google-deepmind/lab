@@ -613,12 +613,17 @@ std::string Context::GetLevelPath() {
        level_name_.compare(level_name_.length() - 4, 4, ".lua", 4) == 0)) {
     return level_name_;
   } else {
-    if (!level_directory_.empty() && level_directory_[0] == '/') {
-      return absl::StrCat(level_directory_, "/", level_name_, ".lua");
+    if (!level_directory_.empty()) {
+      if (level_directory_[0] == '/') {
+        return absl::StrCat(level_directory_, "/", level_name_, ".lua");
+      } else {
+        return absl::StrCat(ExecutableRunfiles(), kGameScriptPath, "/",
+                            kLevelDirectory, "/", level_directory_, "/",
+                            level_name_, ".lua");
+      }
     } else {
       return absl::StrCat(ExecutableRunfiles(), kGameScriptPath, "/",
-                          kLevelDirectory, "/", level_directory_, "/",
-                          level_name_, ".lua");
+                          kLevelDirectory, "/", level_name_, ".lua");
     }
   }
 }
