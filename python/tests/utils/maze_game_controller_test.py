@@ -35,6 +35,20 @@ class MazeGameControllerTest(unittest.TestCase):
     self.assertFalse(self._controller.move_to(20, 1))
     self.assertFalse(self._controller.move_to(3, 4))
 
+  def testFollowPathToReachablePos(self):
+    path = self._controller.find_path(2, 5)
+    self.assertTrue(self._controller.follow_path(path))
+    pos = self._controller.maze_position()
+    self.assertTrue(np.array_equal(pos, [2, 5]))
+
+  def testFollowSparsePathToReachablePos(self):
+    self.assertTrue(self._controller.follow_path([(2, 5)]))
+    pos = self._controller.maze_position()
+    self.assertTrue(np.array_equal(pos, [2, 5]))
+
+  def testFollowPathToUneachablePos(self):
+    self.assertFalse(self._controller.follow_path([(20, 1)]))
+
   def testFailToGoTrhoughBlockedCorridor(self):
     self.assertFalse(self._controller.move_to(2, 5, blocked=[(1, 4)]))
 

@@ -32,25 +32,25 @@ REQUIRED_OBSERVATIONS = [
 ]
 
 
-def _create_distance_map(maze, x, y):
+def _create_distance_map(maze, from_x, from_y, to_x, to_y):
   """Return a distance map to position: x,y."""
-  if not (0 <= x < maze.shape[0] and 0 <= y < maze.shape[1]):
+  if not (0 <= from_x < maze.shape[0] and 0 <= from_y < maze.shape[1]):
     return None
 
-  if maze[x, y] != 0:
+  if maze[from_x, from_y] != 0:
     return None
 
   # distance map contains -1 for unexplored cells and -2 for walls.
   distance_map = -np.copy(maze) - 1
-  distance_map[x, y] = 0
+  distance_map[from_x, from_y] = 0
 
-  to_explore = [(x, y)]
+  to_explore = [(from_x, from_y)]
 
   offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
   distance = 1
   while to_explore:
-    next_expore = []
+    next_explore = []
     for pos in to_explore:
       for (offset_x, offset_y) in offsets:
         x = pos[0] + offset_x
@@ -58,16 +58,20 @@ def _create_distance_map(maze, x, y):
         if (0 <= x < maze.shape[0] and 0 <= y < maze.shape[1] and
             distance_map[x, y] == -1):
           distance_map[x, y] = distance
-          next_expore.append((x, y))
-    to_explore = next_expore
+          if to_x == x and to_y == y:
+            return distance_map
+          else:
+            next_explore.append((x, y))
+
+    to_explore = next_explore
     distance += 1
 
-  return distance_map
+  return None
 
 
 def _find_path(maze, from_x, from_y, to_x, to_y):
   """Return a path from (from_x, from_y) to (to_x, to_y) or None."""
-  distance_map = _create_distance_map(maze, to_x, to_y)
+  distance_map = _create_distance_map(maze, to_x, to_y, from_x, from_y)
   if distance_map is None or distance_map[from_x, from_y] < 0:
     return None
 
@@ -123,16 +127,48 @@ class MazeGameController(object):
     path = _find_path(maze, start[0], start[1], dest_x, dest_y)
     return path
 
+  def follow_path(self, path):
+    """Move the player along the path."""
+    path = self._expand_path(path)
+
+    if not path:
+      return False
+
+    for (prev_x, prev_y), (x, y), (next_x, next_y) in zip(
+        path, path[1:], path[2:]):
+      if next_x - x != x - prev_x or next_y - y != y - prev_y:
+        world_x, world_y = self._to_world_coord(x, y)
+        self._controller.move_to(world_x, world_y)
+
+    (x, y) = path[-1]
+    world_x, world_y = self._to_world_coord(x, y)
+    self._controller.move_to(world_x, world_y)
+    return True
+
+  def _expand_path(self, path):
+    """Return a new path that includes all intermediate steps."""
+    (last_x, last_y) = self.maze_position()
+    expanded_path = [(last_x, last_y)]
+    maze = self._get_maze()
+    for (x, y) in path:
+      if last_x != x or last_y != y:
+        local_path = _find_path(maze, last_x, last_y, x, y)
+        if local_path:
+          expanded_path += local_path
+        else:
+          return None
+      last_x, last_y = x, y
+    return expanded_path
+
   def move_to(self, dest_x, dest_y, blocked=None):
     """Move the player to the destination avoiding blocked cells."""
     path = self.find_path(dest_x, dest_y, blocked=blocked)
     if path is None:
       return False
-    else:
-      for (x, y) in path:
-        world_x, world_y = self._to_world_coord(x, y)
-        self._controller.move_to(world_x, world_y)
+    elif self.follow_path(path):
       return np.array_equal([dest_x, dest_y], self.maze_position())
+    else:
+      return False
 
   def pickup_location(self, index):
     """Return location of a pickpup."""
