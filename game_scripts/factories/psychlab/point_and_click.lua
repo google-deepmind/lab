@@ -82,12 +82,27 @@ end
 
 --[[ Add a widget.
 
+Note posAbs and sizeAbs can be combined with pos and size.
+Example:
+
+Align center-right is achieved with:
+
+    local imageY, imageX = unpack(image:shape())
+    pac:addWidget{
+        name = "WIDGET_CENTRE_RIGHT"
+        pos = {1.0, 0.5},
+        posAbs = {-imageX, math.floor(-imageY/2)},
+        sizeAbs = {imageX, imageY},
+    }
+
 Keyword arguments:
 
 *   `name` Name of the widget - must be unique.
+*   `posAbs` = {xPos, yPos} Widget position in pixels (BL origin 0,0).
+*   `sizeAbs` = {width, height} The widget size in pixels.
 *   `pos` = {xPos, yPos} Widget position relative to screen.
 *   `size` = {width, height} The widget size relative to screen.
-*   `image` (ByteTensor{3xhxw}, optional).
+*   `image` (ByteTensor{hxwx3}, optional).
 *   `imageLayer` (int, default = 1) Order to draw the images, 1 being the
     bottom.
 *   `userData` (optional) Passed back in callbacks.
@@ -100,22 +115,29 @@ Keyword arguments:
 ]]
 function pac:addWidget(opts)
   local name = opts.name
-  assert(self._widgets[name] == nil, 'Widget ' .. opts.name ..
-         ' already exists!')
+  assert(self._widgets[name] == nil, 'Widget ' .. opts.name .. ' exists!')
   self._surfaceDirty = true
-
   local widget = {}
-  widget.bounds = {
-    xMin = opts.pos[1],
-    yMin = opts.pos[2],
-    xMax = opts.pos[1] + opts.size[1],
-    yMax = opts.pos[2] + opts.size[2]
-  }
+  local sizeY, sizeX = unpack(self._surface:shape())
+  local posAbs = opts.posAbs or {0, 0}
+  local sizeAbs = opts.sizeAbs or {0, 0}
+  local pos = opts.pos or {0, 0}
+  local size = opts.size or {0, 0}
 
-  -- Return an error if widget bounds are too large.
-  assert(widget.bounds.xMax <= 1, 'Widget ' .. opts.name .. ' is too wide!')
-  assert(widget.bounds.yMax <= 1, 'Widget ' .. opts.name .. ' is too high!')
+  local xMin = posAbs[1] + pos[1] * sizeX
+  local yMin = posAbs[2] + pos[2] * sizeY
+  local xMax = xMin + sizeAbs[1] + size[1] * sizeX
+  local yMax = yMin + sizeAbs[2] + size[2] * sizeY
 
+  if xMax <= xMin or yMax <= yMin or
+      xMin < 0 or yMin < 0 or
+      xMax > sizeX or yMax > sizeY then
+    error('Widget ' .. opts.name .. ' Invalid bounds!' ..
+          '\nxMin: ' .. xMin .. ' xMax: ' .. xMax ..
+          '\nyMin: ' .. yMin .. ' yMax: ' .. yMax ..
+          '\nsizeX: ' .. sizeX .. ' sizeY: ' .. sizeY)
+  end
+  widget.bounds = {xMin = xMin, yMin = yMin, xMax = xMax, yMax = yMax}
   widget.image = opts.image
   widget.mouseClickCallback = opts.mouseClickCallback
   widget.mouseHoverCallback = opts.mouseHoverCallback
@@ -275,13 +297,12 @@ function pac:_drawWidgets()
          'Layers must start from 1 and be consecutive')
 
   self:_drawBackgroundColor()
-  local shape = self._surface:shape()
   for i, layer in ipairs(imageLayers) do
     for name, widget in pairs(layer) do
-      local offsetx = widget.bounds.xMin * shape[2]
-      local offsety = widget.bounds.yMin * shape[1]
-      local sizex = (widget.bounds.xMax - widget.bounds.xMin) * shape[1]
-      local sizey = (widget.bounds.yMax - widget.bounds.yMin) * shape[1]
+      local offsetx = widget.bounds.xMin
+      local offsety = widget.bounds.yMin
+      local sizex = (widget.bounds.xMax - widget.bounds.xMin)
+      local sizey = (widget.bounds.yMax - widget.bounds.yMin)
       -- Narrow the screen to the region for the image and do the copy.
       local narrow = self._surface:
         narrow(1, offsety + 1, sizey):
@@ -352,10 +373,12 @@ function pac:step(action)
   -- Process the action.
   local isClick = action[1] == 1
   local pos = action[2]
+  local sizeY, sizeX = unpack(self._surface:shape())
+  local mouseXAbs, mouseYAbs = pos[1] * sizeX, pos[2] * sizeY
   if isClick then
-    self:onMouseClick(pos[1], pos[2])
+    self:onMouseClick(mouseXAbs, mouseYAbs)
   else
-    self:onMouseOver(pos[1], pos[2])
+    self:onMouseOver(mouseXAbs, mouseYAbs)
   end
 
   -- Step the environment.
