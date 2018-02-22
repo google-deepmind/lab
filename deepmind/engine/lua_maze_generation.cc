@@ -140,7 +140,7 @@ lua::NResultsOr LuaMazeGeneration::Create(lua_State* L) {
   if (table.Contains("entity")) {
     std::string entity_layer;
     if (!table.LookUp("entity", &entity_layer) || entity_layer.empty()) {
-      return "[mazeGeneration] - Must construct with non empty entity_layer";
+      return "[mazeGeneration] - 'entity' must be a non-empty string.";
     }
     std::string variations_layer;
     if (table.LookUp("variations", &variations_layer) &&
