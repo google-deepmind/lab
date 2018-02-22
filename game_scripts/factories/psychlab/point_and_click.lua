@@ -130,8 +130,8 @@ function pac:addWidget(opts)
   local yMax = yMin + sizeAbs[2] + size[2] * sizeY
 
   if xMax <= xMin or yMax <= yMin or
-      xMin < 0 or yMin < 0 or
-      xMax > sizeX or yMax > sizeY then
+      xMax <= 0 or yMax <= 0 or
+      xMin >= sizeX or yMin >= sizeY then
     error('Widget ' .. opts.name .. ' Invalid bounds!' ..
           '\nxMin: ' .. xMin .. ' xMax: ' .. xMax ..
           '\nyMin: ' .. yMin .. ' yMax: ' .. yMax ..
@@ -297,18 +297,42 @@ function pac:_drawWidgets()
          'Layers must start from 1 and be consecutive')
 
   self:_drawBackgroundColor()
+  local maxy, maxx = unpack(self._surface:shape())
   for i, layer in ipairs(imageLayers) do
     for name, widget in pairs(layer) do
       local offsetx = widget.bounds.xMin
       local offsety = widget.bounds.yMin
-      local sizex = (widget.bounds.xMax - widget.bounds.xMin)
-      local sizey = (widget.bounds.yMax - widget.bounds.yMin)
+      local sizey, sizex = unpack(widget.image:shape())
+      local image = widget.image
+      -- Clip Right
+      if sizex + offsetx > maxx then
+        sizex = maxx - offsetx
+        image = image:narrow(2, 1, sizex)
+      end
+      -- Clip Top
+      if sizey + offsety > maxy then
+        sizey = maxy - offsety
+        image = image:narrow(1, 1, sizey)
+      end
+
+      -- Clip Left
+      if offsetx < 0 then
+        sizex = sizex + offsetx
+        image = image:narrow(2, -offsetx + 1, sizex)
+        offsetx = 0
+      end
+      -- Clip Bottom
+       if offsety < 0 then
+        sizey = sizey + offsety
+        image = image:narrow(1, -offsety + 1, sizey)
+        offsety = 0
+      end
       -- Narrow the screen to the region for the image and do the copy.
-      local narrow = self._surface:
-        narrow(1, offsety + 1, sizey):
-        narrow(2, offsetx + 1, sizex):
-        narrow(3, 1, 3)
-      narrow:copy(widget.image)
+      self._surface:
+          narrow(1, offsety + 1, sizey):
+          narrow(2, offsetx + 1, sizex):
+          narrow(3, 1, 3):
+          copy(image)
     end
   end
   self._surfaceDirty = false
