@@ -41,7 +41,6 @@ function api:init(params)
       mapName = "empty_room",
       mapEntityLayer = MAP_ENTITIES,
       useSkybox = true,
-      theme = "TETRIS"
   }
 end
 

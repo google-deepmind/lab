@@ -36,10 +36,9 @@ local rewards = {}
 function api:init(params)
   make_map.seedRng(1)
   self._map = make_map.makeMap{
-      mapName = "empty_room",
+      mapName = 'empty_room',
       mapEntityLayer = MAP_ENTITIES,
-      useSkybox = true,
-      theme = "MISHMASH"
+      useSkybox = true
   }
 end
 
@@ -53,10 +52,10 @@ function api:createPickup(classname)
 end
 
 function api:updateSpawnVars(spawnVars)
-  if spawnVars.classname == "info_player_start" then
+  if spawnVars.classname == 'info_player_start' then
     -- Spawn facing north.
-    spawnVars.angle = "90"
-    spawnVars.randomAngleRange = "0"
+    spawnVars.angle = '90'
+    spawnVars.randomAngleRange = '0'
   else
     rewards[#rewards + 1] = helpers.spawnVarToNumberTable(spawnVars.origin)
   end

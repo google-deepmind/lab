@@ -41,7 +41,6 @@ function api:init(params)
       mapName = 'empty_room',
       mapEntityLayer = MAP_NO_WEAPON,
       useSkybox = true,
-      theme = 'TETRIS',
       allowBots = true
   }
   self._spawnWeapons = params.spawnWeapons

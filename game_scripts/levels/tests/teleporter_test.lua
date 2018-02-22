@@ -37,7 +37,6 @@ function api:init(params)
       mapName = "teleport_test",
       mapEntityLayer = MAP_ENTITIES,
       useSkybox = true,
-      theme = "TETRIS",
       callback = function (i, j, c, maker)
         if c == 'T' then
           return custom_entities.makeTeleporter(
