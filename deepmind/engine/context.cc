@@ -703,7 +703,7 @@ int Context::Init() {
     lua_pop(L, result.n_results());
     return 1;
   }
-  if (!lua::Read(L, -1, &script_table_ref_)) {
+  if (!IsFound(lua::Read(L, -1, &script_table_ref_))) {
     error_message_ = absl::StrCat(
         "Lua script must return a table or userdata with metatable. Actually "
         "returned : '",
@@ -769,7 +769,7 @@ bool Context::HasEpisodeFinished(double elapsed_episode_time_seconds) {
   CHECK(result.n_results() == 1) << "[hasEpisodeFinished] - Expect single "
                                     "return value of true or false.";
   bool finish_episode = false;
-  CHECK(lua::Read(L, -1, &finish_episode))
+  CHECK(IsFound(lua::Read(L, -1, &finish_episode)))
       << "[hasEpisodeFinished] - Must return a boolean.";
   lua_pop(L, result.n_results());
   return finish_episode;
@@ -783,7 +783,7 @@ const char* Context::GetCommandLine(const char* old_commandline) {
     auto result = lua::Call(L, 2);
     CHECK(result.ok()) << result.error();
     CHECK_EQ(1, result.n_results()) << "'commandLine' must return a string.";
-    CHECK(lua::Read(L, -1, &command_line_))
+    CHECK(IsFound(lua::Read(L, -1, &command_line_)))
         << "'commandLine' must return a string: Found " << lua::ToString(L, -1);
     lua_pop(L, result.n_results());
     return command_line_.c_str();
@@ -801,7 +801,7 @@ int Context::RunLuaSnippet(const char* buf, std::size_t buf_len) {
     lua::Push(L, script_table_ref_);
     result = lua::Call(L, 1);
     if (result.ok() && result.n_results() != 0) {
-      lua::Read(L, -1, &out);
+      CHECK(!IsTypeMismatch(lua::Read(L, -1, &out)));
     }
     lua_pop(L, result.n_results());
   }
@@ -818,7 +818,7 @@ const char* Context::NextMap() {
   auto result = lua::Call(L, 1);
   CHECK(result.ok()) << result.error();
   CHECK_EQ(1, result.n_results()) << "'nextMap' must return one string.";
-  CHECK(lua::Read(L, -1, &map_name_))
+  CHECK(IsFound(lua::Read(L, -1, &map_name_)))
       << "'nextMap' must return one string: Found " << lua::ToString(L, -1);
   MutableGame()->NextMap();
   lua_pop(L, result.n_results());
@@ -854,12 +854,13 @@ void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
     CHECK_EQ(1, result.n_results())
         << "[" << update_type << "] - Must return table or nil!";
     if (!lua_isnil(L, -1)) {
-      CHECK(lua::Read(L, -1, &table))
+      CHECK(IsFound(lua::Read(L, -1, &table)))
           << "[" << update_type << "] - Must return table or nil!";
-      CHECK(table.LookUp("amounts",
-                         absl::MakeSpan(gadget_inventory, gadget_count)))
+      CHECK(IsFound(table.LookUp(
+          "amounts", absl::MakeSpan(gadget_inventory, gadget_count))))
           << "[" << update_type << "] - Table missing 'amounts'!";
-      CHECK(table.LookUp("stats", absl::MakeSpan(stat_inventory, stat_count)))
+      CHECK(IsFound(
+          table.LookUp("stats", absl::MakeSpan(stat_inventory, stat_count))))
           << "[" << update_type << "] - Table missing 'stats'!";
     }
     lua_pop(L, result.n_results());
@@ -876,7 +877,7 @@ int Context::GameType() {
     auto result = lua::Call(L, 1);
     CHECK(result.ok()) << "[gameType] - " << result.error();
     int game_type = 0;
-    CHECK(lua::Read(L, -1, &game_type))
+    CHECK(IsFound(lua::Read(L, -1, &game_type)))
         << "[gameType] - must return integer; actual \"" << lua::ToString(L, -1)
         << "\"";
     CHECK_LT(game_type, 8)
@@ -905,8 +906,9 @@ char Context::TeamSelect(int player_id, const char* player_name) {
   }
   CHECK_EQ(1, result.n_results()) << "[team] - must return one string.";
   std::string team;
-  CHECK(lua::Read(L, -1, &team)) << "[team] - must return one string: Found \""
-                                 << lua::ToString(L, -1) << "\"";
+  CHECK(IsFound(lua::Read(L, -1, &team)))
+      << "[team] - must return one string: Found \"" << lua::ToString(L, -1)
+      << "\"";
 
   lua_pop(L, result.n_results());
   CHECK(!team.empty()) << "[team] - must return one character or nil: Found \""
@@ -955,13 +957,13 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
     CHECK(result.ok()) << result.error();
 
     if (result.n_results() >= 1) {
-      lua::Read(L, -1, &table);
-      CHECK(table.LookUp("lookDownUp", look_down_up));
-      CHECK(table.LookUp("lookLeftRight", look_left_right));
-      CHECK(table.LookUp("moveBackForward", move_back_forward));
-      CHECK(table.LookUp("strafeLeftRight", strafe_left_right));
-      CHECK(table.LookUp("crouchJump", crouch_jump));
-      CHECK(table.LookUp("buttonsDown", buttons_down));
+      CHECK(IsFound(lua::Read(L, -1, &table)));
+      CHECK(IsFound(table.LookUp("lookDownUp", look_down_up)));
+      CHECK(IsFound(table.LookUp("lookLeftRight", look_left_right)));
+      CHECK(IsFound(table.LookUp("moveBackForward", move_back_forward)));
+      CHECK(IsFound(table.LookUp("strafeLeftRight", strafe_left_right)));
+      CHECK(IsFound(table.LookUp("crouchJump", crouch_jump)));
+      CHECK(IsFound(table.LookUp("buttonsDown", buttons_down)));
       lua_pop(L, result.n_results());
       return;
     }
@@ -1006,7 +1008,7 @@ bool Context::FindModel(const char* model_name) {
 
   // Read model
   std::unique_ptr<Model> model(new Model());
-  CHECK(Read(L, -1, model.get()))
+  CHECK(IsFound(Read(L, -1, model.get())))
       << "createModel: Failed to parse data for model " << model_name;
   model_name_ = model_name;
   model_ = std::move(model);
@@ -1044,7 +1046,7 @@ bool Context::CanTrigger(int entity_id, const char* target_name) {
       << "canTrigger: return value from lua canTrigger must be true or false.";
 
   bool can_trigger;
-  CHECK(lua::Read(L, -1, &can_trigger))
+  CHECK(IsFound(lua::Read(L, -1, &can_trigger)))
       << "canTrigger: Failed to read the return value as a boolean."
       << "Return true or false.";
 
@@ -1076,7 +1078,7 @@ bool Context::OverrideTrigger(int entity_id, const char* target_name) {
   }
 
   bool has_override;
-  CHECK(lua::Read(L, -1, &has_override))
+  CHECK(IsFound(lua::Read(L, -1, &has_override)))
       << "trigger: Failed to read the return value as a boolean."
       << "Return true or false.";
 
@@ -1137,7 +1139,7 @@ int Context::RewardOverride(const char* optional_reason, int player_id,
       CHECK(result.n_results() <= 1)
           << "[scoreOverride] - Must return new score or nil";
       if (result.n_results() == 1 && !lua_isnil(L, -1)) {
-        CHECK(lua::Read(L, -1, &score))
+        CHECK(IsFound(lua::Read(L, -1, &score)))
             << "[scoreOverride] - Score must be an integer!";
       }
       lua_pop(L, result.n_results());
@@ -1182,18 +1184,18 @@ void Context::AddBots() {
     return;
   }
   lua::TableRef table;
-  CHECK(Read(L, -1, &table)) << "[addBots] - Failed to addBot table!";
+  CHECK(IsFound(Read(L, -1, &table))) << "[addBots] - Failed to addBot table!";
   for (std::size_t i = 0; i < table.ArraySize(); ++i) {
     lua::TableRef bot_table;
-    CHECK(table.LookUp(i + 1, &bot_table)) << "Failed to read bot - " << i + 1
-                                           << "!";
+    CHECK(IsFound(table.LookUp(i + 1, &bot_table)))
+        << "Failed to read bot - " << i + 1 << "!";
     std::string bot_name;
-    CHECK(bot_table.LookUp("name", &bot_name))
+    CHECK(IsFound(bot_table.LookUp("name", &bot_name)))
         << "[addBots] - Must supply bot name!";
     double skill = 5.0;
-    bot_table.LookUp("skill", &skill);
+    CHECK(!IsTypeMismatch(bot_table.LookUp("skill", &skill)));
     std::string team = "free";
-    bot_table.LookUp("team", &team);
+    CHECK(!IsTypeMismatch(bot_table.LookUp("team", &team)));
     Game().Calls()->add_bot(bot_name.c_str(), skill, team.c_str());
   }
   lua_pop(L, result.n_results());
@@ -1223,14 +1225,14 @@ bool Context::ReplaceModelName(const char* name, char* new_name,
   }
 
   std::string replacement_name;
-  CHECK(lua::Read(L, 1, &replacement_name))
+  CHECK(IsFound(lua::Read(L, 1, &replacement_name)))
       << "[replaceModelName] - Return arg1 (newModelName) must be a string.";
   CHECK_LT(replacement_name.size(), new_name_size)
       << "[replaceModelName] - Return arg1 (newModelName) is too long.";
 
   std::string string_prefix;
   if (result.n_results() == 2 && !lua_isnil(L, 2)) {
-    CHECK(lua::Read(L, 2, &string_prefix))
+    CHECK(IsFound(lua::Read(L, 2, &string_prefix)))
         << "[replaceModelName] - Return arg2 (texturePrefix) must be a string.";
     CHECK_LT(string_prefix.size(), texture_prefix_size)
         << "[replaceModelName] - Return arg2 (texturePrefix) is too long.";
@@ -1260,7 +1262,7 @@ bool Context::ReplaceTextureName(const char* name, char* new_name,
     return false;
   }
   std::string replacement_name;
-  CHECK(lua::Read(L, -1, &replacement_name))
+  CHECK(IsFound(lua::Read(L, -1, &replacement_name)))
       << "[replaceTextureName] - New name must be a string.";
   CHECK_LT(replacement_name.size(), max_size)
       << "[replaceTextureName] - New name is too long.";
@@ -1324,7 +1326,7 @@ bool Context::ModifyRgbaTexture(const char* name, unsigned char* data,
   CHECK(result.ok()) << "[modifyTexture] - " << result.error();
 
   bool modified_texture;
-  CHECK(lua::Read(L, -1, &modified_texture))
+  CHECK(IsFound(lua::Read(L, -1, &modified_texture)))
       << "[modifyTexture] - must return true or false";
   lua_pop(L, result.n_results());
   storage_validity->Invalidate();
@@ -1346,9 +1348,9 @@ int Context::CallInit() {
   }
 
   int ret_val = 0;
-  bool correct_args = result.n_results() == 0 ||
-                      (result.n_results() == 1 && lua_isnil(L, 1)) ||
-                      (result.n_results() <= 2 && lua::Read(L, 1, &ret_val));
+  bool correct_args =
+      result.n_results() == 0 || (result.n_results() == 1 && lua_isnil(L, 1)) ||
+      (result.n_results() <= 2 && IsFound(lua::Read(L, 1, &ret_val)));
   if (ret_val != 0) {
     if (result.n_results() == 2) {
       error_message_ = lua::ToString(L, 2);
@@ -1387,24 +1389,25 @@ int Context::MakeScreenMessages(int screen_width, int screen_height,
   CHECK(result.n_results() == 1)
       << "[screenMessages] - Must return an array of messages";
   lua::TableRef messages_array;
-  lua::Read(L, -1, &messages_array);
+  CHECK(IsFound(lua::Read(L, -1, &messages_array)));
   for (std::size_t i = 0, size = messages_array.ArraySize(); i != size; ++i) {
     lua::TableRef message_table;
-    CHECK(messages_array.LookUp(i + 1, &message_table))
+    CHECK(IsFound(messages_array.LookUp(i + 1, &message_table)))
         << "[screenMessages] - Each message must be a table";
     ScreenMessage message = {};
-    CHECK(message_table.LookUp("message", &message.text) &&
+    CHECK(IsFound(message_table.LookUp("message", &message.text)) &&
           message.text.length() < static_cast<std::size_t>(string_buffer_size))
         << "[screenMessages] - Must contain a string 'message' field and the "
            "message must no longer than "
         << string_buffer_size - 1;
-    message_table.LookUp("x", &message.x);
-    message_table.LookUp("y", &message.y);
-    message_table.LookUp("alignment", &message.align_l0_r1_c2);
+    CHECK(!IsTypeMismatch(message_table.LookUp("x", &message.x)));
+    CHECK(!IsTypeMismatch(message_table.LookUp("y", &message.y)));
+    CHECK(!IsTypeMismatch(
+        message_table.LookUp("alignment", &message.align_l0_r1_c2)));
     std::fill(message.rgba.begin(), message.rgba.end(), 1.0);
-    message_table.LookUp("rgba", &message.rgba);
+    CHECK(!IsTypeMismatch(message_table.LookUp("rgba", &message.rgba)));
     message.shadow = true;
-    message_table.LookUp("shadow", &message.shadow);
+    CHECK(!IsTypeMismatch(message_table.LookUp("shadow", &message.shadow)));
     screen_messages_.push_back(std::move(message));
   }
 
@@ -1444,21 +1447,21 @@ int Context::MakeFilledRectangles(int screen_width, int screen_height) {
   CHECK_EQ(1, result.n_results())
       << "[filledRectangles] - Must return an array of rectangles";
   lua::TableRef rectangles_array;
-  lua::Read(L, -1, &rectangles_array);
+  CHECK(IsFound(lua::Read(L, -1, &rectangles_array)));
   for (std::size_t i = 0, size = rectangles_array.ArraySize(); i != size; ++i) {
     lua::TableRef rectangle_table;
-    CHECK(rectangles_array.LookUp(i + 1, &rectangle_table))
+    CHECK(IsFound(rectangles_array.LookUp(i + 1, &rectangle_table)))
         << "[filledRectangles] - Each message must be a table";
     FilledRectangle filled_rectangle = {};
-    CHECK(rectangle_table.LookUp("x", &filled_rectangle.x))
+    CHECK(IsFound(rectangle_table.LookUp("x", &filled_rectangle.x)))
         << "[filledRectangles] - Must supply x";
-    CHECK(rectangle_table.LookUp("y", &filled_rectangle.y))
+    CHECK(IsFound(rectangle_table.LookUp("y", &filled_rectangle.y)))
         << "[filledRectangles] - Must supply y";
-    CHECK(rectangle_table.LookUp("width", &filled_rectangle.width))
+    CHECK(IsFound(rectangle_table.LookUp("width", &filled_rectangle.width)))
         << "[filledRectangles] - Must supply width";
-    CHECK(rectangle_table.LookUp("height", &filled_rectangle.height))
+    CHECK(IsFound(rectangle_table.LookUp("height", &filled_rectangle.height)))
         << "[filledRectangles] - Must supply height";
-    CHECK(rectangle_table.LookUp("rgba", &filled_rectangle.rgba))
+    CHECK(IsFound(rectangle_table.LookUp("rgba", &filled_rectangle.rgba)))
         << "[filledRectangles] - Must supply rgba";
     filled_rectangles_.push_back(filled_rectangle);
   }
@@ -1525,10 +1528,10 @@ void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
   std::array<float, 3> pos_delta = {{0.0f, 0.0f, 0.0f}};
   std::array<float, 3> vel_delta = {{0.0f, 0.0f, 0.0f}};
 
-  CHECK(lua_isnoneornil(L, 1) || lua::Read(L, 1, &pos_delta))
+  CHECK(!IsTypeMismatch(lua::Read(L, 1, &pos_delta)))
       << "[playerMover] - First return value must be a table containing"
          "player position delta values.";
-  CHECK(lua_isnoneornil(L, 2) || lua::Read(L, 2, &vel_delta))
+  CHECK(!IsTypeMismatch(lua::Read(L, 2, &vel_delta)))
       << "[playerMover] - Second return value must be a table containing"
          "player velocity delta values.";
 
