@@ -35,6 +35,65 @@ namespace deepmind {
 namespace lab {
 namespace lua {
 
+// Status of a read operation.
+class ReadResult {
+ public:
+  enum ReadResultEnum {
+    kFound = 0,
+    kNotFound = 1,
+    kTypeMismatch = 2,
+  };
+
+  constexpr ReadResult(const ReadResult&) = default;
+  ReadResult& operator=(const ReadResult&) = default;
+
+  // Legacy - please use 'IsFound(read_result)' instead.
+  constexpr operator bool() const { return value_ == kFound; }
+
+  constexpr ReadResultEnum Value() const { return value_; }
+
+  // Read was successful.
+  friend constexpr ReadResult ReadFound();
+
+  // Read from Lua stack was none or nil.
+  friend constexpr ReadResult ReadNotFound();
+
+  // Item was present but not convertible to the desired type.
+  friend constexpr ReadResult ReadTypeMismatch();
+
+  friend constexpr bool operator==(ReadResult lhs, ReadResult rhs) {
+    return lhs.value_ == rhs.value_;
+  }
+
+  friend constexpr bool IsFound(ReadResult read_result) {
+    return read_result.value_ == kFound;
+  }
+
+  friend constexpr bool IsTypeMismatch(ReadResult read_result) {
+    return read_result.value_ == kTypeMismatch;
+  }
+
+  friend constexpr bool IsNotFound(ReadResult read_result) {
+    return read_result.value_ == kNotFound;
+  }
+
+ private:
+  constexpr explicit ReadResult(ReadResultEnum value) : value_(value) {}
+  ReadResultEnum value_;
+};
+
+constexpr inline ReadResult ReadFound() {
+  return ReadResult(ReadResult::kFound);
+}
+
+constexpr inline ReadResult ReadNotFound() {
+  return ReadResult(ReadResult::kNotFound);
+}
+
+constexpr inline ReadResult ReadTypeMismatch() {
+  return ReadResult(ReadResult::kTypeMismatch);
+}
+
 template <typename Type>
 Type* ReadUDT(lua_State* L, int idx, const char* tname) {
   if (!lua_isuserdata(L, idx)) {
@@ -58,97 +117,130 @@ Type* ReadUDT(lua_State* L, int idx, const char* tname) {
 // In all Read overloads, '*result' is filled in if value at the stack
 // location 'idx' is valid for the given type. The return value indicates
 // whether the read was valid. If the read fails, '*result' is unmodified.
-inline bool Read(lua_State* L, int idx, std::string* result) {
-  if (lua_type(L, idx) == LUA_TSTRING) {
-    std::size_t length = 0;
-    const char* result_cstr = lua_tolstring(L, idx, &length);
-    *result = std::string(result_cstr, length);
-    return true;
+inline ReadResult Read(lua_State* L, int idx, std::string* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TSTRING: {
+      std::size_t length = 0;
+      const char* result_cstr = lua_tolstring(L, idx, &length);
+      *result = std::string(result_cstr, length);
+      return ReadFound();
+    }
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
-inline bool Read(lua_State* L, int idx, bool* result) {
-  if (lua_type(L, idx) == LUA_TBOOLEAN) {
-    *result = lua_toboolean(L, idx);
-    return true;
+inline ReadResult Read(lua_State* L, int idx, bool* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TBOOLEAN:
+      *result = lua_toboolean(L, idx);
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
-inline bool Read(lua_State* L, int idx, lua_Integer* result) {
-  if (lua_type(L, idx) == LUA_TNUMBER) {
-    *result = lua_tointeger(L, idx);
-    return true;
+inline ReadResult Read(lua_State* L, int idx, lua_Integer* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TNUMBER:
+      *result = lua_tointeger(L, idx);
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
-inline bool Read(lua_State* L, int idx, lua_Number* result) {
-  if (lua_type(L, idx) == LUA_TNUMBER) {
-    *result = lua_tonumber(L, idx);
-    return true;
+inline ReadResult Read(lua_State* L, int idx, lua_Number* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TNUMBER:
+      *result = lua_tonumber(L, idx);
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
 // Convenience wrapper for arbitrary signed integral types.
 template <typename T>
-typename std::enable_if<std::is_integral<T>::value &&
-                        std::is_signed<T>::value, bool>::type
+typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value,
+                        ReadResult>::type
 Read(lua_State* L, int idx, T* out) {
   lua_Integer result;
-  if (!Read(L, idx, &result)) {
-    return false;
-  } else {
+  ReadResult read_result = Read(L, idx, &result);
+  if (IsFound(read_result)) {
     *out = result;
-    return true;
   }
+  return read_result;
 }
 
 // Convenience wrapper for arbitrary unsigned integral types.
 // Read fails if value is negative.
 template <typename T>
 typename std::enable_if<std::is_unsigned<T>::value &&
-                        !std::is_same<T, bool>::value, bool>::type
+                            !std::is_same<T, bool>::value,
+                        ReadResult>::type
 Read(lua_State* L, int idx, T* out) {
   lua_Integer result;
-  if (!Read(L, idx, &result) || result < 0) {
-    return false;
-  } else {
-    *out = result;
-    return true;
+  ReadResult read_result = Read(L, idx, &result);
+  if (IsFound(read_result)) {
+    if (result < 0) {
+      return ReadTypeMismatch();
+    } else {
+      *out = result;
+    }
   }
+  return read_result;
 }
 
 // Convenience wrapper for arbitrary floating-point types.
 template <typename T>
-typename std::enable_if<std::is_floating_point<T>::value, bool>::type
+typename std::enable_if<std::is_floating_point<T>::value, ReadResult>::type
 Read(lua_State* L, int idx, T* out) {
   lua_Number result;
-  if (!Read(L, idx, &result)) {
-    return false;
-  } else {
+  ReadResult read_result = Read(L, idx, &result);
+  if (IsFound(read_result)) {
     *out = result;
-    return true;
   }
+  return read_result;
 }
 
-inline bool Read(lua_State* L, int idx, lua_CFunction* result) {
-  if (lua_type(L, idx) == LUA_TFUNCTION) {
-    *result = lua_tocfunction(L, idx);
-    return true;
+inline ReadResult Read(lua_State* L, int idx, lua_CFunction* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TFUNCTION:
+      *result = lua_tocfunction(L, idx);
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
 template <typename T>
-bool Read(lua_State* L, int idx, T** result) {
-  if (lua_type(L, idx) == LUA_TLIGHTUSERDATA) {
-    *result = static_cast<T*>(lua_touserdata(L, idx));
-    return true;
+ReadResult Read(lua_State* L, int idx, T** result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TLIGHTUSERDATA:
+      *result = static_cast<T*>(lua_touserdata(L, idx));
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
 }
 
 // Reads an array from the Lua stack. On success, the array is stored in
@@ -159,25 +251,25 @@ bool Read(lua_State* L, int idx, T** result) {
 // table, or if any array element of the table is not readable as type T.
 // Non-array table elements are silently ignored.
 template <typename T, typename A>
-bool Read(lua_State* L, int idx, std::vector<T, A>* result);
+ReadResult Read(lua_State* L, int idx, std::vector<T, A>* result);
 
 // Reads a Lua array into 'values'. The failure conditions are the same as in
 // the previous function, but 'values' may be modified even if this function
 // fails.
 template <typename T>
-bool Read(lua_State* L, int idx, absl::Span<T> values);
+ReadResult Read(lua_State* L, int idx, absl::Span<T> values);
 
 // Reads a Lua array into '*values'. The failure conditions are the same as in
 // the previous function, but '*values' may be modified even if this function
 // fails.
 template <typename T, std::size_t N>
-bool Read(lua_State* L, int idx, std::array<T, N>* values);
+ReadResult Read(lua_State* L, int idx, std::array<T, N>* values);
 
 // Reads a Lua array into '*values'. The failure conditions are the same as in
 // the previous function and '*values' may be modified even if this function
 // fails.
 template <typename T, std::size_t N, typename A>
-bool Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values);
+ReadResult Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values);
 
 // Reads a table from the Lua stack. On success, the table is stored in
 // '*result'; on failure, '*result' is unmodified. Returns whether the function
@@ -187,103 +279,136 @@ bool Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values);
 // table, or if the table contains an entry whose key cannot be read as K or
 // whose value cannot be read as T.
 template <typename K, typename T, typename H, typename C, typename A>
-bool Read(lua_State* L, int idx, std::unordered_map<K, T, H, C, A>* result);
+ReadResult Read(lua_State* L, int idx,
+                std::unordered_map<K, T, H, C, A>* result);
 
 template <typename T>
-bool Read(lua_State* L, int idx, absl::Span<T> values) {
-  if (lua_type(L, idx) == LUA_TTABLE) {
-    const std::size_t count = ArrayLength(L, idx);
-    if (count >= values.size()) {
-      for (std::size_t i = 0; i < values.size(); ++i) {
-        lua_rawgeti(L, idx, i + 1);
-        if (!Read(L, -1, &values[i])) {
-          lua_pop(L, 1);
-          return false;
-        }
-        lua_pop(L, 1);
-      }
-      return true;
-    }
+ReadResult Read(lua_State* L, int idx, absl::Span<T> values) {
+  switch (lua_type(L, idx)) {
+    case LUA_TTABLE:
+      break;
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
+
+  const std::size_t count = ArrayLength(L, idx);
+  if (count < values.size()) {
+    return ReadTypeMismatch();
+  }
+
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    lua_rawgeti(L, idx, i + 1);
+    if (!IsFound(Read(L, -1, &values[i]))) {
+      lua_pop(L, 1);
+      return ReadTypeMismatch();
+    }
+    lua_pop(L, 1);
+  }
+  return ReadFound();
 }
 
 template <typename T, std::size_t N>
-bool Read(lua_State* L, int idx, std::array<T, N>* values) {
+ReadResult Read(lua_State* L, int idx, std::array<T, N>* values) {
   return Read(L, idx, absl::MakeSpan(*values));
 }
 
 template <typename T, std::size_t N, typename A>
-bool Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values) {
+ReadResult Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values) {
   values->clear();
-  if (lua_type(L, idx) == LUA_TTABLE) {
-    std::size_t count = ArrayLength(L, idx);
-    values->reserve(count);
-    for (std::size_t i = 0; i < count; ++i) {
-      lua_rawgeti(L, idx, i + 1);
-      T value;
-      if (Read(L, -1, &value)) {
-        values->push_back(std::move(value));
-        lua_pop(L, 1);
-      } else {
-        lua_pop(L, 1);
-        return false;
-      }
-    }
-    return true;
+  switch (lua_type(L, idx)) {
+    case LUA_TTABLE:
+      break;
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
+
+  std::size_t count = ArrayLength(L, idx);
+  values->reserve(count);
+  for (std::size_t i = 0; i < count; ++i) {
+    lua_rawgeti(L, idx, i + 1);
+    T value;
+    if (IsFound(Read(L, -1, &value))) {
+      values->push_back(std::move(value));
+      lua_pop(L, 1);
+    } else {
+      lua_pop(L, 1);
+      return ReadTypeMismatch();
+    }
+  }
+  return ReadFound();
 }
 
 template <typename T, typename A>
-bool Read(lua_State* L, int idx, std::vector<T, A>* result) {
+ReadResult Read(lua_State* L, int idx, std::vector<T, A>* result) {
   std::vector<T, A> local_result;
-  if (lua_type(L, idx) == LUA_TTABLE) {
-    std::size_t count = ArrayLength(L, idx);
-    local_result.reserve(count);
-    for (std::size_t i = 0; i < count; ++i) {
-      lua_rawgeti(L, idx, i + 1);
-      T value;
-      if (Read(L, -1, &value)) {
-        local_result.push_back(std::move(value));
-      } else {
-        lua_pop(L, 1);
-        return false;
-      }
-      lua_pop(L, 1);
-    }
-    result->swap(local_result);
-    return true;
+  switch (lua_type(L, idx)) {
+    case LUA_TTABLE:
+      break;
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
+
+  std::size_t count = ArrayLength(L, idx);
+  local_result.reserve(count);
+  for (std::size_t i = 0; i < count; ++i) {
+    lua_rawgeti(L, idx, i + 1);
+    T value;
+    if (IsFound(Read(L, -1, &value))) {
+      local_result.push_back(std::move(value));
+    } else {
+      lua_pop(L, 1);
+      return ReadTypeMismatch();
+    }
+    lua_pop(L, 1);
+  }
+  result->swap(local_result);
+  return ReadFound();
 }
 
 template <typename K, typename T, typename H, typename C, typename A>
-bool Read(lua_State* L, int idx, std::unordered_map<K, T, H, C, A>* result) {
+ReadResult Read(lua_State* L, int idx,
+                std::unordered_map<K, T, H, C, A>* result) {
   std::unordered_map<K, T, H, C, A> local_result;
-  if (lua_type(L, idx) == LUA_TTABLE) {
-    if (idx < 0) {
-      idx = lua_gettop(L) + idx + 1;
-    }
-    lua_pushnil(L);
-    while (lua_next(L, idx) != 0) {
-      K key;
-      if (!Read(L, -2, &key)) {
-        lua_pop(L, 2);
-        return false;
-      }
-      T value;
-      if (!Read(L, -1, &value)) {
-        lua_pop(L, 2);
-        return false;
-      }
-      local_result.emplace(std::move(key), std::move(value));
-      lua_pop(L, 1);
-    }
-    result->swap(local_result);
-    return true;
+
+  switch (lua_type(L, idx)) {
+    case LUA_TTABLE:
+      break;
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
-  return false;
+
+  if (idx < 0) {
+    idx = lua_gettop(L) + idx + 1;
+  }
+  lua_pushnil(L);
+  while (lua_next(L, idx) != 0) {
+    K key;
+    if (!IsFound(Read(L, -2, &key))) {
+      lua_pop(L, 2);
+      return ReadTypeMismatch();
+    }
+    T value;
+    if (!IsFound(Read(L, -1, &value))) {
+      lua_pop(L, 2);
+      return ReadTypeMismatch();
+    }
+    local_result.emplace(std::move(key), std::move(value));
+    lua_pop(L, 1);
+  }
+  result->swap(local_result);
+  return ReadFound();
 }
 
 // Coerce result into human readable string. (Does not fail.)

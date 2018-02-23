@@ -54,27 +54,35 @@ void Push(lua_State* L, const Model& model) {
   lua::Push(L, res);
 }
 
-bool Read(lua_State* L, int idx, Model* model) {
+lua::ReadResult Read(lua_State* L, int idx, Model* model) {
   lua::TableRef table;
-  if (!lua::Read(L, idx, &table)) {
+  lua::ReadResult read_result = lua::Read(L, idx, &table);
+  if (!IsFound(read_result)) {
     LOG(ERROR) << "Failed to read model table";
-    return false;
+    return read_result;
   }
-  table.LookUp("name", &model->name);
+  if (IsTypeMismatch(table.LookUp("name", &model->name))) {
+    LOG(ERROR) << "Failed to read model name";
+    return lua::ReadTypeMismatch();
+  }
   lua::TableRef surfaces;
-  table.LookUp("surfaces", &surfaces);
+  if (!IsFound(table.LookUp("surfaces", &surfaces))) {
+    LOG(ERROR) << "'surfaces' must be a table.";
+    return lua::ReadTypeMismatch();
+  }
   for (const auto& surface_name : surfaces.Keys<std::string>()) {
     // Read each surface.
     lua::TableRef surface;
-    if (!surfaces.LookUp(surface_name, &surface)) {
+    if (!IsFound(surfaces.LookUp(surface_name, &surface))) {
       LOG(ERROR) << "Failed to read surface table";
-      return false;
+      return lua::ReadTypeMismatch();
     }
     Model::Surface model_surface;
     model_surface.name = surface_name;
-    if (!surface.LookUp("shaderName", &model_surface.shader_name)) {
+    if (surface.LookUp("shaderName", &model_surface.shader_name) !=
+        lua::ReadFound()) {
       LOG(ERROR) << "Bad or missing arg 'surfaces.shader_name'";
-      return false;
+      return lua::ReadTypeMismatch();
     }
     // Read vertices.
     surface.LookUpToStack("vertices");
@@ -82,13 +90,13 @@ bool Read(lua_State* L, int idx, Model* model) {
     if (vertices == nullptr) {
       LOG(ERROR) << "Bad or missing arg 'surfaces.vertices'";
       lua_pop(L, 1);
-      return false;
+      return lua::ReadTypeMismatch();
     }
     if (vertices->tensor_view().shape().size() != 2 ||
         vertices->tensor_view().shape()[1] != 8) {
       LOG(ERROR) << "Incorrect dimensions for arg 'surfaces.vertices'";
       lua_pop(L, 1);
-      return false;
+      return lua::ReadTypeMismatch();
     }
     model_surface.vertices.reserve(vertices->tensor_view().shape()[0] * 8);
     auto& surface_vertices = model_surface.vertices;
@@ -101,13 +109,13 @@ bool Read(lua_State* L, int idx, Model* model) {
     if (indices == nullptr) {
       LOG(ERROR) << "Bad or missing arg 'surfaces.indices'";
       lua_pop(L, 1);
-      return false;
+      return lua::ReadTypeMismatch();
     }
     if (indices->tensor_view().shape().size() != 2 ||
         indices->tensor_view().shape()[1] != 3) {
       LOG(ERROR) << "Incorrect dimensions for arg 'surfaces.indices'";
       lua_pop(L, 1);
-      return false;
+      return lua::ReadTypeMismatch();
     }
     model_surface.indices.reserve(indices->tensor_view().shape()[0] * 3);
     auto& surface_indices = model_surface.indices;
@@ -125,13 +133,17 @@ bool Read(lua_State* L, int idx, Model* model) {
                     "expected range [1, "
                  << model_surface.vertices.size() << "]";
       lua_pop(L, 1);
-      return false;
+      return lua::ReadTypeMismatch();
     }
     model->surfaces.emplace_back(std::move(model_surface));
     lua_pop(L, 1);
   }
-  table.LookUp("locators", &model->locators);
-  return true;
+
+  if (IsTypeMismatch(table.LookUp("locators", &model->locators))) {
+    LOG(ERROR) << "Failed to read locators";
+    return lua::ReadTypeMismatch();
+  }
+  return lua::ReadFound();
 }
 
 }  // namespace lab

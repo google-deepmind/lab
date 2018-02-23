@@ -99,7 +99,7 @@ TEST(DeepmindModelTest, PushRead) {
 
   int top = lua_gettop(L);
   Push(L, ref_model);
-  Read(L, -1, &test_model);
+  ASSERT_TRUE(IsFound(Read(L, -1, &test_model)));
   lua_pop(L, 1);
   ASSERT_EQ(top, lua_gettop(L));
 
@@ -156,7 +156,7 @@ TEST(DeepmindModelTest, ReadIndicesOutOfRange) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 constexpr char kModelNoVertices[] = R"(
@@ -189,7 +189,7 @@ TEST(DeepmindModelTest, ReadNoVertices) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 constexpr char kModelVerticesWrongSize[] = R"(
@@ -226,7 +226,7 @@ TEST(DeepmindModelTest, ReadVerticesWrongSize) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 constexpr char kModelNoIndices[] = R"(
@@ -259,7 +259,7 @@ TEST(DeepmindModelTest, ReadNoIndices) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 constexpr char kModelIndicesWrongSize[] = R"(
@@ -296,7 +296,7 @@ TEST(DeepmindModelTest, ReadIndicesWrongSize) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 constexpr char kModelNoShader[] = R"(
@@ -331,7 +331,7 @@ TEST(DeepmindModelTest, ReadNoShader) {
       << "Missing result";
 
   Model test_model;
-  EXPECT_FALSE(Read(L, -1, &test_model));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &test_model)));
 }
 
 }  // namespace

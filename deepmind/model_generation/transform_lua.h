@@ -20,6 +20,7 @@
 #define DML_DEEPMIND_MODEL_GENERATION_TRANSFORM_LUA_H_
 
 #include "deepmind/lua/lua.h"
+#include "deepmind/lua/read.h"
 #include "deepmind/model_generation/transform.h"
 
 namespace deepmind {
@@ -32,7 +33,7 @@ void Push(lua_State* L, const Transform& transform);
 // Read a transform from the given position in the stack and load it onto xfrm.
 // Returns whether the transform was successfully read.
 // [0, 0, -]
-bool Read(lua_State* L, int idx, Transform* transform);
+lua::ReadResult Read(lua_State* L, int idx, Transform* transform);
 
 }  // namespace lab
 }  // namespace deepmind

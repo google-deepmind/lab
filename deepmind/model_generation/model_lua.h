@@ -20,6 +20,7 @@
 #define DML_DEEPMIND_MODEL_GENERATION_GEOMETRY_MODEL_LUA_H_
 
 #include "deepmind/lua/lua.h"
+#include "deepmind/lua/read.h"
 #include "deepmind/model_generation/model.h"
 
 namespace deepmind {
@@ -32,7 +33,7 @@ void Push(lua_State* L, const Model& model);
 // Read a model from the position in the stack given by idx.
 // Returns whether the model was successfully read.
 // [0, 0, -]
-bool Read(lua_State* L, int idx, Model* model);
+lua::ReadResult Read(lua_State* L, int idx, Model* model);
 
 }  // namespace lab
 }  // namespace deepmind

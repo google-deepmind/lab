@@ -114,14 +114,18 @@ void TableRef::PushTable() const {
 
 void Push(lua_State* L, const TableRef& table) { table.PushTable(); }
 
-bool Read(lua_State* L, int idx, TableRef* table) {
-  auto type = lua_type(L, idx);
-  if (type != LUA_TTABLE && type != LUA_TUSERDATA) {
-    return false;
-  } else {
-    lua_pushvalue(L, idx);
-    *table = TableRef(L, luaL_ref(L, LUA_REGISTRYINDEX));
-    return true;
+ReadResult Read(lua_State* L, int idx, TableRef* table) {
+  switch (lua_type(L, idx)) {
+    case LUA_TTABLE:
+    case LUA_TUSERDATA:
+      lua_pushvalue(L, idx);
+      *table = TableRef(L, luaL_ref(L, LUA_REGISTRYINDEX));
+      return ReadFound();
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
   }
 }
 

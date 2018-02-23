@@ -25,8 +25,9 @@
 namespace deepmind {
 namespace lab {
 
-void Push(lua_State* L, const Transform& xfrm) {
-  auto storage = std::make_shared<tensor::StorageVector<Transform>>(1, xfrm);
+void Push(lua_State* L, const Transform& transform) {
+  auto storage =
+      std::make_shared<tensor::StorageVector<Transform>>(1, transform);
   tensor::LuaTensor<float>::CreateObject(
       L,
       tensor::TensorView<float>(tensor::Layout({4, 4}),
@@ -34,22 +35,25 @@ void Push(lua_State* L, const Transform& xfrm) {
       storage);
 }
 
-bool Read(lua_State* L, int idx, Transform* xfrm) {
+lua::ReadResult Read(lua_State* L, int idx, Transform* transform) {
+  if (lua_isnoneornil(L, idx)) {
+    return lua::ReadNotFound();
+  }
   auto* tensor = tensor::LuaTensor<float>::ReadObject(L, idx);
   if (tensor == nullptr) {
-    return false;
+    return lua::ReadTypeMismatch();
   }
   const auto& view = tensor->tensor_view();
   const auto& shape = view.shape();
   if (shape.size() != 2 || shape[0] != 4 || shape[1] != 4 ||
       !view.IsContiguous()) {
-    LOG(ERROR) << "Incorrect dimensions for arg 'xfrm'";
-    return false;
+    LOG(ERROR) << "Incorrect dimensions for arg 'transform'";
+    return lua::ReadTypeMismatch();
   }
   const float* storage = view.storage();
   view.ForEachOffset(
-      [=](std::size_t offset) { xfrm->data()[offset] = storage[offset]; });
-  return true;
+      [=](std::size_t offset) { transform->data()[offset] = storage[offset]; });
+  return lua::ReadFound();
 }
 
 }  // namespace lab

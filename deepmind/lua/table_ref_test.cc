@@ -47,11 +47,19 @@ class Foo final : public Class<Foo> {
   // Foo(name): returns a new Foo object with the given name.
   static NResultsOr CreateFoo(lua_State* L) {
     std::string name;
-    if (Read(L, 1, &name)) {
-      Class::CreateObject(L, std::move(name));
-      return 1;
+    switch (Read(L, 1, &name).Value()) {
+      case ReadResult::kFound:
+        Class::CreateObject(L, std::move(name));
+        return 1;
+      case ReadResult::kNotFound:
+        return std::string("Missing string arg1 when constructing: ") +
+               ClassName();
+      case ReadResult::kTypeMismatch:
+      default:
+        return std::string(
+                   "Type missmatch arg1 is not a string when constructing: ") +
+               ClassName();
     }
-    return std::string("Missing string arg1 when constructing :") + ClassName();
   }
 
   // Returns whatever was provided as the first argument, twice.
@@ -95,12 +103,12 @@ TEST_F(TableRefTest, TestPushMemberFunction) {
 
   Foo::Register(L);
   Push(L, "Hello");
-  ASSERT_FALSE(Read(L, -1, &table));
+  ASSERT_TRUE(IsTypeMismatch(Read(L, -1, &table)));
   ASSERT_NE(L, table.LuaState());
 
   Foo::CreateFoo(L);
 
-  ASSERT_TRUE(Read(L, -1, &table));
+  ASSERT_TRUE(IsFound(Read(L, -1, &table)));
   ASSERT_EQ(L, table.LuaState());
 
   // Also has keys "__gc" and "__index" but may have more in the future.
@@ -109,7 +117,7 @@ TEST_F(TableRefTest, TestPushMemberFunction) {
   table.PushMemberFunction("name");
   Call(L, 2);
   std::string result;
-  ASSERT_TRUE(Read(L, -1, &result));
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   EXPECT_EQ("Hello", result);
   const auto& keys = table.Keys<std::string>();
   EXPECT_THAT(keys, Contains("name"));
@@ -129,7 +137,7 @@ TEST_F(TableRefTest, TestReadTable) {
 
   TableRef table;
 
-  ASSERT_TRUE(Read(L, -1, &table));
+  ASSERT_TRUE(IsFound(Read(L, -1, &table)));
   EXPECT_EQ(2, table.KeyCount());
 
   std::vector<std::string> keys = table.Keys<std::string>();
@@ -142,8 +150,8 @@ TEST_F(TableRefTest, TestReadTable) {
     std::string result;
 
     ASSERT_TRUE(table.Contains(p.first));
-    ASSERT_TRUE(table.LookUp(p.first, &subtable));
-    ASSERT_TRUE(subtable.LookUp(std::string(p.first) + "_1", &result));
+    ASSERT_TRUE(IsFound(table.LookUp(p.first, &subtable)));
+    ASSERT_TRUE(IsFound(subtable.LookUp(std::string(p.first) + "_1", &result)));
     EXPECT_EQ(p.second, result);
   }
 }
@@ -156,7 +164,7 @@ TEST_F(TableRefTest, TestCreateTable) {
 
   std::vector<int> result;
   Push(L, table);
-  Read(L, -1, &result);
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   lua_pop(L, 1);
   ASSERT_EQ(10, result.size());
   ASSERT_EQ(10, table.ArraySize());
@@ -164,7 +172,7 @@ TEST_F(TableRefTest, TestCreateTable) {
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(i + 1, result[i]);
     int out = 0;
-    EXPECT_TRUE(table.LookUp(i + 1, &out));
+    EXPECT_TRUE(IsFound(table.LookUp(i + 1, &out)));
     EXPECT_EQ(i + 1, out);
   }
 }
@@ -178,14 +186,14 @@ TEST_F(TableRefTest, TestCreateSubTable) {
 
   std::vector<TableRef> result;
   Push(L, table);
-  Read(L, -1, &result);
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   lua_pop(L, 1);
   ASSERT_EQ(10, result.size());
 
   for (int i = 0; i < 10; ++i) {
     EXPECT_THAT(result[i].Keys<int>(), ElementsAre(i + 1));
     int out = 0;
-    EXPECT_TRUE(result[i].LookUp(i + 1, &out));
+    EXPECT_TRUE(IsFound(result[i].LookUp(i + 1, &out)));
     EXPECT_EQ(i + 1, out);
   }
 }
@@ -225,14 +233,14 @@ TEST_F(TableRefTest, TestCreateInsertFromStack) {
 
   std::vector<TableRef> result;
   Push(L, table);
-  Read(L, -1, &result);
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   lua_pop(L, 1);
   ASSERT_EQ(10, result.size());
 
   for (int i = 0; i < 10; ++i) {
     EXPECT_THAT(result[i].Keys<int>(), ElementsAre(i + 1));
     int out = 0;
-    EXPECT_TRUE(result[i].LookUp(i + 1, &out));
+    EXPECT_TRUE(IsFound(result[i].LookUp(i + 1, &out)));
     EXPECT_EQ(i + 1, out);
   }
 }
@@ -242,7 +250,7 @@ TEST_F(TableRefTest, TestInsertAndReadSpan) {
   const int data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   table.Insert("array", absl::MakeConstSpan(data));
   int result[10] = {};
-  table.LookUp("array", absl::MakeSpan(result));
+  ASSERT_TRUE(IsFound(table.LookUp("array", absl::MakeSpan(result))));
   EXPECT_EQ(absl::MakeConstSpan(data), absl::MakeConstSpan(result));
 }
 

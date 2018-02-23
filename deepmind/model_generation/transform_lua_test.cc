@@ -46,7 +46,7 @@ TEST(DeepmindTransformTest, PushRead) {
   ref_xfrm = ref_data;
   Push(lua_vm.get(), ref_xfrm);
   Transform tst_xfrm;
-  Read(lua_vm.get(), -1, &tst_xfrm);
+  ASSERT_TRUE(IsFound(Read(lua_vm.get(), -1, &tst_xfrm)));
   EXPECT_NEAR((ref_data - tst_xfrm.matrix()).norm(), 0.0f, kEpsilon);
 }
 
@@ -72,7 +72,7 @@ TEST(DeepmindTransformTest, ReadWrongDims) {
   ASSERT_THAT(lua::Call(L, 0), lua::testing::IsOkAndHolds(1))
       << "Missing result";
   Transform tst_matrix;
-  EXPECT_FALSE(Read(L, -1, &tst_matrix));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, -1, &tst_matrix)));
 }
 
 }  // namespace

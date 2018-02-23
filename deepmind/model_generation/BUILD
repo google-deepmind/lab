@@ -171,6 +171,7 @@ cc_library(
     deps = [
         ":transform",
         "//deepmind/lua",
+        "//deepmind/lua:read",
         "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",

@@ -34,7 +34,7 @@ class TableRef;
 // Returns whether item at idx is a Lua table or userdata. If true '*table' is
 // assigned a reference to it.
 // [0, 0, -]
-bool Read(lua_State* L, int idx, TableRef* table);
+ReadResult Read(lua_State* L, int idx, TableRef* table);
 
 // Push the table refered to by 'table' onto the stack.
 // [1, 0, -] - Precondition: !table.is_unbound().
@@ -120,7 +120,7 @@ class TableRef final {
     lua_pushnil(lua_state_);
     while (lua_next(lua_state_, -2) != 0) {
       K key;
-      if (Read(lua_state_, -2, &key)) {
+      if (IsFound(Read(lua_state_, -2, &key))) {
         result.push_back(std::move(key));
       }
       lua_pop(lua_state_, 1);
@@ -130,17 +130,17 @@ class TableRef final {
   }
 
   // If the table contains an entry of type T for index key, sets *value to
-  // table[key] and returns true; otherwise returns false and does not access
-  // *value.
+  // table[key] and returns whether the key was found and whether it is of the
+  // correct type.
   // [0, 0, -] - Precondition: !this->is_unbound().
   template <typename K, typename T>
-  bool LookUp(const K& key, T value) const {
+  ReadResult LookUp(const K& key, T value) const {
     PushTable();
     Push(lua_state_, key);
     lua_gettable(lua_state_, -2);
-    bool success = Read(lua_state_, -1, value);
+    auto read_result = Read(lua_state_, -1, value);
     lua_pop(lua_state_, 2);
-    return success;
+    return read_result;
   }
 
   // Pushes the value as table[key] on to the stack.
@@ -208,7 +208,7 @@ class TableRef final {
   lua_State* LuaState() { return lua_state_; }
 
  private:
-  friend bool Read(lua_State* L, int idx, TableRef* table);
+  friend ReadResult Read(lua_State* L, int idx, TableRef* table);
   friend void Push(lua_State* L, const TableRef& table);
 
   // Pushes a copy of the table referenced by *this onto the Lua stack.

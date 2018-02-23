@@ -48,33 +48,49 @@ using ReadTest = testing::TestWithVm;
 
 TEST_F(ReadTest, ReadFunction) {
   Push(L, TestFunction);
+  Push(L, false);
   lua_CFunction c_function;
-  ASSERT_TRUE(Read(L, 1, &c_function));
+  ASSERT_TRUE(IsFound(Read(L, 1, &c_function)));
+  EXPECT_TRUE(TestFunction == c_function);
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &c_function)));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, &c_function)));
   EXPECT_TRUE(TestFunction == c_function);
 }
 
 TEST_F(ReadTest, ReadString) {
   Push(L, kTestString);
+  Push(L, false);
   std::string result;
-  ASSERT_TRUE(Read(L, 1, &result));
+  ASSERT_TRUE(IsFound(Read(L, 1, &result)));
+  EXPECT_EQ(kTestString, result);
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, &result)));
   EXPECT_EQ(kTestString, result);
 }
 
 TEST_F(ReadTest, ReadNumber) {
   Push(L, kTestValue);
+  Push(L, false);
   double result;
-  ASSERT_TRUE(Read(L, 1, &result));
+  EXPECT_TRUE(IsFound(Read(L, 1, &result)));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, &result)));
   EXPECT_EQ(kTestValue, result);
 }
 
 TEST_F(ReadTest, ReadUnsigned) {
   Push(L, 20);
   Push(L, -20);
+  Push(L, false);
   std::size_t result;
-  ASSERT_TRUE(Read(L, 1, &result));
+  ASSERT_TRUE(IsFound(Read(L, 1, &result)));
   EXPECT_EQ(20, result);
   // Should not read a negative value.
-  ASSERT_FALSE(Read(L, 2, &result));
+  ASSERT_TRUE(IsTypeMismatch(Read(L, 2, &result)));
+  EXPECT_EQ(20, result);
+  // Should not read a negative value.
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 3, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
   EXPECT_EQ(20, result);
 }
 
@@ -83,20 +99,25 @@ TEST_F(ReadTest, ReadBoolean) {
   Push(L, false);
   Push(L, 1);
   bool result = false;
-  ASSERT_TRUE(Read(L, 1, &result));
+  ASSERT_TRUE(IsFound(Read(L, 1, &result)));
   EXPECT_EQ(true, result);
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(false, result);
-  ASSERT_FALSE(Read(L, 3, &result));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 3, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
 }
 
 TEST_F(ReadTest, ReadLightUserData) {
   int test_value = 10;
   Push(L, &test_value);
+  Push(L, false);
   int* result;
-  ASSERT_TRUE(Read(L, 1, &result));
+  ASSERT_TRUE(IsFound(Read(L, 1, &result)));
   ASSERT_EQ(&test_value, result);
   EXPECT_EQ(test_value, *result);
+
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, &result)));
 }
 
 TEST_F(ReadTest, ReadVector) {
@@ -105,10 +126,13 @@ TEST_F(ReadTest, ReadVector) {
   Push(L, test);
   Push(L, "Junk");
   std::vector<double> result;
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(result, test);
-  ASSERT_TRUE(Read(L, -2, &result));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
   EXPECT_EQ(result, test);
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 1, &result)));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 3, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
 }
 
 TEST_F(ReadTest, ReadArray) {
@@ -117,11 +141,15 @@ TEST_F(ReadTest, ReadArray) {
   Push(L, test);
   Push(L, "Junk");
   std::array<double, 5> result;
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(result, test);
-  ASSERT_TRUE(Read(L, -2, &result));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
   EXPECT_EQ(result, test);
   EXPECT_EQ(3, lua_gettop(L));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 1, &result)));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 3, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
+  EXPECT_EQ(result, test);
 }
 
 TEST_F(ReadTest, ReadInlinedVector) {
@@ -130,9 +158,9 @@ TEST_F(ReadTest, ReadInlinedVector) {
   Push(L, test);
   Push(L, "Junk");
   absl::InlinedVector<double, 5> result;
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(result, test);
-  ASSERT_TRUE(Read(L, -2, &result));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
   EXPECT_EQ(result, test);
   EXPECT_EQ(3, lua_gettop(L));
 }
@@ -143,20 +171,30 @@ TEST_F(ReadTest, ReadArrayFloat) {
   Push(L, test);
   Push(L, "Junk");
   std::array<float, 5> result;
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(result, test);
-  ASSERT_TRUE(Read(L, -2, &result));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
   EXPECT_EQ(result, test);
   EXPECT_EQ(3, lua_gettop(L));
+  std::array<bool, 5> result_mismatch_type;
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result_mismatch_type)));
+
+  std::array<float, 6> result_mismatch_size;
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result_mismatch_size)));
 }
 
 TEST_F(ReadTest, ReadSpan) {
   const std::array<const float, 5> test{{1, 2, 3, 4, 5}};
   Push(L, test);
+  Push(L, false);
   float result[] = {0, 0, 0, 0, 0};
-  ASSERT_TRUE(Read(L, 1, absl::MakeSpan(result)));
+  ASSERT_TRUE(IsFound(Read(L, 1, absl::MakeSpan(result))));
   EXPECT_EQ(absl::MakeSpan(result), test);
-  EXPECT_EQ(1, lua_gettop(L));
+  EXPECT_EQ(2, lua_gettop(L));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, absl::MakeSpan(result))));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, absl::MakeSpan(result))));
+  bool result_mismatch[] = {false, false, false, false, false};
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 1, absl::MakeSpan(result_mismatch))));
 }
 
 TEST_F(ReadTest, ReadTable) {
@@ -172,11 +210,19 @@ TEST_F(ReadTest, ReadTable) {
   Push(L, test);
   Push(L, "Junk");
   std::unordered_map<std::string, double> result;
-  ASSERT_TRUE(Read(L, 2, &result));
+  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
   EXPECT_EQ(result, test);
-  ASSERT_TRUE(Read(L, -2, &result));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
   EXPECT_EQ(result, test);
   EXPECT_EQ(3, lua_gettop(L));
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 1, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
+
+  std::unordered_map<std::string, std::string> result_missmatch_value;
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result_missmatch_value)));
+
+  std::unordered_map<double, double> result_missmatch_key;
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result_missmatch_value)));
 }
 
 TEST_F(ReadTest, ToString) {
