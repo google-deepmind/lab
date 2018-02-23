@@ -31,11 +31,16 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
   EnvCApi env_c_api;
   void* context;
   dmlab_connect(&params, &env_c_api, &context);
-  ASSERT_EQ(env_c_api.setting(context, "width", "64"), 0);
-  ASSERT_EQ(env_c_api.setting(context, "height", "36"), 0);
-  ASSERT_EQ(env_c_api.setting(context, "logToStdErr", "true"), 0);
-  ASSERT_EQ(env_c_api.setting(context, "fps", "15"), 0);
-  ASSERT_EQ(env_c_api.setting(context, "invocationMode", "testbed"), 0);
+  ASSERT_EQ(env_c_api.setting(context, "width", "64"), 0)
+      << env_c_api.error_message(context);
+  ASSERT_EQ(env_c_api.setting(context, "height", "36"), 0)
+      << env_c_api.error_message(context);
+  ASSERT_EQ(env_c_api.setting(context, "logToStdErr", "true"), 0)
+      << env_c_api.error_message(context);
+  ASSERT_EQ(env_c_api.setting(context, "fps", "15"), 0)
+      << env_c_api.error_message(context);
+  ASSERT_EQ(env_c_api.setting(context, "invocationMode", "testbed"), 0)
+      << env_c_api.error_message(context);
   ASSERT_EQ(env_c_api.setting(context, "levelName", test_script), 0)
       << env_c_api.error_message(context);
 
@@ -45,14 +50,18 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
 #define __has_feature(x) 0
 #endif
 #if __has_feature(thread_sanitizer)
-  ASSERT_EQ(env_c_api.setting(context, "vmMode", "interpreted"), 0);
+  ASSERT_EQ(env_c_api.setting(context, "vmMode", "interpreted"), 0)
+      << env_c_api.error_message(context);
 #endif
 
   ASSERT_EQ(env_c_api.init(context), 0) << env_c_api.error_message(context);
-  env_c_api.start(context, 0 /*episode*/, 1 /*seed*/);
+  ASSERT_EQ(env_c_api.start(context, 0 /*episode*/, 1 /*seed*/), 0)
+      << env_c_api.error_message(context);
 
   double reward;
-  env_c_api.advance(context, 10 /*steps*/, &reward);
+  ASSERT_NE(env_c_api.advance(context, 10 /*steps*/, &reward),
+            EnvCApi_EnvironmentStatus_Error)
+      << env_c_api.error_message(context);
 
   EnvCApi_Observation observation;
   env_c_api.observation(context, 0, &observation);
