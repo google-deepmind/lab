@@ -1051,8 +1051,12 @@ static void ParseRawBrush( qboolean onlyLights ){
 
 		/* ydnar: gs mods: bias texture shift */
 		if ( si->globalTexture == qfalse ) {
-			shift[ 0 ] -= ( floor( shift[ 0 ] / si->shaderWidth ) * si->shaderWidth );
-			shift[ 1 ] -= ( floor( shift[ 1 ] / si->shaderHeight ) * si->shaderHeight );
+			if ( si->shaderWidth > 0 ) {
+				shift[ 0 ] -= ( floor( shift[ 0 ] / si->shaderWidth ) * si->shaderWidth );
+			}
+			if ( si->shaderHeight ) {
+				shift[ 1 ] -= ( floor( shift[ 1 ] / si->shaderHeight ) * si->shaderHeight );
+			}
 		}
 
 		/*
