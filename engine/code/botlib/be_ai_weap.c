@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -48,8 +48,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define DEBUG_AI_WEAP
 
 //structure field offsets
-#define WEAPON_OFS(x) (size_t)&(((weaponinfo_t *)0)->x)
-#define PROJECTILE_OFS(x) (size_t)&(((projectileinfo_t *)0)->x)
+#define WEAPON_OFS(x) offsetof(weaponinfo_t, x)
+#define PROJECTILE_OFS(x) offsetof(projectileinfo_t, x)
 
 //weapon definition
 static fielddef_t weaponinfo_fields[] =

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -134,7 +134,7 @@ typedef struct iteminfo_s
 	int number;							//number of the item info
 } iteminfo_t;
 
-#define ITEMINFO_OFS(x)	(size_t)&(((iteminfo_t *)0)->x)
+#define ITEMINFO_OFS(x)	offsetof(iteminfo_t, x)
 
 fielddef_t iteminfo_fields[] =
 {
