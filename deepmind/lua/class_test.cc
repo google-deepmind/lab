@@ -40,11 +40,19 @@ class Foo final : public Class<Foo> {
   // Foo(name): returns a new Foo object with the given name.
   static NResultsOr CreateFoo(lua_State* L) {
     std::string name;
-    if (Read(L, 1, &name)) {
-      Class::CreateObject(L, std::move(name));
-      return 1;
+    switch (Read(L, 1, &name).Value()) {
+      case ReadResult::kFound:
+        Class::CreateObject(L, std::move(name));
+        return 1;
+      case ReadResult::kNotFound:
+        return std::string("Missing string arg1 when constructing: ") +
+               ClassName();
+      case ReadResult::kTypeMismatch:
+      default:
+        return std::string(
+                   "Type missmatch arg1 is not a string when constructing: ") +
+               ClassName();
     }
-    return std::string("Missing string arg1 when constructing: ") + ClassName();
   }
 
   // Returns whatever was provided as the first argument, twice.
@@ -103,7 +111,7 @@ TEST_F(ClassTest, TestName) {
   int error = lua_pcall(L, 1, 1, 0);
   ASSERT_EQ(error, 0) << "Reason - " << lua_tostring(L, -1);
   std::string result;
-  ASSERT_TRUE(Read(L, -1, &result));
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   EXPECT_EQ("Hello", result);
 }
 
@@ -119,8 +127,8 @@ TEST_F(ClassTest, TestDuplicate) {
   ASSERT_EQ(error, 0) << "Reason - " << lua_tostring(L, -1);
   std::string result0;
   std::string result1;
-  ASSERT_TRUE(Read(L, -1, &result0));
-  ASSERT_TRUE(Read(L, -2, &result1));
+  ASSERT_TRUE(IsFound(Read(L, -1, &result0)));
+  ASSERT_TRUE(IsFound(Read(L, -2, &result1)));
   EXPECT_EQ(result0, result1);
 }
 

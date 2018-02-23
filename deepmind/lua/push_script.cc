@@ -30,7 +30,8 @@ NResultsOr PushScript(lua_State* L, const char* buffer, std::size_t buffer_size,
                       const char* script_name) {
   if (luaL_loadbuffer(L, buffer, buffer_size, script_name)) {
     std::string error;
-    if (!Read(L, -1, &error)) error = "Failed to retrieve error!";
+    if (!IsFound(Read(L, -1, &error)))
+      error = "Failed to retrieve error!";
     return std::move(error);
   }
   return 1;
@@ -45,7 +46,8 @@ NResultsOr PushScriptFile(lua_State* L, const char* filename) {
     return error;
   } else if (error != 0) {
     std::string error;
-    if (!Read(L, -1, &error)) error = "Failed to retrieve error!";
+    if (!IsFound(Read(L, -1, &error)))
+      error = "Failed to retrieve error!";
     return std::move(error);
   }
   return 1;

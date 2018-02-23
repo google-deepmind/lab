@@ -57,7 +57,7 @@ NResultsOr Call(lua_State* L, int nargs, bool with_traceback) {
   }
   if (lua_pcall(L, nargs, LUA_MULTRET, err_stackpos) != 0) {
     std::string error;
-    if (!Read(L, -1, &error)) {
+    if (!IsFound(Read(L, -1, &error))) {
       error = "Failed to retrieve error!";
     }
     if (with_traceback) {

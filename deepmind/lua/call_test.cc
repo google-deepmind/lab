@@ -61,7 +61,7 @@ TEST_F(CallTest, CallsFunction) {
   ASSERT_THAT(n_or, IsOkAndHolds(lua_gettop(L) - top));
 
   std::string result;
-  ASSERT_TRUE(Read(L, -1, &result));
+  ASSERT_TRUE(IsFound(Read(L, -1, &result)));
   EXPECT_EQ(result, "Success");
 }
 
@@ -98,7 +98,9 @@ TEST_F(CallTest, FunctionErrorsNoStack) {
 
 NResultsOr TestCFuntion(lua_State* L) {
   bool should_be_success = false;
-  Read(L, 1, &should_be_success);
+  if (IsTypeMismatch(Read(L, 1, &should_be_success))) {
+    return "Type missmatch!";
+  }
   Push(L, "What happens?");
   if (should_be_success) {
     return 1;
@@ -130,7 +132,7 @@ TEST_F(CallTest, FunctionBindSuccess) {
   ASSERT_THAT(call_result, IsOkAndHolds(1));
 
   std::string message;
-  ASSERT_TRUE(Read(L, -1, &message));
+  ASSERT_TRUE(IsFound(Read(L, -1, &message)));
   EXPECT_EQ("What happens?", message);
 
   EXPECT_EQ(lua_gettop(L), top + call_result.n_results());

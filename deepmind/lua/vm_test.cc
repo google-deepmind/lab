@@ -81,7 +81,7 @@ TEST(VmTest, TestEmbedC) {
       << "Missing result";
 
   int val;
-  ASSERT_TRUE(lua::Read(L, -1, &val));
+  ASSERT_TRUE(IsFound(lua::Read(L, -1, &val)));
   EXPECT_EQ(11, val);
 }
 
@@ -105,7 +105,7 @@ TEST(VmTest, TestEmbedCClosure) {
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(1));
 
   int val;
-  ASSERT_TRUE(lua::Read(L, -1, &val));
+  ASSERT_TRUE(IsFound(lua::Read(L, -1, &val)));
   EXPECT_EQ(11, val);
 }
 
@@ -126,7 +126,7 @@ TEST(VmTest, TestEmbedLua) {
       << "Missing result";
 
   int val;
-  ASSERT_TRUE(lua::Read(L, -1, &val));
+  ASSERT_TRUE(IsFound(lua::Read(L, -1, &val)));
   EXPECT_EQ(11, val);
 }
 
@@ -148,7 +148,7 @@ TEST(VmTest, TestLuaPath) {
       << "Missing result";
 
   int val;
-  ASSERT_TRUE(lua::Read(L, -1, &val));
+  ASSERT_TRUE(IsFound(lua::Read(L, -1, &val)));
   EXPECT_EQ(11, val);
 }
 

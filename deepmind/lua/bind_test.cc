@@ -51,7 +51,7 @@ TEST_F(BindTest, Success) {
   Push(L, 10.0);
   ASSERT_EQ(0, lua_pcall(L, 1, 1, 0)) << ToString(L, -1);
   double value_out;
-  ASSERT_TRUE(Read(L, -1, &value_out)) << "Result was not a double.";
+  ASSERT_TRUE(IsFound(Read(L, -1, &value_out))) << "Result was not a double.";
   EXPECT_EQ(10.0, value_out);
 }
 
@@ -60,7 +60,7 @@ TEST_F(BindTest, FailLessThanZero) {
   Push(L, -10.0);
   ASSERT_NE(0, lua_pcall(L, 1, 1, 0)) << "No error message!";
   std::string error;
-  ASSERT_TRUE(Read(L, -1, &error)) << "Error was not available.";
+  ASSERT_TRUE(IsFound(Read(L, -1, &error))) << "Error was not available.";
   EXPECT_EQ(kNegativeError, error);
 }
 
@@ -69,7 +69,7 @@ TEST_F(BindTest, FailNotADouble) {
   Push(L, "-10.0");
   ASSERT_NE(0, lua_pcall(L, 1, 1, 0)) << "No error message!";
   std::string error;
-  ASSERT_TRUE(Read(L, -1, &error)) << "Error was not available.";
+  ASSERT_TRUE(IsFound(Read(L, -1, &error))) << "Error was not available.";
   EXPECT_EQ(kFailedToConvertError, error);
 }
 
