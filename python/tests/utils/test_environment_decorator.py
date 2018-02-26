@@ -23,6 +23,8 @@ import os
 import numpy as np
 from PIL import Image
 
+_RGB_OBSERVATION_NAME = 'RGB_INTERLEAVED'
+
 
 class TestEnvironmentDecorator(object):
   """A test environment decorator class.
@@ -36,9 +38,6 @@ class TestEnvironmentDecorator(object):
   def __init__(self, environment):
     """Initializes the decorator."""
     self._environment = environment
-    spec = self._find_observation_spec('RGB_INTERLEAVED')
-    assert spec, 'The environment has to provide RGB_INTERLEAVED observations.'
-    self._rgb_shape = spec['shape']
     self._rgb_history = []
     self._frame_index = 0
     self._events = []
@@ -48,7 +47,7 @@ class TestEnvironmentDecorator(object):
     """Advance the environment a number of steps."""
     reward = self._environment.step(actions, steps)
     observations = self._environment.observations()
-    self._rgb_history.append(observations['RGB_INTERLEAVED'])
+    self._save_current_frame()
     self._accumulate_events(self._environment.events())
     self._reward_history.append(reward)
     return reward
@@ -97,8 +96,8 @@ class TestEnvironmentDecorator(object):
     self._accumulated_reward = 0
     self._events = []
     self._accumulate_events(self._environment.events())
-    observations = self._environment.observations()
-    self._rgb_history = [observations['RGB_INTERLEAVED']]
+    self._rgb_history = []
+    self._save_current_frame()
     self._reward_history = []
     return result
 
@@ -118,3 +117,8 @@ class TestEnvironmentDecorator(object):
   def num_steps(self):
     """Number of frames since the last reset() call."""
     return self._environment.num_steps()
+
+  def _save_current_frame(self):
+    observations = self._environment.observations()
+    if _RGB_OBSERVATION_NAME in observations:
+      self._rgb_history.append(observations['RGB_INTERLEAVED'])
