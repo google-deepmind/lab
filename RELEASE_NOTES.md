@@ -6,6 +6,10 @@
 
 1.  Add the ability to spawn pickups dynamically at arbitrary locations.
 
+### Bug Fixes:
+
+1.  Fix playerId and otherPlayerId out by one errors in 'game_rewards.lua'.
+
 ### Minor Improvements:
 
 1.  Moved .map files into assets/maps/src and .bsp files into assets/maps/built.

@@ -94,8 +94,8 @@ function game_rewards:overrideScore(kwargs, rewardInfo)
                 rewardInfo.score
   score = tonumber(score)
   local d = tensor.DoubleTensor
-  events:add('reward', reason, team, d{score}, d{playerId + 1}, d(location),
-             d{otherPlayerId + 1})
+  events:add('reward', reason, team, d{score}, d{playerId}, d(location),
+             d{otherPlayerId})
   return score
 end
 
