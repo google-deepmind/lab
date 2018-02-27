@@ -24,7 +24,7 @@ return factory.createLevelApi{
 ## Tutorial
 
 A [narrative
-tutorial](/docs/developers/creating_levels/minimal_level_tutorial.md)
+tutorial](/docs/developers/minimal_level_tutorial.md)
 walks through the initial steps in creating a simple level.
 
 ## Details
