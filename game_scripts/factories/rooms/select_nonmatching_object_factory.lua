@@ -133,7 +133,7 @@ function factory.createLevelApi(kwargs)
   end
 
   function api:trigger(spawnId, targetName)
-    game:addScore(0, kwargs.teleportReward)
+    game:addScore(kwargs.teleportReward)
     return false
   end
 

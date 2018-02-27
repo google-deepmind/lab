@@ -372,7 +372,7 @@ function factory.createLevelApi(kwargs)
 
             -- Update the game reward.
             if trigger.reward then
-              game:addScore(0, trigger.reward)
+              game:addScore(trigger.reward)
             end
 
             -- Call the trigger's callback, if it exists.

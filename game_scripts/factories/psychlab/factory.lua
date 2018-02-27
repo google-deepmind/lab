@@ -84,7 +84,7 @@ function factory.createLevelApi(kwargs)
     end
 
     if reward ~= 0 then
-      game:addScore(0, reward)
+      game:addScore(reward)
     end
 
     -- Set api:pos to nil so we can tell if api:lookAt() has been

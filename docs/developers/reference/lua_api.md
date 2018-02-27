@@ -540,9 +540,13 @@ Game scripts can interact with *DeepMind Lab* using the `dmlab.system.game`
 module, which can be loaded using `local game = require 'dmlab.system.game'`.
 The module provides the following functions:
 
+### `addScore`(*score*)
+
+Adds a *score* to the total score of the current player.
+
 ### `addScore`(*playerId*, *score*)
 
-Adds a *score* to the total score of the player with *playerId*.
+Adds a *score* to the total score of the player with *playerId* (1 indexed).
 
 ### `finishMap`()
 

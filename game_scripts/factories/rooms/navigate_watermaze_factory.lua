@@ -86,7 +86,7 @@ function factory.createLevelApi(kwargs)
         game:finishMap()
       else
         api._addedReward = api._addedReward + _platformReward
-        game:addScore(0, _platformReward)
+        game:addScore(_platformReward)
       end
     end
 

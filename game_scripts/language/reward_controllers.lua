@@ -51,7 +51,7 @@ function reward_controllers.createSimple()
 
   function simpleRewardController:handlePickup(description)
     game:finishMap()
-    game:addScore(0, description.reward)
+    game:addScore(description.reward)
     return -1 -- Prevent re-spawning of pickup.
   end
 
@@ -95,7 +95,7 @@ function reward_controllers.createBalanced(goalReward)
     end
 
     game:finishMap()
-    game:addScore(0, reward)
+    game:addScore(reward)
     return -1 -- Prevent re-spawning of pickup.
   end
 
@@ -145,7 +145,7 @@ local function createCountingImpl(balanced)
           self._goalGroup, self:_calculateGoalReward(), self._descriptions)
     end
 
-    game:addScore(0, reward)
+    game:addScore(reward)
     if finishMap then
       game:finishMap()
     end
@@ -212,7 +212,7 @@ function reward_controllers.createOrdered(order)
       end
     end
 
-    game:addScore(0, scoreChange)
+    game:addScore(scoreChange)
     if finishMap then
       game:finishMap()
     end
@@ -262,7 +262,7 @@ function reward_controllers.createAnswer(kwargs)
 
     local correctAnswer = self._truthFn(self._objectsPerGroup)
     local reward = answer == correctAnswer and self._reward or -self._reward
-    game:addScore(0, reward)
+    game:addScore(reward)
     game:finishMap()
     return -1
   end

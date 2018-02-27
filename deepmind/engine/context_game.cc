@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -87,18 +88,34 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
 
  private:
   lua::NResultsOr AddScore(lua_State* L) {
-    int player_id = 0;
     double score = 0;
-    if (lua::Read(L, 2, &player_id) && lua::Read(L, 3, &score) &&
-        0 <= player_id && player_id < 64) {
-      ctx_->Calls()->add_score(player_id, score);
-      return 0;
+    int player_id_lua = 1;
+    int arg_count = lua_gettop(L) - 1;
+    if (arg_count == 2) {
+      // Warn later if playerId is zero.
+      if (IsTypeMismatch(lua::Read(L, 2, &player_id_lua)) ||
+          player_id_lua < 0 || player_id_lua > 64) {
+        return "[game:addScore] - playerId, must be an integer in range"
+               " [1, 64] or nil/none.";
+      }
+      if (!IsFound(lua::Read(L, 3, &score))) {
+        return "[game:addScore] - score, must be a number.";
+      }
+    } else if (arg_count == 1) {
+      player_id_lua = ctx_->GetPlayerView().player_id + 1;
+      if (!IsFound(lua::Read(L, 2, &score))) {
+        return "[game:addScore] - score, must be a number.";
+      }
+    } else {
+      return "[game:addScore] - Must be called with either (playerId, score) or"
+             " or (score).";
     }
-    std::string error = "Invalid arguments player_id: ";
-    error += lua::ToString(L, 2);
-    error += " or reward: ";
-    error += lua::ToString(L, 3);
-    return std::move(error);
+    if (player_id_lua == 0) {
+      std::cerr << "WARNING game:addScore playerId is one indexed. Don't "
+                   "supply index to give score to current playerId\n";
+    }
+    ctx_->Calls()->add_score(player_id_lua - 1, score);
+    return 0;
   }
 
   lua::NResultsOr Raycast(lua_State* L) {

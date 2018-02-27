@@ -190,7 +190,7 @@ function factory.createLevelApi(kwargs)
     if api._doors[targetName] and not api._doorsOpened[targetName] then
       api._doorsOpened[targetName] = true
       api._carriedKeyColor = nil
-      game:addScore(0, 1)
+      game:addScore(1)
     end
   end
 

@@ -9,6 +9,8 @@
 ### Bug Fixes:
 
 1.  Fix playerId and otherPlayerId out by one errors in 'game_rewards.lua'.
+2.  Require playerId passed to `game:addScore` to be one indexed instead of zero
+    indexed and allow `game:addScore` to be used without a playerId.
 
 ### Minor Improvements:
 
