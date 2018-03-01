@@ -21,6 +21,7 @@
 5.  Add a Lua API to load PNGs from file contents.
 6.  Add 'eyePos' to playerInfo() for a more accurate eye position of player.
     Used in place of player pos + height.
+7.  Add support for absl::string_view to lua::Push and lua::Read.
 
 ### Deprecated Features:
 

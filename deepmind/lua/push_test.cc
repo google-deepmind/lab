@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 #include "absl/container/inlined_vector.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/vm_test_util.h"
 
@@ -55,6 +56,24 @@ TEST_F(PushTest, PushFunction) {
 
 TEST_F(PushTest, PushCString) {
   Push(L, kTestString);
+  ASSERT_EQ(LUA_TSTRING, lua_type(L, -1));
+  std::size_t size;
+  const char* result_ctr = lua_tolstring(L, 1, &size);
+  std::string result(result_ctr, size);
+  EXPECT_EQ(kTestString, result);
+}
+
+TEST_F(PushTest, PushString) {
+  Push(L, std::string(kTestString));
+  ASSERT_EQ(LUA_TSTRING, lua_type(L, -1));
+  std::size_t size;
+  const char* result_ctr = lua_tolstring(L, 1, &size);
+  std::string result(result_ctr, size);
+  EXPECT_EQ(kTestString, result);
+}
+
+TEST_F(PushTest, PushStringView) {
+  Push(L, absl::string_view(kTestString));
   ASSERT_EQ(LUA_TSTRING, lua_type(L, -1));
   std::size_t size;
   const char* result_ctr = lua_tolstring(L, 1, &size);

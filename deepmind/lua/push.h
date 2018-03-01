@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/lua.h"
 
@@ -36,7 +37,7 @@ namespace lab {
 namespace lua {
 
 // [0, +1, -]
-inline void Push(lua_State* L, const std::string& value) {
+inline void Push(lua_State* L, const absl::string_view value) {
   lua_pushlstring(L, value.data(), value.size());
 }
 

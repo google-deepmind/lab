@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/inlined_vector.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/vm_test_util.h"
@@ -61,6 +62,17 @@ TEST_F(ReadTest, ReadString) {
   Push(L, kTestString);
   Push(L, false);
   std::string result;
+  ASSERT_TRUE(IsFound(Read(L, 1, &result)));
+  EXPECT_EQ(kTestString, result);
+  EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result)));
+  EXPECT_TRUE(IsNotFound(Read(L, 3, &result)));
+  EXPECT_EQ(kTestString, result);
+}
+
+TEST_F(ReadTest, ReadStringView) {
+  Push(L, kTestString);
+  Push(L, false);
+  absl::string_view result;
   ASSERT_TRUE(IsFound(Read(L, 1, &result)));
   EXPECT_EQ(kTestString, result);
   EXPECT_TRUE(IsTypeMismatch(Read(L, 2, &result)));

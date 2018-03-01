@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/lua.h"
 
@@ -123,6 +124,24 @@ inline ReadResult Read(lua_State* L, int idx, std::string* result) {
       std::size_t length = 0;
       const char* result_cstr = lua_tolstring(L, idx, &length);
       *result = std::string(result_cstr, length);
+      return ReadFound();
+    }
+    case LUA_TNIL:
+    case LUA_TNONE:
+      return ReadNotFound();
+    default:
+      return ReadTypeMismatch();
+  }
+}
+
+// Warning result's data is still owned by Lua's stack and maybe garbage
+// collected after being removed from that stack.
+inline ReadResult Read(lua_State* L, int idx, absl::string_view* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TSTRING: {
+      std::size_t length = 0;
+      const char* result_cstr = lua_tolstring(L, idx, &length);
+      *result = absl::string_view(result_cstr, length);
       return ReadFound();
     }
     case LUA_TNIL:
