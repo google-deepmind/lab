@@ -21,6 +21,7 @@
 #include "../qcommon/qcommon.h"
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -102,13 +103,14 @@ static int copy_fp(FILE* src_file, FILE* dest_file) {
 
 // Moves a file from the src location to the dest location potentially across
 // storage devices.
-static int move_file(const char* src, const char* dest) {
+// Returns whether the operation was a success.
+static bool move_file(const char* src, const char* dest) {
   FILE* src_file;
   FILE* dest_file;
 
   int rename_code = rename(src, dest);
   if (rename_code == 0) {
-    return 0;
+    return true;
   }
 
   // Continue only if it's an invalid cross-device link error.
@@ -118,12 +120,12 @@ static int move_file(const char* src, const char* dest) {
 
   // Rename failed, copy the file and delete the original.
   if (!(src_file = fopen(src, "r"))) {
-    return 1;  // 'fopen' sets errno.
+    return false;  // 'fopen' sets errno.
   }
 
   if (!(dest_file = fopen(dest, "w"))) {
     fclose(src_file);
-    return 1;  // 'fopen' sets errno.
+    return false;  // 'fopen' sets errno.
   }
 
   int copy_fp_code = copy_fp(src_file, dest_file);
@@ -131,10 +133,10 @@ static int move_file(const char* src, const char* dest) {
   fclose(dest_file);
 
   if (copy_fp_code == 0) {
-    return unlink(src);
+    return unlink(src) == 0;
   } else {
     unlink(dest);
-    return copy_fp_code;
+    return copy_fp_code == 0;
   }
 }
 
@@ -243,7 +245,7 @@ bool dmlab_stop_recording(dmlabRecordingContext* ctx) {
         ctx->demofiles_path, ctx->recording_name, demo_number);
     const char* homefiles_path =
         homefiles_demo_path(ctx->recording_name, demo_number);
-    if (move_file(homefiles_path, demofiles_path)) {
+    if (!move_file(homefiles_path, demofiles_path)) {
       ctx->error = DMLAB_RECORDING_ERROR_MOVE_DEMO_FILE;
       Q_strncpyz(ctx->error_message,
                  va("Moving demo file failed: %s %s %s\n", strerror(errno),
@@ -307,11 +309,11 @@ bool dmlab_start_demo(dmlabRecordingContext* ctx) {
           demofiles_demo_path(ctx->demofiles_path, ctx->demo_name, demo_number);
       const char* homefiles_path =
           homefiles_demo_path(ctx->demo_name, demo_number);
-      if (move_file(demofiles_path, homefiles_path)) {
+      if (!move_file(demofiles_path, homefiles_path)) {
         ctx->error = DMLAB_RECORDING_ERROR_MOVE_DEMO_FILE;
         Q_strncpyz(ctx->error_message,
                    va("Moving demo file failed: %s %s %s\n", strerror(errno),
-                      homefiles_path, demofiles_path),
+                      demofiles_path, homefiles_path),
                    sizeof(ctx->error_message));
         return false;
       }
@@ -388,7 +390,7 @@ bool dmlab_stop_video(dmlabRecordingContext* ctx) {
         demofiles_video_path(ctx->demofiles_path, ctx->video_name, demo_number);
     const char* homefiles_path =
         homefiles_video_path(ctx->video_name, demo_number);
-    if (move_file(homefiles_path, demofiles_path)) {
+    if (!move_file(homefiles_path, demofiles_path)) {
       ctx->error = DMLAB_RECORDING_ERROR_MOVE_VIDEO_FILE;
       Q_strncpyz(ctx->error_message,
                  va("Moving video file failed: %s %s %s\n", strerror(errno),
