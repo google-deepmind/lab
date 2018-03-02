@@ -24,6 +24,7 @@
 6.  Add 'eyePos' to playerInfo() for a more accurate eye position of player.
     Used in place of player pos + height.
 7.  Add support for absl::string_view to lua::Push and lua::Read.
+8.  Allow player model to be overridden via 'playerModel' callback.
 
 ### Deprecated Features:
 

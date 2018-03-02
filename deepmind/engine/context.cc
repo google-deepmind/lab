@@ -32,6 +32,9 @@
 
 #include "deepmind/support/logging.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
 #include "deepmind/engine/lua_image.h"
 #include "deepmind/engine/lua_maze_generation.h"
 #include "deepmind/engine/lua_random.h"
@@ -128,6 +131,12 @@ static int game_type(void* userdata) {
 static char team_select(void* userdata, int player_id,
                         const char* player_name) {
   return static_cast<Context*>(userdata)->TeamSelect(player_id, player_name);
+}
+
+static bool update_player_info(void* userdata, int player_id, char* info,
+                               int info_size) {
+  return static_cast<Context*>(userdata)->UpdatePlayerInfo(player_id, info,
+                                                           info_size);
 }
 
 static bool has_alt_cameras(void* userdata) {
@@ -532,6 +541,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->next_map = next_map;
   hooks->game_type = game_type;
   hooks->team_select = team_select;
+  hooks->update_player_info = update_player_info;
   hooks->run_lua_snippet = run_lua_snippet;
   hooks->set_native_app = set_native_app;
   hooks->get_native_app = get_native_app;
@@ -887,6 +897,42 @@ int Context::GameType() {
   }
 }
 
+bool Context::UpdatePlayerInfo(int player_id, char* info, int info_size) {
+  lua_State* L = lua_vm_.get();
+  script_table_ref_.PushMemberFunction("playerModel");
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+  } else {
+    lua::Push(L, player_id + 1);
+    std::unordered_map<std::string, absl::string_view> player_info =
+        absl::StrSplit(info + 1, '\\');
+    lua::Push(L, player_info["name"]);
+    lua::Push(L, player_info["model"]);
+    auto result = lua::Call(L, 4);
+    CHECK(result.ok()) << result.error();
+    if (result.n_results() > 0) {
+      absl::string_view model;
+      lua::Read(L, -1, &model);
+      auto& current = player_info["model"];
+      bool model_changed = current != model;
+      if (model_changed) {
+        current = model;
+        player_info["headmodel"] = model;
+        player_info["team_headmodel"] = model;
+        player_info["team_model"] = model;
+        std::string new_info = absl::StrCat(
+            "\\", absl::StrJoin(player_info, "\\", absl::PairFormatter("\\")),
+            "\\");
+        CHECK_LT(new_info.size(), info_size) << "New setting string too large.";
+        info[new_info.copy(info, info_size - 1)] = '\0';
+      }
+      lua_pop(L, result.n_results());
+      return model_changed;
+    }
+  }
+  return false;
+}
+
 char Context::TeamSelect(int player_id, const char* player_name) {
   lua_State* L = lua_vm_.get();
   script_table_ref_.PushMemberFunction("team");
@@ -1024,7 +1070,6 @@ void Context::GetModelGetters(DeepmindModelGetters* model_getters,
   *model_getters = ModelGetters();
   *model_data = model_.get();
 }
-
 
 bool Context::CanTrigger(int entity_id, const char* target_name) {
   lua_State* L = lua_vm_.get();
@@ -1545,7 +1590,7 @@ void Context::GameEvent(const char* event_name, int count,
                         const float* data) {
   lua_State* L = script_table_ref_.LuaState();
   script_table_ref_.PushMemberFunction("gameEvent");
-    // Check function exists.
+  // Check function exists.
   if (lua_isnil(L, -2)) {
     lua_pop(L, 2);
     return;

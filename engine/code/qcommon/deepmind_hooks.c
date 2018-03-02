@@ -185,6 +185,12 @@ int dmlab_callback(
                                     /*player_id=*/a1,
                                     /*player_name=*/VM_ArgPtr(a2));
       break;
+    case DEEPMIND_UPDATE_PLAYER_INFO:
+      return ctx->hooks.update_player_info(ctx->userdata,
+                                           /*player_id=*/a1,
+                                           /*info=*/VM_ArgPtr(a2),
+                                           /*info_size=*/a3);
+      break;
     case DEEPMIND_ENTITIES_CLEAR:
       ctx->hooks.entities.clear(ctx->userdata);
       break;

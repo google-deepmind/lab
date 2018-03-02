@@ -169,6 +169,11 @@ void dmlab_update_inventory(playerState_t* player_state);
 // Called during G_InitSessionData.
 char dmlab_select_team(int player_id, const char* player_name);
 
+// Called during SV_ClientEnterWorld. 'info' contains a '\' separated dictionary
+// of player settings. This function is called so that the game can override any
+// of these settings.
+qboolean dmlab_update_player_info(int clientId, char* info, int info_size);
+
 // Called at the start of entity update.
 void dmlab_entities_clear(void);
 

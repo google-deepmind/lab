@@ -366,6 +366,10 @@ struct DeepmindHooks_s {
   // See TeamSelect in deepmind/engine/context.h.
   char (*team_select)(void* userdata, int player_id, const char* player_name);
 
+  // See UpdatePlayerInfo in deepmind/engine/context.h.
+  bool (*update_player_info)(void* userdata, int player_id, char* info,
+                             int info_size);
+
   // See SetHasAltCameras in deepmind/engine/context.h.
   void (*set_has_alt_cameras)(void* userdata, bool has_alt_cameras);
 

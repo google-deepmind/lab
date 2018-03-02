@@ -149,3 +149,12 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
 )
+
+py_test(
+    name = "team_model_select_test",
+    size = "large",
+    srcs = ["team_model_select_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    tags = ["manual"],
+)

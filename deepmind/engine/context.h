@@ -122,6 +122,10 @@ class Context {
   // Called by the engine with each player's chosen ID and name.
   char TeamSelect(int player_id, const char* player_name);
 
+  // 'info' is a '\' separated dictionary. It can be modified in place via Lua
+  // as long as it doesn't exceed info_size. Returns whether 'info' has changed.
+  bool UpdatePlayerInfo(int player_id, char* info, int info_size);
+
   // The script is called with the script_table_ref pushed on the stack.
   // Runs the contents in the lua_vm_. If the script returns an integer this
   // function will return it, too, else it returns 0.

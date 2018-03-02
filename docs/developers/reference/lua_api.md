@@ -76,6 +76,45 @@ function api:team(playerId, playerName)
 end
 ```
 
+### `playerModel`(*playerId*, *playerName*) &rarr; string
+
+Called for each player joining the game. Each model/team combination has a
+textures that can be overridden.
+
+Model                 | team | Textures
+:-------------------: | :--: | ---------------------------------------------
+`'crash'`             | free | `'models/players/crash/skin1.tga'`
+`'crash'`             | red  | `'models/players/crash/redskin.tga'`
+`'crash'`             | blue | `'models/players/crash/blueskin.tga'`
+`'crash_color'`       | all  | `'models/players/crash_color/skin_base.tga'`
+`'crash_color/skin1'` | all  | `'models/players/crash_color/skin_base1.tga'`
+`'crash_color/skin2'` | all  | `'models/players/crash_color/skin_base2.tga'`
+`'crash_color/skin3'` | all  | `'models/players/crash_color/skin_base3.tga'`
+`'crash_color/skin4'` | all  | `'models/players/crash_color/skin_base4.tga'`
+`'crash_color/skin5'` | all  | `'models/players/crash_color/skin_base5.tga'`
+`'crash_color/skin6'` | all  | `'models/players/crash_color/skin_base6.tga'`
+`'crash_color/skin7'` | all  | `'models/players/crash_color/skin_base7.tga'`
+
+```lua
+local redTeamSkin = 'crash_color/skin1'
+local blueTeamSkin = 'crash_color/skin2'
+function api:playerModel(playerId, playerName)
+  return playerId % 2 == 0 and redTeamSkin or blueTeamSkin
+end
+
+function api:modifyTexture(name, texture)
+  if name == 'models/players/crash_color/skin_base1.tga' then
+    texture:add{255, 0, 0, 0}
+    return true
+  end
+  if name == 'models/players/crash_color/skin_base2.tga' then
+    texture:add{0, 0, 255, 0}
+    return true
+  end
+  return false
+end
+```
+
 ### `canPickup`(*entity_id*) &rarr; boolean
 
 The environment calls this function to decide whether the item with ID

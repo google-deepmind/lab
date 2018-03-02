@@ -244,3 +244,9 @@ qboolean dmlab_custom_view(refdef_t* camera) {
   return trap_DeepmindCallback(DEEPMIND_CUSTOM_VIEW, (intptr_t)camera, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0);
 }
+
+qboolean dmlab_update_player_info(int clientId, char* info, int info_size) {
+  return trap_DeepmindCallback(DEEPMIND_UPDATE_PLAYER_INFO, (intptr_t)clientId,
+                               (intptr_t)info, (intptr_t)info_size, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0);
+}

@@ -756,6 +756,10 @@ void ClientUserinfoChanged( int clientNum ) {
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
+	if ( dmlab_update_player_info( clientNum, userinfo, sizeof( userinfo ) ) ) {
+		trap_SetUserinfo( clientNum, userinfo );
+	}
+
 	// check for malformed or illegal info strings
 	if ( !Info_Validate(userinfo) ) {
 		strcpy (userinfo, "\\name\\badinfo");
