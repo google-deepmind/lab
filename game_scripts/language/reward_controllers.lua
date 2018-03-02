@@ -33,7 +33,7 @@ A reward controller is expected to implement the following API:
 
 *   handlePickup(description) required -- When an agent collides with a pickup,
     this function will be called with the table describing the pickup object
-    passed as an argument.
+    passed as an argument, as described in language.object_generator.
 ]]
 local reward_controllers = {}
 
@@ -185,8 +185,8 @@ end
 is constructed with a list of group ids in the order which they should be
 collected.
 
-*   Objects collected in the correct order will award 'reward2' points.
-    Otherwise 'reward' points will be awarded.
+*   Objects collected in the correct order will award 'reward' points.
+    Otherwise 'reward2' points will be awarded.
 *   The level will end if any incorrect object is picked up, or when the last
     goal object is collected.
 ]]
@@ -201,18 +201,18 @@ function reward_controllers.createOrdered(order)
 
   function orderedRewardController:handlePickup(description)
     local finishMap = true
-    local reward = description.reward
+    local scoreChange = description.reward2  -- Assume penalty
 
-    -- If picked up in the correct order, add score of reward2 to reward.
+    -- If picked up in the correct order, add reward to score.
     if description._group == self._requiredOrder[self._nextIndex] then
-      reward = description.reward2 or 0
+      scoreChange = description.reward or 0
       if self._nextIndex < #self._requiredOrder then
         self._nextIndex = self._nextIndex + 1
         finishMap = false
       end
     end
 
-    game:addScore(0, reward)
+    game:addScore(0, scoreChange)
     if finishMap then
       game:finishMap()
     end

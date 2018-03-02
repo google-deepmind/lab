@@ -140,8 +140,8 @@ following keys and possible values:
 *   `pattern` values from known pattern names, object_generator.PATTERNS
 *   `region` 'all'
 *   `requires` nil
-*   `reward` 0
-*   `reward2` 0
+*   `reward` 0 -- the default change to score when picked up
+*   `reward2` 0 -- auxiliary value used by some reward controllers
 *   `shade` ''
 *   `shape` name of known recognisable pickups, object_generator.SHAPES
 *   `size` size from object_generator.SIZES
