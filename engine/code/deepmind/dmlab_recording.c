@@ -140,39 +140,63 @@ static bool move_file(const char* src, const char* dest) {
   }
 }
 
-void dmlab_set_recording_name(dmlabRecordingContext* ctx, const char* name) {
+bool dmlab_set_recording_name(dmlabRecordingContext* ctx, const char* name) {
   ctx->error = DMLAB_RECORDING_ERROR_NONE;
 
   if (name == NULL || name[0] == '\0') {
     ctx->is_recording = false;
+  } else if (ctx->is_demo || ctx->is_video) {
+    ctx->error = DMLAB_RECORDING_ERROR_INVALID_FLAGS;
+    Q_strncpyz(
+        ctx->error_message,
+        "The flags 'recording' and 'demo' may not both be specified.\n",
+        sizeof(ctx->error_message));
+    return false;
   } else {
     Q_strncpyz(ctx->recording_name, name, sizeof(ctx->recording_name));
     ctx->is_recording = true;
     ctx->demo_number = 0;
   }
+  return true;
 }
 
-void dmlab_set_demo_name(dmlabRecordingContext* ctx, const char* name) {
+bool dmlab_set_demo_name(dmlabRecordingContext* ctx, const char* name) {
   ctx->error = DMLAB_RECORDING_ERROR_NONE;
 
   if (name == NULL || name[0] == '\0') {
     ctx->is_recording = false;
+  } else if (ctx->is_recording) {
+    ctx->error = DMLAB_RECORDING_ERROR_INVALID_FLAGS;
+    Q_strncpyz(
+        ctx->error_message,
+        "The flags 'recording' and 'demo' may not both be specified.\n",
+        sizeof(ctx->error_message));
+    return false;
   } else {
     Q_strncpyz(ctx->demo_name, name, sizeof(ctx->demo_name));
     ctx->is_demo = true;
     ctx->demo_number = 0;
   }
+  return true;
 }
 
-void dmlab_set_video_name(dmlabRecordingContext* ctx, const char* name) {
+bool dmlab_set_video_name(dmlabRecordingContext* ctx, const char* name) {
   ctx->error = DMLAB_RECORDING_ERROR_NONE;
 
   if (name == NULL || name[0] == '\0') {
     ctx->is_video = false;
+  } else if (ctx->is_recording) {
+    ctx->error = DMLAB_RECORDING_ERROR_INVALID_FLAGS;
+    Q_strncpyz(
+        ctx->error_message,
+        "The flags 'recording' and 'video' may not both be specified.\n",
+        sizeof(ctx->error_message));
+    return false;
   } else {
     Q_strncpyz(ctx->video_name, name, sizeof(ctx->video_name));
     ctx->is_video = true;
   }
+  return true;
 }
 
 void dmlab_set_demofiles_path(dmlabRecordingContext* context,

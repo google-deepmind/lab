@@ -36,6 +36,7 @@ enum dmlabRecordingError {
   DMLAB_RECORDING_ERROR_OVERWRITE_VIDEO_FILE,
 
   DMLAB_RECORDING_ERROR_FLUSH_OUTPUT_STREAM,
+  DMLAB_RECORDING_ERROR_INVALID_FLAGS,
 };
 
 typedef struct dmlabRecordingContext_s {
@@ -79,13 +80,16 @@ typedef struct dmlabRecordingContext_s {
 } dmlabRecordingContext;
 
 // Copies |name| into the context as the recording name.
-void dmlab_set_recording_name(dmlabRecordingContext* context, const char* name);
+// Returns whether it succeeded.
+bool dmlab_set_recording_name(dmlabRecordingContext* context, const char* name);
 
 // Copies |name| into the context as the video name.
-void dmlab_set_video_name(dmlabRecordingContext* context, const char* name);
+// Returns whether it succeeded.
+bool dmlab_set_video_name(dmlabRecordingContext* context, const char* name);
 
 // Copies |name| into the context as the demo name.
-void dmlab_set_demo_name(dmlabRecordingContext* context, const char* name);
+// Returns whether it succeeded.
+bool dmlab_set_demo_name(dmlabRecordingContext* context, const char* name);
 
 // Copies |path| into the context as the demofiles_path.
 void dmlab_set_demofiles_path(dmlabRecordingContext* context, const char* path);

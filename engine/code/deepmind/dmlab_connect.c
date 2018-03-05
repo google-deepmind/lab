@@ -630,11 +630,23 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     Q_strcat(gc->command_line, sizeof(gc->command_line), " ");
     Q_strcat(gc->command_line, sizeof(gc->command_line), value);
   } else if (strcmp(key, "record") == 0) {
-    dmlab_set_recording_name(gc->recording_ctx, value);
+    if (!dmlab_set_recording_name(gc->recording_ctx, value)) {
+      gc->dm_ctx->hooks.set_error_message(gc->dm_ctx->userdata,
+                                          gc->recording_ctx->error_message);
+      return 1;
+    }
   } else if (strcmp(key, "demo") == 0) {
-    dmlab_set_demo_name(gc->recording_ctx, value);
+    if (!dmlab_set_demo_name(gc->recording_ctx, value)) {
+      gc->dm_ctx->hooks.set_error_message(gc->dm_ctx->userdata,
+                                          gc->recording_ctx->error_message);
+      return 1;
+    }
   } else if (strcmp(key, "video") == 0) {
-    dmlab_set_video_name(gc->recording_ctx, value);
+    if (!dmlab_set_video_name(gc->recording_ctx, value)) {
+      gc->dm_ctx->hooks.set_error_message(gc->dm_ctx->userdata,
+                                          gc->recording_ctx->error_message);
+      return 1;
+    }
   } else if (strcmp(key, "demofiles") == 0) {
     dmlab_set_demofiles_path(gc->recording_ctx, value);
   } else if (strcmp(key, "use_pbos") == 0) {
