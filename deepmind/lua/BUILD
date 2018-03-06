@@ -231,3 +231,26 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "stack_resetter",
+    hdrs = ["stack_resetter.h"],
+    deps = [":lua"],
+)
+
+cc_test(
+    name = "stack_resetter_test",
+    size = "small",
+    srcs = ["stack_resetter_test.cc"],
+    deps = [
+        ":call",
+        ":n_results_or",
+        ":n_results_or_test_util",
+        ":push",
+        ":push_script",
+        ":read",
+        ":stack_resetter",
+        ":vm_test_util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
