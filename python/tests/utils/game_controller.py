@@ -40,6 +40,18 @@ _INTERNAL_POSITION_TOLERANCE = POSITION_TOLERANCE * .7
 _SLOW_MOVE_DISTANCE = 10.
 
 
+class ControllerException(Exception):
+  """Base class for all game controller exceptions."""
+
+
+class EpisodeFinishedError(ControllerException):
+  """Raised when an episode is finished while controller is running."""
+
+
+class PathBlockedError(ControllerException):
+  """Raised when player path is blocked."""
+
+
 class GameController(object):
   """A high level game controller class.
 
@@ -79,7 +91,7 @@ class GameController(object):
                      'target: {1}, current: {2}.')
     for _ in xrange(steps):
       if self._env.is_running():
-        self._env.step(actions, 1)
+        self._step(actions, 1)
       else:
         raise AssertionError(
             error_message.format(start[1], target[1], self.orientation[1]))
@@ -94,25 +106,48 @@ class GameController(object):
             math_utils.delta_angle_degrees(self.orientation[1], target[1]),
             steps=1)
 
-  def move_to(self, target_x, target_y, max_steps=2000):
+  def move_to(self,
+              target_x,
+              target_y,
+              max_steps=2000,
+              max_speed=None):
     """Move the player to the target location."""
     pos = self.position
     target = np.array([target_x, target_y, pos[2]])
 
-    direction = target - pos
+    if max_speed is None:
+      max_speed = float('inf')
+
+    direction = (target - pos)[:2]
+    last_pos = np.array([float('inf'), float('inf'), float('inf')])
     target_orientation = np.degrees(np.arctan2(direction[1], direction[0]))
     self.look_at_2d(target_orientation)
 
+    blocked_frames_count = 0
     for _ in xrange(max_steps):
+      move_action_value = 1
       pos = self.position
-      direction = target - pos
+      direction = (target - pos)[:2]
       distance = np.linalg.norm(direction)
+      speed = np.linalg.norm(self.velocity[:2])
+
       if distance < _SLOW_MOVE_DISTANCE:
-        speed = np.linalg.norm(self.velocity)
         if speed > 0.0:
           self.stop()
+      elif speed > max_speed:
+        move_action_value = 0
+
       if distance < _INTERNAL_POSITION_TOLERANCE:
         break
+
+      if np.linalg.norm(last_pos - pos) < .1:
+        blocked_frames_count += 1
+        if blocked_frames_count > 10:
+          raise PathBlockedError(
+              'Failed to reach target. The path might be blocked.')
+      else:
+        blocked_frames_count = 0
+      last_pos = pos
 
       target_orientation = np.degrees(np.arctan2(direction[1], direction[0]))
       rotation_speed = self._rotation_speed(
@@ -121,48 +156,67 @@ class GameController(object):
           steps=1)
       actions = self._get_empty_actions()
       self._set_action_value(actions, _TURN_ACTION_NAME, rotation_speed)
-      self._set_action_value(actions, _MOVE_ACTION_NAME, 1)
-      self._env.step(actions, 1)
+      self._set_action_value(actions, _MOVE_ACTION_NAME, move_action_value)
+      self._step(actions, 1)
     else:
-      raise ('Failed to reach target in max steps.')
+      raise AssertionError('Failed to reach target in max steps.')
 
   def stop(self, max_steps=2000):
     """Stops the player as soon as possible."""
     start_orientation = self.orientation[1]
     for _ in xrange(max_steps):
-      speed = np.linalg.norm(self.velocity)
+      speed = np.linalg.norm(self.velocity[:2])
       if speed < _VELOCITY_TOLERANCE and np.isclose(
           self.rotation_velocity, [0.0, 0.0, 0.0],
           atol=_VELOCITY_TOLERANCE).all():
         break
       if speed < _MIN_BRAKING_SPEED:
-        self._env.step(_NOOP_ACTION, 1)
+        self._step(_NOOP_ACTION, 1)
       else:
         self.look_at_2d(
             self.orientation[1] +
             np.degrees(np.arctan2(self.velocity[1], self.velocity[0])),
             steps=1)
 
-        self._env.step(self._get_actions(_MOVE_ACTION_NAME, -1), 1)
+        self._step(self._get_actions(_MOVE_ACTION_NAME, -1), 1)
     else:
       raise AssertionError('Failed to stop in max steps.')
     self.look_at_2d(start_orientation, steps=1)
 
+  def _step(self, actions, steps):
+    try:
+      return self._env.step(actions, steps)
+    except RuntimeError:
+      if self._env.is_running():
+        raise
+      else:
+        raise EpisodeFinishedError()
+
   @property
   def position(self):
-    return self._env.observations()['DEBUG.POS.TRANS']
+    return self._observations['DEBUG.POS.TRANS']
 
   @property
   def orientation(self):
-    return self._env.observations()['DEBUG.POS.ROT']
+    return self._observations['DEBUG.POS.ROT']
 
   @property
   def velocity(self):
-    return self._env.observations()['VEL.TRANS']
+    return self._observations['VEL.TRANS']
 
   @property
   def rotation_velocity(self):
-    return self._env.observations()['VEL.ROT']
+    return self._observations['VEL.ROT']
+
+  @property
+  def _observations(self):
+    try:
+      return self._env.observations()
+    except RuntimeError:
+      if self._env.is_running():
+        raise
+      else:
+        raise EpisodeFinishedError()
 
   def _get_empty_actions(self):
     return np.zeros([len(self._action_index)], dtype=np.intc)

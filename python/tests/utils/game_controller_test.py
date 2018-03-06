@@ -35,10 +35,9 @@ class GameControllerTest(unittest.TestCase):
 
   def setUp(self):
     self._env = test_environment_decorator.TestEnvironmentDecorator(
-        deepmind_lab.Lab('seekavoid_arena_01', [
-            'RGB_INTERLEAVED', 'VEL.ROT', 'VEL.TRANS', 'DEBUG.POS.ROT',
-            'DEBUG.POS.TRANS'
-        ]))
+        deepmind_lab.Lab(
+            'seekavoid_arena_01',
+            ['VEL.ROT', 'VEL.TRANS', 'DEBUG.POS.ROT', 'DEBUG.POS.TRANS']))
     self._controller = game_controller.GameController(self._env)
     self._env.reset()
 
@@ -72,6 +71,27 @@ class GameControllerTest(unittest.TestCase):
       delta = math_utils.delta_angle_degrees(self._controller.orientation[1],
                                              angle)
       self.assertLess(abs(delta), game_controller.ROTATION_TOLERANCE)
+
+  def testMovingSlowly(self):
+    self._controller.move_to(.0, .0)
+    start_steps = self._env.num_steps()
+    self._controller.move_to(100.0, .0)
+    steps_moving_fast = self._env.num_steps() - start_steps
+    start_steps = self._env.num_steps()
+    self._controller.move_to(.0, .0, max_speed=50.0)
+    self.assertLess(steps_moving_fast,
+                    (self._env.num_steps() - start_steps) / 2.)
+
+  def testControllerThrowsExceptionWhenBlocked(self):
+    self._controller.move_to(100.0, .0)
+    with self.assertRaises(game_controller.PathBlockedError):
+      self._controller.move_to(10000.0, .0)
+
+  def testControllerThrowsExceptionWhenEpisodeFinishes(self):
+    with self.assertRaises(game_controller.EpisodeFinishedError):
+      for _ in xrange(1000):
+        self._controller.move_to(100.0, .0)
+        self._controller.move_to(0.0, .0)
 
 
 if __name__ == '__main__':
