@@ -294,6 +294,24 @@ struct DeepmindHooks_s {
   // Level-specific observations
   ///////////////
 
+  // The number of level-specific actions.
+  int (*custom_action_discrete_count)(void* userdata);
+
+  // The name associated with a level-specific action at the given index.
+  // 'idx' shall be in range [0, custom_action_discrete_count()).
+  const char* (*custom_action_discrete_name)(void* userdata, int idx);
+
+  // Bounds of level-specific action at the given index.
+  // 'idx' shall be in range [0, custom_action_discrete_count()).
+  void (*custom_action_discrete_bounds)(void* userdata, int idx,
+                                        int* min_value_out, int* max_value_out);
+
+  // Send custom actions to Lua script api. 'actions' shall be an array of
+  // custom_action_discrete_count() integers each within the bounds described by
+  // custom_action_discrete_bounds.
+  void (*custom_action_discrete_apply)(void* userdata, const int* actions);
+
+
   // The number of level-specific observations.
   int (*custom_observation_count)(void* userdata);
 

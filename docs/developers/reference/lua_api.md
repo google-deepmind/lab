@@ -21,6 +21,7 @@ the game script.
 The calling code that calls into these API functions can be found in:
 
 *   [deepmind/engine/context.cc](../../../deepmind/engine/context.cc).
+*   [deepmind/engine/context_actions.cc](../../../deepmind/engine/context_actions.cc).
 *   [deepmind/engine/context_entities.cc](../../../deepmind/engine/context_entities.cc).
 *   [deepmind/engine/context_events.cc](../../../deepmind/engine/context_events.cc).
 *   [deepmind/engine/context_game.cc](../../../deepmind/engine/context_game.cc).
@@ -167,6 +168,46 @@ invoke `createModel` with the contents of that string.
 Returns a table with the geometry of the model referenced by `model_name`. The
 format of such table is described in [Model Generation](
 ../creating_levels/model_generation.md).
+
+### `customDiscreteActionSpec`() &rarr; array
+### `customDiscreteActions`(*actions*)
+
+`customDiscreteActionSpec` is called after `init`, it returns an additional
+array of extra actions supplied by the script.
+
+Each action must contain a `name`, `type` and `shape`.
+
+*   `name` Name of the action reported by the environment.
+*   `min` Min value of actions.
+*   `max` Max value of actions.
+
+When specified `customDiscreteActions` is called with an array current actions
+for that frame.
+
+```lua
+
+function api:customActionSpec()
+  return {
+    {name = 'SWITCH_GADGET', min = -1, max = 1},
+    {name = 'SELECT_GADGET', min = 0, max = 10},
+  }
+end
+
+local currentCustomActions = actions
+
+function api:customDiscreteActions(actions)
+  currentCustomActions = actions
+end
+
+function api:modifyControl(controls)
+  if currentCustomActions[1] ~= 0 then
+    -- SWITCH_GADGET action.
+  end
+  if currentCustomActions[2] ~= 0 then
+    -- SELECT_GADGET action.
+  end
+end
+```
 
 ### `customObservation`(*name*) &rarr; tensor.ByteTensor or tensor.DoubleTensor.
 

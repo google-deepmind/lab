@@ -808,11 +808,23 @@ static const char* dmlab_environment_name(void* context) {
 }
 
 static int dmlab_action_discrete_count(void* context) {
-  return ((GameContext*)context)->is_server ? 0 : ARRAY_LEN(kActionNames);
+  GameContext* gc = context;
+  DeepmindContext* ctx = gc->dm_ctx;
+  return gc->is_server
+             ? 0
+             : ARRAY_LEN(kActionNames) +
+                   ctx->hooks.custom_action_discrete_count(ctx->userdata);
 }
 
 static const char* dmlab_action_discrete_name(void* context, int discrete_idx) {
-  return kActionNames[discrete_idx];
+  if (discrete_idx < ARRAY_LEN(kActionNames)) {
+    return kActionNames[discrete_idx];
+  } else {
+    GameContext* gc = context;
+    DeepmindContext* ctx = gc->dm_ctx;
+    return ctx->hooks.custom_action_discrete_name(
+        ctx->userdata, discrete_idx - ARRAY_LEN(kActionNames));
+  }
 }
 
 static void dmlab_action_discrete_bounds(
@@ -824,9 +836,15 @@ static void dmlab_action_discrete_bounds(
   } else if (discrete_idx < kActions_Fire) {
     *min_value_out = -1;
     *max_value_out = 1;
-  } else {
+  } else if (discrete_idx < ARRAY_LEN(kActionNames)) {
     *min_value_out = 0;
     *max_value_out = 1;
+  } else {
+    GameContext* gc = context;
+    DeepmindContext* ctx = gc->dm_ctx;
+    ctx->hooks.custom_action_discrete_bounds(
+        ctx->userdata, discrete_idx - ARRAY_LEN(kActionNames), min_value_out,
+        max_value_out);
   }
 }
 
@@ -1087,6 +1105,8 @@ static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
 
   ctx->hooks.set_actions(ctx->userdata, pitch, yaw, forwardmove, rightmove,
                          upmove, buttons);
+  ctx->hooks.custom_action_discrete_apply(ctx->userdata,
+                                          act_d + ARRAY_LEN(kActionNames));
 }
 
 static double get_engine_score(void) {

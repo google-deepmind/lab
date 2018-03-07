@@ -25,6 +25,8 @@
     Used in place of player pos + height.
 7.  Add support for absl::string_view to lua::Push and lua::Read.
 8.  Allow player model to be overridden via 'playerModel' callback.
+9.  Add ability to specify custom actions via 'customDiscreteActionSpec' and
+    'customDiscreteAction' callbacks.
 
 ### Deprecated Features:
 

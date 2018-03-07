@@ -9,6 +9,7 @@ cc_library(
     hdrs = ["context.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":context_actions",
         ":context_entities",
         ":context_events",
         ":context_game",
@@ -127,6 +128,22 @@ cc_library(
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
+    ],
+)
+
+cc_library(
+    name = "context_actions",
+    srcs = ["context_actions.cc"],
+    hdrs = ["context_actions.h"],
+    deps = [
+        "//deepmind/lua",
+        "//deepmind/lua:call",
+        "//deepmind/lua:push",
+        "//deepmind/lua:read",
+        "//deepmind/lua:stack_resetter",
+        "//deepmind/lua:table_ref",
+        "//deepmind/support:logging",
+        "//deepmind/tensor:lua_tensor",
     ],
 )
 

@@ -158,3 +158,10 @@ py_test(
     imports = ["python"],
     tags = ["manual"],
 )
+
+py_test(
+    name = "custom_actions_test",
+    srcs = ["custom_actions_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)

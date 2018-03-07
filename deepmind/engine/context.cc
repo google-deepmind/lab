@@ -382,6 +382,27 @@ static void custom_observation(void* userdata, int idx,
       idx, observation);
 }
 
+static int custom_action_discrete_count(void* userdata) {
+  return static_cast<Context*>(userdata)->CustomActions().DiscreteCount();
+}
+
+static const char* custom_action_discrete_name(void* userdata, int idx) {
+  return static_cast<Context*>(userdata)->CustomActions().DiscreteName(idx);
+}
+
+static void custom_action_discrete_bounds(void* userdata, int idx,
+                                          int* min_value_out,
+                                          int* max_value_out) {
+  return static_cast<Context*>(userdata)->CustomActions().DiscreteBounds(
+      idx, min_value_out, max_value_out);
+}
+
+static void custom_action_discrete_apply(void* userdata, const int* actions) {
+  return static_cast<Context*>(userdata)
+      ->MutableCustomActions()
+      ->DiscreteApply(actions);
+}
+
 static void player_state(void* userdata, const float origin[3],
                          const float velocity[3], const float viewangles[3],
                          float height, const float eyePos[3], int team_score,
@@ -570,6 +591,10 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->custom_observation_count = custom_observation_count;
   hooks->custom_observation_name = custom_observation_name;
   hooks->custom_observation_spec = custom_observation_spec;
+  hooks->custom_action_discrete_count = custom_action_discrete_count;
+  hooks->custom_action_discrete_name = custom_action_discrete_name;
+  hooks->custom_action_discrete_bounds = custom_action_discrete_bounds;
+  hooks->custom_action_discrete_apply = custom_action_discrete_apply;
   hooks->custom_observation = custom_observation;
   hooks->player_state = player_state;
   hooks->make_screen_messages = make_screen_messages;
@@ -726,7 +751,9 @@ int Context::Init() {
   if (err != 0) return err;
 
   MutablePickups()->SetScriptTableRef(script_table_ref_);
-  return MutableObservations()->ReadSpec(script_table_ref_);
+  err = MutableObservations()->ReadSpec(script_table_ref_);
+  if (err != 0) return err;
+  return MutableCustomActions()->ReadSpec(script_table_ref_);
 }
 
 int Context::Start(int episode, int seed) {

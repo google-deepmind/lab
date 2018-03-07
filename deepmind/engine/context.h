@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "deepmind/engine/context_actions.h"
 #include "deepmind/engine/context_entities.h"
 #include "deepmind/engine/context_events.h"
 #include "deepmind/engine/context_game.h"
@@ -396,6 +397,9 @@ class Context {
   const ContextObservations& Observations() const { return observations_; }
   ContextObservations* MutableObservations() { return &observations_; }
 
+  const ContextActions& CustomActions() const { return custom_actions_; }
+  ContextActions* MutableCustomActions() { return &custom_actions_; }
+
   const ContextPickups& Pickups() const { return pickups_; }
   ContextPickups* MutablePickups() { return &pickups_; }
 
@@ -523,6 +527,9 @@ class Context {
 
   // An object for storing and retrieving custom observations.
   ContextObservations observations_;
+
+  // An object for storing and applying custom actions.
+  ContextActions custom_actions_;
 
   // An object for interacting with pickups.
   ContextPickups pickups_;
