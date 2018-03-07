@@ -46,9 +46,11 @@ TEST_MAP = """
 ********
 """.lstrip('\n')
 
-RANDOM_DEBUG_CAMERA_PIXEL_POS = [[160, 179], [210, 150], [250, 125]]
-RANDOM_DEBUG_CAMERA_PIXEL_VALUES = [[77, 108, 69], [194, 150, 53],
-                                    [206, 161, 60]]
+RANDOM_DEBUG_CAMERA_PIXEL_POS_VALUES = [
+    ([55, 122], [187, 184, 255]),
+    ([210, 150], [76, 108, 68]),
+    ([250, 125], [214, 148, 28]),
+]
 
 
 class DebugObservationTest(unittest.TestCase):
@@ -122,8 +124,7 @@ class DebugObservationTest(unittest.TestCase):
     env.reset()
 
     camera_image = env.observations()[DEBUG_CAMERA_OBSERVATION]
-    for (x, y), rgb in zip(RANDOM_DEBUG_CAMERA_PIXEL_POS,
-                           RANDOM_DEBUG_CAMERA_PIXEL_VALUES):
+    for (x, y), rgb in RANDOM_DEBUG_CAMERA_PIXEL_POS_VALUES:
       self.assertTrue(np.allclose(camera_image[:, y, x], rgb, atol=6))
 
 

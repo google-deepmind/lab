@@ -380,7 +380,7 @@ void RE_BeginFrameCustomView( void ) {
 
 	tr.refdef.stereoFrame = STEREO_CENTER;
 
-	tr.refdef.vertFlipBuffer = qfalse;
+	tr.refdef.vertFlipBuffer = qtrue;
 }
 
 void RE_EndFrameCustomView( void ) {

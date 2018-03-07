@@ -11,6 +11,9 @@
 1.  Fix playerId and otherPlayerId out by one errors in 'game_rewards.lua'.
 2.  Require playerId passed to `game:addScore` to be one indexed instead of zero
     indexed and allow `game:addScore` to be used without a playerId.
+3.  `game:renderCustomView` now renders the view with top-left as the origin.
+    The previous behaviour can be achieved by calling reverse(1) on the returned
+    tensor.
 
 ### Minor Improvements:
 

@@ -706,7 +706,7 @@ storage.
 ```
 
 Returns a byte tensor containing the render of the current game at that position
-and look rotation. The images's origin is bottom left and interlaced.
+and look rotation. The images's origin is top left and interlaced.
 Note +ve pitch looks down.
 
 ### `runFiles`()

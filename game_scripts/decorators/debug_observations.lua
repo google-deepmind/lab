@@ -234,7 +234,7 @@ local function topDownCamera()
       pos = camera.pos,
       look = camera.look,
   }
-  return buffer:transpose(3, 2):transpose(2, 1):reverse(2):clone()
+  return buffer:transpose(3, 2):transpose(2, 1):clone()
 end
 
 local function playerView(reticleSize)
@@ -255,7 +255,7 @@ local function playerView(reticleSize)
             :narrow(2, hwidth - hsize, reticleSize)
             :fill{200, 200, 200}
     end
-    return buffer:transpose(3, 2):transpose(2, 1):reverse(2):clone()
+    return buffer:transpose(3, 2):transpose(2, 1):clone()
   end
   return view
 end
