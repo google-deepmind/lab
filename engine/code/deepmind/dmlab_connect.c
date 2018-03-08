@@ -1245,6 +1245,10 @@ static void screen_shape(int* width, int* height, int* buff_width,
   *height = gc->height;
 }
 
+static void execute_console_command(const char* cmd) {
+  Cmd_ExecuteString(cmd);
+}
+
 static void add_bot(const char* name, double skill, const char* team) {
   Cbuf_AddText(va("addbot %s %f %s\n", name, skill, team));
 }
@@ -1382,6 +1386,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->calls.add_score = call_add_score;
   gc->dm_ctx->calls.screen_shape = screen_shape;
   gc->dm_ctx->calls.add_bot = add_bot;
+  gc->dm_ctx->calls.execute_console_command = execute_console_command;
   gc->dm_ctx->calls.engine_frame_period_msec = engine_frame_period_msec;
   gc->dm_ctx->calls.total_engine_time_msec = total_engine_time_msec;
   gc->dm_ctx->calls.total_time_seconds = total_time_seconds;

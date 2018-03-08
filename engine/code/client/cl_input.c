@@ -610,6 +610,7 @@ CL_CreateCmd
 usercmd_t CL_CreateCmd( void ) {
 	usercmd_t	cmd;
 	vec3_t		oldAngles;
+	DeepmindContext* ctx = dmlab_context();
 
 	VectorCopy( cl.viewangles, oldAngles );
 
@@ -631,6 +632,8 @@ usercmd_t CL_CreateCmd( void ) {
 
 	// store out the final values
 	CL_FinishMove( oldAngles, &cmd );
+
+	ctx->hooks.issue_console_commands( ctx->userdata );
 
 	// draw debug graphs of turning for mouse testing
 	if ( cl_debugMove->integer ) {

@@ -44,6 +44,9 @@ struct DeepmindCalls_s {
   void (*screen_shape)(int* width, int* height, int* buff_width,
                        int* buff_height);
 
+  // Executes a Quake console command. Must not be called during a callback.
+  void (*execute_console_command)(const char* cmd);
+
   // Engine time between the start of two consecutive frames, in milliseconds.
   int (*engine_frame_period_msec)(void);
 

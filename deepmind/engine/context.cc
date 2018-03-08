@@ -413,6 +413,10 @@ static void player_state(void* userdata, const float origin[3],
       other_team_score, player_id, teleported, timestamp_msec);
 }
 
+static void issue_console_commands(void* userdata) {
+  return static_cast<Context*>(userdata)->MutableGame()->IssueConsoleCommands();
+}
+
 static int make_screen_messages(void* userdata, int screen_width,
                                 int screen_height, int line_height,
                                 int string_buffer_size) {
@@ -628,6 +632,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->set_has_alt_cameras = set_has_alt_cameras;
   hooks->has_alt_cameras = has_alt_cameras;
   hooks->custom_view = custom_view;
+  hooks->issue_console_commands = issue_console_commands;
 }
 
 void Context::AddSetting(const char* key, const char* value) {

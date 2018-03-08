@@ -30,6 +30,7 @@
 8.  Allow player model to be overridden via 'playerModel' callback.
 9.  Add ability to specify custom actions via 'customDiscreteActionSpec' and
     'customDiscreteAction' callbacks.
+10. Add `game:console` command to issue Quake 3 console commands directly.
 
 ### Deprecated Features:
 

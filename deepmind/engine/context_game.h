@@ -23,7 +23,9 @@
 #include <cstddef>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "Eigen/Dense"
 #include "deepmind/include/deepmind_calls.h"
 #include "deepmind/lua/lua.h"
@@ -124,6 +126,12 @@ class ContextGame {
   void SetCustomView(int width, int height, const std::array<float, 3>& pos,
                      const std::array<float, 3>& eye, bool render_player);
 
+  void IssueConsoleCommands();
+
+  void AddConsoleCommand(absl::string_view commad) {
+    console_commands_.emplace_back(commad);
+  }
+
  private:
   // Calls into the engine.
   const DeepmindCalls* deepmind_calls_;
@@ -149,6 +157,7 @@ class ContextGame {
   std::array<float, 3> camera_position_;
   std::array<float, 3> camera_view_angles_;
   bool camera_render_player_;
+  std::vector<std::string> console_commands_;
 };
 
 }  // namespace lab

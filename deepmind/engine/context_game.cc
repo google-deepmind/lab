@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/push.h"
@@ -82,6 +83,7 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
         {"copyFileToLocation", Member<&LuaGameModule::CopyFileToLocation>},
         {"renderCustomView", Member<&LuaGameModule::RenderCustomView>},
         {"screenShape", Member<&LuaGameModule::ScreenShape>},
+        {"console", Member<&LuaGameModule::Console>},
     };
     Class::Register(L, methods);
   }
@@ -139,6 +141,14 @@ class LuaGameModule : public lua::Class<LuaGameModule> {
     } else {
       return "Must provide start, end coordinates and orientation angles";
     }
+  }
+
+  lua::NResultsOr Console(lua_State* L) {
+    absl::string_view command;
+    if (IsFound(lua::Read(L, 2, &command))) {
+      ctx_->AddConsoleCommand(command);
+    }
+    return 0;
   }
 
   lua::NResultsOr ScreenShape(lua_State* L) {
@@ -463,6 +473,13 @@ void ContextGame::SetCustomView(int width, int height,
   camera_position_ = pos;
   camera_view_angles_ = eye;
   camera_render_player_ = render_player;
+}
+
+void ContextGame::IssueConsoleCommands() {
+  for (const auto& command : console_commands_) {
+    Calls()->execute_console_command(command.c_str());
+  }
+  console_commands_.clear();
 }
 
 }  // namespace lab
