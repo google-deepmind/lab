@@ -22,12 +22,19 @@ local colors = {}
 --[[ Converts an HSV color value to RGB.
 
 Conversion formula adapted from
-http://en.wikipedia.org/wiki/HSV_color_space. Assumes h in [0, 360), s and v are
-contained in the set [0, 1].
+http://en.wikipedia.org/wiki/HSV_color_space.
 
-Returns r, g, b each in the set [0, 255].
+Arguments:
+
+*   'h' Hue must be in range [0, 360)
+*   's' Saturation must be in range [0, 1] (default 1)
+*   'v' Value must be in range [0, 1] (default 1)
+
+Returns r, g, b each in the range [0, 255].
 ]]
 function colors.hsvToRgb(h, s, v)
+  s = s or 1
+  v = v or 1
   local i = math.floor(h / 60)
   local f = h / 60 - i
   local p = v * (1 - s)
