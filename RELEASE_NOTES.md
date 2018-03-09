@@ -14,13 +14,15 @@
 3.  `game:renderCustomView` now renders the view with top-left as the origin.
     The previous behaviour can be achieved by calling reverse(1) on the returned
     tensor.
+4.  Fix a bug in image.scale whereby the offset into the data was erroneously
+    ignored.
 
 ### Minor Improvements:
 
 1.  Moved .map files into assets/maps/src and .bsp files into assets/maps/built.
     Added further pre-built maps, which removes the need for the expensive
     :map_assets build step.
-2.  Allow game to be renderered with top-left as origin instead of bottom-left.
+2.  Allow game to be rendered with top-left as origin instead of bottom-left.
 3.  Add 'mixerSeed' setting to change behaviour of all random number generators.
 4.  Support for BGR_INTERLEAVED and BGRD_INTERLEAVED observation formats.
 5.  Add a Lua API to load PNGs from file contents.

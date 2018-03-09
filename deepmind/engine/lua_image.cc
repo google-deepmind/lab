@@ -441,24 +441,24 @@ lua::NResultsOr Scale(lua_State* L) {
   }
   std::string mode = "bilinear";
   lua::Read(L, 4, &mode);
-  std::size_t source_rows = source->tensor_view().shape()[0];
-  std::size_t source_cols = source->tensor_view().shape()[1];
-  std::size_t num_channels = source->tensor_view().shape()[2];
+  const auto& view = source->tensor_view();
+  std::size_t source_rows = view.shape()[0];
+  std::size_t source_cols = view.shape()[1];
+  std::size_t num_channels = view.shape()[2];
 
   // Compute the scaled image.
+  const unsigned char* tensor_start = &view.storage()[view.start_offset()];
   std::vector<unsigned char> res(target_cols * target_rows * num_channels);
   if (mode == "bilinear") {
     if (res.begin() == scaleImage(num_channels, source_rows, source_cols,
-                                  source->tensor_view().storage(),
-                                  LinearMagnifier(), target_rows, target_cols,
-                                  res.begin())) {
+                                  tensor_start, LinearMagnifier(), target_rows,
+                                  target_cols, res.begin())) {
       return 0;
     }
   } else if (mode == "nearest") {
     if (res.begin() == scaleImage(num_channels, source_rows, source_cols,
-                                  source->tensor_view().storage(),
-                                  NearestMagnifier(), target_rows, target_cols,
-                                  res.begin())) {
+                                  tensor_start, NearestMagnifier(), target_rows,
+                                  target_cols, res.begin())) {
       return 0;
     }
   } else {
