@@ -136,6 +136,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         {"reverse", &Class::template Member<&LuaTensor<T>::Reverse>},
         {"apply", &Class::template Member<&LuaTensor<T>::Apply>},
         {"applyIndexed", &Class::template Member<&LuaTensor<T>::ApplyIndexed>},
+        {"clamp", &Class::template Member<&LuaTensor<T>::Clamp>},
         {"fill",
          &Class::template Member<&LuaTensor<T>::ScalarOp<&View::Assign>>},
         {"mul", &Class::template Member<&LuaTensor<T>::ScalarOp<&View::Mul>>},
@@ -605,6 +606,39 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       return err;
     }
     lua_pop(L, lua_gettop(L) - 1);
+    return 1;
+  }
+
+  // Clamps all values to the interval [arg1, arg2]; arg1 must not exceed arg2.
+  // If either argument is not found, then clamping does not occour on that
+  // side.
+  // [(0-2), 1, e]
+  lua::NResultsOr Clamp(lua_State* L) {
+    T min_value = std::numeric_limits<T>::lowest(),
+      max_value = std::numeric_limits<T>::max();
+    if (IsTypeMismatch(lua::Read(L, 2, &min_value)) ||
+        IsTypeMismatch(lua::Read(L, 3, &max_value))) {
+      return "TypeMismatch Arg1 must be a nil or valid min value and Arg2 must "
+             "nil or a valid max value.";
+    }
+    if (max_value < min_value) {
+      return "Arg1 (min value) must not exceed Arg2 (max value).";
+    }
+    if (min_value != std::numeric_limits<T>::lowest() &&
+        max_value != std::numeric_limits<T>::max()) {
+      tensor_view_.ForEachMutable([min_value, max_value](T* value) {
+        *value = std::max(std::min(*value, max_value), min_value);
+      });
+    } else if (min_value != std::numeric_limits<T>::lowest()) {
+      tensor_view_.ForEachMutable([min_value, max_value](T* value) {
+        *value = std::max(min_value, *value);
+      });
+    } else if (max_value != std::numeric_limits<T>::max()) {
+      tensor_view_.ForEachMutable([min_value, max_value](T* value) {
+        *value = std::min(*value, max_value);
+      });
+    }
+    lua_settop(L, 1);
     return 1;
   }
 

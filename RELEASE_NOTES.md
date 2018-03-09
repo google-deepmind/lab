@@ -33,6 +33,7 @@
 9.  Add ability to specify custom actions via 'customDiscreteActionSpec' and
     'customDiscreteAction' callbacks.
 10. Add `game:console` command to issue Quake 3 console commands directly.
+11. Add `clamp` to tensor operations.
 
 ### Deprecated Features:
 

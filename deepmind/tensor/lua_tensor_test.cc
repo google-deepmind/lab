@@ -932,6 +932,57 @@ TEST_F(LuaTensorTest, kNumElements) {
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
 }
 
+constexpr char kClamp[] = R"(
+local tensor = require 'dmlab.system.tensor'
+local doubles = tensor.DoubleTensor(3, 2)
+doubles(1):fill(-500)
+doubles(2):fill(25)
+doubles(3):fill(500)
+local clampBoth = doubles:clone():clamp(0, 255)
+assert(clampBoth == tensor.DoubleTensor{{0, 0}, {25, 25}, {255, 255}},
+       tostring(clampBoth))
+local clampLower = doubles:clone():clamp(0, nil)
+assert(clampLower == tensor.DoubleTensor{{0, 0}, {25, 25}, {500, 500}},
+       tostring(clampLower))
+local clampUpper = doubles:clone():clamp(nil, 255)
+assert(clampUpper == tensor.DoubleTensor{{-500, -500}, {25, 25}, {255, 255}},
+       tostring(clampUpper))
+)";
+
+TEST_F(LuaTensorTest, kClamp) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kClamp, sizeof(kClamp) - 1, "kClamp"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kClampErrorMaxMin[] = R"(
+local tensor = require 'dmlab.system.tensor'
+tensor.DoubleTensor(3, 2):clamp(255, 0)
+)";
+
+TEST_F(LuaTensorTest, kClampErrorMaxMin) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kClampErrorMaxMin,
+                              sizeof(kClampErrorMaxMin) - 1, "kClampMaxMin"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), StatusIs(HasSubstr("must not exceed")));
+}
+
+constexpr char kClampTypeMismatch[] = R"(
+local tensor = require 'dmlab.system.tensor'
+tensor.ByteTensor(3, 2):clamp(-10, 100)
+)";
+
+TEST_F(LuaTensorTest, kClampTypeMismatch) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kClampTypeMismatch, sizeof(kClampTypeMismatch) - 1,
+                      "kClampTypeMismatch"),
+      IsOkAndHolds(1));
+  ASSERT_THAT(lua::Call(L, 0), StatusIs(HasSubstr("TypeMismatch")));
+}
+
 }  // namespace
 }  // namespace lab
 }  // namespace deepmind

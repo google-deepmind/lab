@@ -323,7 +323,7 @@ Returns the shape of the tensor.
 {3, 2}
 ```
 
-## Rounding
+## Rounding/Clamping
 
 Rounding operations can be applied to nonintegral types.
 
@@ -380,6 +380,55 @@ Shape: [2, 2]
 Shape: [2, 2]
 [[-2, -2],
  [1.0, 1.0]]
+```
+
+### `clamp`(\[`minValue`\], \[`maxValue`\])
+
+Clamps the tensor elements to range \[`minValue`, `maxValue`\]. If either value
+is `nil` then the values are not clamped in that direction.
+
+`minValue` must not exceed `maxValue`.
+
+```Lua
+> z = tensor.DoubleTensor(3, 2)
+> z(1):fill(-500)
+> z(2):fill(25)
+> z(3):fill(500)
+> z
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 2]
+[[-500, -500],
+ [25, 25],
+ [500, 500]]
+
+> z:clone():clamp(0, 255)
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 2]
+[[0, 0],
+ [25, 25],
+ [255, 255]]
+
+> z:clone():clamp(0)
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 2]
+[[0, 0],
+ [25, 25],
+ [500, 500]]
+
+> z:clone():clamp(nil, 255)
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 2]
+[[-500, -500],
+ [25, 25],
+ [255, 255]]
+
+
+> z:clamp()  -- No op.
+[dmlab.system.tensor.DoubleTensor]
+Shape: [3, 2]
+[[-500, -500],
+ [25, 25],
+ [500, 500]]
 ```
 
 ## Layout Operations
