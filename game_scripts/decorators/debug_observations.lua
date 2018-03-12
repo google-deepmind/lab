@@ -227,17 +227,24 @@ function debug_observations.getCameraPos()
   return camera
 end
 
-local function topDownCamera()
+-- Returns interleaved image height x width x 3.
+local function topDownInterleavedCamera()
   local buffer = game:renderCustomView{
       width = SCREEN_SHAPE.width,
       height = SCREEN_SHAPE.height,
       pos = camera.pos,
       look = camera.look,
   }
-  return buffer:transpose(3, 2):transpose(2, 1):clone()
+  return buffer
 end
 
-local function playerView(reticleSize)
+-- Returns planar image 3 x height x width.
+local function topDownCamera()
+  return topDownInterleavedCamera():transpose(3, 2):transpose(2, 1):clone()
+end
+
+-- Returns interleaved images height x width x 3.
+local function playerInterleavedView(reticleSize)
   local function view()
     local info = game:playerInfo()
     local buffer = game:renderCustomView{
@@ -255,7 +262,16 @@ local function playerView(reticleSize)
             :narrow(2, hwidth - hsize, reticleSize)
             :fill{200, 200, 200}
     end
-    return buffer:transpose(3, 2):transpose(2, 1):clone()
+    return buffer
+  end
+  return view
+end
+
+-- Returns planar images 3 x height x width.
+local function playerView(reticleSize)
+  local function view()
+    return playerInterleavedView(reticleSize)():transpose(3, 2):
+           transpose(2, 1):clone()
   end
   return view
 end
@@ -266,6 +282,16 @@ function debug_observations.extend(custom_observations)
   names = co.playerNames
   inventories = co.playerInventory
   teams = co.playerTeams
+  co.addSpec('DEBUG.CAMERA_INTERLEAVED.TOP_DOWN', 'Bytes',
+             {SCREEN_SHAPE.height, SCREEN_SHAPE.width, 3},
+             topDownInterleavedCamera)
+  co.addSpec('DEBUG.CAMERA_INTERLEAVED.PLAYER_VIEW', 'Bytes',
+             {SCREEN_SHAPE.height, SCREEN_SHAPE.width, 3},
+             playerInterleavedView(3))
+  co.addSpec('DEBUG.CAMERA_INTERLEAVED.PLAYER_VIEW_NO_RETICLE', 'Bytes',
+             {SCREEN_SHAPE.height, SCREEN_SHAPE.width, 3},
+             playerInterleavedView(0))
+
   co.addSpec('DEBUG.CAMERA.TOP_DOWN', 'Bytes',
              {3, SCREEN_SHAPE.height, SCREEN_SHAPE.width}, topDownCamera)
   co.addSpec('DEBUG.CAMERA.PLAYER_VIEW', 'Bytes',

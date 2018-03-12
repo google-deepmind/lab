@@ -38,6 +38,7 @@ PLAYER_DEBUG_OBSERVATIONS = [
 ]
 
 DEBUG_CAMERA_OBSERVATION = 'DEBUG.CAMERA.TOP_DOWN'
+DEBUG_ICAMERA_OBSERVATION = 'DEBUG.CAMERA_INTERLEAVED.TOP_DOWN'
 MAZE_LAYOUT_OBSERVATION = 'DEBUG.MAZE.LAYOUT'
 TEST_MAP = """
 ********
@@ -118,14 +119,17 @@ class DebugObservationTest(unittest.TestCase):
   def test_debug_camera(self):
     env = deepmind_lab.Lab(
         'tests/debug_observation_test',
-        [DEBUG_CAMERA_OBSERVATION, 'RGB_INTERLEAVED'],
+        [DEBUG_CAMERA_OBSERVATION, DEBUG_ICAMERA_OBSERVATION,
+         'RGB_INTERLEAVED'],
         config={'width': '320', 'height': '180'})
 
     env.reset()
 
     camera_image = env.observations()[DEBUG_CAMERA_OBSERVATION]
+    icamera_image = env.observations()[DEBUG_ICAMERA_OBSERVATION]
     for (x, y), rgb in RANDOM_DEBUG_CAMERA_PIXEL_POS_VALUES:
       self.assertTrue(np.allclose(camera_image[:, y, x], rgb, atol=6))
+      self.assertTrue(np.allclose(icamera_image[y, x, :], rgb, atol=6))
 
 
 if __name__ == '__main__':
