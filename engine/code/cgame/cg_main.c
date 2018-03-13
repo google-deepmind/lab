@@ -94,7 +94,12 @@ centity_t			cg_entities[MAX_GENTITIES];
 weaponInfo_t		cg_weapons[MAX_WEAPONS];
 itemInfo_t			cg_items[MAX_ITEMS];
 
-
+vmCvar_t	cg_redteam_r;
+vmCvar_t	cg_redteam_g;
+vmCvar_t	cg_redteam_b;
+vmCvar_t	cg_blueteam_r;
+vmCvar_t	cg_blueteam_g;
+vmCvar_t	cg_blueteam_b;
 vmCvar_t	cg_railTrailTime;
 vmCvar_t	cg_centertime;
 vmCvar_t	cg_runpitch;
@@ -252,6 +257,12 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_addMarks, "cg_marks", "1", CVAR_ARCHIVE },
 	{ &cg_lagometer, "cg_lagometer", "1", CVAR_ARCHIVE },
 	{ &cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE  },
+	{ &cg_redteam_r, "cg_redteam_r", "255", CVAR_ARCHIVE  },
+	{ &cg_redteam_g, "cg_redteam_g", "0", CVAR_ARCHIVE  },
+	{ &cg_redteam_b, "cg_redteam_b", "0", CVAR_ARCHIVE  },
+	{ &cg_blueteam_r, "cg_blueteam_r", "0", CVAR_ARCHIVE  },
+	{ &cg_blueteam_g, "cg_blueteam_g", "0", CVAR_ARCHIVE  },
+	{ &cg_blueteam_b, "cg_blueteam_b", "255", CVAR_ARCHIVE  },
 	{ &cg_gun_x, "cg_gunX", "0", CVAR_CHEAT },
 	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT },
 	{ &cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT },

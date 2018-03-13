@@ -1084,6 +1084,12 @@ extern	weaponInfo_t	cg_weapons[MAX_WEAPONS];
 extern	itemInfo_t		cg_items[MAX_ITEMS];
 extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 
+extern	vmCvar_t		cg_redteam_r;
+extern	vmCvar_t		cg_redteam_g;
+extern	vmCvar_t		cg_redteam_b;
+extern	vmCvar_t		cg_blueteam_r;
+extern	vmCvar_t		cg_blueteam_g;
+extern	vmCvar_t		cg_blueteam_b;
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
 extern	vmCvar_t		cg_runroll;
