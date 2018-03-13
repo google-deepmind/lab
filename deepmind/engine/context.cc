@@ -48,6 +48,7 @@
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/read.h"
+#include "deepmind/lua/stack_resetter.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/model_generation/lua_model.h"
 #include "deepmind/model_generation/lua_transform.h"
@@ -676,6 +677,7 @@ int Context::Init() {
   }
 
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   std::string level_path = GetLevelPath();
   if (level_path.empty()) {
     error_message_ = "Missing level script must set setting 'levelName'!";
@@ -740,7 +742,6 @@ int Context::Init() {
   if (result.n_results() != 1) {
     error_message_ =
         "Lua script must return only a table or userdata with metatable.";
-    lua_pop(L, result.n_results());
     return 1;
   }
   if (!IsFound(lua::Read(L, -1, &script_table_ref_))) {
@@ -748,10 +749,11 @@ int Context::Init() {
         "Lua script must return a table or userdata with metatable. Actually "
         "returned : '",
         lua::ToString(L, -1), "'");
-    lua_pop(L, result.n_results());
     return 1;
   }
-  lua_pop(L, result.n_results());
+
+  lua_settop(L, 0);  // CallInit expects an empty Lua stack.
+
   int err = CallInit();
   if (err != 0) return err;
 
@@ -766,6 +768,7 @@ int Context::Start(int episode, int seed) {
                      (static_cast<std::uint64_t>(mixer_seed_) << 32));
   MutableGame()->NextMap();
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("start");
   if (!lua_isnil(L, -2)) {
     lua::Push(L, episode);
@@ -775,15 +778,13 @@ int Context::Start(int episode, int seed) {
       error_message_ = result.error();
       return 1;
     }
-    lua_pop(L, result.n_results());
-  } else {
-    lua_pop(L, 2);
   }
   return 0;
 }
 
 int Context::MapLoaded() {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("mapLoaded");
   if (!lua_isnil(L, -2)) {
     auto result = lua::Call(L, 1);
@@ -791,18 +792,15 @@ int Context::MapLoaded() {
       error_message_ = result.error();
       return 1;
     }
-    lua_pop(L, result.n_results());
-  } else {
-    lua_pop(L, 2);
   }
   return 0;
 }
 
 bool Context::HasEpisodeFinished(double elapsed_episode_time_seconds) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("hasEpisodeFinished");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return elapsed_episode_time_seconds >= kDefaultEpisodeLengthSeconds;
   }
   lua::Push(L, elapsed_episode_time_seconds);
@@ -813,12 +811,12 @@ bool Context::HasEpisodeFinished(double elapsed_episode_time_seconds) {
   bool finish_episode = false;
   CHECK(IsFound(lua::Read(L, -1, &finish_episode)))
       << "[hasEpisodeFinished] - Must return a boolean.";
-  lua_pop(L, result.n_results());
   return finish_episode;
 }
 
 const char* Context::GetCommandLine(const char* old_commandline) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("commandLine");
   if (!lua_isnil(L, -2)) {
     lua::Push(L, old_commandline);
@@ -827,16 +825,15 @@ const char* Context::GetCommandLine(const char* old_commandline) {
     CHECK_EQ(1, result.n_results()) << "'commandLine' must return a string.";
     CHECK(IsFound(lua::Read(L, -1, &command_line_)))
         << "'commandLine' must return a string: Found " << lua::ToString(L, -1);
-    lua_pop(L, result.n_results());
     return command_line_.c_str();
   } else {
-    lua_pop(L, 2);
     return old_commandline;
   }
 }
 
 int Context::RunLuaSnippet(const char* buf, std::size_t buf_len) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   int out = 0;
   lua::NResultsOr result = lua::PushScript(L, buf, buf_len, "snippet");
   if (result.ok()) {
@@ -845,7 +842,6 @@ int Context::RunLuaSnippet(const char* buf, std::size_t buf_len) {
     if (result.ok() && result.n_results() != 0) {
       CHECK(!IsTypeMismatch(lua::Read(L, -1, &out)));
     }
-    lua_pop(L, result.n_results());
   }
 
   CHECK(result.ok()) << result.error();
@@ -855,6 +851,7 @@ int Context::RunLuaSnippet(const char* buf, std::size_t buf_len) {
 
 const char* Context::NextMap() {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("nextMap");
   CHECK(!lua_isnil(L, -2)) << "Missing Lua function nextMap";
   auto result = lua::Call(L, 1);
@@ -863,7 +860,6 @@ const char* Context::NextMap() {
   CHECK(IsFound(lua::Read(L, -1, &map_name_)))
       << "'nextMap' must return one string: Found " << lua::ToString(L, -1);
   MutableGame()->NextMap();
-  lua_pop(L, result.n_results());
   return map_name_.c_str();
 }
 
@@ -874,9 +870,9 @@ void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
                               float position[3], float view_angles[3]) {
   const char* update_type = is_spawning ? "spawnInventory" : "updateInventory";
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction(update_type);
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return;
   }
 
@@ -905,15 +901,14 @@ void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
           table.LookUp("stats", absl::MakeSpan(stat_inventory, stat_count))))
           << "[" << update_type << "] - Table missing 'stats'!";
     }
-    lua_pop(L, result.n_results());
   }
 }
 
 int Context::GameType() {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("gameType");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return 0;  // GT_FFA from bg_public.
   } else {
     auto result = lua::Call(L, 1);
@@ -931,10 +926,9 @@ int Context::GameType() {
 
 bool Context::UpdatePlayerInfo(int player_id, char* info, int info_size) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("playerModel");
-  if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
-  } else {
+  if (!lua_isnil(L, -2)) {
     lua::Push(L, player_id + 1);
     std::unordered_map<std::string, absl::string_view> player_info =
         absl::StrSplit(info + 1, '\\');
@@ -958,7 +952,6 @@ bool Context::UpdatePlayerInfo(int player_id, char* info, int info_size) {
         CHECK_LT(new_info.size(), info_size) << "New setting string too large.";
         info[new_info.copy(info, info_size - 1)] = '\0';
       }
-      lua_pop(L, result.n_results());
       return model_changed;
     }
   }
@@ -967,9 +960,9 @@ bool Context::UpdatePlayerInfo(int player_id, char* info, int info_size) {
 
 char Context::TeamSelect(int player_id, const char* player_name) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("team");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return '\0';
   }
 
@@ -979,7 +972,6 @@ char Context::TeamSelect(int player_id, const char* player_name) {
   auto result = lua::Call(L, 3);
   CHECK(result.ok()) << result.error();
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return '\0';
   }
   CHECK_EQ(1, result.n_results()) << "[team] - must return one string.";
@@ -988,7 +980,6 @@ char Context::TeamSelect(int player_id, const char* player_name) {
       << "[team] - must return one string: Found \"" << lua::ToString(L, -1)
       << "\"";
 
-  lua_pop(L, result.n_results());
   CHECK(!team.empty()) << "[team] - must return one character or nil: Found \""
                        << lua::ToString(L, -1) << "\"";
 
@@ -1020,6 +1011,7 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
                          signed char* strafe_left_right,
                          signed char* crouch_jump, int* buttons_down) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("modifyControl");
   // Check function exists.
   if (!lua_isnil(L, -2)) {
@@ -1042,11 +1034,8 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
       CHECK(IsFound(table.LookUp("strafeLeftRight", strafe_left_right)));
       CHECK(IsFound(table.LookUp("crouchJump", crouch_jump)));
       CHECK(IsFound(table.LookUp("buttonsDown", buttons_down)));
-      lua_pop(L, result.n_results());
       return;
     }
-  } else {
-    lua_pop(L, 2);
   }
 
   *look_down_up = actions_.look_down_up;
@@ -1064,11 +1053,11 @@ int Context::MakeRandomSeed() {
 
 bool Context::FindModel(const char* model_name) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("createModel");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1080,7 +1069,6 @@ bool Context::FindModel(const char* model_name) {
   // If no description is returned or the description is nil, don't create
   // model.
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return false;
   }
 
@@ -1090,8 +1078,6 @@ bool Context::FindModel(const char* model_name) {
       << "createModel: Failed to parse data for model " << model_name;
   model_name_ = model_name;
   model_ = std::move(model);
-
-  lua_pop(L, result.n_results());
   return true;
 }
 
@@ -1105,11 +1091,11 @@ void Context::GetModelGetters(DeepmindModelGetters* model_getters,
 
 bool Context::CanTrigger(int entity_id, const char* target_name) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("canTrigger");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return true;
   }
 
@@ -1127,17 +1113,16 @@ bool Context::CanTrigger(int entity_id, const char* target_name) {
       << "canTrigger: Failed to read the return value as a boolean."
       << "Return true or false.";
 
-  lua_pop(L, result.n_results());
   return can_trigger;
 }
 
 bool Context::OverrideTrigger(int entity_id, const char* target_name) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("trigger");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1150,7 +1135,6 @@ bool Context::OverrideTrigger(int entity_id, const char* target_name) {
   // If nothing was returned or if the first return value is nil, the trigger
   // behaviour was not overridden
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return false;
   }
 
@@ -1158,19 +1142,17 @@ bool Context::OverrideTrigger(int entity_id, const char* target_name) {
   CHECK(IsFound(lua::Read(L, -1, &has_override)))
       << "trigger: Failed to read the return value as a boolean."
       << "Return true or false.";
-
-  lua_pop(L, result.n_results());
   return has_override;
 }
 
 void Context::TriggerLookat(int entity_id, bool looked_at,
                             const float position[3]) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("lookat");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return;
   }
 
@@ -1182,8 +1164,6 @@ void Context::TriggerLookat(int entity_id, bool looked_at,
 
   auto result = lua::Call(L, 4);
   CHECK(result.ok()) << "[lookat] - " << result.error();
-
-  lua_pop(L, result.n_results());
 }
 
 int Context::RewardOverride(const char* optional_reason, int player_id,
@@ -1191,6 +1171,7 @@ int Context::RewardOverride(const char* optional_reason, int player_id,
                             const float* optional_origin, int score) {
   if (optional_reason != nullptr) {
     lua_State* L = script_table_ref_.LuaState();
+    lua::StackResetter stack_resetter(L);
     script_table_ref_.PushMemberFunction("rewardOverride");
     // Check function exists.
     if (!lua_isnil(L, -2)) {
@@ -1219,9 +1200,6 @@ int Context::RewardOverride(const char* optional_reason, int player_id,
         CHECK(IsFound(lua::Read(L, -1, &score)))
             << "[scoreOverride] - Score must be an integer!";
       }
-      lua_pop(L, result.n_results());
-    } else {
-      lua_pop(L, 2);
     }
   }
   return ExternalReward(player_id) + score;
@@ -1247,17 +1225,16 @@ void Context::AddScore(int player_id, double reward) {
 
 void Context::AddBots() {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("addBots");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return;
   }
   auto result = lua::Call(L, 1);
   CHECK(result.ok()) << "[addBots] - " << result.error();
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return;
   }
   lua::TableRef table;
@@ -1275,17 +1252,16 @@ void Context::AddBots() {
     CHECK(!IsTypeMismatch(bot_table.LookUp("team", &team)));
     Game().Calls()->add_bot(bot_name.c_str(), skill, team.c_str());
   }
-  lua_pop(L, result.n_results());
 }
 
 bool Context::ReplaceModelName(const char* name, char* new_name,
                                int new_name_size, char* texture_prefix,
                                int texture_prefix_size) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("replaceModelName");
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1297,7 +1273,6 @@ bool Context::ReplaceModelName(const char* name, char* new_name,
     CHECK(lua_isnoneornil(L, 2))
         << "[replaceModelName] - Return arg2 (texturePrefix) must be nil if "
            "return arg1 (newModelName) is nil.";
-    lua_pop(L, result.n_results());
     return false;
   }
 
@@ -1317,17 +1292,16 @@ bool Context::ReplaceModelName(const char* name, char* new_name,
 
   std::copy_n(replacement_name.c_str(), replacement_name.size() + 1, new_name);
   std::copy_n(string_prefix.c_str(), string_prefix.size() + 1, texture_prefix);
-  lua_pop(L, result.n_results());
   return true;
 }
 
 bool Context::ReplaceTextureName(const char* name, char* new_name,
                                  int max_size) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("replaceTextureName");
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1335,7 +1309,6 @@ bool Context::ReplaceTextureName(const char* name, char* new_name,
   auto result = lua::Call(L, 2);
   CHECK(result.ok()) << "[replaceTextureName] - " << result.error();
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return false;
   }
   std::string replacement_name;
@@ -1344,17 +1317,16 @@ bool Context::ReplaceTextureName(const char* name, char* new_name,
   CHECK_LT(replacement_name.size(), max_size)
       << "[replaceTextureName] - New name is too long.";
   std::copy_n(replacement_name.c_str(), replacement_name.size() + 1, new_name);
-  lua_pop(L, result.n_results());
   return true;
 }
 
 bool Context::LoadTexture(const char* name, unsigned char** pixels, int* width,
                           int* height, void* (*allocator)(int size)) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("loadTexture");
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1362,7 +1334,6 @@ bool Context::LoadTexture(const char* name, unsigned char** pixels, int* width,
   auto result = lua::Call(L, 2);
   CHECK(result.ok()) << "[loadTexture] - " << result.error();
   if (result.n_results() == 0 || lua_isnil(L, -1)) {
-    lua_pop(L, result.n_results());
     return false;
   }
   auto* image_tensor = tensor::LuaTensor<unsigned char>::ReadObject(L, -1);
@@ -1377,17 +1348,16 @@ bool Context::LoadTexture(const char* name, unsigned char** pixels, int* width,
   *pixels = static_cast<unsigned char*>(allocator(view.num_elements()));
   unsigned char* pixel_it = *pixels;
   view.ForEach([&pixel_it](unsigned char value) { *pixel_it++ = value; });
-  lua_pop(L, result.n_results());
   return true;
 }
 
 bool Context::ModifyRgbaTexture(const char* name, unsigned char* data,
                                 int width, int height) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("modifyTexture");
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return false;
   }
 
@@ -1405,16 +1375,15 @@ bool Context::ModifyRgbaTexture(const char* name, unsigned char* data,
   bool modified_texture;
   CHECK(IsFound(lua::Read(L, -1, &modified_texture)))
       << "[modifyTexture] - must return true or false";
-  lua_pop(L, result.n_results());
   storage_validity->Invalidate();
   return modified_texture;
 }
 
 int Context::CallInit() {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("init");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return 0;
   }
   lua::Push(L, settings_);
@@ -1432,12 +1401,11 @@ int Context::CallInit() {
     if (result.n_results() == 2) {
       error_message_ = lua::ToString(L, 2);
     } else {
-      error_message_ = "Error while calling 'init'.";
+      error_message_ = "[init] - Script returned non zero.";
     }
   }
-  lua_pop(L, result.n_results());
   if (!correct_args) {
-    error_message_ = "[init] - Must return none, nil, or integer and message\n";
+    error_message_ = "[init] - Must return none, nil, or integer and message";
     return 1;
   }
   return ret_val;
@@ -1447,9 +1415,9 @@ int Context::MakeScreenMessages(int screen_width, int screen_height,
                                 int line_height, int string_buffer_size) {
   screen_messages_.clear();
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("screenMessages");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return 0;
   }
 
@@ -1488,7 +1456,6 @@ int Context::MakeScreenMessages(int screen_width, int screen_height,
     screen_messages_.push_back(std::move(message));
   }
 
-  lua_pop(L, result.n_results());
   return screen_messages_.size();
 }
 
@@ -1509,9 +1476,9 @@ void Context::GetScreenMessage(int message_id, char* buffer, int* x, int* y,
 int Context::MakeFilledRectangles(int screen_width, int screen_height) {
   filled_rectangles_.clear();
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("filledRectangles");
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return 0;
   }
 
@@ -1543,7 +1510,6 @@ int Context::MakeFilledRectangles(int screen_width, int screen_height) {
     filled_rectangles_.push_back(filled_rectangle);
   }
 
-  lua_pop(L, result.n_results());
   return filled_rectangles_.size();
 }
 
@@ -1576,11 +1542,11 @@ void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
                                    float player_pos_delta[3],
                                    float player_vel_delta[3]) {
   lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("playerMover");
 
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return;
   }
 
@@ -1614,17 +1580,15 @@ void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
 
   std::copy_n(pos_delta.data(), pos_delta.size(), player_pos_delta);
   std::copy_n(vel_delta.data(), vel_delta.size(), player_vel_delta);
-
-  lua_pop(L, result.n_results());
 }
 
 void Context::GameEvent(const char* event_name, int count,
                         const float* data) {
   lua_State* L = script_table_ref_.LuaState();
+  lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("gameEvent");
   // Check function exists.
   if (lua_isnil(L, -2)) {
-    lua_pop(L, 2);
     return;
   }
 
@@ -1637,7 +1601,6 @@ void Context::GameEvent(const char* event_name, int count,
   }
   auto result = lua::Call(L, 3);
   CHECK(result.ok()) << result.error() << '\n';
-  lua_pop(L, result.n_results());
 }
 
 }  // namespace lab

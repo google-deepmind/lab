@@ -30,6 +30,7 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:push_script",
         "//deepmind/lua:read",
+        "//deepmind/lua:stack_resetter",
         "//deepmind/lua:table_ref",
         "//deepmind/lua:vm",
         "//deepmind/model_generation:lua_model",

@@ -441,6 +441,8 @@ class Context {
   // server, which only deals in integral reward increments.
   int ExternalReward(int player_id);
 
+  // Calls Lua script 'init' function with settings dictionary.
+  // Must be called with an empty Lua stack.
   int CallInit();
 
   Context(const Context&) = delete;
