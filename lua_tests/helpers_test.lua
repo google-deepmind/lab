@@ -17,11 +17,11 @@ function tests.findFileInLuaPath_shouldNotFindMadeUpFile()
   asserts.EQ(path, nil)
 end
 
-local function toKeyValueArrays(table)
+local function toKeyArrays(table)
   if table == nil then return {} end
   local arr = {}
   for k, v in pairs(table) do
-    arr[#arr + 1] = {k = k, v = v}
+    arr[#arr + 1] = k
   end
   return arr
 end
@@ -33,14 +33,13 @@ local function shallowEqual(tableA, tableB)
   if tableA == tableB then return false end
 
   -- Convert to arrays
-  local a = toKeyValueArrays(tableA)
-  local b = toKeyValueArrays(tableB)
+  local a = toKeyArrays(tableA)
+  local b = toKeyArrays(tableB)
   if #a ~= #b then return false end
 
   -- Check for simple equality between key values.
-  for i = 1, #a do
-    if a[i].k ~= b[i].k then return false end
-    if a[i].v ~= b[i].v then return false end
+  for _, k in ipairs(a) do
+    if tableA[k] ~= tableB[k] then return false end
   end
 
   return true
@@ -110,20 +109,21 @@ local function deepEqual(tableA, tableB)
   if tableA == tableB then return false end
 
   -- Convert to arrays
-  local a = toKeyValueArrays(tableA)
-  local b = toKeyValueArrays(tableB)
+  local a = toKeyArrays(tableA)
+  local b = toKeyArrays(tableB)
   if #a ~= #b then return false end
 
-  for i = 1, #a do
+  for _, k in ipairs(a) do
     -- Check for simple equality between keys
-    if a[i].k ~= b[i].k then return false end
-    if type(a[i].v) ~= type(b[i].v) then return false end
-    if type(a[i].v) == 'table' then
+    local va = tableA[k]
+    local vb = tableB[k]
+    if type(va) ~= type(vb) then return false end
+    if type(va) == 'table' then
       -- Check for deep equality between table values
-      if not deepEqual(a[i].v, b[i].v) then return false end
+      if not deepEqual(va, vb) then return false end
     else
       -- Check for simple equality between simple values
-      if a[i].v ~= b[i].v then return false end
+      if va ~= vb then return false end
     end
   end
 
