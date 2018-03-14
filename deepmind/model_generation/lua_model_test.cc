@@ -156,15 +156,30 @@ TEST(DeepmindModelLibTest, CreateHierarchy) {
   constexpr int kSurfaceCount = 4;
   ASSERT_EQ(model.get_surface_count(model_data), kSurfaceCount);
 
-  constexpr std::array<int, kSurfaceCount> kSurfaceVertCounts = {
-      {168, 100, 66, 66}};
-  constexpr std::array<int, kSurfaceCount> kSurfaceTriCounts = {
-      {224, 64, 32, 32}};
+  struct SurfaceInfo {
+    int vc;
+    int fc;
+  };
+
+  std::map<std::string, SurfaceInfo> surface_infos = {
+      {"root_cone_surface", SurfaceInfo{66, 32}},
+      {"root_c0:sphere_surface", SurfaceInfo{168, 224}},
+      {"root_c0:c0:cylinder_surface", SurfaceInfo{100, 64}},
+      {"root_c0:c0:c0:cone_surface", SurfaceInfo{66, 32}},
+  };
+
   for (size_t i = 0; i < kSurfaceCount; ++i) {
-    ASSERT_EQ(model.get_surface_vertex_count(model_data, i),
-              kSurfaceVertCounts[i]);
-    ASSERT_EQ(model.get_surface_face_count(model_data, i),
-              kSurfaceTriCounts[i]);
+    char name[64];
+    model.get_surface_name(model_data, i, sizeof(name), name);
+    auto surface_info_it = surface_infos.find(name);
+    ASSERT_TRUE(surface_info_it != surface_infos.end())
+        << "Cannont find surface: " << name << " - "
+        << model.get_surface_vertex_count(model_data, i) << ", "
+        << model.get_surface_face_count(model_data, i);
+    EXPECT_EQ(model.get_surface_vertex_count(model_data, i),
+              surface_info_it->second.vc);
+    EXPECT_EQ(model.get_surface_face_count(model_data, i),
+              surface_info_it->second.fc);
   }
 
   ctx.hooks.clear_model(ctx.userdata);

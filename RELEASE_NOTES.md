@@ -17,6 +17,7 @@
 4.  Fix a bug in image.scale whereby the offset into the data was erroneously
     ignored.
 5.  Fix a typo in a `require` statement in visual_search_factory.lua.
+6.  Fix a few erroneous dependencies on Lua dictionary iteration order.
 
 ### Minor Improvements:
 
