@@ -567,7 +567,7 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     if (res != 0) return res;
     gc->port = v;
     Q_strcat(gc->command_line, sizeof(gc->command_line),
-             va(" +set net_port %ld", v));
+             va(" +set net_port6 %ld", v));
     return 0;
   } else if (strcmp(key, "vmMode") == 0) {
     if (strcmp(value, "interpreted") == 0) {
@@ -725,7 +725,7 @@ static int dmlab_init(void* context) {
 }
 
 static void connect_client(GameContext* gc) {
-  Cmd_ExecuteString(va("connect 127.0.0.1:%d\n", gc->server_port));
+  Cmd_ExecuteString(va("connect -6 [::]:%d\n", gc->server_port));
   Cvar_Set("fixedtime", va("%d", gc->engine_frame_period_msec));
   Com_Frame();
   gc->is_connecting = true;
