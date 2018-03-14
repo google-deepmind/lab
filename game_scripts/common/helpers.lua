@@ -194,4 +194,29 @@ function helpers.fromString(input)
   return input
 end
 
+--[[ Iterates dictionary in sorted key order.
+
+Arguments:
+
+*   'dict' (table) Table to be iterated.
+*   'sorter' (function) Optional sorting function.
+
+Raises an error if keys are not comparable.
+]]
+function helpers.pairsByKeys(dict, sorter)
+  local a = {}
+  for n in pairs(dict) do a[#a + 1] = n end
+  table.sort(a, sorter)
+  local i = 0
+  return function()
+    i = i + 1
+    local k = a[i]
+    if k then
+      return k, dict[k]
+    else
+      return nil
+    end
+  end
+end
+
 return helpers

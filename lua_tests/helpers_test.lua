@@ -2,6 +2,7 @@ local asserts = require 'testing.asserts'
 local test_runner = require 'testing.test_runner'
 
 local helpers = require 'common.helpers'
+local random = require 'common.random'
 
 local tests = {}
 
@@ -219,6 +220,43 @@ function tests.pathJoin()
   asserts.EQ(helpers.pathJoin('base/', 'path'), 'base/path')
   asserts.EQ(helpers.pathJoin('base', '/path'), '/path')
   asserts.EQ(helpers.pathJoin('base/', '/path'), '/path')
+end
+
+function tests.pairsByKeys()
+  local keys = {'a', 'b', 'c', 'd'}
+  local vals = {'10', '20', '80', '40'}
+  local gen = random:shuffledIndexGenerator(#keys)
+  local dict = {}
+  for i = 1, #keys do
+    local id = gen()
+    dict[keys[id]] = vals[id]
+  end
+  local i = 0
+  for k, v in helpers.pairsByKeys(dict) do
+    i = i + 1
+    asserts.EQ(k, keys[i])
+    asserts.EQ(v, vals[i])
+  end
+
+  asserts.EQ(i, #keys)
+end
+
+function tests.pairsByKeysReversed()
+  local keys = {'a', 'b', 'c', 'd'}
+  local vals = {'10', '20', '80', '40'}
+  local gen = random:shuffledIndexGenerator(#keys)
+  local dict = {}
+  for i = 1, #keys do
+    local id = gen()
+    dict[keys[id]] = vals[id]
+  end
+  local i = #keys
+  for k, v in helpers.pairsByKeys(dict, function(a, b) return a > b end) do
+    asserts.EQ(k, keys[i])
+    asserts.EQ(v, vals[i])
+    i = i - 1
+  end
+  asserts.EQ(i, 0)
 end
 
 return test_runner.run(tests)
