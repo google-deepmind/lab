@@ -20,7 +20,7 @@ local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
 local helpers = require 'common.helpers'
 local image = require 'dmlab.system.image'
-local point_and_click = require 'factories.psychlab.point\_and_click'
+local point_and_click = require 'factories.psychlab.point_and_click'
 local random = require 'common.random'
 local tensor = require 'dmlab.system.tensor'
 
