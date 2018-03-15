@@ -522,8 +522,8 @@ Called once per frame. `actions` is a lua table containing six keys:
 `lookDownUp`, `lookLeftRight`, `moveBackForward`, `strafeLeftRight`,
 `crouchJump` and `buttonsDown`, denoting the actions retrieved from the
 controller. The script has an opportunity to modify the actions and return it to
-override the actions to be applied. If nothing is returned, the method makes no
-effect.
+override the actions to be applied. If nothing or nil is returned, the method
+makes no effect.
 
 ### `registerDynamicItems`() -> table
 

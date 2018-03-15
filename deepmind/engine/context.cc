@@ -596,11 +596,11 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->custom_observation_count = custom_observation_count;
   hooks->custom_observation_name = custom_observation_name;
   hooks->custom_observation_spec = custom_observation_spec;
+  hooks->custom_observation = custom_observation;
   hooks->custom_action_discrete_count = custom_action_discrete_count;
   hooks->custom_action_discrete_name = custom_action_discrete_name;
   hooks->custom_action_discrete_bounds = custom_action_discrete_bounds;
   hooks->custom_action_discrete_apply = custom_action_discrete_apply;
-  hooks->custom_observation = custom_observation;
   hooks->player_state = player_state;
   hooks->make_screen_messages = make_screen_messages;
   hooks->get_screen_message = get_screen_message;
@@ -1010,40 +1010,45 @@ void Context::GetActions(double* look_down_up, double* look_left_right,
                          signed char* move_back_forward,
                          signed char* strafe_left_right,
                          signed char* crouch_jump, int* buttons_down) {
-  lua_State* L = lua_vm_.get();
-  lua::StackResetter stack_resetter(L);
-  script_table_ref_.PushMemberFunction("modifyControl");
-  // Check function exists.
-  if (!lua_isnil(L, -2)) {
-    auto table = lua::TableRef::Create(L);
-    table.Insert("lookDownUp", actions_.look_down_up);
-    table.Insert("lookLeftRight", actions_.look_left_right);
-    table.Insert("moveBackForward", actions_.move_back_forward);
-    table.Insert("strafeLeftRight", actions_.strafe_left_right);
-    table.Insert("crouchJump", actions_.crouch_jump);
-    table.Insert("buttonsDown", actions_.buttons_down);
-    lua::Push(L, table);
-    auto result = lua::Call(L, 2);
-    CHECK(result.ok()) << result.error();
-
-    if (result.n_results() >= 1) {
-      CHECK(IsFound(lua::Read(L, -1, &table)));
-      CHECK(IsFound(table.LookUp("lookDownUp", look_down_up)));
-      CHECK(IsFound(table.LookUp("lookLeftRight", look_left_right)));
-      CHECK(IsFound(table.LookUp("moveBackForward", move_back_forward)));
-      CHECK(IsFound(table.LookUp("strafeLeftRight", strafe_left_right)));
-      CHECK(IsFound(table.LookUp("crouchJump", crouch_jump)));
-      CHECK(IsFound(table.LookUp("buttonsDown", buttons_down)));
-      return;
-    }
-  }
-
   *look_down_up = actions_.look_down_up;
   *look_left_right = actions_.look_left_right;
   *move_back_forward = actions_.move_back_forward;
   *strafe_left_right = actions_.strafe_left_right;
   *crouch_jump = actions_.crouch_jump;
   *buttons_down = actions_.buttons_down;
+  lua_State* L = lua_vm_.get();
+  lua::StackResetter stack_resetter(L);
+  script_table_ref_.PushMemberFunction("modifyControl");
+  // Check function exists.
+  if (!lua_isnil(L, -2)) {
+    auto table = lua::TableRef::Create(L);
+    table.Insert("lookDownUp", *look_down_up);
+    table.Insert("lookLeftRight", *look_left_right);
+    table.Insert("moveBackForward", *move_back_forward);
+    table.Insert("strafeLeftRight", *strafe_left_right);
+    table.Insert("crouchJump", *crouch_jump);
+    table.Insert("buttonsDown", *buttons_down);
+    lua::Push(L, table);
+    auto result = lua::Call(L, 2);
+    CHECK(result.ok()) << "[modifyControl] - " << result.error();
+    auto read_result = lua::Read(L, -1, &table);
+    CHECK(!IsTypeMismatch(read_result))
+        << "[modifyControl] - return table or nil.";
+    if (IsFound(read_result)) {
+      CHECK(!IsTypeMismatch(table.LookUp("lookDownUp", look_down_up)))
+          << "[modifyControl] - Type mismatch when reading 'lookDownUp'";
+      CHECK(!IsTypeMismatch(table.LookUp("lookLeftRight", look_left_right)))
+          << "[modifyControl] - Type mismatch when reading 'lookLeftRight'";
+      CHECK(!IsTypeMismatch(table.LookUp("moveBackForward", move_back_forward)))
+          << "[modifyControl] - Type mismatch when reading 'moveBackForward'";
+      CHECK(!IsTypeMismatch(table.LookUp("strafeLeftRight", strafe_left_right)))
+          << "[modifyControl] - Type mismatch when reading 'strafeLeftRight'";
+      CHECK(!IsTypeMismatch(table.LookUp("crouchJump", crouch_jump)))
+          << "[modifyControl] - Type mismatch when reading 'crouchJump'";
+      CHECK(!IsTypeMismatch(table.LookUp("buttonsDown", buttons_down)))
+          << "[modifyControl] - Type mismatch when reading 'buttonsDown'";
+    }
+  }
 }
 
 int Context::MakeRandomSeed() {
