@@ -51,6 +51,7 @@ Observation Name | Type/Shape | Description
 `INSTR`          | String     | Textual message from level to agent.
 `TEAM.SCORE`     | Doubles(2) | Team score (your team, their team.)
 
+
 ## Debug observations (Player only)
 
 Debug camera observations default to using the width and height of the screen.
