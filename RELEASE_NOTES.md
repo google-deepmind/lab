@@ -92,7 +92,9 @@
     teleported that frame.
 5.  Add Lua functions `countEntities` and `countVariations` to the maze
     generation API to count the number of occurrences of a specific entity or
-    variation, respectively
+    variation, respectively.
+6.  Add ability to switch/select gadget via actions. Actions are available when
+    enabling flags `gadgetSelect` and/or `gadgetSwitch`.
 
 ### Bug Fixes:
 

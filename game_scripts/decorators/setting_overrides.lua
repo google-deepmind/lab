@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local helpers = require 'common.helpers'
 local timeout = require 'decorators.timeout'
 local debug_observations = require 'decorators.debug_observations'
+local gadget_selection = require 'decorators.gadget_selection'
 
 -- These parameters may or may not be specified in the init `params`, depending
 -- on the execution environment. We should ignore them without raising an
@@ -107,6 +108,9 @@ function setting_overrides.decorate(kwargs)
   local debugCameraPos = debug_observations.getCameraPos()
   apiParams.camera = apiParams.camera or debugCameraPos.pos
   apiParams.cameraLook = apiParams.cameraLook or debugCameraPos.look
+  apiParams.gadgetSelect = apiParams.gadgetSelect or false
+  apiParams.gadgetSwitch = apiParams.gadgetSwitch or false
+
   -- Preserve the existing init call.
   local apiInit = api.init
 
@@ -135,6 +139,8 @@ function setting_overrides.decorate(kwargs)
              '(Set to false to disable)')
       timeout.decorate(api, apiParams.episodeLengthSeconds)
     end
+
+    gadget_selection(api, apiParams)
 
     -- Call version of `init` that existed before decoration.
     if apiInit then
