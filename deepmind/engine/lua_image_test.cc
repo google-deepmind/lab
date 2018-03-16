@@ -424,5 +424,133 @@ TEST_F(LuaImageTest, kLuaImageScaleDown1Pix) {
   lua_pop(L, 1);
 }
 
+constexpr char kLuaSetHueRedToGreen[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local src = tensor.ByteTensor{
+    {255, 0, 0},
+    {127, 0, 0},
+    {255, 127, 127},
+    {127, 64, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}
+local greenHue = 120
+image.setHue(src, greenHue)
+assert(src == tensor.ByteTensor{
+    {0, 255, 0},
+    {0, 127, 0},
+    {127, 255, 127},
+    {64, 127, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}, tostring(src))
+)";
+
+TEST_F(LuaImageTest, kLuaSetHueRedToGreen) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kLuaSetHueRedToGreen, sizeof(kLuaSetHueRedToGreen) - 1,
+                      "kLuaSetHueRedToGreen"),
+      IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kLuaSetHueRedToYellow[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local src = tensor.ByteTensor{
+    {255, 0, 0},
+    {127, 0, 0},
+    {255, 127, 127},
+    {127, 64, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}
+local yellowHue = 60
+image.setHue(src, yellowHue)
+assert(src == tensor.ByteTensor{
+    {255, 255, 0},
+    {127, 127, 0},
+    {255, 255, 127},
+    {127, 127, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}, tostring(src))
+)";
+
+TEST_F(LuaImageTest, kLuaSetHueRedToYellow) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLuaSetHueRedToYellow,
+                              sizeof(kLuaSetHueRedToYellow) - 1,
+                              "kLuaSetHueRedToYellow"),
+              IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kLuaSetHueRedToCyan[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local src = tensor.ByteTensor{
+    {255, 0, 0},
+    {127, 0, 0},
+    {255, 127, 127},
+    {127, 64, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}
+local cyan = 180
+image.setHue(src, cyan)
+assert(src == tensor.ByteTensor{
+    {0, 255, 255},
+    {0, 127, 127},
+    {127, 255, 255},
+    {64, 127, 127},
+    {255, 255, 255},
+    {0, 0, 0},
+}, tostring(src))
+)";
+
+TEST_F(LuaImageTest, kLuaSetHueRedToCyan) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kLuaSetHueRedToCyan, sizeof(kLuaSetHueRedToCyan) - 1,
+                      "kLuaSetHueRedToCyan"),
+      IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr char kLuaSetHueRedToDeepPink[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+local src = tensor.ByteTensor{
+    {255, 0, 0},
+    {127, 0, 0},
+    {255, 127, 127},
+    {127, 64, 64},
+    {255, 255, 255},
+    {0, 0, 0},
+}
+local deepPinkHue = 330
+image.setHue(src, deepPinkHue)
+assert(src == tensor.ByteTensor{
+    {255, 0, 127},
+    {127, 0, 63},
+    {255, 127, 191},
+    {127, 64, 95},
+    {255, 255, 255},
+    {0, 0, 0},
+}, tostring(src))
+)";
+
+TEST_F(LuaImageTest, kLuaSetHueRedToDeepPink) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kLuaSetHueRedToDeepPink,
+                              sizeof(kLuaSetHueRedToDeepPink) - 1,
+                              "kLuaSetHueRedToDeepPink"),
+              IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
 }  // namespace lab
 }  // namespace deepmind

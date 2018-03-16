@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -473,12 +474,156 @@ lua::NResultsOr Scale(lua_State* L) {
   return 1;
 }
 
+// Converts RGB to S and L components of HSL.
+void RgbToSl(unsigned char r, unsigned char g, unsigned char b, double* s,
+             double* l) {
+  auto min_max = std::minmax({r, g, b});
+  double hmin = (0.5 / 255.0) * min_max.first;
+  double hmax = (0.5 / 255.0) * min_max.second;
+  *l = hmax + hmin;
+  double hdif = hmax - hmin;
+  if (min_max.first == min_max.second) {
+    *s = 0;
+  } else if (*l > 0.5) {
+    *s = hdif / (1.0 - *l);
+  } else {
+    *s = hdif / *l;
+  }
+}
+
+// Converts Hue Saturation and Lightness to RGB.
+// Hue specific calculations are performed at construction time.
+class HslToRgb {
+ public:
+  // 'hue' Must be an angle in degrees.
+  explicit HslToRgb(double hue) {
+    hue_prime_ = hue / 60.0;
+    if (!(0 >= hue_prime_ && hue_prime_ < 6.0)) {
+      hue_prime_ -= 6.0 * std::floor(hue_prime_ / 6.0);
+    }
+    double hue_mod_2 = hue_prime_ - 2.0 * (std::floor(hue_prime_ / 2.0));
+    hue_partial_ = 1.0 - std::abs(hue_mod_2 - 1.0);
+    hue_case_ = static_cast<int>(hue_prime_);
+  }
+
+  // Perform the conversion. 'l' and 's' must be in the range [0, 1].
+  void operator()(double s, double l, unsigned char* r, unsigned char* g,
+                  unsigned char* b) {
+    double c = s * (1.0 - std::abs(2.0 * l - 1.0));
+    double x = c * hue_partial_;
+    double m = l - 0.5 * c;
+    c += m;
+    x += m;
+    m *= 255.0;
+    x *= 255.0;
+    c *= 255.0;
+    switch (hue_case_) {
+      default:
+      case 0:
+        *r = static_cast<unsigned char>(c);
+        *g = static_cast<unsigned char>(x);
+        *b = static_cast<unsigned char>(m);
+        break;
+      case 1:
+        *r = static_cast<unsigned char>(x);
+        *g = static_cast<unsigned char>(c);
+        *b = static_cast<unsigned char>(m);
+        break;
+      case 2:
+        *r = static_cast<unsigned char>(m);
+        *g = static_cast<unsigned char>(c);
+        *b = static_cast<unsigned char>(x);
+        break;
+      case 3:
+        *r = static_cast<unsigned char>(m);
+        *g = static_cast<unsigned char>(x);
+        *b = static_cast<unsigned char>(c);
+        break;
+      case 4:
+        *r = static_cast<unsigned char>(x);
+        *g = static_cast<unsigned char>(m);
+        *b = static_cast<unsigned char>(c);
+        break;
+      case 5:
+        *r = static_cast<unsigned char>(c);
+        *g = static_cast<unsigned char>(m);
+        *b = static_cast<unsigned char>(x);
+        break;
+    }
+  }
+
+ private:
+  int hue_case_;
+  double hue_prime_;
+  double hue_partial_;
+};
+
+
+// Sets hue of an RGB image.
+//
+// Lua Arguments:
+//
+// 1.  image - A contiguous ByteTensor with 3 or 4 channels in last dimension.
+// 2.  hue - Desired hue (in degrees).
+//
+// Given an RGB image tensor (`img`), set its hue to a specified value (`hue`).
+// This is done by converting the image into Hue, Saturation, and Lightness
+// colorspace, setting the Hue to `hue`, and converting back again. The
+// operation is done in-place on the supplied image tensor.
+//
+// Notes:
+//
+// As the conversion is done via only modifying the hue in the HSL colour space,
+// saturation and lightness remain unaltered (i.e., whites remain whites and
+// blacks remain blacks).
+//
+// Returns updated `img`.
+// [2, 1, e]
+lua::NResultsOr SetHue(lua_State* L) {
+  // Validate input parameters.
+  auto* source = tensor::LuaTensor<unsigned char>::ReadObject(L, 1);
+  if (source == nullptr) {
+    std::string error = absl::StrCat("[image.setHue] - \"", lua::ToString(L, 1),
+                                     "\" - Invalid source image");
+    return error;
+  }
+  auto* view = source->mutable_tensor_view();
+  if (view->shape().empty() ||
+      (view->shape().back() != 3 && view->shape().back() != 4)) {
+    std::string error = absl::StrCat(
+        "[image.setHue] - Image shape does not have correct channel count");
+    return error;
+  }
+  if (!source->tensor_view().IsContiguous()) {
+    return "[image.setHue] - Image not contiguous!";
+  }
+  double hue;
+  if (!IsFound(lua::Read(L, 2, &hue))) {
+    return "[image.setHue] - missing arg2 - hue";
+  }
+
+  HslToRgb sl_to_rgb(hue);
+  std::size_t num_elements = view->num_elements();
+  std::size_t num_channels = view->shape().back();
+  unsigned char* tensor_start = &view->mutable_storage()[view->start_offset()];
+  for (int i = 0; i < num_elements; i += num_channels) {
+    unsigned char* r = &tensor_start[i + 0];
+    unsigned char* g = &tensor_start[i + 1];
+    unsigned char* b = &tensor_start[i + 2];
+    double s, l;
+    RgbToSl(*r, *g, *b, &s, &l);
+    sl_to_rgb(s, l, r, g, b);
+  }
+  return 1;
+}
+
 }  // namespace
 
 int LuaImageRequire(lua_State* L) {
   auto table = lua::TableRef::Create(L);
   table.Insert("load", &lua::Bind<Load>);
   table.Insert("scale", &lua::Bind<Scale>);
+  table.Insert("setHue", &lua::Bind<SetHue>);
   lua::Push(L, table);
   return 1;
 }

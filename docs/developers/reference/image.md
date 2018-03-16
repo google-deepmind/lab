@@ -71,3 +71,48 @@ Shape: [2, 6, 3]
   [178, 204, 212]
   [212, 255, 212]]]
 ```
+
+## `setHue`(*img*, *hue*)
+
+Given an RGB image tensor (`img`), set its hue to a specified value (`hue`).
+This is done by converting the image into Hue, Saturation, and Lightness
+colorspace, setting the Hue to `hue`, and converting back again. The operation
+is done in-place on the supplied image tensor.
+
+Arguments:
+
+*   img - A contiguous ByteTensor with 3 or 4 channels in last dimension.
+*   hue - Desired hue (in degrees).
+
+Notes:
+
+As the conversion is done via only modifying the hue in the HSL colour space,
+saturation and lightness remain unaltered (i.e., whites remain whites and blacks
+remain blacks).
+
+Returns updated `img`.
+
+```Lua
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+
+> src = tensor.ByteTensor{
+      {255, 0, 0},
+      {127, 0, 0},
+      {255, 127, 127},
+      {127, 64, 64},
+      {255, 255, 255},
+      {0, 0, 0},
+  }
+
+> greenHue = 120
+> image.setHue(src, greenHue)
+> src
+Shape: [6, 3]
+[[  0, 255,   0]
+ [  0, 127,   0]
+ [127, 255, 127]
+ [ 64, 127,  64]
+ [255, 255, 255]
+ [  0,   0,   0]]
+```
