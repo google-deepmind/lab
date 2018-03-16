@@ -58,7 +58,7 @@ end
 --[[ Converts an HSL color value to RGB.
 
 Based on formula at https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL.
-Assumes h ∈ [0°, 360°), s ∈ [0, 1] and v ∈ [0, 1].
+Assumes h ∈ [0°, 360°), s ∈ [0, 1] and l ∈ [0, 1].
 
 Returns r, g, b each in the set [0, 255].
 ]]
@@ -80,6 +80,31 @@ function colors.hslToRgb(h, s, l)
   end
 
   return r * 255, g * 255, b * 255
+end
+
+--[[ Converts an RGB color value to HSL.
+
+Based on formula at https://en.wikipedia.org/wiki/HSL_and_HSV#Hue_and_chroma.
+Assumes r, g, b each in the set [0, 255].
+
+Returns h ∈ [0°, 360°), s ∈ [0, 1] and l ∈ [0, 1].
+]]
+function colors.rgbToHsl(r, g, b)
+  r, g, b = r / 255, g / 255, b / 255
+  local max, min = math.max(r, g, b), math.min(r, g, b)
+  local h, s, l
+  l = (max + min) * 0.5
+  if max == min then
+    h, s = 0, 0
+  else
+    local d = (max - min) * 0.5
+    s = l > 0.5 and d / (1 - l) or d / l
+    h = max == r and ((g - b) / d + (g < b and 6 or 0)) or
+        max == g and ((b - r) / d + 2) or
+        max == b and ((r - g) / d + 4)
+    h = 360 * h / 6
+  end
+  return h, s, l
 end
 
 return colors
