@@ -115,6 +115,22 @@ class Class {
   template <NResultsOr (T::*Function)(lua_State*)>
   static inline int Member(lua_State* L);
 
+  // Matches lua::Read signature for reading as part of larger structures. Must
+  // be called without the 'lua' namespace as it must use argument dependent
+  // lookup.
+  friend ReadResult Read(lua_State* L, int idx, T** out) {
+    if (lua_isnoneornil(L, idx)) {
+      return ReadNotFound();
+    }
+    auto* result = lua::Class<T>::ReadObject(L, idx);
+    if (result != nullptr) {
+      *out = result;
+      return ReadFound();
+    } else {
+      return ReadTypeMismatch();
+    }
+  }
+
  private:
   // Destroys this class by calling the destructor, invoked from the Lua "__gc"
   // method.

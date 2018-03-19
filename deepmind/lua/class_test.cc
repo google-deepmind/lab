@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
+#include "deepmind/lua/n_results_or_test_util.h"
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
@@ -31,6 +32,8 @@ namespace deepmind {
 namespace lab {
 namespace lua {
 namespace {
+
+using ::deepmind::lab::lua::testing::IsOkAndHolds;
 
 // Simple demo class to test and demonstrate the functionality of Class.
 class Foo final : public Class<Foo> {
@@ -140,6 +143,25 @@ TEST_F(ClassTest, TestRead) {
   Foo* foo = Foo::ReadObject(L, -1);
   ASSERT_TRUE(foo != nullptr);
   EXPECT_EQ("Hello", foo->name());
+}
+
+constexpr char kScript2[] = R"(
+local foo_module = require 'foo_module'
+return {
+    foo_module.Foo('Hello'),
+    foo_module.Foo('Hello2'),
+}
+)";
+
+TEST_F(ClassTest, TestRead2) {
+  vm()->AddCModuleToSearchers("foo_module", Foo::Module);
+  ASSERT_THAT(PushScript(L, kScript2, sizeof(kScript2) - 1, "kScript2"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(Call(L, 0), IsOkAndHolds(1));
+  std::array<Foo*, 2> results;
+  ASSERT_TRUE(IsFound(Read(L, 1, &results)));
+  EXPECT_EQ("Hello", results[0]->name());
+  EXPECT_EQ("Hello2", results[1]->name());
 }
 
 constexpr char kScript[] = R"(
