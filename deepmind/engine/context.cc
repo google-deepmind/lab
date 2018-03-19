@@ -457,7 +457,7 @@ static void lua_mover(void* userdata, int entity_id,
 }
 
 static void game_event(void* userdata, const char* event_name, int count,
-                         const float* data) {
+                       const float* data) {
   static_cast<Context*>(userdata)->GameEvent(event_name, count, data);
 }
 
@@ -491,9 +491,8 @@ static void entities_clear(void* userdata) {
   static_cast<Context*>(userdata)->MutableGameEntities()->Clear();
 }
 
-static void entities_add(void* userdata, int entity_id, int user_id,
-                            int type, int flags, float position[3],
-                            const char* classname) {
+static void entities_add(void* userdata, int entity_id, int user_id, int type,
+                         int flags, float position[3], const char* classname) {
   static_cast<Context*>(userdata)->MutableGameEntities()->Add(
       entity_id, user_id, type, flags, position, classname);
 }

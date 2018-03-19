@@ -256,5 +256,4 @@ void dmlab_new_client_info(int player_idx, const char* player_name,
   trap_DeepmindCallback(DEEPMIND_NEW_CLIENT_INFO, (intptr_t)player_idx,
                         (intptr_t)player_name, (intptr_t)player_model, 0, 0, 0,
                         0, 0, 0, 0, 0, 0);
-  return;
 }
