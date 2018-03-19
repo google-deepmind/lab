@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -349,6 +349,10 @@ class Context {
                        int stat_inventory[], int powerup_count,
                        int powerup_time[], int gadget_held, float height,
                        float position[3], float view_angles[3]);
+
+  // Called on the client when each player is created.
+  void NewClientInfo(int player_id, const char* player_name,
+                     const char* player_model);
 
   // Calls `gameEvent` with the event name and an array of data.
   void GameEvent(const char* event_name, int count, const float* data);

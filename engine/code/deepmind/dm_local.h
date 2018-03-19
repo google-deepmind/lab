@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -194,5 +194,7 @@ void dmlab_clear_dynamic_spawn_entities(void);
 
 int dmlab_register_dynamic_items(void);
 void dmlab_read_dynamic_item_name(int item_index, char* item_name);
+void dmlab_new_client_info(int player_idx, const char* player_name,
+                           const char* player_model);
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_

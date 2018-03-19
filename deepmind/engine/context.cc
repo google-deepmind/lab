@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -498,6 +498,12 @@ static void entities_add(void* userdata, int entity_id, int user_id,
       entity_id, user_id, type, flags, position, classname);
 }
 
+static void new_client_info(void* userdata, int player_id,
+                            const char* player_name, const char* player_model) {
+  static_cast<Context*>(userdata)->NewClientInfo(player_id, player_name,
+                                                 player_model);
+}
+
 }  // extern "C"
 
 namespace deepmind {
@@ -634,6 +640,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->has_alt_cameras = has_alt_cameras;
   hooks->custom_view = custom_view;
   hooks->issue_console_commands = issue_console_commands;
+  hooks->new_client_info = new_client_info;
 }
 
 void Context::AddSetting(const char* key, const char* value) {
@@ -1605,6 +1612,21 @@ void Context::GameEvent(const char* event_name, int count,
     lua_settable(L, -3);
   }
   auto result = lua::Call(L, 3);
+  CHECK(result.ok()) << result.error() << '\n';
+}
+
+void Context::NewClientInfo(int player_id, const char* player_name,
+                            const char* player_model) {
+  lua_State* L = script_table_ref_.LuaState();
+  lua::StackResetter stack_resetter(L);
+  script_table_ref_.PushMemberFunction("newClientInfo");
+  if (lua_isnil(L, -2)) {
+    return;
+  }
+  lua::Push(L, player_id + 1);
+  lua::Push(L, player_name);
+  lua::Push(L, player_model);
+  auto result = lua::Call(L, 4);
   CHECK(result.ok()) << result.error() << '\n';
 }
 

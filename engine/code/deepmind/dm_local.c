@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -249,4 +249,12 @@ qboolean dmlab_update_player_info(int clientId, char* info, int info_size) {
   return trap_DeepmindCallback(DEEPMIND_UPDATE_PLAYER_INFO, (intptr_t)clientId,
                                (intptr_t)info, (intptr_t)info_size, 0, 0, 0, 0,
                                0, 0, 0, 0, 0);
+}
+
+void dmlab_new_client_info(int player_idx, const char* player_name,
+                           const char* player_model) {
+  trap_DeepmindCallback(DEEPMIND_NEW_CLIENT_INFO, (intptr_t)player_idx,
+                        (intptr_t)player_name, (intptr_t)player_model, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0);
+  return;
 }

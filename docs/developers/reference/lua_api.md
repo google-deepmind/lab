@@ -546,6 +546,10 @@ to `false`.
 The lookat position relative to the trigger's bounding box is given as
 `position`.
 
+### `newClientInfo`(*playerId*, *playerName*, *modelName*)
+
+Called once per player joining the game (including bots).
+
 ### `rewardOverride`(*kwargs*) -> Int or nil
 
 Called whenever there is a reward event. This allows the level script to adjust

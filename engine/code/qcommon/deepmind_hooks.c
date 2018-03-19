@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -219,6 +219,10 @@ int dmlab_callback(
       camera->fov_y = (180.0 / M_PI) * fov_y_rad;
       return (render_player) ? qtrue : qfalse;
     }
+    case DEEPMIND_NEW_CLIENT_INFO:
+      ctx->hooks.new_client_info(ctx->userdata, a1, VM_ArgPtr(a2),
+                                 VM_ArgPtr(a3));
+      break;
     default:
       Com_Error(ERR_DROP, "DeepMind system call %d not implemented\n",
                 dm_callnum);

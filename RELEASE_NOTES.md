@@ -36,6 +36,8 @@
     'customDiscreteAction' callbacks.
 10. Add `game:console` command to issue Quake 3 console commands directly.
 11. Add `clamp` to tensor operations.
+12. Add new callback `api:newClientInfo`, allowing each client to intercept
+    when players are loading.
 
 ### Deprecated Features:
 

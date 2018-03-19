@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ typedef enum deepmindImport_enum {
   DEEPMIND_READ_DYNAMIC_SPAWN_ENTITY,
   DEEPMIND_REGISTER_DYNAMIC_ITEMS,
   DEEPMIND_READ_DYNAMIC_ITEM_NAME,
+  DEEPMIND_NEW_CLIENT_INFO,
 } deepmindImport_t;
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_PUBLIC_H_

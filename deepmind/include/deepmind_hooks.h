@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -401,6 +401,10 @@ struct DeepmindHooks_s {
   void (*custom_view)(void* userdata, int* width, int* height,
                       float position[3], float view_angles[3],
                       bool* render_player);
+
+  // See NewClientInfo in in deepmind/engine/context.h
+  void (*new_client_info)(void* userdata, int player_id,
+                          const char* player_name, const char* player_model);
 
   // Set and retrieve error message. 'error_message' shall be a null terminated
   // string.
