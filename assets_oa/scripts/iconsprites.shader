@@ -216,7 +216,7 @@ icons/iconw_shotgun
 {
     nopicmip
     {
-        map icons/iconw_shotgun.tga
+        map textures/icons/iconw_shotgun.tga
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
         rgbgen identitylighting
     }
@@ -226,7 +226,7 @@ icons/iconw_grenade
 {
     nopicmip
     {
-         map icons/iconw_grenade.tga
+         map textures/icons/iconw_grenade.tga
          blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
     }
 }
@@ -244,7 +244,7 @@ icons/iconw_plasma
 {
     nopicmip
     {
-        map icons/iconw_plasma.tga
+        map textures/icons/iconw_plasma.tga
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
     }
 }

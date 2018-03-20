@@ -20,11 +20,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local inventory = {}
 
 inventory.GADGETS = {
-    IMPULSE = 2,  -- Contact gadget.
-    RAPID = 3,    -- Rapid fire gadget.
-    ORB = 6,      -- Area damage gadget. (Knocks players)
-    BEAM = 7,     -- Accurate and very rapid fire beam.
-    DISC = 8,     -- Powerful but long period between firing.
+    IMPULSE = 2,    -- Contact gadget.
+    RAPID = 3,      -- Rapid fire gadget.
+    SPRAY = 4,      -- Powerful, slow, inaccurate gadget
+    BOUNCE_ORB = 5, -- Area damage with delay. Bounces unpredictably.
+    ORB = 6,        -- Area damage gadget. (Knocks players)
+    BEAM = 7,       -- Accurate and very rapid fire beam.
+    DISC = 8,       -- Powerful but long period between firing.
+    RIPPLE = 9,     -- Rapid-fire gadget with small area damage.
 }
 
 inventory.UNLIMITED = -1

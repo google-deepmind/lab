@@ -476,10 +476,8 @@ shotgunSmokePuff
 {
   cull disable
   {
-    clampmap gfx/misc/smokepuff3.tga
-    blendfunc blend
-    tcMod rotate -45
-    alphaGen entity
+    map textures/map/black_d.tga
+    blendfunc add
   }
 }
 
@@ -487,13 +485,8 @@ sprites/plasma1
 {
   {
     clampmap sprites/plasmaa.tga
-    blendfunc gl_src_alpha gl_one
-    tcMod rotate -145
-  }
-  {
-    clampmap sprites/plasmaa.tga
-    blendfunc gl_src_alpha gl_one
-    tcMod rotate 177
+    blendfunc add
+    rgbGen const ( 1.00 0.00 000 )
   }
 }
 

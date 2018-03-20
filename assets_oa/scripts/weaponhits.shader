@@ -35,21 +35,6 @@ lightningExplosion //modified for DeepMind Lab
     }
 }
 
-bfgExplocsion
-{
-    cull disable
-    {
-        map models/weaphits/bfgscroll.tga
-        blendfunc add
-        tcMod scroll -1.4 0
-    }
-    {
-        map models/weaphits/bfgscroll.tga
-        blendfunc add
-        tcMod scroll -0.6 0
-    }
-}
-
 bfgExplosion
 {
     {
@@ -81,7 +66,7 @@ plasmaExplosion
     {
         map textures/model/gen_impact.tga
         blendfunc add
-        rgbgen const ( 0.00 0.58 1.00 ) //blue
+        rgbgen const ( 1.00 0.00 0.00 )
     }
 }
 
@@ -89,19 +74,9 @@ railExplosion
 {
     cull disable
     {
-        clampmap textures/model/disc_impact_d.tga
+          clampmap textures/model/disc_impact_d.tga
         blendfunc add
         rgbgen wave sin 1.0  1.0 0.0 0.8
-    }
-}
-
-OLDplasmaExplosion
-{
-    cull disable
-    {
-        map models/weaphits/plasscroll2.tga
-        blendfunc add
-        tcMod scroll -1.2 7
     }
 }
 
@@ -123,8 +98,6 @@ bloodExplosion
     }
 }
 
-
-
 rocketExplosion
 {
     {
@@ -134,52 +107,11 @@ rocketExplosion
     }
 }
 
-lasmaExplosion
+grenadeExplosion
 {
-    cull disable
     {
-        clampmap textures/oa/fiar.tga
+        map textures/model/gen_impact.tga
         blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 4
-        tcMod rotate 300
-        tcMod stretch sin 0.3 0.4 0 0.4
-    }
-    {
-        clampmap textures/oa/fiar2.tga
-        blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 4
-        tcMod rotate 122
-        tcMod stretch sin 0.8 -0.7 0 0.1
-    }
-}
-
-ailExplosion
-{
-    cull disable
-    {
-        clampmap textures/oa/fiar.tga
-        blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 1
-        tcMod rotate 12
-        tcMod stretch sin 0.3 0.4 0 0.4
-    }
-    {
-        clampmap textures/oa/fiar2.tga
-        blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 1
-        tcMod rotate 15
-        tcMod stretch sin 0.8 -0.4 0 0.1
-    }
-    {
-        clampmap textures/oa/fiar.tga
-        blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 1
-        tcMod rotate -12
-    }
-    {
-        clampmap textures/oa/fiar2.tga
-        blendfunc add
-        rgbGen wave inversesawtooth 0 1 0 1
-        tcMod rotate -78
+        rgbgen const ( 0.00 1.00 0.58 )
     }
 }
