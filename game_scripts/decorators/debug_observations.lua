@@ -44,7 +44,7 @@ local function playerOrientation()
 end
 
 local function playerId()
-  return tensor.DoubleTensor{game:playerInfo().playerId}
+  return tensor.ByteTensor{game:playerInfo().playerId}
 end
 
 local function playersId()
@@ -52,7 +52,7 @@ local function playersId()
   for playerId, name in pairs(names) do
     playerIds[#playerIds + 1] = playerId
   end
-  return tensor.DoubleTensor(playerIds)
+  return tensor.ByteTensor(playerIds)
 end
 
 
@@ -304,13 +304,13 @@ function debug_observations.extend(custom_observations)
 
   co.addSpec('DEBUG.POS.TRANS', 'Doubles', {3}, playerPosition)
   co.addSpec('DEBUG.POS.ROT', 'Doubles', {3}, playerOrientation)
-  co.addSpec('DEBUG.PLAYER_ID', 'Doubles', {1}, playerId)
+  co.addSpec('DEBUG.PLAYER_ID', 'Bytes', {1}, playerId)
   co.addSpec('DEBUG.PLAYERS.ARMOR', 'Doubles', {0}, playersArmor)
   co.addSpec('DEBUG.PLAYERS.GADGET', 'Doubles', {0}, playersGadget)
   co.addSpec('DEBUG.PLAYERS.GADGET_AMOUNT', 'Doubles', {0}, playersGadgetAmount)
   co.addSpec('DEBUG.PLAYERS.HEALTH', 'Doubles', {0}, playersHealth)
   co.addSpec('DEBUG.PLAYERS.HOLDING_FLAG', 'Doubles', {0}, playersHoldingFlag)
-  co.addSpec('DEBUG.PLAYERS.ID', 'Doubles', {0}, playersId)
+  co.addSpec('DEBUG.PLAYERS.ID', 'Bytes', {0}, playersId)
   co.addSpec('DEBUG.PLAYERS.EYE.POS', 'Doubles', {0, 3}, playersEyePos)
   co.addSpec('DEBUG.PLAYERS.EYE.ROT', 'Doubles', {0, 3}, playersEyeRot)
   -- New line separated string.
