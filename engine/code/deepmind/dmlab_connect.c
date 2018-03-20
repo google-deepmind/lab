@@ -752,6 +752,13 @@ static int dmlab_start(void* context, int episode_id, int seed) {
   seed = (seed < 0) ? seed + 1 + INT_MAX : seed;
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
+  if (!gc->init_called) {
+    ctx->hooks.set_error_message(ctx->userdata,
+                                 "'init' must be called before 'start. See "
+                                 "documentation in env_c_api.h'\n");
+
+    return 1;
+  }
   gc->current_screen_rendered = false;
   if (gc->is_connecting) {
     re.MakeCurrent();
