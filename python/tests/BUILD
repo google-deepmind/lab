@@ -172,3 +172,10 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
 )
+
+py_test(
+    name = "final_reward_test",
+    srcs = ["final_reward_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)

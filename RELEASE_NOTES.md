@@ -18,6 +18,7 @@
     ignored.
 5.  Fix a typo in a `require` statement in visual_search_factory.lua.
 6.  Fix a few erroneous dependencies on Lua dictionary iteration order.
+7.  `game:AddScore` now works even on the final frame of an episode.
 
 ### Minor Improvements:
 

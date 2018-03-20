@@ -1177,6 +1177,12 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
     // it has not been wiped. This is a workaround for an issue where server
     // game script methods are not invoked during demos (i.e. set_map_finished
     // is not triggered.)
+
+    // Tick for one extra frame to gather any outstanding rewards.
+    if (episode_ended) {
+      Com_Frame();
+    }
+
     if (clc.state == CA_ACTIVE) {
       double reward_after = get_engine_score();
       double delta_score = reward_after - reward_before;
