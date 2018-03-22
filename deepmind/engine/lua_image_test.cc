@@ -34,6 +34,8 @@ namespace deepmind {
 namespace lab {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
+using ::deepmind::lab::lua::testing::StatusIs;
+using ::testing::HasSubstr;
 
 class LuaImageTest : public ::testing::Test {
  protected:
@@ -550,6 +552,111 @@ TEST_F(LuaImageTest, kLuaSetHueRedToDeepPink) {
                               "kLuaSetHueRedToDeepPink"),
               IsOkAndHolds(1));
   EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr const char kSetMaskedPattern[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+
+local img = tensor.ByteTensor{
+    {{255,   0,   0,   0}, {255,   0,   0, 128}, {255,   0,   0, 255}},
+    {{255,   0,   0,   0}, {255,   0,   0, 128}, {255,   0,   0, 255}},
+    {{255,   0,   0,   0}, {255,   0,   0, 128}, {255,   0,   0, 255}},
+}
+
+local pat = tensor.ByteTensor{
+    {{255}, {255}, {255}},
+    {{128}, {128}, {128}},
+    {{  0}, {  0}, {  0}},
+}
+
+local newImage = image.setMaskedPattern(img:clone(), pat, {0, 255, 0}, {0, 0, 255})
+
+local target = tensor.ByteTensor{
+    {{255,   0,   0, 255}, {127, 128,   0, 255}, {  0, 255,   0, 255}},
+    {{255,   0,   0, 255}, {127,  64,  64, 255}, {  0, 128, 127, 255}},
+    {{255,   0,   0, 255}, {127,   0, 128, 255}, {  0,   0, 255, 255}},
+}
+
+assert(newImage == target, tostring(newImage))
+
+local function setMaskedPatternRef(src, pat, color1, color2)
+  local hSrc, wSrc, cSrc = unpack(src:shape())
+  local hPat, wPat, cPat = unpack(pat:shape())
+  assert(hSrc * wSrc == hPat * wPat)
+  assert(cSrc == 4)
+  assert(cPat > 0)
+  local rC1, gC1, bC1 = unpack(color1)
+  local rC2, gC2, bC2 = unpack(color2)
+  for i = 1, hSrc do
+    local rowSrc = src(i)
+    local rowPat = pat(i)
+    for j = 1, wSrc do
+      local rSrc, gSrc, bSrc, aSrc = unpack(rowSrc(j):val())
+      local aPat = cPat > 1 and unpack(rowPat(j):val()) or rowPat(j):val()
+      local rPat = math.floor((rC1 * aPat + (255 - aPat) * rC2 + 127) / 255)
+      local gPat = math.floor((gC1 * aPat + (255 - aPat) * gC2 + 127) / 255)
+      local bPat = math.floor((bC1 * aPat + (255 - aPat) * bC2 + 127) / 255)
+      rowSrc(j):val{
+          math.floor((rSrc * (255 - aSrc) + rPat * aSrc + 127) / 255),
+          math.floor((gSrc * (255 - aSrc) + gPat * aSrc + 127) / 255),
+          math.floor((bSrc * (255 - aSrc) + bPat * aSrc + 127) / 255),
+          255
+      }
+    end
+  end
+  return src
+end
+
+local newImage2 = setMaskedPatternRef(img:clone(), pat, {0, 255, 0}, {0, 0, 255})
+assert(newImage == newImage2, tostring(newImage2))
+)";
+
+TEST_F(LuaImageTest, kSetMaskedPattern) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(
+      lua::PushScript(L, kSetMaskedPattern, sizeof(kSetMaskedPattern) - 1,
+                      "kSetMaskedPattern"),
+      IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), IsOkAndHolds(0));
+}
+
+constexpr const char kSetMaskedPatternInvalidShape[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+image.setMaskedPattern(
+    tensor.ByteTensor(4, 3, 4),
+    tensor.ByteTensor(3, 4, 1),
+    {0, 0, 0},
+    {0, 0, 0})
+)";
+
+TEST_F(LuaImageTest, kSetMaskedPatternInvalidShape) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kSetMaskedPatternInvalidShape,
+                              sizeof(kSetMaskedPatternInvalidShape) - 1,
+                              "kSetMaskedPatternInvalidShape"),
+              IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), StatusIs(HasSubstr("[4, 3, 4]")));
+}
+
+constexpr const char kSetMaskedPatternInvalidShape2[] = R"(
+local image = require 'dmlab.system.image'
+local tensor = require 'dmlab.system.tensor'
+image.setMaskedPattern(
+    tensor.ByteTensor(4, 3, 1, 4),
+    tensor.ByteTensor(4, 3, 1),
+    {0, 0, 0},
+    {0, 0, 0})
+)";
+
+TEST_F(LuaImageTest, kSetMaskedPatternInvalidShape2) {
+  lua_State* L = lua_vm_.get();
+  ASSERT_THAT(lua::PushScript(L, kSetMaskedPatternInvalidShape2,
+                              sizeof(kSetMaskedPatternInvalidShape2) - 1,
+                              "kSetMaskedPatternInvalidShape2"),
+              IsOkAndHolds(1));
+  EXPECT_THAT(lua::Call(L, 0), StatusIs(HasSubstr("same number")));
 }
 
 }  // namespace lab

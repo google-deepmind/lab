@@ -142,28 +142,26 @@ local function scaleNameToNumber(scale, shape)
   return CUSTOM_SCALES[shape] and CUSTOM_SCALES[shape][scale] or SCALES[scale]
 end
 
--- Returns normalised float texture, loading once from disk if need be.
+-- Returns unsigned byte texture, loading once from disk if need be.
 function hrp.getPatternTexture(patternName, width, height)
   if not PATTERNS_SET[patternName] then
     error("Unknown pattern: " .. tostring(patternName))
   end
 
   if not hrp._patternTextures[patternName] then
-    local floatImage
+    local byteImage
     if patternName == 'solid' then
-      floatImage = tensor.FloatTensor(width, height, 4):fill(1.0)
+      byteImage = tensor.ByteTensor(width, height, 4):fill(255)
     else
       local path = PATTERN_DIR .. patternName .. '_d.png'
-      local byteImage = image.load(path)
-      local shape = byteImage:shape()
-      if shape[1] ~= width or shape[2] ~= height then
-        byteImage = image.scale(byteImage, width, height)
+      byteImage = image.load(path)
+      local patHeight, patWidth = unpack(byteImage:shape())
+      if patWidth ~= width or patHeight ~= height then
+        byteImage =
+            image.scale(byteImage:narrow(3, 1, 1):clone(), width, height)
       end
-      floatImage = byteImage:float():mul(1 / 255)
     end
-    assert(floatImage:shape()[3] == 4,
-           'Pattern textures must be in RGBA format.')
-    hrp._patternTextures[patternName] = floatImage
+    hrp._patternTextures[patternName] = byteImage
   end
   return hrp._patternTextures[patternName]
 end
@@ -231,7 +229,7 @@ function hrp.create(kwargs)
     hrp._nextId = hrp._nextId + 1
   end
   hrp._currentPickupsId = hrp._currentPickupsId + 1
-  local classname = 'pu:' ..  hrp._currentPickupsId
+  local classname = 'pu:' .. hrp._currentPickupsId
   hrp._currentPickups[classname] = {
       name = classname,
       classname = classname,
@@ -261,33 +259,8 @@ function hrp.replaceTextureName(textureName)
   end
 end
 
-local function pattern(patternChannel, color1, color2)
-  local invChannel = patternChannel:clone():mul(-1):add(1)
-  return patternChannel:clone():mul(color1):cadd(invChannel:mul(color2))
-end
-
 function hrp.applyPatternAndColors(objTexture, patternTexture, color1, color2)
-  local floatObjTexture = objTexture:float()
-  local r = floatObjTexture:select(3, 1)
-  local g = floatObjTexture:select(3, 2)
-  local b = floatObjTexture:select(3, 3)
-  local a = floatObjTexture:select(3, 4):clone():mul(1 / 255)
-  local invA = a:clone():mul(-1):add(1)
-
-    -- Generate colorised copies of the pattern for each channel.
-  local patternR = pattern(patternTexture:select(3, 1), color1[1], color2[1])
-  local patternG = pattern(patternTexture:select(3, 2), color1[2], color2[2])
-  local patternB = pattern(patternTexture:select(3, 3), color1[3], color2[3])
-
-  -- Combine original texture with pattern according to original alpha.
-  r:cmul(invA):cadd(patternR:cmul(a))
-  g:cmul(invA):cadd(patternG:cmul(a))
-  b:cmul(invA):cadd(patternB:cmul(a))
-
-  objTexture:copy(floatObjTexture:byte())
-
-  collectgarbage()
-  collectgarbage()
+  image.setMaskedPattern(objTexture, patternTexture, color1, color2)
 end
 
 function hrp.modifyTexture(textureName, texture)

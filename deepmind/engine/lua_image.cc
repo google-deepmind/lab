@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
@@ -558,7 +559,6 @@ class HslToRgb {
   double hue_partial_;
 };
 
-
 // Sets hue of an RGB image.
 //
 // Lua Arguments:
@@ -617,6 +617,134 @@ lua::NResultsOr SetHue(lua_State* L) {
   return 1;
 }
 
+// Careful benchmarking is required when refactoring this code.
+void ApplyPattern(unsigned char* source_start,
+                          const unsigned char* pattern_start,
+                          std::size_t pattern_span, std::size_t pixel_count,
+                          unsigned char r1, unsigned char g1, unsigned char b1,
+                          unsigned char r2, unsigned char g2,
+                          unsigned char b2) {
+  for (std::size_t pixel_idx = 0; pixel_idx < pixel_count; ++pixel_idx) {
+    unsigned char* source = &source_start[pixel_idx * 4];
+    const unsigned char pattern = pattern_start[pixel_idx * pattern_span];
+    const int pattern_w_0 = pattern;
+    const int pattern_w_1 = 255 - pattern;
+    const int pattern_0 = (pattern_w_0 * r1 + pattern_w_1 * r2 + 127) / 255;
+    const int pattern_1 = (pattern_w_0 * g1 + pattern_w_1 * g2 + 127) / 255;
+    const int pattern_2 = (pattern_w_0 * b1 + pattern_w_1 * b2 + 127) / 255;
+
+    const int source_w_0 = source[3];
+    const int source_w_1 = 255 - source_w_0;
+    source[0] = (source_w_0 * pattern_0 + source_w_1 * source[0] + 127) / 255;
+    source[1] = (source_w_0 * pattern_1 + source_w_1 * source[1] + 127) / 255;
+    source[2] = (source_w_0 * pattern_2 + source_w_1 * source[2] + 127) / 255;
+    source[3] = 255;
+  }
+}
+
+// Overlays a colored pattern onto a source image using its alpha channel as an
+// opacity mask.
+//
+// function image.setMaskedPattern(img, pattern, color1, color2)
+//
+// Lua Arguments:
+//
+// 1.  'img' - ByteTensor HxWx4 contiguous. Source image to apply pattern to.
+// 2.  'pattern' - ByteTensor HxWx? contiguous (assumed to be grayscale so
+//     only the first channel used).
+// 3.  'color1' - {R, G, B} White in pattern image is mapped to color1.
+// 4.  'color2' - {R, G, B} Black in pattern image is mapped to color2.
+//
+// R, G, and B must be integers in the range [0, 255].
+// The pattern color is the linear interpolation of color1 and color2 according
+// to the 'pattern' image's first channel. The linear interpolation is between
+// color2 for pattern value 0 and color1 for pattern value 255.
+//
+// Each pixel in the source image 'img' is interpolated between the
+// corresponding pattern color as defined above and its own original color. The
+// linear interpolation is between source image colour where the source image's
+// alpha is 0 and the pattern color where the source image's alpha is 255. The
+// source image's alpha channel is then set to 255.
+//
+// Returns the modified source image.
+lua::NResultsOr SetMaskedPattern(lua_State* L) {
+  if (lua_gettop(L) != 4) {
+    std::string error = absl::StrCat(
+        "[image.setMaskedPattern] - Incorrect number of arguments. Expected: "
+        "4, received: ",
+        lua_gettop(L));
+    return error;
+  }
+  auto* source = tensor::LuaTensor<unsigned char>::ReadObject(L, 1);
+  if (source == nullptr) {
+    std::string error =
+        absl::StrCat("[image.setMaskedPattern] - Arg1 \"", lua::ToString(L, 1),
+                     "\" - Invalid source image");
+    return error;
+  }
+  const auto* pattern = tensor::LuaTensor<unsigned char>::ReadObject(L, 2);
+  if (pattern == nullptr) {
+    std::string error =
+        absl::StrCat("[image.setMaskedPattern] - Arg2 \"", lua::ToString(L, 2),
+                     "\" - Invalid pattern image");
+    return error;
+  }
+  std::array<unsigned char, 3> color1;
+  std::array<unsigned char, 3> color2;
+  if (!IsFound(lua::Read(L, 3, &color1))) {
+    std::string error =
+        absl::StrCat("[image.setMaskedPattern] - Arg 3 \"", lua::ToString(L, 3),
+                     "\" - Invalid color1.");
+  }
+
+  if (IsFound(lua::Read(L, 4, &color2))) {
+    std::string error =
+        absl::StrCat("[image.setMaskedPattern] - Arg 4 \"", lua::ToString(L, 3),
+                     "\" - Invalid color1.");
+  }
+  auto* source_view = source->mutable_tensor_view();
+  const auto& pattern_view = pattern->tensor_view();
+
+  if (source_view->shape().size() != pattern_view.shape().size()) {
+    std::string error = absl::StrCat(
+        "[image.setMaskedPattern] Arg1 (source) must have the same number of "
+        "dimensions as Arg2 (pattern)",
+        "Arg 1 (source) shape : [", absl::StrJoin(source_view->shape(), ", "),
+        "] Arg 2 (pattern) shape : [",
+        absl::StrJoin(pattern_view.shape(), ", "), "]");
+    return error;
+  }
+
+  // Must have the same major dimensions.
+  for (std::size_t i = 0; i + 1 < source_view->shape().size(); ++i) {
+    if (source_view->shape()[i] != pattern_view.shape()[i]) {
+      std::string error = absl::StrCat(
+          "[image.setMaskedPattern] Arg1 (source) must have the same major "
+          "dimensions as Arg2 (pattern).",
+          "Arg 1 (source) shape : [", absl::StrJoin(source_view->shape(), ", "),
+          "] Arg 2 (pattern) shape : [",
+          absl::StrJoin(pattern_view.shape(), ", "), "]");
+      return error;
+    }
+  }
+
+  if (source_view->num_elements() == 0 || source_view->shape().back() != 4) {
+    return "[image.setMaskedPattern] Arg1 (source) shape must have 4 channels.";
+  }
+
+  std::size_t number_pixels = source_view->num_elements() / 4;
+  int pattern_span = pattern_view.shape().back();
+  unsigned char* source_start =
+      &source_view->mutable_storage()[source_view->start_offset()];
+  const unsigned char* pattern_start =
+      &pattern_view.storage()[pattern_view.start_offset()];
+  ApplyPattern(source_start, pattern_start, pattern_span, number_pixels,
+               color1[0], color1[1], color1[2], color2[0], color2[1],
+               color2[2]);
+  lua_settop(L, 1);
+  return 1;
+}
+
 }  // namespace
 
 int LuaImageRequire(lua_State* L) {
@@ -624,6 +752,7 @@ int LuaImageRequire(lua_State* L) {
   table.Insert("load", &lua::Bind<Load>);
   table.Insert("scale", &lua::Bind<Scale>);
   table.Insert("setHue", &lua::Bind<SetHue>);
+  table.Insert("setMaskedPattern", &lua::Bind<SetMaskedPattern>);
   lua::Push(L, table);
   return 1;
 }

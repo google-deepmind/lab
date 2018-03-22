@@ -13,8 +13,9 @@ function tests.allPatternsShouldBeValidAndLoad()
   for _, patternName in ipairs(hrp.patterns()) do
     local patternTexture = hrp.getPatternTexture(patternName, 1024, 1024)
     assert(patternTexture)
-    asserts.EQ(patternTexture:type(), 'deepmind.lab.tensor.FloatTensor')
-    asserts.tablesEQ(patternTexture:shape(), {1024, 1024, 4})
+    asserts.EQ(patternTexture:type(), 'deepmind.lab.tensor.ByteTensor')
+    local _, _, c = unpack(patternTexture:shape())
+    asserts.tablesEQ(patternTexture:shape(), {1024, 1024, c})
   end
 end
 
@@ -99,7 +100,8 @@ function tests.applyPatternAndColors_doesNothingIfNoAlphaComponent()
   texture:fill(127)
   texture:select(3, 4):fill(0)
   local expected = texture:clone()
-  local pattern = tensor.FloatTensor(1024, 1024, 3):fill(1)
+  expected:select(3, 4):fill(255)
+  local pattern = tensor.ByteTensor(1024, 1024, 1):fill(255)
 
   hrp.applyPatternAndColors(texture, pattern, RED, GREEN)
   asserts.EQ(texture, expected)
@@ -111,7 +113,7 @@ function tests.applyPatternAndColors_ShouldApplyColor1WhenPatternIs1()
   texture:fill(255)
 
   -- Create pattern of all 1's.
-  local pattern = tensor.FloatTensor(1024, 1024, 3):fill(1)
+  local pattern = tensor.ByteTensor(1024, 1024, 1):fill(255)
 
   -- Expect everything to go red.
   local expected = tensor.ByteTensor(1024, 1024, 4)
@@ -128,7 +130,7 @@ function tests.applyPatternAndColors_ShouldApplyColor2WhenPatternIs0()
   texture:fill(255)
 
   -- Create pattern of all 0's.
-  local pattern = tensor.FloatTensor(1024, 1024, 3)
+  local pattern = tensor.ByteTensor(1024, 1024, 1)
 
   -- Expect everything to go green.
   local expected = tensor.ByteTensor(1024, 1024, 4)
@@ -146,8 +148,8 @@ function tests.applyPatternAndColors_ShouldApplyBothColors()
   texture:narrow(1, 513, 512):select(3, 4):fill(0)
 
   -- Create pattern with 1's in the left half, zero's in the right.
-  local pattern = tensor.FloatTensor(1024, 1024, 3)
-  pattern:narrow(2, 1, 512):fill(1)
+  local pattern = tensor.ByteTensor(1024, 1024, 1)
+  pattern:narrow(2, 1, 512):fill(255)
 
   -- Expect top half to be red and green, bottom half still white.
   local expected = tensor.ByteTensor(1024, 1024, 4)
@@ -156,7 +158,7 @@ function tests.applyPatternAndColors_ShouldApplyBothColors()
   top:narrow(2, 513, 512):select(3, 2):fill(255)
   top:select(3, 4):fill(255)
 
-  expected:narrow(1, 513, 512):narrow(3, 1, 3):fill(255)
+  expected:narrow(1, 513, 512):fill(255)
 
   hrp.applyPatternAndColors(texture, pattern, RED, GREEN)
   asserts.EQ(texture, expected)

@@ -116,3 +116,79 @@ Shape: [6, 3]
  [255, 255, 255]
  [  0,   0,   0]]
 ```
+
+## `setMaskedPattern`(*img*, *pattern*, *color1*, *color2*)
+
+Overlays a colored pattern onto a source image using its alpha channel as an
+opacity mask.
+
+Arguments:
+
+1.  `img` - ByteTensor HxWx4 contiguous. Source image to apply pattern to.
+2.  `pattern` - ByteTensor HxWx? contiguous (assumed to be grayscale so only the
+    first channel used).
+3.  `color1` - `{R, G, B}` White in pattern image is mapped to `color1`
+4.  `color2` - `{R, G, B}` Black in pattern image is mapped to `color2`.
+
+R, G, and B must be integers in the range \[0, 255\]. The pattern color is the
+linear interpolation of `color1` and `color2` according to the `pattern` image's
+first channel. The linear interpolation is between `color2` for pattern value 0
+and `color1` for pattern value 255.
+
+Each pixel in the source image `img` is interpolated between the corresponding
+pattern color as defined above and its own original color. The linear
+interpolation is between source image colour where the source image's alpha is 0
+and the pattern color where the source image's alpha is 255. The source image's
+alpha channel is then set to 255.
+
+Returns the modified source image `img`.
+
+```Lua
+local image = require
+'dmlab.system.image' local tensor = require 'dmlab.system.tensor'
+
+> img = tensor.ByteTensor{ {{255, 0, 0, 0}, {255, 0, 0, 128}, {255, 0, 0, 255}},
+> {{255, 0, 0, 0}, {255, 0, 0, 128}, {255, 0, 0, 255}}, {{255, 0, 0, 0}, {255,
+> 0, 0, 128}, {255, 0, 0, 255}}, }
+>
+> pat = tensor.ByteTensor{ {{255}, {255}, {255}}, {{128}, {128}, {128}}, {{ 0},
+> { 0}, { 0}}, }
+>
+> image.setMaskedPattern(img, pat, {0, 255, 0}, {0, 0, 255})
+>
+> target = tensor.ByteTensor{ {{255, 0, 0, 255}, {127, 128, 0, 255}, { 0, 255,
+> 0, 255}}, {{255, 0, 0, 255}, {127, 64, 64, 255}, { 0, 128, 127, 255}}, {{255,
+> 0, 0, 255}, {127, 0, 128, 255}, { 0, 0, 255, 255}}, } assert(img == target,
+> tostring(img))
+```
+
+It is functionally equivalent to:
+
+```Lua
+function image.setMaskedPattern(src, pat, color1, color2)
+  local hSrc, wSrc, cSrc = unpack(src:shape())
+  local hPat, wPat, cPat = unpack(pat:shape())
+  assert(hSrc * wSrc == hPat * wPat)
+  assert(cSrc == 4)
+  assert(cPat > 0)
+  local rC1, gC1, bC1 = unpack(color1)
+  local rC2, gC2, bC2 = unpack(color2)
+  for i = 1, hSrc do
+    local rowSrc = src(i)
+    local rowPat = pat(i)
+    for j = 1, wSrc do
+      local rSrc, gSrc, bSrc, aSrc = unpack(rowSrc(j):val())
+      local aPat = cPat > 1 and unpack(rowPat(j):val()) or rowPat(j):val()
+      local rPat = math.floor((rC1 * aPat + (255 - aPat) * rC2 + 127) / 255)
+      local gPat = math.floor((gC1 * aPat + (255 - aPat) * gC2 + 127) / 255)
+      local bPat = math.floor((bC1 * aPat + (255 - aPat) * bC2 + 127) / 255)
+      rowSrc(j):val{
+          math.floor((rSrc * (255 - aSrc) + rPat * aSrc + 127) / 255),
+          math.floor((gSrc * (255 - aSrc) + gPat * aSrc + 127) / 255),
+          math.floor((bSrc * (255 - aSrc) + bPat * aSrc + 127) / 255),
+          255
+      }
+    end
+  end
+end
+```
