@@ -39,6 +39,8 @@
 11. Add `clamp` to tensor operations.
 12. Add new callback `api:newClientInfo`, allowing each client to intercept
     when players are loading.
+13. Skymaze level generation is now restricted to produce only 100000 distinct
+    levels. This allows for caching to avoid expensive recompilations.
 
 ### Deprecated Features:
 

@@ -64,8 +64,8 @@ function factory.createLevelApi(kwargs)
     if not kwargs.levelMap then
       print('Generating levelMap with from seed ' .. seed)
     end
-    local levelMap = kwargs.levelMap or gen.makeLevel(kwargs.difficulty, seed)
-    map_maker:randomGen():seed(seed)
+    local levelMap = kwargs.levelMap or
+                     gen.makeLevel(kwargs.difficulty, randomMap)
     api._asciiMap = levelMap.map
     print(api._asciiMap)
     io.flush()
@@ -119,7 +119,7 @@ function factory.createLevelApi(kwargs)
             if i == api._goal.x and j == api._goal.y then
               c = ''
               for n = 1, kwargs.goalHeight do
-                 c = c ..'\n\n'.. maker:makeEntity{
+                 c = c .. '\n\n' .. maker:makeEntity{
                     i = i,
                     j = j,
                     height = height + (n - 1) * PICKUP_HEIGHT,

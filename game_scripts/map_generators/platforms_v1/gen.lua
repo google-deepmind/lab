@@ -15,7 +15,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local random = require 'common.random'
 local maze_generation = require 'dmlab.system.maze_generation'
 
 -- The heights of the cells are integers in [1, 26], larger number denotes
@@ -37,6 +36,7 @@ local MAX_PATHS = 8
 
 -- Maximum iterations any part of the algorithm can take.
 local MAX_ITERATIONS = 1000
+local rng
 
 local function getWeightedValue(min, max, weight)
   return min + math.floor(weight * (max - min) + 0.5)
@@ -45,16 +45,16 @@ end
 -- Generates a player position which is randomly chosen from the first 1/3 rows
 -- of the map.
 local function randomPlayerPosition(size)
-  local row = math.floor(random:uniformReal(0, 1) / 3 * size) + 1
-  local col = random:uniformInt(2, size - 1)
+  local row = math.floor(rng:uniformReal(0, 1) / 3 * size) + 1
+  local col = rng:uniformInt(2, size - 1)
   return {row, col}
 end
 
 -- Generates a goal position which is randomly chosen from the last 1/3 rows
 -- of the map.
 local function randomGoalPosition(size)
-  local row = math.floor((2.0 + random:uniformReal(0, 1)) / 3 * size) + 1
-  local col = random:uniformInt(2, size - 1)
+  local row = math.floor((2.0 + rng:uniformReal(0, 1)) / 3 * size) + 1
+  local col = rng:uniformInt(2, size - 1)
   return {row, col}
 end
 
@@ -76,7 +76,7 @@ local function generateRandomPath(maze, playerPos, goalPos, maxExtraSteps)
   for iters = 1, MAX_ITERATIONS do
     path = {}
     maze:visitRandomPath{
-        seed = random:uniformInt(0, math.pow(2, 31)),
+        seed = rng:uniformInt(0, math.pow(2, 31)),
         from = playerPos,
         to = goalPos,
         func = function(row, col)
@@ -105,8 +105,8 @@ local function generateHeightForMainPath(map, path)
   for i = 2, #path do
     local x, y = path[i][1], path[i][2]
     local height = lastHeight
-    if random:uniformReal(0, 1) < HEIGHT_DECREASE_PROBABILITY then
-      height = lastHeight - random:uniformInt(1, MAX_HEIGHT_DECREASE)
+    if rng:uniformReal(0, 1) < HEIGHT_DECREASE_PROBABILITY then
+      height = lastHeight - rng:uniformInt(1, MAX_HEIGHT_DECREASE)
     end
     if height < MIN_HEIGHT then
       height = MIN_HEIGHT
@@ -123,7 +123,7 @@ local function permute(p, q)
     permutedIndex[i] = i
   end
   for i = p, q do
-    local j = random:uniformInt(i, q)
+    local j = rng:uniformInt(i, q)
     permutedIndex[i], permutedIndex[j] = permutedIndex[j], permutedIndex[i]
   end
   return permutedIndex
@@ -314,7 +314,7 @@ Arguments:
 
 *   difficulty     - The difficulty of the level, if unset, will be randomly
     drawn from [0, 1).
-*   seed           - Seed for randomization.
+*   random           - random for randomization.
 
 Returns a table with three keys:
 
@@ -323,11 +323,9 @@ Returns a table with three keys:
 *   goalPosition   - The coordinates of the goal position.
 
 The player and goal positions are 0-indexed. ]]
-local function makeLevel(difficulty, seed)
-  if seed then
-    random:seed(seed)
-  end
-  difficulty = difficulty or random:uniformReal(0, 1)
+local function makeLevel(difficulty, random)
+  rng = random
+  difficulty = difficulty or rng:uniformReal(0, 1)
   assert(difficulty >= 0 and difficulty <= 1)
   local levelSize =
       getWeightedValue(MIN_LEVEL_SIZE, MAX_LEVEL_SIZE, difficulty)
