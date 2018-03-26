@@ -79,6 +79,8 @@ class LogMessage {
     std::clog << "[" << file << ":" << line << "] ";
   }
 
+  ~LogMessage() { std::clog << "\n"; }
+
   std::ostream& stream() && { return std::clog; }
 };
 
