@@ -521,10 +521,22 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
   } else if (strcmp(key, "width") == 0) {
     int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
+    if (v < 4 || v % 4 != 0) {
+      gc->dm_ctx->hooks.set_error_message(
+          ctx->userdata,
+          va("'width' must be a positive multiple of 4. Actual %ld", v));
+      return 1;
+    }
     gc->width = v;
   } else if (strcmp(key, "height") == 0) {
     int res = parse_int(value, &v, ctx);
     if (res != 0) return res;
+    if (v < 4 || v % 4 != 0) {
+      gc->dm_ctx->hooks.set_error_message(
+          ctx->userdata,
+          va("'height' must be a positive multiple of 4. Actual %ld", v));
+      return 1;
+    }
     gc->height = v;
   } else if (strcmp(key, "server") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
