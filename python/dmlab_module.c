@@ -36,6 +36,27 @@
 #define ENV_STATUS_UNINITIALIZED -2
 #define ENV_STATUS_INITIALIZED -1
 
+
+// Glue code to make the code work with both Python 2.7 and Python 3.
+//
+#if PY_MAJOR_VERSION >= 3
+#  define PY_INIT_SIGNATURE(name) PyInit_ ## name
+#  define PY_RETURN_SUCCESS(x) return x
+#  define PY_RETURN_FAILURE    return NULL
+#  define PyInt_FromLong PyLong_FromLong
+#  define PyInt_AsLong PyLong_AsLong
+#  define PyInt_Check PyLong_Check
+#  define PyString_FromString PyBytes_FromString
+#  define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#  define PyString_AsString PyBytes_AsString
+#  define PyString_Check PyBytes_Check
+#  define PyString_Type PyBytes_Type
+#else  // PY_MAJOR_VERSION >= 3
+#  define PY_INIT_SIGNATURE(name) init ## name
+#  define PY_RETURN_SUCCESS(x) return
+#  define PY_RETURN_FAILURE    return
+#endif  // PY_MAJOR_VERSION >= 3
+
 static char runfiles_path[4096];  // set in initdeepmind_lab() below
 
 typedef struct {
@@ -64,7 +85,7 @@ static void LabObject_dealloc(PyObject* pself) {
   env_close(self);
   free(self->env_c_api);
   free(self->observation_indices);
-  self->ob_type->tp_free(pself);
+  Py_TYPE(self)->tp_free(pself);
 }
 
 static PyObject* LabObject_new(PyTypeObject* type, PyObject* args,
@@ -585,7 +606,7 @@ static PyMethodDef LabObject_methods[] = {
 };
 
 static PyTypeObject deepmind_lab_LabType = {
-    PyObject_HEAD_INIT(NULL) 0,    /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0) /* ob_size */
     "deepmind_lab.Lab",            /* tp_name */
     sizeof(LabObject),             /* tp_basicsize */
     0,                             /* tp_itemsize */
@@ -659,12 +680,30 @@ static PyMethodDef module_methods[] = {
     {NULL, NULL, 0, NULL} /* sentinel */
 };
 
-PyMODINIT_FUNC initdeepmind_lab(void) {
+#if PY_MAJOR_VERSION >= 3
+static PyModuleDef module_def = {
+    PyModuleDef_HEAD_INIT,
+    "deepmind_lab",             /* m_name */
+    "DeepMind Lab API module",  /* m_doc */
+    -1,                         /* m_size */
+    module_methods,             /* m_methods */
+    NULL,                       /* m_reload */
+    NULL,                       /* m_traverse */
+    NULL,                       /* m_clear */
+    NULL,                       /* m_free */
+};
+#endif  // PY_MAJOR_VERSION >= 3
+
+PyMODINIT_FUNC PY_INIT_SIGNATURE(deepmind_lab)(void) {
   PyObject* m;
 
-  if (PyType_Ready(&deepmind_lab_LabType) < 0) return;
+  if (PyType_Ready(&deepmind_lab_LabType) < 0) PY_RETURN_FAILURE;
 
+#if PY_MAJOR_VERSION >= 3
+  m = PyModule_Create(&module_def);
+#else  // PY_MAJOR_VERSION >= 3
   m = Py_InitModule3("deepmind_lab", module_methods, "DeepMind Lab API module");
+#endif  // PY_MAJOR_VERSION >= 3
 
   Py_INCREF(&deepmind_lab_LabType);
   PyModule_AddObject(m, "Lab", (PyObject*)&deepmind_lab_LabType);
@@ -677,7 +716,7 @@ PyMODINIT_FUNC initdeepmind_lab(void) {
       strcpy(runfiles_path, file);
     } else {
       PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
-      return;
+      PY_RETURN_FAILURE;
     }
 
     char* last_slash = strrchr(runfiles_path, '/');
@@ -686,24 +725,36 @@ PyMODINIT_FUNC initdeepmind_lab(void) {
     } else {
       PyErr_SetString(PyExc_RuntimeError,
                       "Unable to determine runfiles directory!");
-      return;
+      PY_RETURN_FAILURE;
     }
   } else {
     strcpy(runfiles_path, ".");
   }
 #else
+#if PY_MAJOR_VERSION >= 3
+  PyObject* u = PyUnicode_FromWideChar(Py_GetProgramFullPath(), -1);
+  if (u == NULL) PY_RETURN_FAILURE;
+
+  PyObject* p = PyUnicode_EncodeFSDefault(u);
+  const char* s = PyBytes_AsString(p);
+  size_t n = PyBytes_Size(p);
+#else  // PY_MAJOR_VERSION >= 3
+  const char* s = Py_GetProgramFullPath();
+  size_t n = strlen(s);
+#endif  // PY_MAJOR_VERSION >= 3
   static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
-  if (strlen(Py_GetProgramFullPath()) + strlen(kRunfiles) <
-      sizeof(runfiles_path)) {
-    strcpy(runfiles_path, Py_GetProgramFullPath());
+  if (n + strlen(kRunfiles) < sizeof(runfiles_path)) {
+    strcpy(runfiles_path, s);
     strcat(runfiles_path, kRunfiles);
   } else {
     PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
-    return;
+    PY_RETURN_FAILURE;
   }
 #endif
 
   srand(time(NULL));
 
   import_array();
+
+  PY_RETURN_SUCCESS(m);
 }
