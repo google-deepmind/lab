@@ -46,11 +46,6 @@
 #  define PyInt_FromLong PyLong_FromLong
 #  define PyInt_AsLong PyLong_AsLong
 #  define PyInt_Check PyLong_Check
-#  define PyString_FromString PyBytes_FromString
-#  define PyString_FromStringAndSize PyBytes_FromStringAndSize
-#  define PyString_AsString PyBytes_AsString
-#  define PyString_Check PyBytes_Check
-#  define PyString_Type PyBytes_Type
 #else  // PY_MAJOR_VERSION >= 3
 #  define PY_INIT_SIGNATURE(name) init ## name
 #  define PY_RETURN_SUCCESS(x) return
@@ -118,9 +113,11 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
     return -1;
   }
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!s", kwlist, &level,
-                                   &PyList_Type, &observations, &PyDict_Type,
-                                   &config, &renderer)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!s", kwlist,
+                                   &level,
+                                   &PyList_Type, &observations,
+                                   &PyDict_Type, &config,
+                                   &renderer)) {
     return -1;
   }
 
@@ -189,8 +186,13 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
     char *key, *value;
 
     while (PyDict_Next(config, &pos, &pykey, &pyvalue)) {
+#if PY_MAJOR_VERSION >= 3
+      key = PyUnicode_AsUTF8(pykey);
+      value = PyUnicode_AsUTF8(pyvalue);
+#else  // PY_MAJOR_VERSION >= 3
       key = PyString_AsString(pykey);
       value = PyString_AsString(pyvalue);
+#endif  // PY_MAJOR_VERSION >= 3
       if (key == NULL || value == NULL) {
         return -1;
       }
@@ -212,7 +214,11 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
   char* observation_name;
   int api_observation_count = self->env_c_api->observation_count(self->context);
   for (int i = 0; i < self->observation_count; ++i) {
+#if PY_MAJOR_VERSION >= 3
+    observation_name = PyUnicode_AsUTF8(PyList_GetItem(observations, i));
+#else  // PY_MAJOR_VERSION >= 3
     observation_name = PyString_AsString(PyList_GetItem(observations, i));
+#endif  // PY_MAJOR_VERSION >= 3
     if (observation_name == NULL) {
       return -1;
     }
@@ -370,13 +376,17 @@ static PyObject* Lab_observation_spec(PyObject* pself, PyObject* no_arg) {
   for (int idx = 0; idx < count; ++idx) {
     self->env_c_api->observation_spec(self->context, idx, &spec);
     if (spec.type == EnvCApi_ObservationString) {
+#if PY_MAJOR_VERSION >= 3
+      type = (PyObject*)(&PyUnicode_Type);
+#else  //  PY_MAJOR_VERSION >= 3
       type = (PyObject*)(&PyString_Type);
+#endif  // PY_MAJOR_VERSION >= 3
       shape = PyTuple_New(0);
-      if (PyList_SetItem(result, idx,
-                         Py_BuildValue("{s:s,s:N,s:O}", "name",
-                                       self->env_c_api->observation_name(
-                                           self->context, idx),
-                                       "shape", shape, "dtype", type)) != 0) {
+      if (PyList_SetItem(result, idx, Py_BuildValue(
+              "{s:s,s:N,s:O}",
+              "name", self->env_c_api->observation_name(self->context, idx),
+              "shape", shape,
+              "dtype", type)) != 0) {
         PyErr_SetString(PyExc_RuntimeError, "Unable to populate list");
         return NULL;
       }
@@ -396,11 +406,11 @@ static PyObject* Lab_observation_spec(PyObject* pself, PyObject* no_arg) {
         return NULL;
       }
     }
-    if (PyList_SetItem(
-            result, idx,
-            Py_BuildValue("{s:s,s:N,s:O}", "name",
-                          self->env_c_api->observation_name(self->context, idx),
-                          "shape", shape, "dtype", type)) != 0) {
+    if (PyList_SetItem(result, idx, Py_BuildValue(
+            "{s:s,s:N,s:O}",
+            "name", self->env_c_api->observation_name(self->context, idx),
+            "shape", shape,
+            "dtype", type)) != 0) {
       PyErr_SetString(PyExc_RuntimeError, "Unable to populate list");
       return NULL;
     }
@@ -442,8 +452,14 @@ static PyObject* Lab_action_spec(PyObject* pself, PyObject* no_arg) {
 
 static PyObject* make_observation(const EnvCApi_Observation* observation) {
   if (observation->spec.type == EnvCApi_ObservationString) {
-    PyObject* result = PyString_FromStringAndSize(observation->payload.string,
-                                                  observation->spec.shape[0]);
+    PyObject* result =
+#if PY_MAJOR_VERSION >= 3
+        PyUnicode_FromStringAndSize(
+#else  // PY_MAJOR_VERSION >= 3
+        PyString_FromStringAndSize(
+#endif  // PY_MAJOR_VERSION >= 3
+            observation->payload.string, observation->spec.shape[0]);
+
     if (result == NULL) PyErr_NoMemory();
     return result;
   }
@@ -551,8 +567,13 @@ static PyObject* Lab_events(PyObject* pself, PyObject* no_arg) {
     }
     PyObject* entry = PyTuple_New(2);
     PyTuple_SetItem(entry, 0,
-                    PyString_FromString(self->env_c_api->event_type_name(
-                        self->context, event.id)));
+#if PY_MAJOR_VERSION >= 3
+                    PyUnicode_FromString(
+#else  // PY_MAJOR_VERSION >= 3
+                    PyString_FromString(
+#endif  // PY_MAJOR_VERSION >= 3
+                        self->env_c_api->event_type_name(self->context,
+                                                         event.id)));
 
     PyObject* observation_list = PyList_New(event.observation_count);
     if (observation_list == NULL) {
@@ -710,8 +731,13 @@ PyMODINIT_FUNC PY_INIT_SIGNATURE(deepmind_lab)(void) {
 
 #ifdef DEEPMIND_LAB_MODULE_RUNFILES_DIR
   PyObject *v = PyObject_GetAttrString(m, "__file__");
+#if PY_MAJOR_VERSION >= 3
+  if (v && PyBytes_Check(v)) {
+    const char* file = PyBytes_AsString(v);
+#else  // PY_MAJOR_VERSION >= 3
   if (v && PyString_Check(v)) {
     const char* file = PyString_AsString(v);
+#endif  // PY_MAJOR_VERSION >= 3
     if (strlen(file) < sizeof(runfiles_path)) {
       strcpy(runfiles_path, file);
     } else {
