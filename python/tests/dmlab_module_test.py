@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -31,7 +32,7 @@ class DeepMindLabTest(unittest.TestCase):
   def testInitArgs(self):
     with self.assertRaisesRegexp(TypeError, 'must be dict, not list'):
       deepmind_lab.Lab('tests/empty_room_test', [], ['wrongconfig'])
-    with self.assertRaisesRegexp(TypeError, 'str'):
+    with self.assertRaisesRegexp(TypeError, 'str|bad argument type'):
       deepmind_lab.Lab('tests/empty_room_test', [], {'wrongtype': 3})
     with self.assertRaisesRegexp(TypeError, 'must be list, not None'):
       deepmind_lab.Lab('tests/empty_room_test', None, {})
@@ -83,7 +84,7 @@ class DeepMindLabTest(unittest.TestCase):
     env = deepmind_lab.Lab('lt_chasm', [observation])
     env.reset()
 
-    for _ in xrange(steps):
+    for _ in six.moves.range(steps):
       obs = env.observations()
       action = np.zeros((7,), dtype=np.intc)
       reward = env.step(action, num_steps=4)
@@ -107,26 +108,25 @@ class DeepMindLabTest(unittest.TestCase):
     self.assertTrue(os.stat(deepmind_lab.runfiles_path()))
 
   def testWidthHeight(self, width=80, height=80, steps=10, num_steps=1):
-    observations = ['RGBD']
-    env = deepmind_lab.Lab('lt_chasm', observations,
-                           config={'height': str(height),
-                                   'width': str(width)})
+    observation = 'RGBD'
+    env = deepmind_lab.Lab(
+        'lt_chasm', [observation],
+        config={'height': str(height), 'width': str(width)})
     env.reset()
 
-    for _ in xrange(steps):
+    for _ in six.moves.range(steps):
       obs = env.observations()
       action = np.zeros((7,), dtype=np.intc)
       reward = env.step(action, num_steps=num_steps)
 
-      self.assertEqual(obs[observations[0]].shape, (4, width, height))
+      self.assertEqual(obs[observation].shape, (4, width, height))
       self.assertEqual(reward, 0.0)
 
   def testStringObervations(self):
     observation = 'CUSTOM_TEXT'
     env = deepmind_lab.Lab(
         'tests/text_observation_test', [observation],
-        config={'height': str(32),
-                'width': str(32)})
+        config={'height': '32', 'width': '32'})
     observation_spec = env.observation_spec()
     observation_spec_lookup = {o['name']: o for o in observation_spec}
     spec = observation_spec_lookup[observation]
@@ -138,8 +138,8 @@ class DeepMindLabTest(unittest.TestCase):
 
   def testEvents(self):
     env = deepmind_lab.Lab(
-        'tests/event_test', [], config={'height': str(32),
-                                              'width': str(32)})
+        'tests/event_test', [],
+        config={'height': '32', 'width': '32'})
     env.reset(episode=1, seed=7)
     events = env.events()
     self.assertEqual(len(events), 4)
@@ -191,17 +191,16 @@ class DeepMindLabTest(unittest.TestCase):
     backward_action = - forward_action
     look_sideways_action = np.array([512, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
-    env = deepmind_lab.Lab('seekavoid_arena_01', ['VEL.TRANS', 'VEL.ROT'],
-                           config={'height': str(height),
-                                   'width': str(width),
-                                   'fps': '60'})
+    env = deepmind_lab.Lab(
+        'seekavoid_arena_01', ['VEL.TRANS', 'VEL.ROT'],
+        config={'height': str(height), 'width': str(width), 'fps': '60'})
 
     env.reset(seed=1)
 
     # Initial landing on the ground.
     env.step(noop_action, num_steps=180)
 
-    for _ in xrange(3):
+    for _ in six.moves.range(3):
       # Doing nothing should result in velocity observations of zero.
       env.step(noop_action, num_steps=100)
       obs = env.observations()
@@ -227,7 +226,7 @@ class DeepMindLabTest(unittest.TestCase):
 
     env.reset(seed=1)
 
-    for _ in xrange(3):
+    for _ in six.moves.range(3):
       env.step(noop_action, num_steps=100)
       obs = env.observations()
       np.testing.assert_array_equal(obs['VEL.TRANS'], np.zeros((3,)))

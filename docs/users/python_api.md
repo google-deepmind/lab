@@ -8,6 +8,12 @@ usage, there is
 [python/random_agent.py](../../python/random_agent.py), and
 [python/random_agent_simple.py](../../python/random_agent_simple.py).
 
+**A note about Python 3:** By and large the Python API requires Python 2.7.
+However, there is experimental support for Python 3. Under Python 3, strings
+coming out of the environment (e.g. event names or string observations) have to
+be valid UTF-8. The `dmlab_module_test.py` demonstrates how to write code that
+works both in Python 2.7 and Python 3 (using the `six` package).
+
 ### class `deepmind_lab.Lab`(*level*, *observations*, *config={}*, *renderer='software'*)
 
 Creates an environment object, loading the game script file *level*. The
