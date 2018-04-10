@@ -22,10 +22,7 @@ cc_binary(
     name = "libenv_c_api_example.so",
     testonly = 1,
     srcs = ["env_c_api_example.cc"],
-    linkopts = [
-        "-Wl,--version-script",
-        ":env_c_api_example.lds",
-    ],
+    linkopts = ["-Wl,--version-script=$(location :env_c_api_example.lds)"],
     linkshared = 1,
     linkstatic = 1,
     deps = [
