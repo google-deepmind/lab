@@ -949,6 +949,15 @@ gitem_t bg_itemlist[MAX_ITEMS] = { {NULL} };
 int bg_numItems = 0;
 int bg_defaultNumItems = 0;
 
+static void BG_RegisterDynamicPickups( void ) {
+	char classname[256];
+	int i, item_count = dmlab_register_dynamic_items();
+	for (i = 0; i < item_count; ++i) {
+		dmlab_read_dynamic_item_name( i, classname );
+		BG_FindItemByClassName( classname );
+	}
+}
+
 /*
 ==============
 BG_InitItemList
@@ -959,6 +968,7 @@ void BG_InitItemList( void ) {
 	bg_numItems = ARRAY_LEN( bg_itemTemplates ) - 1;
 	bg_defaultNumItems = bg_numItems;
 	bg_buffer_idx = 0;
+	BG_RegisterDynamicPickups();
 }
 
 // Struct containing temporary buffers for deepmind item args to be copied into.
