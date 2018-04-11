@@ -13,7 +13,7 @@ function api:createPickup(classname)
       classname = 'apple_reward',
       model = 'models/apple.md3',
       quantity = 1,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   }
 end
 
@@ -63,7 +63,7 @@ function api:createPickup(classname)
       classname = 'custom_cube',
       model = 'customCubeModel',
       quantity = 1,
-      type = pickups.type.kReward
+      type = pickups.type.REWARD
   }
 end
 
