@@ -619,20 +619,20 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
     if (res != 0) return res;
     if (v_bool) {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
-               " +set cg_drawCrosshairAlways 1 +set cg_draw2D 0");
+               " +set cg_draw2D 0 +set cg_drawCrosshairAlways 1");
     } else {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
-               " +set cg_drawCrosshairAlways 0 +set cg_draw2D 1");
+               " +set cg_draw2D 1 +set cg_drawCrosshairAlways 0");
     }
   } else if (strcmp(key, "reducedUI") == 0) {
     int res = parse_bool(value, &v_bool, ctx);
     if (res != 0) return res;
     if (v_bool) {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
-               " +set cg_drawReducedUI 1 +set cg_draw2D 1");
+               " +set cg_drawReducedUI 1 +set cg_drawCrosshairAlways 1");
     } else {
       Q_strcat(gc->command_line, sizeof(gc->command_line),
-               " +set cg_drawReducedUI 0 +set cg_draw2D 1");
+               " +set cg_drawReducedUI 0 +set cg_drawCrosshairAlways 0");
     }
   } else if (strcmp(key, "nativeApp") == 0) {
     int res = parse_bool(value, &v_bool, ctx);

@@ -41,6 +41,8 @@
     when players are loading.
 13. Skymaze level generation is now restricted to produce only 100000 distinct
     levels. This allows for caching to avoid expensive recompilations.
+14. Add cvars 'cg_drawScriptRectanglesAlways' and 'cg_drawScriptTextAlways' to
+    enable script rendering when reducedUI or minimalUI is enabled.
 
 ### Deprecated Features:
 

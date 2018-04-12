@@ -2549,15 +2549,13 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 		return;
 	}
 
-	if ( cg_draw2D.integer == 0 ) {
-		if (cg_drawCrosshairAlways.integer != 0 && stereoFrame == STEREO_CENTER)
-				CG_DrawCrosshair();
-		return;
-	}
-
-	if (cg_drawReducedUI.integer != 0) {
-		CG_DrawCrosshair();
-		CG_DrawStatusBarReduced();
+	if ( cg_draw2D.integer == 0 || cg_drawReducedUI.integer != 0) {
+		if (stereoFrame == STEREO_CENTER) {
+			if (cg_drawCrosshairAlways.integer != 0) CG_DrawCrosshair();
+			if (cg_drawReducedUI.integer != 0) CG_DrawStatusBarReduced();
+			if (cg_drawScriptTextAlways.integer !=0) CG_DrawScriptMessage();
+			if (cg_drawScriptRectanglesAlways.integer !=0) CG_DrawScriptFilledRectangles();
+		}
 		return;
 	}
 

@@ -121,6 +121,8 @@ vmCvar_t	cg_drawCrosshairAlways;
 vmCvar_t	cg_drawCrosshairNames;
 vmCvar_t	cg_drawReducedUI;
 vmCvar_t	cg_drawRewards;
+vmCvar_t	cg_drawScriptRectanglesAlways;
+vmCvar_t	cg_drawScriptTextAlways;
 vmCvar_t	cg_crosshairSize;
 vmCvar_t	cg_crosshairX;
 vmCvar_t	cg_crosshairY;
@@ -245,6 +247,8 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE  },
 	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
 	{ &cg_drawCrosshairAlways, "cg_drawCrosshairAlways", "0", CVAR_ARCHIVE },
+	{ &cg_drawScriptRectanglesAlways, "cg_drawScriptRectanglesAlways", "0", CVAR_ARCHIVE },
+	{ &cg_drawScriptTextAlways, "cg_drawScriptTextAlways", "0", CVAR_ARCHIVE },
 	{ &cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE },
 	{ &cg_drawReducedUI, "cg_drawReducedUI", "0", CVAR_ARCHIVE },
 	{ &cg_drawRewards, "cg_drawRewards", "1", CVAR_ARCHIVE },

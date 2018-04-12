@@ -1110,6 +1110,8 @@ extern	vmCvar_t		cg_drawCrosshairAlways;
 extern	vmCvar_t		cg_drawCrosshairNames;
 extern	vmCvar_t		cg_drawReducedUI;
 extern	vmCvar_t		cg_drawRewards;
+extern	vmCvar_t		cg_drawScriptRectanglesAlways;
+extern	vmCvar_t		cg_drawScriptTextAlways;
 extern	vmCvar_t		cg_drawTeamOverlay;
 extern	vmCvar_t		cg_teamOverlayUserinfo;
 extern	vmCvar_t		cg_crosshairX;
