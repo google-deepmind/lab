@@ -101,6 +101,38 @@ local function playersEyePos()
   return tensor.DoubleTensor(eyePos)
 end
 
+local function playersScore()
+  local scores = {}
+  for playerId, inv in pairs(inventories) do
+    scores[#scores + 1] = inv:score()
+  end
+  return tensor.DoubleTensor(scores)
+end
+
+local function playersVelocity()
+  local velocities = {}
+  for playerId, inv in pairs(inventories) do
+    velocities[#velocities + 1] = inv:velocity()
+  end
+  return tensor.DoubleTensor(velocities)
+end
+
+local function playersIsBot()
+  local isBots = {}
+  for playerId, inv in pairs(inventories) do
+    isBots[#isBots + 1] = inv:isBot() and 1 or 0
+  end
+  return tensor.ByteTensor(isBots)
+end
+
+local function playersCaptures()
+  local captures = {}
+  for playerId, inv in pairs(inventories) do
+    captures[#captures + 1] = inv:captures()
+  end
+  return tensor.DoubleTensor(captures)
+end
+
 local function playersEyeRot()
   local eyeRot = {}
   for playerId, inv in pairs(inventories) do
@@ -313,9 +345,13 @@ function debug_observations.extend(custom_observations)
   co.addSpec('DEBUG.PLAYERS.ID', 'Bytes', {0}, playersId)
   co.addSpec('DEBUG.PLAYERS.EYE.POS', 'Doubles', {0, 3}, playersEyePos)
   co.addSpec('DEBUG.PLAYERS.EYE.ROT', 'Doubles', {0, 3}, playersEyeRot)
+  co.addSpec('DEBUG.PLAYERS.VELOCITY', 'Doubles', {0, 3}, playersVelocity)
   -- New line separated string.
   co.addSpec('DEBUG.PLAYERS.NAME', 'String', {1}, playersName)
   co.addSpec('DEBUG.PLAYERS.TEAM', 'Doubles', {0}, playersTeam)
+  co.addSpec('DEBUG.PLAYERS.CAPTURES', 'Doubles', {0}, playersCaptures)
+  co.addSpec('DEBUG.PLAYERS.SCORE', 'Doubles', {0}, playersScore)
+  co.addSpec('DEBUG.PLAYERS.IS_BOT', 'Bytes', {0}, playersIsBot)
 
   -- Flag information (x, y, z, playerId,
   -- {NONE = 0, HOME = 1, CARRIED = 2, DROPPED = 3})

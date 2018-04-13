@@ -114,15 +114,17 @@ static const char* next_map(void* userdata) {
   return static_cast<Context*>(userdata)->NextMap();
 }
 
-void update_inventory(void* userdata, bool is_spawning, int player_id,
-                      int gadget_count, int gadget_inventory[], int stat_count,
+void update_inventory(void* userdata, bool is_spawning, bool is_bot,
+                      int player_id, int gadget_count, int gadget_inventory[],
+                      int persistent_count, int persistents[], int stat_count,
                       int stat_inventory[], int powerup_count,
                       int powerup_time[], int gadget_held, float height,
-                      float position[3], float view_angles[3]) {
+                      float position[3], float velocity[3],
+                      float view_angles[3]) {
   static_cast<Context*>(userdata)->UpdateInventory(
-      is_spawning, player_id, gadget_count, gadget_inventory, stat_count,
-      stat_inventory, powerup_count, powerup_time, gadget_held, height,
-      position, view_angles);
+      is_spawning, is_bot, player_id, gadget_count, gadget_inventory,
+      persistent_count, persistents, stat_count, stat_inventory, powerup_count,
+      powerup_time, gadget_held, height, position, velocity, view_angles);
 }
 
 static int game_type(void* userdata) {
@@ -869,11 +871,13 @@ const char* Context::NextMap() {
   return map_name_.c_str();
 }
 
-void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
-                              int gadget_inventory[], int stat_count,
-                              int stat_inventory[], int powerup_count,
-                              int powerup_time[], int gadget_held, float height,
-                              float position[3], float view_angles[3]) {
+void Context::UpdateInventory(bool is_spawning, bool is_bot, int player_id,
+                              int gadget_count, int gadget_inventory[],
+                              int persistent_count, int persistents[],
+                              int stat_count, int stat_inventory[],
+                              int powerup_count, int powerup_time[],
+                              int gadget_held, float height, float position[3],
+                              float velocity[3], float view_angles[3]) {
   const char* update_type = is_spawning ? "spawnInventory" : "updateInventory";
   lua_State* L = lua_vm_.get();
   lua::StackResetter stack_resetter(L);
@@ -883,11 +887,15 @@ void Context::UpdateInventory(bool is_spawning, int player_id, int gadget_count,
   }
 
   auto table = lua::TableRef::Create(L);
+  table.Insert("isBot", is_bot);
   table.Insert("playerId", player_id + 1);
   table.Insert("amounts", absl::MakeConstSpan(gadget_inventory, gadget_count));
   table.Insert("stats", absl::MakeConstSpan(stat_inventory, stat_count));
+  table.Insert("persistents",
+               absl::MakeConstSpan(persistents, persistent_count));
   table.Insert("powerups", absl::MakeConstSpan(powerup_time, powerup_count));
   table.Insert("position", absl::MakeConstSpan(position, 3));
+  table.Insert("velocity", absl::MakeConstSpan(velocity, 3));
   table.Insert("angles", absl::MakeConstSpan(view_angles, 3));
   table.Insert("height", height);
   table.Insert("gadget", gadget_held + 1);

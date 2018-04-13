@@ -33,6 +33,9 @@ PLAYER_DEBUG_OBSERVATIONS = [
     'DEBUG.PLAYERS.ID',
     'DEBUG.PLAYERS.EYE.POS',
     'DEBUG.PLAYERS.EYE.ROT',
+    'DEBUG.PLAYERS.VELOCITY',
+    'DEBUG.PLAYERS.SCORE',
+    'DEBUG.PLAYERS.IS_BOT',
     'DEBUG.PLAYERS.NAME',
     'DEBUG.PLAYERS.TEAM',
 ]
@@ -106,6 +109,11 @@ class DebugObservationTest(unittest.TestCase):
     else:
       self.fail('Failed to be tagged by agent., health still' +
                 str(obs['DEBUG.PLAYERS.HEALTH'][0]))
+
+    self.assertEqual(obs['DEBUG.PLAYERS.SCORE'][0], 0.)
+    self.assertEqual(obs['DEBUG.PLAYERS.SCORE'][1], 1.)
+    self.assertEqual(obs['DEBUG.PLAYERS.IS_BOT'][0], 0)
+    self.assertEqual(obs['DEBUG.PLAYERS.IS_BOT'][1], 1)
 
     self.assertGreater(100, obs['DEBUG.PLAYERS.GADGET_AMOUNT'][1])
 

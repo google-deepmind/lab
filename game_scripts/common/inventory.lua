@@ -30,6 +30,13 @@ inventory.GADGETS = {
 inventory.UNLIMITED = -1
 
 inventory.POWERUPS = {
+    QUAD = 2,
+    BATTLESUIT = 3,
+    HASTE = 4,
+    INVIS = 5,
+    REGEN = 6,
+    FLIGHT = 7,
+
     RED_FLAG = 8,
     BLUE_FLAG = 9,
 }
@@ -63,6 +70,25 @@ local STATS = {
     ARMOR = 4,       -- Quantity of armour.
     MAX_HEALTH = 7,  -- If health is greater than this value it decreases to it
                      -- over time.
+}
+
+local PERSISTANT = {
+    SCORE = 1,               -- player's personal score
+    HITS = 2,                -- total points damage inflicted
+    RANK = 3,                -- player rank or team rank
+    TEAM = 4,                -- player team
+    SPAWN_COUNT = 5,         -- incremented every respawn
+    PLAYEREVENTS = 6,        -- 16 bits that can be flipped for events
+    ATTACKER = 7,            -- playerId - 1 of last damage inflicter
+    ATTACKEE_ARMOR = 8,      -- health/armor of last person we attacked
+    TAGGED = 9,              -- count of the number of times you were tagged
+    -- player awards tracking
+    IMPRESSIVE_COUNT = 10,   -- two disc hits in a row
+    EXCELLENT_COUNT = 11,    -- two successive tags in a short amount of time
+    DEFEND_COUNT = 12,       -- defend awards
+    ASSIST_COUNT = 13,       -- assist awards
+    IMPULSE_TAG_COUNT = 14,  -- tags with the impulse
+    CAPTURES = 15,           -- flag captures
 }
 
 local View = {}
@@ -156,6 +182,11 @@ function View:eyePos()
   return {x, y, z + self._loadOut.height}
 end
 
+-- Returns players velocity in world units.
+function View:velocity()
+  return self._loadOut.velocity
+end
+
 -- Returns players view direction in Euler angles degrees.
 function View:eyeAngles()
   return self._loadOut.angles
@@ -173,6 +204,26 @@ end
 
 function View:loadOut()
   return self._loadOut
+end
+
+function View:captures()
+  return self._loadOut.persistents[PERSISTANT.CAPTURES]
+end
+
+function View:score()
+  return self._loadOut.persistents[PERSISTANT.SCORE]
+end
+
+function View:team()
+  return self._loadOut.persistents[PERSISTANT.TEAM]
+end
+
+function View:isBot()
+  return self._loadOut.isBot
+end
+
+function View:velocity()
+  return self._loadOut.velocity
 end
 
 function inventory.View(loadOut)

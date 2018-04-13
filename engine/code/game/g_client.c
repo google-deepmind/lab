@@ -1224,7 +1224,7 @@ void ClientSpawn(gentity_t *ent) {
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );
 
-	dmlab_spawn_inventory(&client->ps);
+	dmlab_spawn_inventory(&client->ps, !!(ent->r.svFlags & SVF_BOT));
 	ent->health = client->ps.stats[STAT_HEALTH];
 
 	// the respawned flag will be cleared after the attack and jump keys come up

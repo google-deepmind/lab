@@ -1061,7 +1061,7 @@ void ClientThink_real( gentity_t *ent ) {
 	// Add External Score
 	AddScore( ent, NULL, 0, NULL, NULL );
 	health = client->ps.stats[STAT_HEALTH];
-	dmlab_update_inventory(&client->ps);
+	dmlab_update_inventory(&client->ps, !!(ent->r.svFlags & SVF_BOT));
 
 	if (health != client->ps.stats[STAT_HEALTH]) {
 		// Don't revive the dead.

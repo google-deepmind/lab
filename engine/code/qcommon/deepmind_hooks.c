@@ -167,9 +167,12 @@ int dmlab_callback(
       ctx->hooks.update_inventory(
           ctx->userdata,
           /*is_spawning=*/dm_callnum == DEEPMIND_SPAWN_INVENTORY,
+          /*is_bot=*/a2 != 0,
           /*player_id=*/ps->clientNum,
           /*gadget_count=*/MAX_WEAPONS,
           /*gadget_inventory=*/ps->ammo,
+          /*persistent_count=*/MAX_PERSISTANT,
+          /*persistent=*/ps->persistant,
           /*stat_count=*/MAX_STATS,
           /*stats_inventory=*/ps->stats,
           /*powerup_count=*/MAX_POWERUPS,
@@ -177,6 +180,7 @@ int dmlab_callback(
           /*gadget_held=*/ps->weapon,
           /*height=*/ps->viewheight,
           /*position=*/ps->origin,
+          /*velocity=*/ps->velocity,
           /*view_angles=*/ps->viewangles);
       break;
     }

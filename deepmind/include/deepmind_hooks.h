@@ -378,11 +378,14 @@ struct DeepmindHooks_s {
                 const float* data);
 
   // See UpdateInventory in deepmind/engine/context.h.
-  void (*update_inventory)(void* userdata, bool is_spawning, int player_id,
-                           int gadget_count, int gadget_inventory[],
-                           int stat_count, int stats_inventory[], int powerups,
+  void (*update_inventory)(void* userdata, bool is_spawning, bool is_bot,
+                           int player_id, int gadget_count,
+                           int gadget_inventory[], int persistent_count,
+                           int persistents[], int stat_count,
+                           int stats_inventory[], int powerups,
                            int powerups_time[], int gadget_held, float height,
-                           float position[3], float view_angles[3]);
+                           float position[3], float velocity[3],
+                           float view_angles[3]);
 
   // See TeamSelect in deepmind/engine/context.h.
   char (*team_select)(void* userdata, int player_id, const char* player_name);
