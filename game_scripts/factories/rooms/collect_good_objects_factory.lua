@@ -32,7 +32,7 @@ local PICKUPS = {
         model = 'models/hr_hat.md3',
         quantity = -1,
         type = pickups.type.REWARD,
-        tag = pickups.moveType.STATIC,
+        moveType = pickups.moveType.STATIC,
     },
     can = {
         name = 'Can',
@@ -40,7 +40,7 @@ local PICKUPS = {
         model = 'models/hr_can.md3',
         quantity = 1,
         type = pickups.type.REWARD,
-        tag = pickups.moveType.STATIC,
+        moveType = pickups.moveType.STATIC,
     },
     cake = {
         name = 'Cake',
@@ -48,7 +48,7 @@ local PICKUPS = {
         model = 'models/hr_cake.md3',
         quantity = -1,
         type = pickups.type.REWARD,
-        tag = pickups.moveType.STATIC,
+        moveType = pickups.moveType.STATIC,
     },
     balloon = {
         name = 'Balloon',
@@ -56,7 +56,7 @@ local PICKUPS = {
         model = 'models/hr_balloon.md3',
         quantity = 1,
         type = pickups.type.REWARD,
-        tag = pickups.moveType.STATIC,
+        moveType = pickups.moveType.STATIC,
     }
 }
 

@@ -44,12 +44,17 @@
     levels. This allows for caching to avoid expensive recompilations.
 14. Add cvars 'cg_drawScriptRectanglesAlways' and 'cg_drawScriptTextAlways' to
     enable script rendering when reducedUI or minimalUI is enabled.
+15. All pickup types can now choose their movement type separately, and in
+    particular, all pickup types can be made static. Two separate table entries
+    are now specified for an item, 'typeTag' and 'moveType'.
 
 ### Deprecated Features:
 
 1.  Observation format names `RGB_INTERLEAVED` and `RGBD_INTERLEAVED` replace
     `RGB_INTERLACED` and `RGBD_INTERLACED`, respectively. The old format names
     are deprecated and will be removed in a future release.
+2.  The pickup item's `tag` member is now called `moveType`. The old name is
+    deprecated and will be removed in a future release.
 
 ## release-2018-02-07 February 2018 release
 

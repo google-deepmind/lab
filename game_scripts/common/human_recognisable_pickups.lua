@@ -188,7 +188,7 @@ Keyword arguments:
       applied to object; can be 'small', 'medium', or 'large'.
     * `shape` (string, required) Must occur in SHAPES.
 
-Returns a table of {name, classname, model, quantity, type, tag}.
+Returns classname of described pickup.
 --]]
 function hrp.create(kwargs)
   local shape = kwargs.shape or error("Missing shape")
@@ -236,7 +236,7 @@ function hrp.create(kwargs)
       model = hrp._modelCache[key],
       quantity = kwargs.quantity or 0,
       type = pickups.type.REWARD,
-      tag = kwargs.moveType or pickups.moveType.BOB,
+      moveType = kwargs.moveType or pickups.moveType.BOB,
   }
   return classname
 end

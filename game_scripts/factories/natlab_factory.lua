@@ -36,7 +36,7 @@ local PICKUPS = {
         model = 'mushroom_reward',
         quantity = 1,
         type = pickups.type.REWARD,
-        tag = pickups.moveType.STATIC
+        moveType = pickups.moveType.STATIC
     }
 }
 

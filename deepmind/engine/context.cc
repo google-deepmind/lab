@@ -256,10 +256,10 @@ static bool item(void* userdata, int index,
                  char* item_name, int max_item_name,
                  char* class_name, int max_class_name,
                  char* model_name, int max_model_name,
-                 int* quantity, int* type, int* tag) {
+                 int* quantity, int* type, int* tag, int* move_type) {
   return static_cast<const Context*>(userdata)->Pickups().GetItem(
       index, item_name, max_item_name, class_name, max_class_name, model_name,
-      max_model_name, quantity, type, tag);
+      max_model_name, quantity, type, tag, move_type);
 }
 
 static void clear_items(void* userdata) {

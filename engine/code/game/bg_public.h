@@ -624,9 +624,9 @@ typedef enum {
 } itemType_t;
 
 typedef enum {
-	REWARD_MV_BOB,			// bob 4 units above ground
-	REWARD_MV_STATIC		// stay still
-} it_reward_mv_t;
+	MOVE_TYPE_BOB,			// bob 4 units above ground
+	MOVE_TYPE_STATIC		// stay still
+} moveType_t;
 
 #define MAX_ITEM_MODELS 4
 
@@ -645,6 +645,7 @@ typedef struct gitem_s {
 
 	char		*precaches;		// string of all models and images this item will use
 	char		*sounds;		// string of all sounds this item will use
+	moveType_t  move_type;	// MOVE_TYPE_*.
 } gitem_t;
 
 // included in both the game dll and the client

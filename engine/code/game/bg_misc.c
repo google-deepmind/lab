@@ -979,6 +979,7 @@ typedef struct dm_item_args_s {
 	int quantity;
 	int type;
 	int tag;
+	int move_type;
 } dm_item_args_t;
 
 // Creates a new item from the provided args. Currently we don't support icons
@@ -992,6 +993,7 @@ void BG_CreateItem( dm_item_args_t* args, gitem_t* item ) {
 	item->quantity = args->quantity;
 	item->giType = args->type;
 	item->giTag = args->tag;
+	item->move_type = args->move_type;
 	item->precaches = "";
 	item->sounds = "";
 }
@@ -1021,11 +1023,12 @@ void BG_UpdateItems( void ) {
 			}
 
 			if (dmlab_item(
-					i, dm_args.name, sizeof(dm_args.name),           //
-					dm_args.classname, sizeof(dm_args.classname),    //
-					dm_args.model_name, sizeof(dm_args.model_name),  //
-					&dm_args.quantity, &dm_args.type,                //
-					&dm_args.tag)) {
+					i, dm_args.name, sizeof(dm_args.name),
+					dm_args.classname, sizeof(dm_args.classname),
+					dm_args.model_name, sizeof(dm_args.model_name),
+					&dm_args.quantity, &dm_args.type, &dm_args.tag,
+					&dm_args.move_type
+				)) {
 				item = &bg_itemlist[bg_numItems++];
 				BG_CreateItem( &dm_args, item );
 			}

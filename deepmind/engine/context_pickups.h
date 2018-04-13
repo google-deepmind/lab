@@ -99,7 +99,8 @@ class ContextPickups {
       int max_model_name,  //
       int* quantity,       //
       int* type,           //
-      int* tag) const;
+      int* tag,            //
+      int* move_type) const;
 
   // Clear the current list of registered items. Called just before loading a
   // new map.
@@ -149,8 +150,8 @@ class ContextPickups {
     int type;                // Type of pickup. E.g. health, ammo, frags etc.
                              // Must match itemType_t in bg_public.h
     int tag;                 // Tag used in conjunction with type. E.g.
-                             // determine which weapon to award, or if a goal
-                             // should bob and rotate.
+                             // determine which weapon to award.
+    int move_type;           // Used to determine how the pickup moves.
   };
 
   lua::TableRef script_table_ref_;

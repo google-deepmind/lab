@@ -145,11 +145,10 @@ Lists of available commands in *Quake III Arena* can be found online.
 ### `createPickup`(*class_name*) &rarr; table
 
 Returns a table with keys `name`, `classname`, `model`, `quantity`, `type`, and
-an optional `tag`.
+an optional `typeTag` and `moveType`. (`tag` deprecated.)
 
 Pickups are rendered bobbing and spinning in the air. If you require them to be
-static, use `pickups.move_type.STATIC` as `tag`. (This only affects pickups of
-type `REWARD` or `GOAL`.)
+static, use `pickups.move_type.STATIC` as `moveType`.
 
 DMLab defines two item types not found in *Quake III Arena*:
 

@@ -58,7 +58,8 @@ int dmlab_callback(
           /*class_name=*/VM_ArgPtr(a4), /*max_class_name=*/a5,
           /*model_name=*/VM_ArgPtr(a6), /*max_model_name=*/a7,
           /*quantity=*/VM_ArgPtr(a8), /*type=*/VM_ArgPtr(a9),
-          /*tag=*/VM_ArgPtr(a10));
+          /*tag=*/VM_ArgPtr(a10),
+          /*move_type=*/VM_ArgPtr(a11));
     case DEEPMIND_CLEAR_ITEMS:
       ctx->hooks.pickups.clear_items(ctx->userdata);
       return 1;

@@ -264,10 +264,13 @@ bool ContextPickups::FindItem(const char* class_name, int* index) {
   CHECK(table.LookUp("model", &item.model_name));
   CHECK(table.LookUp("quantity", &item.quantity));
   CHECK(table.LookUp("type", &item.type));
+  table.LookUp("typeTag", &item.tag);
 
-  // Optional tag field.
-  table.LookUp("tag", &item.tag);
-
+  // Optional fields.
+  if (!table.LookUp("moveType", &item.move_type)) {
+    // Legacy name.
+    table.LookUp("tag", &item.move_type);
+  }
   items_.push_back(item);
   *index = ItemCount() - 1;
 
@@ -278,7 +281,8 @@ bool ContextPickups::FindItem(const char* class_name, int* index) {
 bool ContextPickups::GetItem(int index, char* item_name, int max_item_name,  //
                              char* class_name, int max_class_name,           //
                              char* model_name, int max_model_name,           //
-                             int* quantity, int* type, int* tag) const {
+                             int* quantity, int* type, int* tag,
+                             int* move_type) const {
   CHECK_GE(index, 0) << "Index out of range!";
   CHECK_LT(index, ItemCount()) << "Index out of range!";
 
@@ -289,6 +293,7 @@ bool ContextPickups::GetItem(int index, char* item_name, int max_item_name,  //
   *quantity = item.quantity;
   *type = static_cast<int>(item.type);
   *tag = item.tag;
+  *move_type = item.move_type;
   return true;
 }
 

@@ -102,7 +102,8 @@ struct DeepmindPickupHooks_s {
   // Returns whether the operation succeeded.
   bool (*item)(void* userdata, int index, char* item_name, int max_item_name,
                char* class_name, int max_class_name, char* model_name,
-               int max_model_name, int* quantity, int* type, int* tag);
+               int max_model_name, int* quantity, int* type, int* tag,
+               int* move_type);
 
   // Clears the current list of custom items. This is called on each
   // initialization.

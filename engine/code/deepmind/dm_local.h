@@ -65,7 +65,7 @@ int dmlab_itemcount(void);
 int dmlab_item(int index, char* item_name, int max_item_name,  //
                char* classname, int max_classname,             //
                char* model_name, int max_model_name,           //
-               int* quantity, int* type, int* tag);
+               int* quantity, int* type, int* tag, int* move_type);
 
 // Clear the current list of registered items. Called just before loading a new
 // map.

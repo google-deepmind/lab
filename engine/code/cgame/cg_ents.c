@@ -232,7 +232,6 @@ static void CG_Item( centity_t *cent ) {
 	float			frac;
 	float			scale;
 	weaponInfo_t	*wi;
-	it_reward_mv_t	movementType;
 
 	es = &cent->currentState;
 	if ( es->modelindex >= bg_numItems ) {
@@ -259,14 +258,9 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-	movementType = REWARD_MV_BOB;
-	if ( item->giType == IT_REWARD || item->giType == IT_GOAL ) {
-		movementType = cent->currentState.generic1;
-	}
-
 	memset( &ent, 0, sizeof( ent ) );
 
-	if ( movementType == REWARD_MV_BOB ) {
+	if ( item->move_type == MOVE_TYPE_BOB ) {
 		// items bob up and down continuously
 		scale = 0.005 + cent->currentState.number * 0.00001;
 		cent->lerpOrigin[2] += 4 + cos( ( cg.time + 1000 ) *  scale ) * 4;
