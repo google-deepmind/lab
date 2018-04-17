@@ -9,7 +9,7 @@ cc_library(
     srcs = ["egl_util.cc"],
     hdrs = ["egl_util.h"],
     visibility = ["//visibility:public"],
-    deps = ["//third_party/GL:EGL_headers_sys"],
+    deps = ["//third_party/GL:EGL_headers"],
 )
 
 cc_test(
@@ -17,7 +17,7 @@ cc_test(
     srcs = ["egl_util_test.cc"],
     deps = [
         ":egl_util",
-        "//third_party/GL:EGL_headers_sys",
+        "//third_party/GL:EGL_headers",
         "@com_google_googletest//:gtest_main",
     ],
 )

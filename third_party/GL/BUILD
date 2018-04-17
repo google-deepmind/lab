@@ -6,7 +6,7 @@ licenses(["notice"])  # Khronos
 exports_files(["LICENSE"])
 
 cc_library(
-    name = "EGL_headers_sys",
+    name = "EGL_headers",
     srcs = [
         "EGL/egl.h",
         "EGL/eglext.h",
