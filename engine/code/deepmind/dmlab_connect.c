@@ -34,6 +34,7 @@
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "../renderercommon/qgl.h"
+#include "../renderercommon/tr_common.h"
 #include "../sys/sys_local.h"
 
 static const double kPixelsPerFrameToDegreesPerMilliseconds = 0.11 * 60 / 1000;
@@ -1128,6 +1129,7 @@ static void dmlab_destroy_context(void* context) {
   free(gc->image_buffer);
   free(gc);
   DMLabUnloadIOQ3Module();
+  GLimp_Shutdown();
 }
 
 static void call_add_score(int player_id, double score) {

@@ -99,4 +99,5 @@ void GLimp_Shutdown(void) {
   CHECK_EGL_SUCCESS(eglDestroySurface(egl_display, egl_surface));
   CHECK_EGL_SUCCESS(eglDestroyContext(egl_display, egl_context));
   CHECK_EGL_SUCCESS(TerminateInitializedEGLDisplay(egl_display));
+  ShutDownEGLSubsystem();
 }
