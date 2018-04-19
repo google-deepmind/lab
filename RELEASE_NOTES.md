@@ -4,7 +4,8 @@
 
 ### New Features:
 
-1.  Add the ability to spawn pickups dynamically at arbitrary locations.
+1.  Support for level caching for improved performance in the Python module.
+2.  Add the ability to spawn pickups dynamically at arbitrary locations.
 
 ### Bug Fixes:
 

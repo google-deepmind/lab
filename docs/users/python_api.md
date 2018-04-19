@@ -14,7 +14,7 @@ coming out of the environment (e.g. event names or string observations) have to
 be valid UTF-8. The `dmlab_module_test.py` demonstrates how to write code that
 works both in Python 2.7 and Python 3 (using the `six` package).
 
-### class `deepmind_lab.Lab`(*level*, *observations*, *config={}*, *renderer='software'*)
+### class `deepmind_lab.Lab`(*level*, *observations*, *config={}*, *renderer='software'*, *level_cache=None*)
 
 Creates an environment object, loading the game script file *level*. The
 environment's `observations`() method will return the observations specified by
@@ -72,6 +72,53 @@ If no define is set then the build uses this config_setting at the default.
 
 This will render the game to the native window. One of the observation starting
 with 'RGB' must be in the `observations` for the game to render correctly.
+
+#### Level Cache
+
+A level cache can optionally be passed to `Lab(..., level_cache=...)` which
+allows the reuse of levels that have already been seen without recompilation. It
+can significantly improve performance for levels where a new map is generated
+for each episode, such as explore_goal_locations_small.
+
+The level cache object must have have the following two methods:
+
+##### `bool fetch(self, key, pk3_path)`
+
+Must return `True` if `key` was found in the level cache, otherwise `False`.
+If `True`, then the cached level must be copied to `pk3_path`.
+
+##### `write(self, key, pk3_path)`
+
+The level that is to be cached for key `key` is located at `pk3_path`.
+
+Example of a file-based level cache:
+
+```python
+import os.path
+import shutil
+
+class LevelCache(object):
+
+  def __init__(self, cache_dir):
+    self._cache_dir = cache_dir
+
+  def fetch(self, key, pk3_path):
+    path = os.path.join(self._cache_dir, key)
+
+    if os.path.isfile(path):
+      # Copy the cached file to the path expected by DeepMind Lab.
+      shutil.copyfile(path, pk3_path)
+      return True
+
+    return False
+
+  def write(self, key, pk3_path):
+    path = os.path.join(self._cache_dir, key)
+
+    if not os.path.isfile(path):
+      # Copy the cached file DeepMind Lab has written to the cache directory.
+      shutil.copyfile(pk3_path, path)
+```
 
 DeepMind Lab environment objects have the following methods:
 

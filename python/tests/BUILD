@@ -179,3 +179,10 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
 )
+
+py_test(
+    name = "level_cache_test",
+    srcs = ["level_cache_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+)

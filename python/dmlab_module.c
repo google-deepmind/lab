@@ -63,6 +63,7 @@ typedef struct {
   int* observation_indices;
   int observation_count;
   int num_steps;
+  PyObject* level_cache_context;
 } LabObject;
 
 // Helper function to close the environment.
@@ -78,6 +79,7 @@ static int env_close(LabObject* self) {
 static void LabObject_dealloc(PyObject* pself) {
   LabObject* self = (LabObject*)pself;
   env_close(self);
+  Py_XDECREF(self->level_cache_context);
   free(self->env_c_api);
   free(self->observation_indices);
   Py_TYPE(self)->tp_free(pself);
@@ -100,24 +102,59 @@ static PyObject* LabObject_new(PyTypeObject* type, PyObject* args,
   return (PyObject*)self;
 }
 
+static bool fetch_level_from_cache(void* level_cache_context,
+                                   const char* const cache_paths[],
+                                   int num_cache_paths,
+                                   const char* key,
+                                   const char* pk3_path) {
+  // We ignore cache paths. They can be set in level cache Python object.
+  PyObject* output = PyObject_CallMethod(
+      level_cache_context, "fetch", "ss", key, pk3_path);
+
+  bool result = output != NULL && PyObject_IsTrue(output);
+
+  Py_XDECREF(output);
+
+  return result;
+}
+
+static void write_level_to_cache(void* level_cache_context,
+                                 const char* const cache_paths[],
+                                 int num_cache_paths,
+                                 const char* key,
+                                 const char* pk3_path) {
+  // We ignore cache paths. They can be set in level cache Python object.
+  PyObject* output = PyObject_CallMethod(
+      level_cache_context, "write", "ss", key, pk3_path);
+
+  Py_XDECREF(output);
+}
+
 static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
   LabObject* self = (LabObject*)pself;
   char* level;
   char* renderer = NULL;
-  PyObject *observations = NULL, *config = NULL;
+  PyObject *observations = NULL, *config = NULL, *level_cache = NULL;
 
-  static char* kwlist[] = {"level", "observations", "config", "renderer", NULL};
+  static char* kwlist[] = {
+    "level",
+    "observations",
+    "config",
+    "renderer",
+    "level_cache",
+    NULL
+  };
 
   if (self->env_c_api == NULL) {
     PyErr_SetString(PyExc_RuntimeError, "RL API not setup");
     return -1;
   }
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!s", kwlist,
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!sO", kwlist,
                                    &level,
                                    &PyList_Type, &observations,
                                    &PyDict_Type, &config,
-                                   &renderer)) {
+                                   &renderer, &level_cache)) {
     return -1;
   }
 
@@ -141,6 +178,15 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
                      renderer);
         return -1;
       }
+    }
+
+    if (level_cache != NULL) {
+      Py_INCREF(level_cache);
+      params.level_cache_params.context = level_cache;
+      params.level_cache_params.fetch_level_from_cache =
+          &fetch_level_from_cache;
+      params.level_cache_params.write_level_to_cache = &write_level_to_cache;
+      self->level_cache_context = level_cache;
     }
 
     if (dmlab_connect(&params, self->env_c_api, &self->context) != 0) {
@@ -345,6 +391,13 @@ static PyObject* Lab_step(PyObject* pself, PyObject* args, PyObject* kwds) {
                  self->env_c_api->error_message(self->context));
     return NULL;
   }
+
+  // Check if any other Python exception has been thrown, e.g. in the level
+  // cache.
+  if (PyErr_Occurred() != NULL) {
+    return NULL;
+  }
+
   return PyFloat_FromDouble(reward);
 }
 
