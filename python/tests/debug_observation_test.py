@@ -23,7 +23,7 @@ import numpy as np
 
 import deepmind_lab
 
-ALL_DEBUG_OBSERVATIONS = [
+PLAYER_DEBUG_OBSERVATIONS = [
     'DEBUG.PLAYER_ID',
     'DEBUG.PLAYERS.ARMOR',
     'DEBUG.PLAYERS.GADGET',
@@ -37,6 +37,19 @@ ALL_DEBUG_OBSERVATIONS = [
     'DEBUG.PLAYERS.TEAM',
 ]
 
+DEBUG_CAMERA_OBSERVATION = 'DEBUG.CAMERA.TOP_DOWN'
+MAZE_LAYOUT_OBSERVATION = 'DEBUG.MAZE.LAYOUT'
+TEST_MAP = """
+********
+*  *P  *
+*P     *
+********
+""".lstrip('\n')
+
+RANDOM_DEBUG_CAMERA_PIXEL_POS = [[160, 179], [210, 150], [250, 125]]
+RANDOM_DEBUG_CAMERA_PIXEL_VALUES = [[77, 108, 69], [194, 150, 53],
+                                    [206, 161, 60]]
+
 
 class DebugObservationTest(unittest.TestCase):
 
@@ -44,7 +57,8 @@ class DebugObservationTest(unittest.TestCase):
     fps = 60
     player_name = 'PlayerInfoTest'
     env = deepmind_lab.Lab(
-        'tests/debug_observation_test', ALL_DEBUG_OBSERVATIONS,
+        'tests/debug_observation_test',
+        PLAYER_DEBUG_OBSERVATIONS,
         config={
             'fps': str(fps),
             'width': '80',
@@ -91,6 +105,27 @@ class DebugObservationTest(unittest.TestCase):
                 str(obs['DEBUG.PLAYERS.HEALTH'][0]))
 
     self.assertGreater(100, obs['DEBUG.PLAYERS.GADGET_AMOUNT'][1])
+
+  def test_maze_layout(self):
+    env = deepmind_lab.Lab(
+        'tests/debug_observation_test', [MAZE_LAYOUT_OBSERVATION], config={})
+
+    env.reset()
+    self.assertEqual(env.observations()[MAZE_LAYOUT_OBSERVATION], TEST_MAP)
+
+  def test_debug_camera(self):
+    env = deepmind_lab.Lab(
+        'tests/debug_observation_test',
+        [DEBUG_CAMERA_OBSERVATION, 'RGB_INTERLACED'],
+        config={'width': '320', 'height': '180'})
+
+    env.reset()
+
+    camera_image = env.observations()[DEBUG_CAMERA_OBSERVATION]
+    for (x, y), rgb in zip(RANDOM_DEBUG_CAMERA_PIXEL_POS,
+                           RANDOM_DEBUG_CAMERA_PIXEL_VALUES):
+      self.assertTrue(np.allclose(camera_image[:, y, x], rgb, atol=6))
+
 
 if __name__ == '__main__':
   if 'TEST_SRCDIR' in os.environ:

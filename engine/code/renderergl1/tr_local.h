@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -381,6 +381,8 @@ typedef struct {
 
 	stereoFrame_t	stereoFrame;
 
+	qboolean	vertFlipBuffer;
+
 	int			time;				// time in milliseconds for shader effects and other time dependent rendering issues
 	int			rdflags;			// RDF_NOWORLDMODEL, etc
 
@@ -459,6 +461,7 @@ typedef struct {
 	vec3_t		visBounds[2];
 	float		zFar;
 	stereoFrame_t	stereoFrame;
+	qboolean	vertFlipBuffer;
 } viewParms_t;
 
 
@@ -823,6 +826,7 @@ typedef struct {
 	qboolean	finishCalled;
 	int			texEnv[2];
 	int			faceCulling;
+	int			faceCullFront;
 	unsigned long	glStateBits;
 } glstate_t;
 
@@ -1143,7 +1147,7 @@ void	GL_Cull( int cullType );
 void	RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
 void	RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
 
-void		RE_BeginFrame( stereoFrame_t stereoFrame );
+void		RE_BeginFrame( stereoFrame_t stereoFrame, renderOrigin_t renderOrigin );
 void		RE_BeginRegistration( glconfig_t *glconfig );
 void		RE_LoadWorldMap( const char *mapname );
 void		RE_SetWorldVisData( const byte *vis );
@@ -1586,7 +1590,7 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs );
 void RE_SetColor( const float *rgba );
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader );
-void RE_BeginFrame( stereoFrame_t stereoFrame );
+void RE_BeginFrame( stereoFrame_t stereoFrame, renderOrigin_t renderOrigin );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_BeginFrameCustomView( void );
 void RE_EndFrameCustomView( void );

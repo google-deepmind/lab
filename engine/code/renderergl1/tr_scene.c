@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -381,8 +381,14 @@ void RE_RenderScene( const refdef_t *fd ) {
 	// convert to GL's 0-at-the-bottom space
 	//
 	Com_Memset( &parms, 0, sizeof( parms ) );
+	parms.vertFlipBuffer = tr.refdef.vertFlipBuffer;
+
 	parms.viewportX = tr.refdef.x;
-	parms.viewportY = glConfig.vidHeight - ( tr.refdef.y + tr.refdef.height );
+	if ( parms.vertFlipBuffer ) {
+		parms.viewportY = tr.refdef.y;
+	} else {
+		parms.viewportY = glConfig.vidHeight - ( tr.refdef.y + tr.refdef.height );
+	}
 	parms.viewportWidth = tr.refdef.width;
 	parms.viewportHeight = tr.refdef.height;
 	parms.isPortal = qfalse;

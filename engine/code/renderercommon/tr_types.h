@@ -148,6 +148,10 @@ typedef enum {
 	STEREO_RIGHT
 } stereoFrame_t;
 
+typedef enum {
+	RO_BOTTOM_LEFT,
+	RO_TOP_LEFT,
+} renderOrigin_t;
 
 /*
 ** glconfig_t

@@ -537,8 +537,8 @@ void R_SetupProjection(viewParms_t *dest, float zProj, qboolean computeFrustum)
 	xmin = -xmax;
 
 	width = xmax - xmin;
-	height = ymax - ymin;
-	
+	height = tr.refdef.vertFlipBuffer ? ymin - ymax : ymax - ymin;
+
 	dest->projectionMatrix[0] = 2 * zProj / width;
 	dest->projectionMatrix[4] = 0;
 	dest->projectionMatrix[8] = (xmax + xmin + 2 * stereoSep) / width;
@@ -553,7 +553,9 @@ void R_SetupProjection(viewParms_t *dest, float zProj, qboolean computeFrustum)
 	dest->projectionMatrix[7] = 0;
 	dest->projectionMatrix[11] = -1;
 	dest->projectionMatrix[15] = 0;
-	
+
+	dest->vertFlipBuffer = tr.refdef.vertFlipBuffer;
+
 	// Now that we have all the data for the projection matrix we can also setup the view frustum.
 	if(computeFrustum)
 		R_SetupFrustum(dest, xmin, xmax, ymax, zProj, stereoSep);

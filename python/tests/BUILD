@@ -132,3 +132,11 @@ py_test(
     imports = ["python"],
     deps = ["//python/tests/utils:math_utils"],
 )
+
+py_test(
+    name = "render_test",
+    srcs = ["render_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    tags = ["manual"],
+)

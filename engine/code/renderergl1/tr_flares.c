@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -520,9 +520,17 @@ void RB_RenderFlares (void) {
 	qglMatrixMode( GL_PROJECTION );
 	qglPushMatrix();
     qglLoadIdentity();
-	qglOrtho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
-			  backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
-			  -99999, 99999 );
+	if ( backEnd.viewParms.vertFlipBuffer ) {
+		qglOrtho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+				  backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight, backEnd.viewParms.viewportY,
+				  -99999, 99999 );
+	}
+	else
+	{
+		qglOrtho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+				  backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
+				  -99999, 99999 );
+	}
 
 	for ( f = r_activeFlares ; f ; f = f->next ) {
 		if ( f->frameSceneNum == backEnd.viewParms.frameSceneNum

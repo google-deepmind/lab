@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -66,25 +66,27 @@ void GL_BindToTMU( image_t *image, int tmu )
 ** GL_Cull
 */
 void GL_Cull( int cullType ) {
-	if ( glState.faceCulling == cullType ) {
-		return;
+	if ( cullType == CT_TWO_SIDED )
+	{
+		if ( glState.faceCulling != CT_TWO_SIDED )
+			qglDisable( GL_CULL_FACE );
 	}
-
-	if ( cullType == CT_TWO_SIDED ) 
+	else
 	{
-		qglDisable( GL_CULL_FACE );
-	} 
-	else 
-	{
-		qboolean cullFront = (cullType == CT_FRONT_SIDED);
+		GLenum faceCullFront;
+		if ( backEnd.viewParms.vertFlipBuffer )
+			faceCullFront = (cullType == CT_FRONT_SIDED) ? GL_BACK : GL_FRONT;
+		else
+			faceCullFront = (cullType == CT_FRONT_SIDED) ? GL_FRONT : GL_BACK;
 
-		if ( glState.faceCulling == CT_TWO_SIDED )
+		if ( glState.faceCulling != cullType )
 			qglEnable( GL_CULL_FACE );
 
-		if ( glState.faceCullFront != cullFront )
-			qglCullFace( cullFront ? GL_FRONT : GL_BACK );
-
-		glState.faceCullFront = cullFront;
+		if ( glState.faceCullFront != faceCullFront )
+		{
+			qglCullFace( faceCullFront );
+			glState.faceCullFront = faceCullFront;
+		}
 	}
 
 	glState.faceCulling = cullType;
@@ -270,7 +272,13 @@ void GL_State( unsigned long stateBits )
 void GL_SetProjectionMatrix(mat4_t matrix)
 {
 	Mat4Copy(matrix, glState.projection);
-	Mat4Multiply(glState.projection, glState.modelview, glState.modelviewProjection);	
+	if ( backEnd.viewParms.vertFlipBuffer ) {
+		glState.projection[ 1] = -glState.projection[ 1];
+		glState.projection[ 5] = -glState.projection[ 5];
+		glState.projection[ 9] = -glState.projection[ 9];
+		glState.projection[13] = -glState.projection[13];
+	}
+	Mat4Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
 }
 
 
@@ -308,9 +316,9 @@ static void SetViewportAndScissor( void ) {
 	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 
 	// set the window clipping
-	qglViewport( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY, 
+	qglViewport( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY,
 		backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight );
-	qglScissor( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY, 
+	qglScissor( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY,
 		backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight );
 }
 
@@ -628,6 +636,7 @@ void	RB_SetGL2D (void) {
 
 	if (backEnd.projection2D && backEnd.last2DFBO == glState.currentFBO)
 		return;
+	backEnd.viewParms.vertFlipBuffer = backEnd.refdef.vertFlipBuffer;
 
 	backEnd.projection2D = qtrue;
 	backEnd.last2DFBO = glState.currentFBO;

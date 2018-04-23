@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -118,6 +118,8 @@ extern cvar_t *r_stereoEnabled;
 extern	cvar_t	*r_saveFontData;
 
 extern cvar_t *r_textureMaxSize;
+
+extern cvar_t *r_vertFlipBuffer;
 
 qboolean	R_GetModeInfo( int *width, int *height, int *buff_width, int *buff_height, float *windowAspect, int mode );
 

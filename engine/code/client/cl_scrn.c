@@ -472,13 +472,13 @@ SCR_DrawScreenField
 This will be called twice if rendering in stereo mode
 ==================
 */
-void SCR_DrawScreenField( stereoFrame_t stereoFrame, qboolean skipRendering ) {
+void SCR_DrawScreenField( stereoFrame_t stereoFrame, renderOrigin_t renderOrigin, qboolean skipRendering ) {
 	qboolean uiFullscreen;
 
 	// Many skip rendering calls below are not needed for performance
 	// but to match any BeginFrame skips
 	if ( !skipRendering ) {
-		re.BeginFrame( stereoFrame );
+		re.BeginFrame( stereoFrame, renderOrigin );
 	}
 
 
@@ -578,6 +578,19 @@ void SCR_SkipRendering( qboolean value ) {
 	skipRendering = value;
 }
 
+static	renderOrigin_t	renderOrigin = RO_BOTTOM_LEFT;
+
+/*
+==================
+SCR_RenderOrigin
+
+Render origin for subsequent calls to SCR_UpdateScreen
+==================
+*/
+void SCR_RenderOrigin( renderOrigin_t value ) {
+	renderOrigin = value;
+}
+
 /*
 ==================
 SCR_UpdateScreen
@@ -606,10 +619,10 @@ void SCR_UpdateScreen( void ) {
 		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
-			SCR_DrawScreenField( STEREO_LEFT, skipRendering );
-			SCR_DrawScreenField( STEREO_RIGHT, skipRendering );
+			SCR_DrawScreenField( STEREO_LEFT, renderOrigin, skipRendering );
+			SCR_DrawScreenField( STEREO_RIGHT, renderOrigin, skipRendering );
 		} else {
-			SCR_DrawScreenField( STEREO_CENTER, skipRendering );
+			SCR_DrawScreenField( STEREO_CENTER, renderOrigin, skipRendering );
 		}
 
 		if ( !skipRendering ) {

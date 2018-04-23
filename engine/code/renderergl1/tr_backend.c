@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2017-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -124,29 +124,39 @@ void GL_BindMultitexture( image_t *image0, GLuint env0, image_t *image1, GLuint 
 ** GL_Cull
 */
 void GL_Cull( int cullType ) {
-	if ( glState.faceCulling == cullType ) {
-		return;
-	}
-
-	glState.faceCulling = cullType;
-
-	if ( cullType == CT_TWO_SIDED ) 
+	if ( cullType == CT_TWO_SIDED )
 	{
-		qglDisable( GL_CULL_FACE );
+		if ( glState.faceCulling != CT_TWO_SIDED )
+		{
+			qglDisable( GL_CULL_FACE );
+		}
 	} 
 	else 
 	{
-		qboolean cullFront;
-		qglEnable( GL_CULL_FACE );
-
-		cullFront = (cullType == CT_FRONT_SIDED);
-		if ( backEnd.viewParms.isMirror )
+		GLenum faceCullFront;
+		if ( backEnd.viewParms.isMirror != backEnd.viewParms.vertFlipBuffer )
 		{
-			cullFront = !cullFront;
+			faceCullFront = (cullType == CT_FRONT_SIDED) ? GL_BACK : GL_FRONT;
+		}
+		else
+		{
+			faceCullFront = (cullType == CT_FRONT_SIDED) ? GL_FRONT : GL_BACK;
 		}
 
-		qglCullFace( cullFront ? GL_FRONT : GL_BACK );
+		if ( glState.faceCulling != cullType )
+		{
+			qglEnable( GL_CULL_FACE );
+		}
+
+		if ( glState.faceCullFront != faceCullFront )
+		{
+			qglCullFace( faceCullFront );
+			glState.faceCullFront = faceCullFront;
+		}
+
 	}
+
+	glState.faceCulling = cullType;
 }
 
 /*
@@ -467,6 +477,7 @@ void RB_BeginDrawingView (void) {
 	}
 
 	glState.faceCulling = -1;		// force face culling to set next time
+	glState.faceCullFront = -1;
 
 	// we will only draw a sun if there was sky rendered in this view
 	backEnd.skyRenderedThisView = qfalse;
@@ -697,13 +708,21 @@ RB_SetGL2D
 */
 void	RB_SetGL2D (void) {
 	backEnd.projection2D = qtrue;
+	backEnd.viewParms.vertFlipBuffer = backEnd.refdef.vertFlipBuffer;
 
 	// set 2D virtual screen size
 	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	qglMatrixMode(GL_PROJECTION);
     qglLoadIdentity ();
-	qglOrtho (0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
+	if(backEnd.viewParms.vertFlipBuffer)
+	{
+		qglOrtho (0, glConfig.vidWidth, 0, glConfig.vidHeight, 0, 1);
+	}
+	else
+	{
+		qglOrtho (0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
+	}
 	qglMatrixMode(GL_MODELVIEW);
     qglLoadIdentity ();
 

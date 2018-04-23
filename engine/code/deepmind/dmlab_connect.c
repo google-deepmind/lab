@@ -646,7 +646,13 @@ static int dmlab_setting(void* context, const char* key, const char* value) {
 static int dmlab_init(void* context) {
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
-  SCR_SkipRendering(!ctx->hooks.get_native_app(ctx->userdata));
+  if (ctx->hooks.get_native_app(ctx->userdata)) {
+    SCR_SkipRendering(false);
+    SCR_RenderOrigin(RO_BOTTOM_LEFT);
+  } else {
+    SCR_SkipRendering(true);
+    SCR_RenderOrigin(RO_TOP_LEFT);
+  }
 
   if (gc->vm_mode != VMI_NATIVE) {
     Q_strcat(gc->command_line, sizeof(gc->command_line),
@@ -879,6 +885,7 @@ static void dmlab_observation(
 
     if (!gc->current_screen_rendered) {
       SCR_SkipRendering(false);
+      SCR_RenderOrigin(RO_TOP_LEFT);
       SCR_UpdateScreen();
       gc->current_screen_rendered = true;
     }
@@ -900,16 +907,7 @@ static void dmlab_observation(
     switch (observation_idx) {
       case kObservations_RgbInterlaced: {
         gc->image_buffer = realloc_or_die(gc->image_buffer, window_size * 3);
-        unsigned char* const image_buffer = gc->image_buffer;
-        for (int i = 0; i < height; ++i) {
-          for (int j = 0; j < width; ++j) {
-            int loc = (i * width + j) * 3;
-            int invy = (height - i - 1) * width + j;
-            image_buffer[invy * 3 + 0] = temp_buffer[loc + 0];
-            image_buffer[invy * 3 + 1] = temp_buffer[loc + 1];
-            image_buffer[invy * 3 + 2] = temp_buffer[loc + 2];
-          }
-        }
+        memcpy(gc->image_buffer, temp_buffer, window_size * 3);
         break;
       }
       case kObservations_RgbdInterlaced: {
@@ -918,10 +916,10 @@ static void dmlab_observation(
         for (int i = 0; i < height; ++i) {
           for (int j = 0; j < width; ++j) {
             int loc = (i * width + j) * 3;
-            int invy = (height - i - 1) * width + j;
-            image_buffer[invy * 4 + 0] = temp_buffer[loc + 0];
-            image_buffer[invy * 4 + 1] = temp_buffer[loc + 1];
-            image_buffer[invy * 4 + 2] = temp_buffer[loc + 2];
+            int y = i * width + j;
+            image_buffer[y * 4 + 0] = temp_buffer[loc + 0];
+            image_buffer[y * 4 + 1] = temp_buffer[loc + 1];
+            image_buffer[y * 4 + 2] = temp_buffer[loc + 2];
           }
         }
         break;
@@ -932,10 +930,10 @@ static void dmlab_observation(
         for (int i = 0; i < height; ++i) {
           for (int j = 0; j < width; ++j) {
             int loc = (i * width + j) * 3;
-            int invy = (height - i - 1) * width + j;
-            image_buffer[invy + window_size * 0] = temp_buffer[loc + 0];
-            image_buffer[invy + window_size * 1] = temp_buffer[loc + 1];
-            image_buffer[invy + window_size * 2] = temp_buffer[loc + 2];
+            int y = i * width + j;
+            image_buffer[y + window_size * 0] = temp_buffer[loc + 0];
+            image_buffer[y + window_size * 1] = temp_buffer[loc + 1];
+            image_buffer[y + window_size * 2] = temp_buffer[loc + 2];
           }
         }
         break;
@@ -946,10 +944,10 @@ static void dmlab_observation(
         for (int i = 0; i < height; ++i) {
           for (int j = 0; j < width; ++j) {
             int loc = (i * width + j) * 3;
-            int invy = (height - i - 1) * width + j;
-            image_buffer[invy + window_size * 0] = temp_buffer[loc + 0];
-            image_buffer[invy + window_size * 1] = temp_buffer[loc + 1];
-            image_buffer[invy + window_size * 2] = temp_buffer[loc + 2];
+            int y = i * width + j;
+            image_buffer[y + window_size * 0] = temp_buffer[loc + 0];
+            image_buffer[y + window_size * 1] = temp_buffer[loc + 1];
+            image_buffer[y + window_size * 2] = temp_buffer[loc + 2];
           }
         }
         break;
@@ -960,16 +958,16 @@ static void dmlab_observation(
     if (render_depth) {
       unsigned char* const image_buffer = gc->image_buffer;
       temp_buffer = bind_pixel_observation(gc, kPixelBufferTypeEnum_Depth);
-      for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-          int loc = i * width + j;
-          int invy = (height - i - 1) * width + j;
-          if (observation_idx == kObservations_RgbdInterlaced) {
-            image_buffer[invy * 4 + 3] = temp_buffer[loc];
-          } else {
-            image_buffer[invy + window_size * 3] = temp_buffer[loc];
+      if (observation_idx == kObservations_RgbdInterlaced) {
+        for (int i = 0; i < height; ++i) {
+          for (int j = 0; j < width; ++j) {
+            int loc = i * width + j;
+            int y = i * width + j;
+            image_buffer[y * 4 + 3] = temp_buffer[loc];
           }
         }
+      } else {
+        memcpy(image_buffer + window_size * 3, temp_buffer, window_size);
       }
       unbind_pixel_observation(gc);
     }
@@ -1037,7 +1035,13 @@ static EnvCApi_EnvironmentStatus dmlab_advance(
   re.MakeCurrent();
   GameContext* gc = context;
   DeepmindContext* ctx = gc->dm_ctx;
-  SCR_SkipRendering(!ctx->hooks.get_native_app(ctx->userdata));
+  if (ctx->hooks.get_native_app(ctx->userdata)) {
+    SCR_SkipRendering(false);
+    SCR_RenderOrigin(RO_BOTTOM_LEFT);
+  } else {
+    SCR_SkipRendering(true);
+    SCR_RenderOrigin(RO_TOP_LEFT);
+  }
   gc->current_screen_rendered = false;
   ctx->hooks.events.clear(ctx->userdata);
   *reward = 0;

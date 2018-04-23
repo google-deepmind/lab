@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -337,6 +337,8 @@ void RE_BeginFrameCustomView( void ) {
 	}
 
 	tr.refdef.stereoFrame = STEREO_CENTER;
+
+	tr.refdef.vertFlipBuffer = qfalse;
 }
 
 void RE_EndFrameCustomView( void ) {
@@ -359,7 +361,7 @@ If running in stereo, RE_BeginFrame will be called twice
 for each RE_EndFrame
 ====================
 */
-void RE_BeginFrame( stereoFrame_t stereoFrame ) {
+void RE_BeginFrame( stereoFrame_t stereoFrame, renderOrigin_t renderOrigin ) {
 	drawBufferCommand_t	*cmd = NULL;
 	colorMaskCommand_t *colcmd = NULL;
 
@@ -523,6 +525,10 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 	
 	tr.refdef.stereoFrame = stereoFrame;
+
+	tr.refdef.vertFlipBuffer = r_vertFlipBuffer->integer >= 0 ?
+		r_vertFlipBuffer->integer != 0 :
+		renderOrigin == RO_TOP_LEFT;
 }
 
 

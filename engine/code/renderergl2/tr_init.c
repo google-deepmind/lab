@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -236,6 +236,8 @@ cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
 cvar_t	*r_textureMaxSize;
+
+cvar_t	*r_vertFlipBuffer;
 
 /*
 ** InitOpenGL
@@ -968,7 +970,7 @@ void GL_SetDefaultState( void )
 	glState.glStateBits = GLS_DEPTHTEST_DISABLE | GLS_DEPTHMASK_TRUE;
 	glState.storedGlState = 0;
 	glState.faceCulling = CT_TWO_SIDED;
-	glState.faceCullFront = qtrue;
+	glState.faceCullFront = GL_FRONT;
 
 	GL_BindNullProgram();
 
@@ -1368,6 +1370,8 @@ void R_Register( void )
 	r_monolightmaps = ri.Cvar_Get("r_monolightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	r_textureMaxSize = ri.Cvar_Get( "r_textureMaxSize", "0", CVAR_ARCHIVE | CVAR_LATCH );
+
+	r_vertFlipBuffer = ri.Cvar_Get( "r_vertFlipBuffer", "-1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

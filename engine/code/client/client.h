@@ -565,6 +565,7 @@ void CL_SaveConsoleHistory( void );
 //
 void	SCR_Init (void);
 void	SCR_SkipRendering (qboolean value);
+void	SCR_RenderOrigin (renderOrigin_t value);
 void	SCR_UpdateScreen (void);
 
 void	SCR_RenderCustomView (void);

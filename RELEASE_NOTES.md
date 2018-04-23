@@ -11,6 +11,7 @@
 1.  Moved .map files into assets/maps/src and .bsp files into assets/maps/built.
     Added further pre-built maps, which removes the need for the expensive
     :map_assets build step.
+2.  Allow game to be renderered with top-left as origin instead of bottom-left.
 
 ## release-2018-02-07 February 2018 release
 

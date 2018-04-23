@@ -80,7 +80,7 @@ class RecordingTest : public ::testing::Test {
   SettingsMap DefaultSettings() {
     return {
       {"width", "64"},
-      {"height", "48"},
+      {"height", "64"},
       {"demofiles", demo_path},
       {"logToStdErr", "true"},
       {"fps", std::to_string(kFramesPerSecond)},
