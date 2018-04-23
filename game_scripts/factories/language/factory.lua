@@ -411,6 +411,9 @@ function factory.createLevelApi(kwargs)
   function api:hasEpisodeFinished(timeSeconds)
     self._timers:update(timeSeconds)
     self._positionTriggers:update(game:playerInfo().pos)
+    if kwargs.hasEpisodeFinished then
+      return kwargs.hasEpisodeFinished(timeSeconds)
+    end
   end
 
   custom_floors.decorate(api)
