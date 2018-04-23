@@ -199,6 +199,7 @@ cc_test(
     name = "lua_maze_generation_test",
     size = "small",
     srcs = ["lua_maze_generation_test.cc"],
+    tags = ["manual"],  # Platform specific tests.
     deps = [
         ":lua_maze_generation",
         ":lua_random",

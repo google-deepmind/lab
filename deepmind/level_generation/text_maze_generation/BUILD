@@ -36,6 +36,7 @@ cc_test(
     name = "algorithm_test",
     size = "small",
     srcs = ["algorithm_test.cc"],
+    tags = ["manual"],  # Platform specific tests.
     deps = [
         ":algorithm",
         ":text_maze",

@@ -2,7 +2,11 @@
 
 ## Current Release
 
-(Nothing yet.)
+### Minor Improvements:
+
+1.  Moved .map files into assets/maps/src and .bsp files into assets/maps/built.
+    Added further pre-built maps, which removes the need for the expensive
+    :map_assets build step.
 
 ## release-2018-02-07 February 2018 release
 

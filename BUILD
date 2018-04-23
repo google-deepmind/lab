@@ -637,8 +637,12 @@ IOQ3_COMMON_DEFINES = [
     "_GNU_SOURCE",
 ]
 
-MAPS = glob(["assets/maps/*.map"])
+MAPS = glob(["assets/maps/src/*.map"])
 
+# Pre-built maps are now committed to source control.
+#
+# Building this target :map_assets will generate PK3 files that can be unzipped
+# into the# maps/built folder for adding to, or updating, the pre-built maps.
 genrule(
     name = "map_assets",
     srcs = MAPS,
@@ -653,6 +657,7 @@ genrule(
           "    echo -e \"Error building map $${M}:\n$$(<$(@D)/out.tmp)\n$$(<$(@D)/err.tmp)\"; " +
           "  fi; " +
           "done",
+    tags = ["manual"],
     tools = [
         "//:bspc",
         "//deepmind/level_generation:compile_map_sh",
@@ -696,15 +701,15 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
-RAW_BSP_ASSETS = glob([
-    "assets/bsps/*.aas",
-    "assets/bsps/*.bsp",
+BUILT_MAPS = glob([
+    "assets/maps/built/*.aas",
+    "assets/maps/built/*.bsp",
 ])
 
 genrule(
-    name = "raw_bsp_assets",
-    srcs = RAW_BSP_ASSETS,
-    outs = ["baselab/maps" + f[len("assets/bsps"):] for f in RAW_BSP_ASSETS],
+    name = "built_maps",
+    srcs = BUILT_MAPS,
+    outs = ["baselab/maps" + f[len("assets/maps/built"):] for f in BUILT_MAPS],
     cmd = "for s in $(SRCS); do " +
           "  mkdir -p $(@D)/baselab/maps; " +
           "  ln -s -L -t $(@D)/baselab/maps $$(realpath $${s}); " +
@@ -766,9 +771,8 @@ GAME_ASSETS = [
     ":assets_oa_pk3",
     ":assets_pk3",
     ":game_script_assets",
-    ":map_assets",
     ":non_pk3_assets",
-    ":raw_bsp_assets",
+    ":built_maps",
     ":vm_pk3",
     "//deepmind/level_generation:compile_map_sh",
 ]
