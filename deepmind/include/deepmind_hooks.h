@@ -38,6 +38,8 @@ typedef struct DeepmindEventsHooks_s DeepmindEventsHooks;
 
 typedef struct DeepmindEntitiesHooks_s DeepmindEntitiesHooks;
 
+typedef struct DeepmindPickupHooks_s DeepmindPickupHooks;
+
 struct DeepmindEventsHooks_s {
   // Returns number of event types.
   int (*type_count)(void* userdata);
@@ -63,6 +65,66 @@ struct DeepmindEntitiesHooks_s {
   // Called with each active entity during entity update.
   void (*add)(void* userdata, int entity_id, int user_id, int type, int flags,
               float position[3], const char* classname);
+};
+
+struct DeepmindPickupHooks_s {
+  // This is a C-style dictionary of settings; the memory is pointed to by
+  // spawn_var_chars.
+  int (*update_spawn_vars)(void* userdata,               //
+                           char* spawn_var_chars,        //
+                           int* num_spawn_var_chars,     //
+                           int spawn_vars_offsets[][2],  //
+                           int* num_spawn_vars);
+
+  // Hook to create a number of entities externally. Returns the number of
+  // entities created.
+  int (*make_extra_entities)(void* userdata);
+
+  // Hook to read an entity at a particular 'entity_id'. 'entity_id' shall be in
+  // the range [0, dmlab_make_extra_entities()) and the remaining arguments
+  // match 'dmlab_update_spawn_vars'.
+  void (*read_extra_entity)(void* userdata,              //
+                            int entity_id,               //
+                            char* spawn_var_chars,       //
+                            int* num_spawn_var_chars,    //
+                            int spawn_var_offsets[][2],  //
+                            int* num_spawn_vars);        //
+
+  // Finds item with the given class_name.
+  // Returns whether the item was found, and if so, writes the index of the
+  // found item to *index.
+  bool (*find_item)(void* userdata, const char* class_name, int* index);
+
+  // Gets the current number of registered items.
+  int (*item_count)(void* userdata);
+
+  // Gets an item at a particular index, and fills in the various buffers.
+  // Returns whether the operation succeeded.
+  bool (*item)(void* userdata, int index, char* item_name, int max_item_name,
+               char* class_name, int max_class_name, char* model_name,
+               int max_model_name, int* quantity, int* type, int* tag);
+
+  // Clears the current list of custom items. This is called on each
+  // initialization.
+  void (*clear_items)(void* userdata);
+
+  // Return how many items to spawn this frame.
+  int (*dynamic_spawn_entity_count)(void* userdata);
+
+  // Read specific spawn var from extra_spawn_vars_. Shall be called after
+  // with entity_index in range [0, dynamic_spawn_entity_count()).
+  void (*read_dynamic_spawn_entity)(void* userdata, int entity_index,
+                                    char* spawn_var_chars,
+                                    int* num_spawn_var_chars,
+                                    int spawn_var_offsets[][2],
+                                    int* num_spawn_vars);
+
+  // Clear spawn entities to use next frame.
+  void (*clear_dynamic_spawn_entities)(void* userdata);
+
+  int (*register_dynamic_items)(void* userdata);
+  void (*read_dynamic_item_name)(void* userdata, int item_index,
+                                 char* item_name);
 };
 
 struct DeepmindHooks_s {
@@ -143,47 +205,6 @@ struct DeepmindHooks_s {
                       signed char* strafe_left_right,  //
                       signed char* crouch_jump,        //
                       int* buttons_down);
-
-  // This is a C-style dictionary of settings the memory is pointed to by
-  // spawn_var_chars.
-  int (*update_spawn_vars)(void* userdata,               //
-                           char* spawn_var_chars,        //
-                           int* num_spawn_var_chars,     //
-                           int spawn_vars_offsets[][2],  //
-                           int* num_spawn_vars);
-
-  // Hook to create a number of entities externally. Returns the number of
-  // entities created.
-  int (*make_extra_entities)(void* userdata);
-
-  // Hook to read an entity at a particular 'entity_id'. 'entity_id' shall be in
-  // the range [0, dmlab_make_extra_entities()) and the remaining arguments
-  // match 'dmlab_update_spawn_vars'.
-  void (*read_extra_entity)(void* userdata,              //
-                            int entity_id,               //
-                            char* spawn_var_chars,       //
-                            int* num_spawn_var_chars,    //
-                            int spawn_var_offsets[][2],  //
-                            int* num_spawn_vars);        //
-
-  // Finds item with the given class_name.
-  // Returns whether the item was found, and if so, writes the index of the
-  // found item to *index.
-  bool (*find_item)(void* userdata, const char* class_name, int* index);
-
-  // Gets the current number of registered items.
-  int (*item_count)(void* userdata);
-
-  // Gets an item at a particular index, and fills in the various buffers.
-  // Returns whether the operation succeeded.
-  bool (*item)(void* userdata, int index, char* item_name, int max_item_name,
-               char* class_name, int max_class_name,
-               char* model_name, int max_model_name,
-               int* quantity, int* type, int* tag);
-
-  // Clears the current list of custom items. This is called on each
-  // initialization.
-  void (*clear_items)(void* userdata);
 
   // Retrieves model with the given model_name.
   // Returns whether the model was found and loads it within the context.
@@ -354,8 +375,8 @@ struct DeepmindHooks_s {
   const char* (*error_message)(void* userdata);
 
   DeepmindEventsHooks events;
-
   DeepmindEntitiesHooks entities;
+  DeepmindPickupHooks pickups;
 };
 
 #ifdef __cplusplus

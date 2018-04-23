@@ -23,6 +23,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "deepmind/include/deepmind_calls.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/table_ref.h"
 
 namespace deepmind {
@@ -36,6 +38,10 @@ class ContextPickups {
   void SetScriptTableRef(lua::TableRef script_table_ref) {
     script_table_ref_ = std::move(script_table_ref);
   }
+
+  // Returns an entity module. A pointer to ContextPickups must exist in the up
+  // value. [0, 1, e]
+  static lua::NResultsOr Module(lua_State* L);
 
   // Allows Lua to replace contents of this c-style dictionary.
   // 'spawn_var_chars' is pointing at the memory holding the strings.
@@ -109,6 +115,30 @@ class ContextPickups {
   // otherwise calls the default pickup behaviour based on the item type.
   bool OverridePickup(int entity_id, int* respawn);
 
+  // Adds spawn_entity to list of entities to be spawned next frame.
+  void SpawnDynamicEntity(EntityInstance spawn_entity);
+
+  // The number of dynamic entities to spawn during next game update.
+  int DynamicSpawnEntityCount() const { return dynamic_spawn_entities_.size(); }
+
+  // Return a set of spawn vars describing an entity to be dynamically spawned;
+  // entity_index must be in the range [0, DynamicSpawnEntityCount()).
+  void ReadDynamicSpawnEntity(int entity_index, char* spawn_var_chars,
+                              int* num_spawn_var_chars,
+                              int spawn_var_offsets[][2],
+                              int* num_spawn_vars) const;
+
+  // Clear list of entities to be spawned next frame.
+  void ClearDynamicSpawnEntities() { dynamic_spawn_entities_.clear(); }
+
+  // Reads from Lua a list of classnames which must be dynamically loadable;
+  // returns the number of classnames read.
+  int RegisterDynamicItems();
+
+  // Fetches one dynamically loadable classname; item_index must be in the range
+  // [0, RegisterDynamicItems()).
+  void ReadDynamicItemName(int item_index, char* item_name) const;
+
  private:
   // Parameters for a custom pickup item.
   struct PickupItem {
@@ -130,6 +160,12 @@ class ContextPickups {
 
   // Array of extra spawn vars for this level.
   std::vector<EntityInstance> extra_entities_;
+
+  // Array of dynamically spawned entities_
+  std::vector<EntityInstance> dynamic_spawn_entities_;
+
+  // Array of classnames of items that may be dynamically spawned.
+  std::vector<std::string> dynamic_items_;
 };
 
 }  // namespace lab

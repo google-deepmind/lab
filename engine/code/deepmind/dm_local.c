@@ -19,6 +19,39 @@
 #include "dm_local.h"
 #include "dm_public.h"
 
+int dmlab_dynamic_spawn_entity_count(void) {
+  return trap_DeepmindCallback(DEEPMIND_DYNAMIC_SPAWN_ENTITY_COUNT, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void dmlab_read_dynamic_spawn_entity(int entity_index, char* spawn_var_chars,
+                                     int* num_spawn_var_chars,
+                                     int spawn_var_offsets[][2],
+                                     int* num_spawn_vars) {
+  trap_DeepmindCallback(DEEPMIND_READ_DYNAMIC_SPAWN_ENTITY,  //
+                        (intptr_t)entity_index,
+                        (intptr_t)spawn_var_chars,      //
+                        (intptr_t)num_spawn_var_chars,  //
+                        (intptr_t)spawn_var_offsets,    //
+                        (intptr_t)num_spawn_vars, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void dmlab_clear_dynamic_spawn_entities(void) {
+  trap_DeepmindCallback(DEEPMIND_CLEAR_DYNAMIC_SPAWN_ENTITIES, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0);
+}
+
+int dmlab_register_dynamic_items(void) {
+  return trap_DeepmindCallback(DEEPMIND_REGISTER_DYNAMIC_ITEMS, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0);
+}
+void dmlab_read_dynamic_item_name(int item_index, char* item_name) {
+  trap_DeepmindCallback(DEEPMIND_READ_DYNAMIC_ITEM_NAME,  //
+                        (intptr_t)item_index,
+                        (intptr_t)item_name,  //
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
 int dmlab_update_spawn_vars(char* spawn_var_chars,
                             int* num_spawn_var_chars,
                             int spawn_var_offsets[][2],
@@ -194,7 +227,7 @@ char dmlab_select_team(int player_id, const char* player_name) {
                                      0, 0, 0);
 }
 
-void dmlab_entities_clear() {
+void dmlab_entities_clear(void) {
   trap_DeepmindCallback(DEEPMIND_ENTITIES_CLEAR, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0);
 }

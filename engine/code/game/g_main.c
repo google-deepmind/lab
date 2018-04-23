@@ -490,6 +490,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
 
+	// dyamic items must be registered.
+	G_RegisterDynamicPickups();
+
 	// general initialization
 	G_FindTeams();
 
@@ -1781,7 +1784,7 @@ void G_RunFrame( int levelTime ) {
 	if ( level.restarted ) {
 		return;
 	}
-
+	G_SpawnDynamicPickups();
 	level.framenum++;
 	level.previousTime = level.time;
 	level.time = levelTime;

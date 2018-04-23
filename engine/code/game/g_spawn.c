@@ -398,7 +398,7 @@ Spawn an entity and fill in all of the level fields from
 level.spawnVars[], then call the class specific spawn function
 ===================
 */
-void G_SpawnGEntityFromSpawnVars( void ) {
+gentity_t* G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
 	char		*s, *value, *gametypeName;
@@ -417,7 +417,7 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		if ( i ) {
 			ADJUST_AREAPORTAL();
 			G_FreeEntity( ent );
-			return;
+			return NULL;
 		}
 	}
 	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
@@ -426,14 +426,14 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		if ( i ) {
 			ADJUST_AREAPORTAL();
 			G_FreeEntity( ent );
-			return;
+			return NULL;
 		}
 	} else {
 		G_SpawnInt( "notfree", "0", &i );
 		if ( i ) {
 			ADJUST_AREAPORTAL();
 			G_FreeEntity( ent );
-			return;
+			return NULL;
 		}
 	}
 
@@ -442,14 +442,14 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	if ( i ) {
 		ADJUST_AREAPORTAL();
 		G_FreeEntity( ent );
-		return;
+		return NULL;
 	}
 #else
 	G_SpawnInt( "notq3a", "0", &i );
 	if ( i ) {
 		ADJUST_AREAPORTAL();
 		G_FreeEntity( ent );
-		return;
+		return NULL;
 	}
 #endif
 
@@ -461,7 +461,7 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 			if( !s ) {
 				ADJUST_AREAPORTAL();
 				G_FreeEntity( ent );
-				return;
+				return NULL;
 			}
 		}
 	}
@@ -473,7 +473,9 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	// if we didn't get a classname, don't bother spawning anything
 	if ( !G_CallSpawn( ent ) ) {
 		G_FreeEntity( ent );
+		return NULL;
 	}
+	return ent;
 }
 
 
@@ -614,6 +616,50 @@ void SP_worldspawn( void ) {
 		G_LogPrintf( "Warmup:\n" );
 	}
 
+}
+
+void G_RegisterDynamicPickups( void ) {
+	char classname[256];
+	int i, item_count = dmlab_register_dynamic_items();
+	for (i = 0; i < item_count; ++i) {
+		dmlab_read_dynamic_item_name( i, classname );
+		RegisterItem( BG_FindItemByClassName( classname ) );
+	}
+}
+
+void G_SpawnDynamicPickups( void ) {
+	gentity_t* ent;
+	int i, ent_id, entity_count;
+	int spawnVarsOffset[MAX_SPAWN_VARS][2];	// key / value pairs offsets
+	entity_count = dmlab_dynamic_spawn_entity_count();
+	if (entity_count == 0) {
+		return;
+	}
+
+	level.spawning = qtrue;
+	level.numSpawnVars = 0;
+
+	for (ent_id = 0; ent_id < entity_count; ++ent_id) {
+		level.numSpawnVars = 0;
+		level.numSpawnVarChars = 0;
+
+		dmlab_read_dynamic_spawn_entity(
+				ent_id,
+				level.spawnVarChars,
+				&level.numSpawnVarChars,
+				spawnVarsOffset,
+				&level.numSpawnVars);
+
+		// Convert from offsets.
+		for (i = 0; i < level.numSpawnVars; ++i) {
+			level.spawnVars[i][0] = level.spawnVarChars + spawnVarsOffset[i][0];
+			level.spawnVars[i][1] = level.spawnVarChars + spawnVarsOffset[i][1];
+		}
+		ent = G_SpawnGEntityFromSpawnVars();
+		if (ent) ent->flags |= FL_DROPPED_ITEM;
+	}
+	dmlab_clear_dynamic_spawn_entities();
+	level.spawning = qfalse;
 }
 
 

@@ -445,6 +445,12 @@ controller. The script has an opportunity to modify the actions and return it to
 override the actions to be applied. If nothing is returned, the method makes no
 effect.
 
+### `registerDynamicItems`() -> table
+
+Called during level loading. The classname of any object which may be spawned
+after the map has loaded must be returned here. See
+[`pickups_spawn`](#the-pickups-spawn-module).
+
 ### `playerMover`(*kwargs*)
 
 Called by a func_lua_mover entity. `kwargs` provides the ID and position of the
@@ -467,7 +473,7 @@ the reward received by the engine and to propagate events externally. The
 `kwargs` are:
 
 *   score - Integer default reward associated with in-game event.
-*   reason - String associated with the event (see [reasons](#reasons)).
+*   [reason](#reasons) - String associated with the event.
 *   playerId - Player receiving the reward.
 *   otherPlayerId (optional) - Other player associated with event if there is
     one.
@@ -714,6 +720,34 @@ local tensor = require 'dmlab.system.tensor'
 local api = {}
 function api:start(episode, seed)
   events:add('Event Name', 'Text', tensor.ByteTensor{3}, tensor.DoubleTensor{7})
+end
+```
+
+## The pickups_spawn module
+
+### `spawn`(*kwargs*)
+
+Spawns an entity into the current scene. The entity must be a string-string
+table containing the key 'classname'. They should match internal Quake III Arena
+`spawnVars` key-value settings.
+
+Example:
+
+```Lua
+local pickups_spawn = require 'dmlab.system.pickups_spawn'
+
+local function _respondToEvent()
+  pickups_spawn:spawn{
+      classname = 'strawberry_reward',
+      origin = '750 450 30',
+      count = '5',
+  }
+end
+
+-- If the entity is not in the original map it must be registered; otherwise it
+-- is not visible.
+function api:registerDynamicItems()
+  return {'strawberry_reward'}
 end
 ```
 

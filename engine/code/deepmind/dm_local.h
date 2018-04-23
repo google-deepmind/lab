@@ -170,11 +170,24 @@ void dmlab_update_inventory(playerState_t* player_state);
 char dmlab_select_team(int player_id, const char* player_name);
 
 // Called at the start of entity update.
-void dmlab_entities_clear();
+void dmlab_entities_clear(void);
+
 // Called on each active entity during entity update.
 void dmlab_entities_add(int entity_id, int user_id, int type, int flags,
                         float position[3], const char* classname);
 
 qboolean dmlab_custom_view(refdef_t* camera);
+
+int dmlab_dynamic_spawn_entity_count(void);
+
+void dmlab_read_dynamic_spawn_entity(int entity_index, char* spawn_var_chars,
+                                     int* num_spawn_var_chars,
+                                     int spawn_var_offsets[][2],
+                                     int* num_spawn_vars);
+
+void dmlab_clear_dynamic_spawn_entities(void);
+
+int dmlab_register_dynamic_items(void);
+void dmlab_read_dynamic_item_name(int item_index, char* item_name);
 
 #endif  // DML_ENGINE_CODE_DEEPMIND_DM_LOCAL_H_

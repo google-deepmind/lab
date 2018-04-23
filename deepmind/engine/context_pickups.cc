@@ -24,6 +24,7 @@
 
 #include "deepmind/support/logging.h"
 #include "deepmind/lua/call.h"
+#include "deepmind/lua/class.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 
@@ -33,6 +34,7 @@ namespace {
 
 constexpr int kMaxSpawnVars = 64;
 constexpr int kMaxSpawnVarChars = 4096;
+constexpr int kMaxPickupChars = 256;
 
 // If the string "arg" fits into the array pointed to by "dest" (including the
 // null terminator), copies the string into the array and returns true;
@@ -74,7 +76,62 @@ void ReadSpawnVars(const ContextPickups::EntityInstance& spawn_vars,
   }
 }
 
+class LuaPickupsModule : public lua::Class<LuaPickupsModule> {
+  friend class Class;
+  static const char* ClassName() { return "deepmind.lab.Pickups"; }
+
+ public:
+  // '*ctx' owned by the caller and should out-live this object.
+  explicit LuaPickupsModule(ContextPickups* ctx) : ctx_(ctx) {}
+
+  static void Register(lua_State* L) {
+    const Class::Reg methods[] = {
+        {"spawn", Member<&LuaPickupsModule::Spawn>},
+    };
+    Class::Register(L, methods);
+  }
+
+ private:
+  // Spawn entity at position
+  // [0, 1, -]
+  lua::NResultsOr Spawn(lua_State* L) {
+    ContextPickups::EntityInstance spawn_entity;
+    if (lua::Read(L, 2, &spawn_entity)) {
+      ctx_->SpawnDynamicEntity(std::move(spawn_entity));
+      return 0;
+    } else {
+      return "[pickups.spawn] - Must be called with a string-string Lua table.";
+    }
+  }
+
+  ContextPickups* ctx_;
+};
+
 }  // namespace
+
+lua::NResultsOr ContextPickups::Module(lua_State* L) {
+  if (auto* ctx = static_cast<ContextPickups*>(
+          lua_touserdata(L, lua_upvalueindex(1)))) {
+    LuaPickupsModule::Register(L);
+    LuaPickupsModule::CreateObject(L, ctx);
+    return 1;
+  } else {
+    return "Missing context!";
+  }
+}
+
+void ContextPickups::SpawnDynamicEntity(EntityInstance spawn_entity) {
+  dynamic_spawn_entities_.push_back(std::move(spawn_entity));
+}
+
+void ContextPickups::ReadDynamicSpawnEntity(int entity_index,
+                                            char* spawn_var_chars,
+                                            int* num_spawn_var_chars,
+                                            int spawn_var_offsets[][2],
+                                            int* num_spawn_vars) const {
+  ReadSpawnVars(dynamic_spawn_entities_[entity_index], spawn_var_chars,
+                num_spawn_var_chars, spawn_var_offsets, num_spawn_vars);
+}
 
 bool ContextPickups::UpdateSpawnVars(char* spawn_var_chars,
                                      int* num_spawn_var_chars,
@@ -131,6 +188,37 @@ int ContextPickups::MakeExtraEntities() {
       << "[extraEntities] - Invalid return value";
   lua_pop(L, result.n_results());
   return extra_entities_.size();
+}
+
+// Clears extra_spawn_vars_ and reads new entities from Lua.
+// Returns number of entities created.
+int ContextPickups::RegisterDynamicItems() {
+  lua_State* L = script_table_ref_.LuaState();
+  script_table_ref_.PushMemberFunction("registerDynamicItems");
+  if (lua_isnil(L, -2)) {
+    lua_pop(L, 2);
+    return 0;
+  }
+  auto result = lua::Call(L, 1);
+  CHECK(result.ok()) << result.error();
+  // Nil return so no spawns returned.
+  if (lua_isnil(L, -1)) {
+    lua_pop(L, result.n_results());
+    return 0;
+  }
+  dynamic_items_.clear();
+  CHECK(lua::Read(L, -1, &dynamic_items_))
+      << "[extraEntities] - Invalid return value";
+  lua_pop(L, result.n_results());
+  return dynamic_items_.size();
+}
+
+void ContextPickups::ReadDynamicItemName(int item_index,
+                                         char* item_name) const {
+  const auto& item = dynamic_items_[item_index];
+  std::size_t length = item.length() + 1;
+  CHECK_LE(length, kMaxPickupChars) << "Too long pickup name! - " << item;
+  std::copy(item.c_str(), item.c_str() + length, item_name);
 }
 
 // Read specific spawn var from extra_spawn_vars_. Shall be called after

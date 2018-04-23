@@ -19,6 +19,7 @@ local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
 local game = require 'dmlab.system.game'
+local pickups_spawn = require 'dmlab.system.pickups_spawn'
 local timeout = require 'decorators.timeout'
 local api = {}
 
@@ -44,6 +45,20 @@ function api:init(params)
   }
 end
 
+function api:pickup(id)
+  if id == 1 then
+    pickups_spawn:spawn{
+        classname = 'strawberry_reward',
+        origin = '750 450 30',
+        count = '5',
+    }
+  end
+end
+
+function api:registerDynamicItems()
+  return {'strawberry_reward'}
+end
+
 function api:nextMap()
   return self._map
 end
@@ -63,6 +78,7 @@ function api:extraEntities()
           classname = 'apple_reward',
           origin = '550 450 30',
           count = '1',
+          id = '1',  -- When picked up spawn strawberry.
       },
       {
           classname = 'apple_reward',
@@ -78,11 +94,6 @@ function api:extraEntities()
           classname = 'apple_reward',
           origin = '700 450 30',
           count = '4',
-      },
-      {
-          classname = 'apple_reward',
-          origin = '750 450 30',
-          count = '5',
       }
   }
 end

@@ -132,7 +132,10 @@ cc_library(
     srcs = ["context_pickups.cc"],
     hdrs = ["context_pickups.h"],
     deps = [
+        "//deepmind/include:context_hdrs",
         "//deepmind/lua:call",
+        "//deepmind/lua:class",
+        "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",

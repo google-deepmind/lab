@@ -30,16 +30,16 @@ int dmlab_callback(
   DeepmindContext* ctx = dmlab_context();
   switch (dm_callnum) {
     case DEEPMIND_UPDATE_SPAWN_VARS:
-      return ctx->hooks.update_spawn_vars(ctx->userdata,
+      return ctx->hooks.pickups.update_spawn_vars(ctx->userdata,
                                           /*spawn_var_chars=*/VM_ArgPtr(a1),
                                           /*num_spawn_var_chars=*/VM_ArgPtr(a2),
                                           /*spawn_vars_offsets=*/VM_ArgPtr(a3),
                                           /*num_spawn_vars=*/VM_ArgPtr(a4));
 
     case DEEPMIND_MAKE_EXTRA_ENTITIES:
-      return ctx->hooks.make_extra_entities(ctx->userdata);
+      return ctx->hooks.pickups.make_extra_entities(ctx->userdata);
     case DEEPMIND_READ_EXTRA_ENTITY:
-      ctx->hooks.read_extra_entity(ctx->userdata,
+      ctx->hooks.pickups.read_extra_entity(ctx->userdata,
                                    /*entity_index=*/a1,
                                    /*spawn_var_chars=*/VM_ArgPtr(a2),
                                    /*num_spawn_var_chars=*/VM_ArgPtr(a3),
@@ -47,12 +47,12 @@ int dmlab_callback(
                                    /*num_spawn_vars=*/VM_ArgPtr(a5));
       return 0;
     case DEEPMIND_FIND_ITEM:
-      return ctx->hooks.find_item(ctx->userdata, /*class_name=*/VM_ArgPtr(a1),
+      return ctx->hooks.pickups.find_item(ctx->userdata, /*class_name=*/VM_ArgPtr(a1),
                                   /*index=*/VM_ArgPtr(a2));
     case DEEPMIND_ITEM_COUNT:
-      return ctx->hooks.item_count(ctx->userdata);
+      return ctx->hooks.pickups.item_count(ctx->userdata);
     case DEEPMIND_ITEM:
-      return ctx->hooks.item(
+      return ctx->hooks.pickups.item(
           ctx->userdata, /*index=*/a1, /*item_name=*/VM_ArgPtr(a2),
           /*max_item_name=*/a3,
           /*class_name=*/VM_ArgPtr(a4), /*max_class_name=*/a5,
@@ -60,8 +60,30 @@ int dmlab_callback(
           /*quantity=*/VM_ArgPtr(a8), /*type=*/VM_ArgPtr(a9),
           /*tag=*/VM_ArgPtr(a10));
     case DEEPMIND_CLEAR_ITEMS:
-      ctx->hooks.clear_items(ctx->userdata);
+      ctx->hooks.pickups.clear_items(ctx->userdata);
       return 1;
+
+    case DEEPMIND_REGISTER_DYNAMIC_ITEMS:
+      return ctx->hooks.pickups.register_dynamic_items(ctx->userdata);
+    case DEEPMIND_READ_DYNAMIC_ITEM_NAME:
+      ctx->hooks.pickups.read_dynamic_item_name(ctx->userdata,
+                                                /*item_index=*/a1,
+                                                /*item_name=*/VM_ArgPtr(a2));
+      return 0;
+
+    case DEEPMIND_DYNAMIC_SPAWN_ENTITY_COUNT:
+      return ctx->hooks.pickups.dynamic_spawn_entity_count(ctx->userdata);
+    case DEEPMIND_CLEAR_DYNAMIC_SPAWN_ENTITIES:
+      ctx->hooks.pickups.clear_dynamic_spawn_entities(ctx->userdata);
+      return 0;
+    case DEEPMIND_READ_DYNAMIC_SPAWN_ENTITY:
+      ctx->hooks.pickups.read_dynamic_spawn_entity(ctx->userdata,
+                             /*entity_index=*/a1,
+                             /*spawn_var_chars=*/VM_ArgPtr(a2),
+                             /*num_spawn_var_chars=*/VM_ArgPtr(a3),
+                             /*spawn_vars_offsets=*/VM_ArgPtr(a4),
+                             /*num_spawn_vars=*/VM_ArgPtr(a5));
+      return 0;
     case DEEPMIND_FINISH_MAP:
       ctx->hooks.set_map_finished(ctx->userdata, /*map_finished=*/a1);
       return 1;

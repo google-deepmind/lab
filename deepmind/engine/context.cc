@@ -191,6 +191,37 @@ static void read_extra_entity(void* userdata, int entity_index,
       num_spawn_vars);
 }
 
+static int dynamic_spawn_entity_count(void* userdata) {
+  return static_cast<Context*>(userdata)->Pickups().DynamicSpawnEntityCount();
+}
+
+static void read_dynamic_spawn_entity(void* userdata, int entity_index,
+                                      char* spawn_var_chars,
+                                      int* num_spawn_var_chars,
+                                      int spawn_var_offsets[][2],
+                                      int* num_spawn_vars) {
+  static_cast<Context*>(userdata)->Pickups().ReadDynamicSpawnEntity(
+      entity_index, spawn_var_chars, num_spawn_var_chars, spawn_var_offsets,
+      num_spawn_vars);
+}
+
+static void clear_dynamic_spawn_entities(void* userdata) {
+  static_cast<Context*>(userdata)
+      ->MutablePickups()
+      ->ClearDynamicSpawnEntities();
+}
+
+static int register_dynamic_items(void* userdata) {
+  return static_cast<Context*>(userdata)
+      ->MutablePickups()
+      ->RegisterDynamicItems();
+}
+static void read_dynamic_item_name(void* userdata, int item_index,
+                                   char* item_name) {
+  static_cast<Context*>(userdata)->Pickups().ReadDynamicItemName(item_index,
+                                                                 item_name);
+}
+
 static bool find_item(void* userdata, const char* class_name, int* index) {
   return static_cast<Context*>(userdata)->MutablePickups()->FindItem(class_name,
                                                                      index);
@@ -494,13 +525,6 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->get_native_app = get_native_app;
   hooks->set_actions = set_actions;
   hooks->get_actions = get_actions;
-  hooks->update_spawn_vars = update_spawn_vars;
-  hooks->make_extra_entities = make_extra_entities;
-  hooks->read_extra_entity = read_extra_entity;
-  hooks->find_item = find_item;
-  hooks->item_count = item_count;
-  hooks->item = item;
-  hooks->clear_items = clear_items;
   hooks->find_model = find_model;
   hooks->model_getters = model_getters;
   hooks->clear_model = clear_model;
@@ -533,6 +557,18 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->make_pk3_from_map = make_pk3_from_map;
   hooks->lua_mover = lua_mover;
   hooks->game_event = game_event;
+  hooks->pickups.update_spawn_vars = update_spawn_vars;
+  hooks->pickups.make_extra_entities = make_extra_entities;
+  hooks->pickups.read_extra_entity = read_extra_entity;
+  hooks->pickups.find_item = find_item;
+  hooks->pickups.item_count = item_count;
+  hooks->pickups.item = item;
+  hooks->pickups.clear_items = clear_items;
+  hooks->pickups.dynamic_spawn_entity_count = dynamic_spawn_entity_count;
+  hooks->pickups.read_dynamic_spawn_entity = read_dynamic_spawn_entity;
+  hooks->pickups.clear_dynamic_spawn_entities = clear_dynamic_spawn_entities;
+  hooks->pickups.register_dynamic_items = register_dynamic_items;
+  hooks->pickups.read_dynamic_item_name = read_dynamic_item_name;
   hooks->events.clear = events_clear;
   hooks->events.type_count = events_type_count;
   hooks->events.type_name = events_type_name;
@@ -614,12 +650,16 @@ int Context::Init() {
       "dmlab.system.map_maker", &lua::Bind<MapMakerModule>, {this});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.game", &lua::Bind<ContextGame::Module>, {MutableGame()});
-  lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.events", &lua::Bind<ContextEvents::Module>,
-      {MutableEvents()});
+
+  lua_vm_.AddCModuleToSearchers("dmlab.system.events",
+                                &lua::Bind<ContextEvents::Module>,
+                                {MutableEvents()});
   lua_vm_.AddCModuleToSearchers("dmlab.system.game_entities",
                                 &lua::Bind<ContextEntities::Module>,
                                 {MutableGameEntities()});
+  lua_vm_.AddCModuleToSearchers("dmlab.system.pickups_spawn",
+                                &lua::Bind<ContextPickups::Module>,
+                                {MutablePickups()});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.random", &lua::Bind<LuaRandom::Require>, {UserPrbg()});
   lua_vm_.AddCModuleToSearchers(
