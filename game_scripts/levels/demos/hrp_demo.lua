@@ -29,25 +29,11 @@ function api:updateSpawnVars(spawnVars)
   if spawnVars.classname == 'info_player_start' then
     spawnVars.angle = '0'
     spawnVars.randomAngleRange = '0'
-  elseif spawnVars.classname == 'recognisable_object' then
+  elseif spawnVars.classname == self._cherries then
     -- If there's no id set, canPickup won't be called.
     spawnVars.id = '1'
   end
   return spawnVars
-end
-
--- Intercept object creation to override by using code from
--- common.human_recognizable_pickups.
-function api:createPickup(className)
-  if className == 'recognisable_object' then
-    return hrp.create{
-        shape = "cherries",
-        color1 = {255, 0, 0},
-        color2 = {0, 255, 0},
-        pattern = "chequered",
-    }
-  end
-  return pickups.defaults[className]
 end
 
 function api:canPickup(id)
@@ -61,11 +47,17 @@ function api:nextMap()
   hrp.reset()
 
   local map = 'PO'
+  self._cherries = hrp.create{
+      shape = "cherries",
+      color1 = {255, 0, 0},
+      color2 = {0, 255, 0},
+      pattern = "chequered",
+  }
   return make_map.makeMap{
       mapName = 'hrpdemo_map',
       mapEntityLayer = map,
       useSkybox = true,
-      pickups = {O = 'recognisable_object'}
+      pickups = {O = self._cherries}
   }
 end
 

@@ -108,7 +108,7 @@ function factory.createLevelApi(kwargs)
                                                      desc.shade)
 
     local id = #self._pickups + 1
-    self._pickups[id] = hrp.create{
+    local classname = hrp.create{
         shape = desc.shape,
         color1 = color1,
         color2 = color2,
@@ -121,7 +121,7 @@ function factory.createLevelApi(kwargs)
     desc._pickupId = id
     desc._group = group
     desc._groupSize = groupSize
-    self._pickups[id]._desc = desc
+    self._pickups[id] = {classname = classname, _desc = desc}
   end
 
   function api:_createObjects(taskSpec, validRegions)
@@ -187,16 +187,17 @@ function factory.createLevelApi(kwargs)
       spawnVars.randomAngleRange = self._playerSpawnAngleRange
     else
       local id = nameToPickupId(spawnVars.classname)
-      spawnVars.id = id and tostring(self._mapIdToPickupId[id]) or nil
+      if id then
+        local actualId = self._mapIdToPickupId[id]
+        if actualId and self._pickups[actualId] then
+          spawnVars.classname = self._pickups[actualId].classname
+          spawnVars.id = tostring(actualId)
+        else
+          return nil
+        end
+      end
     end
     return spawnVars
-  end
-
-  function api:createPickup(className)
-    -- If classname is PICKUP_PREFIX:'x', return self._pickups[x]
-    local id = nameToPickupId(className)
-    return id and self._pickups[self._mapIdToPickupId[id]] or
-      pickups.defaults[className]
   end
 
   function api:_makePickup(c)

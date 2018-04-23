@@ -30,10 +30,6 @@ local MOVE_TYPE = {pickups.moveType.STATIC, pickups.moveType.BOB}
 
 local api = {}
 
-local function nameToPickupId(name)
-  return tonumber(name:match('^pickup:(%d+)$'))
-end
-
 function api:init(settings)
   make_map.seedRng(1)  -- Use a fixed seed since this is a simple demo level.
   random:seed(1)
@@ -54,16 +50,9 @@ function api:updateSpawnVars(spawnVars)
     spawnVars.angle = '0'
     spawnVars.randomAngleRange = '0'
   else
-    local id = nameToPickupId(spawnVars.classname)
-    spawnVars.id = id and tostring(id) or nil
+    spawnVars.id = '1'
   end
   return spawnVars
-end
-
-function api:createPickup(classname)
-  -- If classname is 'pickup:x', return self._pickups[x]
-  local id = nameToPickupId(classname)
-  return id and self._pickups[id] or pickups.defaults[classname]
 end
 
 function api:canPickup(id)
@@ -74,8 +63,8 @@ end
 function api:_makePickup(c)
   if c == 'O' then
     -- Make new pickup and classname to reference it.
-    local id = #self._pickups + 1
-    self._pickups[id] = hrp.create{
+    local id = hrp.pickupCount() + 1
+    return hrp.create{
         shape = self._shapes[id],
         color1 = random:color(),
         color2 = random:color(),
@@ -83,7 +72,6 @@ function api:_makePickup(c)
         scale = SCALES[(id - 1) % #SCALES + 1],
         moveType = MOVE_TYPE[(id - 1) % #MOVE_TYPE + 1],
     }
-    return 'pickup:' .. id
   end
 end
 

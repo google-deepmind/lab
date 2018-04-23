@@ -134,6 +134,9 @@ local COLORS = {
 -- Store loaded textures.
 hrp._patternTextures = {}
 
+hrp._currentPickups = {}
+hrp._currentPickupsId = 0
+
 -- Convert a scale name to a number, accounting for per-shape overrides.
 local function scaleNameToNumber(scale, shape)
   return CUSTOM_SCALES[shape] and CUSTOM_SCALES[shape][scale] or SCALES[scale]
@@ -227,16 +230,21 @@ function hrp.create(kwargs)
                                          transformSuffix)
     hrp._nextId = hrp._nextId + 1
   end
-
-  local obj = {
-      name = shape,
-      classname = shape,
+  hrp._currentPickupsId = hrp._currentPickupsId + 1
+  local classname = 'pu:' ..  hrp._currentPickupsId
+  hrp._currentPickups[classname] = {
+      name = classname,
+      classname = classname,
       model = hrp._modelCache[key],
       quantity = kwargs.quantity or 0,
       type = pickups.type.REWARD,
       tag = kwargs.moveType or pickups.moveType.BOB,
   }
-  return obj
+  return classname
+end
+
+function hrp.pickup(classname)
+  return hrp._currentPickups[classname]
 end
 
 function hrp.replaceModelName(modelName)
@@ -422,6 +430,12 @@ function hrp.reset()
   hrp._nextId = 1
   hrp._objectConfigs = {}
   hrp._modelCache = {}
+  hrp._currentPickups = {}
+  hrp._currentPickupsId = 0
+end
+
+function hrp.pickupCount()
+  return hrp._currentPickupsId
 end
 
 hrp.reset()

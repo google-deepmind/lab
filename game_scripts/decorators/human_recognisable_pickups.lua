@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -- Carries out transformations specified by common.human_recognisable_pickups.
 
 local hrp = require 'common.human_recognisable_pickups'
+local pickups = require 'common.pickups'
 local model = require 'dmlab.system.model'
 local transform = require 'common.transform'
 local decorator = {}
@@ -77,6 +78,13 @@ function decorator.decorate(api)
       res = modifyTexture(self, textureName, texture)
     end
     return hrp.modifyTexture(textureName, texture) or res
+  end
+
+  local createPickup = api.createPickup
+  function api:createPickup(classname)
+    return hrp.pickup(classname) or
+           (createPickup and createPickup(self, classname)) or
+           pickups.defaults[classname]
   end
 end
 

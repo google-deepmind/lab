@@ -22,21 +22,21 @@ function tests.allScalesShouldBeValidToCreate()
   local SHAPE = hrp.shapes()[1]
   local PATTERN = hrp.patterns()[1]
   hrp.reset()
-  local DEFAULT_PICKUP = hrp.create{
+  local DEFAULT_PICKUP = hrp.pickup(hrp.create{
         shape = SHAPE,
         pattern = PATTERN,
         color1 = GREEN,
         color2 = RED,
-  }
+  })
   for _, scale in ipairs({'small', 'medium', 'large'}) do
     hrp.reset()
-    local pickup = hrp.create{
+    local pickup = hrp.pickup(hrp.create{
         shape = SHAPE,
         pattern = PATTERN,
         color1 = GREEN,
         color2 = RED,
         scale = scale,
-    }
+    })
     assert(pickup, 'Pickup failed to be created.')
     if scale == 'medium' then
       asserts.tablesEQ(pickup, DEFAULT_PICKUP,
@@ -53,21 +53,21 @@ function tests.doubleScalesShouldBeValidToCreate()
   local SHAPE = hrp.shapes()[1]
   local PATTERN = hrp.patterns()[1]
   hrp.reset()
-  local DEFAULT_PICKUP = hrp.create{
+  local DEFAULT_PICKUP = hrp.pickup(hrp.create{
         shape = SHAPE,
         pattern = PATTERN,
         color1 = GREEN,
         color2 = RED,
-  }
+  })
   for _, scale in ipairs({0.5, 1.0, 2.0}) do
     hrp.reset()
-    local pickup = hrp.create{
+    local pickup = hrp.pickup(hrp.create{
         shape = SHAPE,
         pattern = PATTERN,
         color1 = GREEN,
         color2 = RED,
         scale = scale,
-    }
+    })
     assert(pickup, 'Pickup failed to be created.')
     if scale == 1.0 then
       asserts.tablesEQ(pickup, DEFAULT_PICKUP,
@@ -83,12 +83,12 @@ function tests.allShapesShouldBeValidToCreate()
   local PATTERN = hrp.patterns()[1]
   for _, shape in ipairs(hrp.shapes()) do
     -- Must provide shape, pattern and a pair of colours.
-    local pickup = hrp.create{
+    local pickup = hrp.pickup(hrp.create{
         shape = shape,
         pattern = PATTERN,
         color1 = GREEN,
         color2 = RED
-    }
+    })
     assert(pickup)
     asserts.EQ(type(pickup), 'table')
   end

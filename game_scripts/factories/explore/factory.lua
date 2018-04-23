@@ -21,7 +21,6 @@ local make_map = require 'common.make_map'
 local map_maker = require 'dmlab.system.map_maker'
 local maze_generation = require 'dmlab.system.maze_generation'
 local pickup_decorator = require 'decorators.human_recognisable_pickups'
-local pickups = require 'common.pickups'
 local random = require 'common.random'
 local setting_overrides = require 'decorators.setting_overrides'
 local debug_observations = require 'decorators.debug_observations'
@@ -71,12 +70,6 @@ function factory.createLevelApi(kwargs)
   kwargs.opts.spawnEntity = kwargs.opts.spawnEntity or 'P'
 
   local api = {}
-
-  function api:createPickup(className)
-    local levelPickup = kwargs.level.createPickup and
-                        kwargs.level:createPickup(className)
-    return levelPickup or pickups.defaults[className]
-  end
 
   function api:nextMap()
     if kwargs.level.restart then

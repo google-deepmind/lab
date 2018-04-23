@@ -109,7 +109,7 @@ end
 -- Constant function.
 function level:_allPickedUp()
   for pickupId, categoryId in ipairs(level._pickupCategories) do
-    local reward = level._categoryObjects[categoryId].quantity
+    local reward = level._categoryQuantity[categoryId]
     if reward > 0 and not level._pickedUp[pickupId] then
       return false
     end
@@ -123,15 +123,6 @@ function level:pickup(pickupId)
   if level._allPickedUp() then
     game:finishMap()
   end
-end
-
--- Return instantiable object if `className` is one of our internally defined
--- human-recognizable objects, and nil otherwise.
-function level:createPickup(className)
-  -- If className starts with CATEGORY_NAME_PREFIX, then it's one of the classes
-  -- we've created, so return our class info.
-  local categoryId = categoryNameToId(className)
-  return categoryId and level._categoryObjects[categoryId] or nil
 end
 
 function level:restart(maze)
@@ -151,7 +142,7 @@ function level:restart(maze)
   -- picked-up.
   -- Keys are pickupIds, values are categoryIds.
   level._pickupCategories = assignCategories(pickupCount,
-                                             #level._categoryObjects)
+                                             #level._categoryClassName)
 
   -- Reset the pickup tracker to "nothing picked up".
   -- Keys are pickupIds, values are `true` (i.e. it's a set).
@@ -171,13 +162,15 @@ function level:start(maze, episode, seed)
   -- returned from createPickup(). The first `goodCategoryCount` objects will
   -- have positive reward, the rest negative.
   -- Keys are categoryIds, values are objects that can be instantiated.
-  level._categoryObjects = {}
+  level._categoryClassName = {}
+  level._categoryQuantity = {}
   local hrpPickups = hrp.uniquePickups(opts.categoryCount)
   for categoryId = 1, opts.categoryCount do
     hrpPickups[categoryId].quantity =
         (categoryId <= goodCategoryCount) and opts.goodCategoryReward or
                                               opts.badCategoryReward
-    level._categoryObjects[categoryId] = hrp.create(hrpPickups[categoryId])
+    level._categoryQuantity[categoryId] = hrpPickups[categoryId].quantity
+    level._categoryClassName[categoryId] = hrp.create(hrpPickups[categoryId])
   end
 end
 
@@ -203,7 +196,7 @@ level.spawnVarsUpdater = {
       -- instantiation. The other apples are ignored.
       if pickupId then
         local categoryId = level._pickupCategories[pickupId]
-        spawnVars.classname = categoryIdToName(categoryId)
+        spawnVars.classname = level._categoryClassName[categoryId]
         spawnVars.id = tostring(pickupId)
         spawnVars.wait = "-1"
         return spawnVars
