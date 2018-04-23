@@ -38,6 +38,10 @@
 #include <string>
 #include <unordered_map>
 
+#ifdef LEAK_SANITIZER
+#include <sanitizer/lsan_interface.h>
+#endif
+
 namespace {
 
 std::mutex connect_mutex;
@@ -72,6 +76,28 @@ void close_handle(void* context) {
   auto it = ctx_map->find(context);
   if (it != ctx_map->end()) {
     it->second.release_context(context);
+#ifdef LEAK_SANITIZER
+    // This function is usually called by LSAN at the end of the process.
+    // Since dlclose is somewhat like an end of process as far as the DSO
+    // is concerned, we call LSAN eagerly here. This prevents LSAN from
+    // considering still-reachable DSO-global allocations as overall leaks.
+    // This call effectively ends the use of LSAN in this process, since
+    // future calls of this function are no-ops. We will therefore only
+    // detect leaks that have happened up until now, but in typical uses,
+    // there will be only one single dlclose near the end of the program.
+    //
+    // We have tried hard to minimize the amount of such leaks. It is worth
+    // checking periodically (by disabling the following line) how much each
+    // DSO load leaks, though, to make sure no large regressions sneak back
+    // in. The only culprits at the moment are various OpenGL libraries.
+    //
+    // Note that it can be tricky to symbolize LSAN backtraces after the DSO
+    // has been unloaded. You will at least want to make a note of the process
+    // module maps just before the return from dmlab_connect below, e.g. via:
+    // std::cerr << "Maps:\n" << std::ifstream("/proc/self/maps").rdbuf();
+
+    __lsan_do_leak_check();
+#endif
     dlclose(it->second.dlhandle);
     ctx_map->erase(it);
   }
