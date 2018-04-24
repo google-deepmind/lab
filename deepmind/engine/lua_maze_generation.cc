@@ -187,7 +187,8 @@ lua::NResultsOr LuaMazeGeneration::CreateRandom(lua_State* L) {
     return "[randomMazeGeneration] - Must construct with positive odd width";
   }
   int max_rooms = 0;
-  if (!table.LookUp("maxRooms", &max_rooms) || max_rooms < 0) {
+  table.LookUp("maxRooms", &max_rooms);
+  if (max_rooms < 0) {
     return "[randomMazeGeneration] - Must construct with non-negative "
            "maxRooms";
   }
