@@ -751,6 +751,7 @@ void CG_DrawCustomView() {
 	if ( !cg.snap || ( cg.snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) ) {
 		return;
 	}
+	cg.refdef.time = cg.time;
 	cg.renderingThirdPerson = dmlab_custom_view( &cg.refdef );
 	CG_AddPacketEntities();
 	CG_AddMarks();
