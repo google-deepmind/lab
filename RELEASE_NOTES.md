@@ -2,10 +2,25 @@
 
 ## Current Release
 
+### New Levels:
+
+1.  DMLab-30.
+
+    1.   contributed/dmlab30/psychlab_arbitrary_visuomotor_mapping
+    2.   contributed/dmlab30/psychlab_continuous_recognition
+
+2.  Psychlab.
+
+    1.   contributed/psychlab/arbitrary_visuomotor_mapping
+    2.   contributed/psychlab/continuous_recognition
+
 ### New Features:
 
 1.  Support for level caching for improved performance in the Python module.
 2.  Add the ability to spawn pickups dynamically at arbitrary locations.
+3.  Add implementations to read datasets including Cifar10 and Stimuli.
+4.  Add the ability to specify custom actions via 'customDiscreteActionSpec' and
+    'customDiscreteAction' callbacks.
 
 ### Bug Fixes:
 

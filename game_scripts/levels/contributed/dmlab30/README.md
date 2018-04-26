@@ -2,8 +2,7 @@
 
 DMLab-30 is a set of environments designed for DeepMind Lab. These environments
 enable a researcher to develop agents for a large spectrum of interesting tasks
-either individually or in a multi-task setting. We have released 28 levels. Two
-remaining levels will be added soon.
+either individually or in a multi-task setting.
 
 1.  [`rooms_collect_good_objects_{test,train}`](#collect-good-objects)
 1.  [`rooms_exploit_deferred_effects_{test,train}`](#exploit-deferred-effects)
@@ -23,6 +22,8 @@ remaining levels will be added soon.
 1.  [`natlab_varying_map_randomized`](#varying-map-randomized)
 1.  [`skymaze_irreversible_path_hard`](#irreversible-path-hard)
 1.  [`skymaze_irreversible_path_varied`](#irreversible-path-varied)
+1.  [`psychlab_arbitrary_visuomotor_mapping`](#arbitrary-visuomotor-mapping)
+1.  [`psychlab_continuous_recognition`](#continuous-recognition)
 1.  [`psychlab_sequential_comparison`](#sequential-comparison)
 1.  [`psychlab_visual_search`](#visual-search)
 1.  [`explore_object_locations_small`](#object-locations-small)
@@ -568,6 +569,34 @@ Level Name: `skymaze_irreversible_path_varied`
 
 For details, see:
 [Leibo, Joel Z. et al. "Psychlab: A Psychology Laboratory for Deep Reinforcement Learning Agents (2018)"](https://arxiv.org/abs/1801.08116).
+
+### Arbitrary Visuomotor Mapping
+
+In this task, the agent is shown consecutive images with which they must
+remember associations with specific movement patterns (locations to point at).
+The agent is rewarded if it can remember the action associated with a given
+object. The images are drawn from a set of ~ 2500, and the specific associations
+are randomly generated and different in each episode.
+
+Test Regime: Training and testing levels drawn from the same distribution.
+
+Observation Spec: RGBD
+
+Level Name: `psychlab_arbitrary_visuomotor_mapping`
+
+### Continuous Recognition
+
+This task tests familiarity memory. Consecutive images are shown, and the agent
+must indicate whether or not they have seen the image before during that
+episode. Looking at the left square indicates no, and right indicates yes. The
+images (drawn from a set of ~2500) are shown in a different random order in
+every episode.
+
+Test Regime: Training and testing levels drawn from the same distribution.
+
+Observation Spec: RGBD
+
+Level Name: `psychlab_continuous_recognition`
 
 ### Sequential Comparison
 
