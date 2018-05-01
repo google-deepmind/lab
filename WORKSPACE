@@ -17,7 +17,10 @@ new_http_archive(
     build_file = "eigen.BUILD",
     sha256 = "9a01fed6311df359f3f9af119fcf298a3353aef7d1b1bc86f6c8ae0ca6a2f842",
     strip_prefix = "/eigen-eigen-5d5dd50b2eb6",
-    url = "https://bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
+    urls = [
+        "https://mirror.bazel.build/bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
+        "https://bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
+    ],
 )
 
 new_http_archive(
@@ -25,7 +28,10 @@ new_http_archive(
     build_file = "glib.BUILD",
     sha256 = "0cbb3d31c9d181bbcc97cba3d9dbe3250f75e2da25e5f7c8bf5a993fe54baf6a",
     strip_prefix = "glib-2.55.1",
-    url = "http://ftp.gnome.org/pub/gnome/sources/glib/2.55/glib-2.55.1.tar.xz",
+    urls = [
+        "https://mirror.bazel.build/ftp.gnome.org/pub/gnome/sources/glib/2.55/glib-2.55.1.tar.xz",
+        "https://ftp.gnome.org/pub/gnome/sources/glib/2.55/glib-2.55.1.tar.xz",
+    ],
 )
 
 new_http_archive(
@@ -33,7 +39,7 @@ new_http_archive(
     build_file = "jpeg.BUILD",
     sha256 = "650250979303a649e21f87b5ccd02672af1ea6954b911342ea491f351ceb7122",
     strip_prefix = "jpeg-9c",
-    url = "http://www.ijg.org/files/jpegsrc.v9c.tar.gz",
+    urls = ["http://www.ijg.org/files/jpegsrc.v9c.tar.gz"],
 )
 
 new_http_archive(
@@ -41,7 +47,10 @@ new_http_archive(
     build_file = "libxml.BUILD",
     sha256 = "f63c5e7d30362ed28b38bfa1ac6313f9a80230720b7fb6c80575eeab3ff5900c",
     strip_prefix = "libxml2-2.9.7",
-    url = "http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
+    urls = [
+        "https://mirror.bazel.build/xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
+        "http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
+    ],
 )
 
 new_http_archive(
@@ -49,15 +58,21 @@ new_http_archive(
     build_file = "png.BUILD",
     sha256 = "7ffa5eb8f9f3ed23cf107042e5fec28699718916668bbce48b968600475208d3",
     strip_prefix = "libpng-1.6.34",
-    url = "http://github.com/glennrp/libpng/archive/v1.6.34.zip",
+    urls = [
+        "https://mirror.bazel.build/github.com/glennrp/libpng/archive/v1.6.34.zip",
+        "https://github.com/glennrp/libpng/archive/v1.6.34.zip",
+    ],
 )
 
 new_http_archive(
     name = "zlib_archive",
     build_file = "zlib.BUILD",
-    sha256 = "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d",
-    strip_prefix = "zlib-1.2.8",
-    url = "http://bazel-mirror.storage.googleapis.com/zlib.net/zlib-1.2.8.tar.gz",
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    strip_prefix = "zlib-1.2.11",
+    urls = [
+        "https://mirror.bazel.build/zlib.net/zlib-1.2.11.tar.gz",
+        "https://zlib.net/zlib-1.2.11.tar.gz",
+    ],
 )
 
 # TODO: Replace with hermetic build
