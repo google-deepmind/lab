@@ -39,6 +39,7 @@ TEST(LuaUnitTest, RunsTest) {
   ASSERT_EQ(dmlab_connect(&params, &env_c_api, &context), 0);
   ASSERT_EQ(env_c_api.setting(context, "levelName", test_script_path.c_str()),
             0);
+  ASSERT_EQ(env_c_api.setting(context, "datasetPath", "dummy"), 0);
   if (env_c_api.init(context) != 0) {
     ADD_FAILURE() << env_c_api.error_message(context);
   }

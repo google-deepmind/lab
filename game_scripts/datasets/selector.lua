@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local brady_konkle_oliva2008 = require 'datasets.brady_konkle_oliva2008'
 local cifar10 = require 'datasets.cifar10'
+local color_dataset = require 'datasets.color_dataset'
 
 local selector = {}
 
@@ -30,9 +31,10 @@ an index returns an interlaced image tensor.
 function selector.loadDataset(name)
   if name == 'brady_konkle_oliva2008' then
     return brady_konkle_oliva2008{}
-  end
-  if name == 'cifar10' then
+  elseif name == 'cifar10' then
     return cifar10{}
+  elseif name == 'color' then
+    return color_dataset(8, 8, 1500)
   end
   return nil
 end

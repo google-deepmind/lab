@@ -40,6 +40,7 @@ end
 return test_runner.run(tests)
 ```
 ]]
+local setting_overrides = require 'decorators.setting_overrides'
 
 local test_runner = {}
 
@@ -60,7 +61,14 @@ function test_runner.run(tests)
     end
     return (statusAll and 0 or 1), errors
   end
-  return {init = runAllTests}
+  local api = {init = runAllTests}
+  setting_overrides.decorate{
+      api = api,
+      apiParams = {},
+      decorateWithTimeout = false,
+      allowMissingSettings = true,
+  }
+  return api
 end
 
 return test_runner

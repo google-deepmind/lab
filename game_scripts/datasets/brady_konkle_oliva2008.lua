@@ -17,18 +17,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local reader = require 'datasets.reader'
 local game = require 'dmlab.system.game'
+local setting_overrides = require 'decorators.setting_overrides'
+local color_dataset = require 'datasets.color_dataset'
 
 local DATASET_TEMPLATE = '%04d.png'
 local DATASET_PATH = ''
 local PRELOAD_CONTENT = false
 local DATASET_SIZE = 2400
 
+
 local function brady_konkle_oliva2008()
-  assert(DATASET_PATH ~= '',
+  local path = setting_overrides:settings().datasetPath
+  if path == 'dummy' then
+    return color_dataset(256, 256, DATASET_SIZE)
+  end
+  if path == '' then
+    path = DATASET_PATH
+  end
+  assert(path ~= '',
     '\n Follow instructions to download datasets here: ' ..
     '\n "data/brady_konkle_oliva2008/README.md"' ..
     '\n and update DATASET_PATH to point the data folder.')
-  return reader(DATASET_PATH, DATASET_TEMPLATE, DATASET_SIZE, PRELOAD_CONTENT)
+  return reader(path, DATASET_TEMPLATE, DATASET_SIZE, PRELOAD_CONTENT)
 end
+
 
 return brady_konkle_oliva2008

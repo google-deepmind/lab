@@ -85,6 +85,8 @@ local function findLastSubTableAndSubKey(nestedTable, key)
   return prevSubTable, lastKey
 end
 
+local settings = {}
+
 local setting_overrides = {}
 
 --[[ Decorate the api with an init(params) function that overrides values in
@@ -104,13 +106,15 @@ function setting_overrides.decorate(kwargs)
   local api = kwargs.api
   local apiParams = kwargs.apiParams
   local decorateWithTimeout = kwargs.decorateWithTimeout
+  local allowMissingSettings = kwargs.allowMissingSettings or false
   assert(api ~= nil and apiParams ~= nil)
   local debugCameraPos = debug_observations.getCameraPos()
   apiParams.camera = apiParams.camera or debugCameraPos.pos
   apiParams.cameraLook = apiParams.cameraLook or debugCameraPos.look
   apiParams.gadgetSelect = apiParams.gadgetSelect or false
   apiParams.gadgetSwitch = apiParams.gadgetSwitch or false
-
+  apiParams.datasetPath = apiParams.datasetPath or ''
+  settings = apiParams
   -- Preserve the existing init call.
   local apiInit = api.init
 
@@ -124,7 +128,7 @@ function setting_overrides.decorate(kwargs)
       elseif PARAMS_DEPRECATED[k] then
         io.stderr:write('WARNING: "' .. k .. '" (here set to "' .. v .. '")' ..
                         ' has been deprecated.\n')
-      elseif not PARAMS_WHITELIST[k] then
+      elseif not allowMissingSettings and not PARAMS_WHITELIST[k] then
         error('Invalid setting: "' .. k .. '" = "' .. v .. '"')
       end
     end
@@ -147,6 +151,10 @@ function setting_overrides.decorate(kwargs)
       return apiInit(api, params)
     end
   end
+end
+
+function setting_overrides:settings()
+  return settings
 end
 
 return setting_overrides
