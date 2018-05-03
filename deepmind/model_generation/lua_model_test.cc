@@ -42,7 +42,7 @@ using ::testing::ElementsAre;
 TEST(DeepmindModelLibTest, CreateCone) {
   DeepmindContext ctx{};
   ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
-                                    nullptr));
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
@@ -68,8 +68,8 @@ TEST(DeepmindModelLibTest, CreateCone) {
 
 TEST(DeepmindModelLibTest, CreateCube) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
@@ -95,8 +95,8 @@ TEST(DeepmindModelLibTest, CreateCube) {
 
 TEST(DeepmindModelLibTest, CreateCylinder) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
@@ -116,8 +116,8 @@ TEST(DeepmindModelLibTest, CreateCylinder) {
 
 TEST(DeepmindModelLibTest, CreateSphere) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
@@ -143,8 +143,8 @@ TEST(DeepmindModelLibTest, CreateSphere) {
 
 TEST(DeepmindModelLibTest, CreateHierarchy) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/model_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 
@@ -203,8 +203,8 @@ return model:circularLayout(10, 4)
 
 TEST(DeepmindModelLibTest, LayoutCircular) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
 
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
@@ -259,8 +259,8 @@ return model:linearLayout(10, 5)
 
 TEST(DeepmindModelLibTest, LayoutLinear) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
 
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());

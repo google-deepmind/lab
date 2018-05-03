@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <stddef.h>
 
 #include "public/level_cache_types.h"
+#include "public/file_reader_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
 #ifdef __cplusplus
@@ -52,6 +53,9 @@ struct DeepMindLabLaunchParams_s {
   bool (*file_reader_override)(const char* file_name, char** buff,
                                size_t* size);
   const char* optional_temp_folder;
+
+  // Optional readonly filesystem. Set null to use local file operations.
+  const DeepMindReadOnlyFileSystem* read_only_file_system;
 };
 
 // Starts an instance of DeepMind Lab and exports the single-player RL

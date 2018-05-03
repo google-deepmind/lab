@@ -56,6 +56,7 @@
 #include "deepmind/model_generation/model_lua.h"
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
+#include "public/file_reader_types.h"
 #include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
@@ -551,6 +552,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
                  const DeepmindCalls* calls, DeepmindHooks* hooks,
                  bool (*file_reader_override)(const char* file_name,
                                               char** buff, size_t* size),
+                 const DeepMindReadOnlyFileSystem* read_only_file_system,
                  const char* temp_folder)
     : lua_vm_(std::move(lua_vm)),
       native_app_(false),
@@ -558,7 +560,7 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
       mixer_seed_(0),
       level_cache_params_{},
       game_(executable_runfiles, calls, file_reader_override,
-            temp_folder != nullptr ? temp_folder : ""),
+            read_only_file_system, temp_folder != nullptr ? temp_folder : ""),
       has_alt_cameras_(false) {
   CHECK(lua_vm_ != nullptr);
   hooks->add_setting = add_setting;
@@ -710,10 +712,12 @@ int Context::Init() {
     auto running_level_folder = level_path.substr(0, last_slash_pos);
     lua_vm_.AddPathToSearchers(running_level_folder);
   }
-
-  lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire);
-  lua_vm_.AddCModuleToSearchers(
-      "dmlab.system.tensor", tensor::LuaTensorConstructors);
+  void* readonly_fs =
+      const_cast<DeepMindReadOnlyFileSystem*>(Game().ReadOnlyFileSystem());
+  lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire,
+                                {readonly_fs});
+  lua_vm_.AddCModuleToSearchers("dmlab.system.tensor",
+                                tensor::LuaTensorConstructors, {readonly_fs});
   lua_vm_.AddCModuleToSearchers(
       "dmlab.system.maze_generation", &lua::Bind<LuaMazeGeneration::Require>,
       {reinterpret_cast<void*>(static_cast<std::uintptr_t>(mixer_seed_))});

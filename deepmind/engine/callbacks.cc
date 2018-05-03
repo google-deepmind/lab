@@ -31,6 +31,7 @@
 #include "deepmind/lua/vm.h"
 #include "deepmind/model_generation/lua_model.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "public/file_reader_types.h"
 
 namespace lua = deepmind::lab::lua;
 namespace tensor = deepmind::lab::tensor;
@@ -45,10 +46,10 @@ using deepmind::lab::LuaModel;
 extern "C" {
 
 int dmlab_create_context(
-    const char* runfiles_path,
-    DeepmindContext* ctx,
+    const char* runfiles_path, DeepmindContext* ctx,
     bool (*file_reader_override)(const char* file_name, char** buff,
                                  std::size_t* size),
+    const DeepMindReadOnlyFileSystem* read_only_file_system,
     const char* temp_folder) {
   lua::Vm lua_vm = lua::CreateVm();
   lua_State* L = lua_vm.get();
@@ -59,8 +60,9 @@ int dmlab_create_context(
   LuaSnippetEmitter::Register(L);
   LuaModel::Register(L);
 
-  ctx->userdata = new Context(std::move(lua_vm), runfiles_path, &ctx->calls,
-                              &ctx->hooks, file_reader_override, temp_folder);
+  ctx->userdata =
+      new Context(std::move(lua_vm), runfiles_path, &ctx->calls, &ctx->hooks,
+                  file_reader_override, read_only_file_system, temp_folder);
   return 0;
 }
 

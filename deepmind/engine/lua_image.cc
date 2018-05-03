@@ -29,12 +29,14 @@
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
-#include "deepmind/util/files.h"
+#include "deepmind/util/file_reader.h"
+#include "public/file_reader_types.h"
 #include "png.h"
 
 namespace deepmind {
@@ -57,7 +59,7 @@ std::vector<unsigned char> PngParsePixels(png_structp png_ptr,
 }
 
 struct Reader {
-  std::string contents;
+  absl::string_view contents;
   std::size_t location;
 };
 
@@ -72,14 +74,14 @@ static void PngReadContents(png_structp png_ptr, png_bytep out_bytes,
 }
 }  // extern "C"
 
-lua::NResultsOr LoadPng(lua_State* L, std::string contents) {
-  Reader reader{std::move(contents), 0};
+lua::NResultsOr LoadPng(lua_State* L, absl::string_view contents) {
+  Reader reader{contents, 0};
   constexpr std::size_t png_header_size = 8;
   if (reader.contents.size() < png_header_size) {
     return "Invalid format. Contents too short.";
   }
 
-  if (!png_check_sig(reinterpret_cast<png_bytep>(&reader.contents[0]),
+  if (!png_check_sig(reinterpret_cast<png_const_bytep>(&reader.contents[0]),
                      png_header_size))
     return "Invalid format. Unrecognised signature.";
 
@@ -147,6 +149,13 @@ lua::NResultsOr LoadPng(lua_State* L, std::string contents) {
 }
 
 lua::NResultsOr Load(lua_State* L) {
+  const DeepMindReadOnlyFileSystem* fs = nullptr;
+  if (IsTypeMismatch(lua::Read(L, lua_upvalueindex(1), &fs))) {
+    return "[image.load] Invalid filesystem in upvalue";
+  }
+  if (fs == nullptr) {
+    return "[image.load] Internal error - missing DeepMindReadOnlyFileSystem.";
+  }
   std::string file_name;
   if (!lua::Read(L, 1, &file_name) || file_name.size() < 4) {
     std::string error = absl::StrCat("[image.load] - \"", lua::ToString(L, 1),
@@ -154,21 +163,31 @@ lua::NResultsOr Load(lua_State* L) {
     return error;
   }
 
-  std::string contents;
-
+  absl::string_view contents;
+  std::unique_ptr<char[]> data;
   if (file_name.compare(0, file_name.length() - 4, "content:") == 0) {
     if (!lua::Read(L, 2, &contents)) {
       std::string error = absl::StrCat("[image.load] - Missing contents.");
       return error;
     }
-  } else if (!util::GetContents(file_name, &contents)) {
-    std::string error =
-        absl::StrCat("[image.load] - \"", file_name, "\" could not be read.");
-    return error;
+  } else {
+    util::FileReader reader(fs, file_name.c_str());
+    if (![&reader, &data, &contents] {
+          if (!reader.Success()) return false;
+          std::size_t size;
+          if (!reader.GetSize(&size)) return false;
+          data.reset(new char[size]);
+          contents = {data.get(), size};
+          return reader.Read(0, size, data.get());
+        }()) {
+      std::string error =
+          absl::StrCat("[image.load] - \"", file_name, "\" could not be read.");
+      return error;
+    }
   }
 
   if (file_name.compare(file_name.length() - 4, 4, ".png") == 0) {
-    auto status = LoadPng(L, std::move(contents));
+    auto status = LoadPng(L, contents);
     if (!status.ok()) {
       std::string error = absl::StrCat("[image.load] (PNG) - \"", file_name,
                                        "\" - ", status.error());
@@ -749,7 +768,12 @@ lua::NResultsOr SetMaskedPattern(lua_State* L) {
 
 int LuaImageRequire(lua_State* L) {
   auto table = lua::TableRef::Create(L);
-  table.Insert("load", &lua::Bind<Load>);
+  void* fs = nullptr;
+  lua::Read(L, lua_upvalueindex(1), &fs);
+  lua_pushlightuserdata(L, fs);
+  lua_pushcclosure(L, &lua::Bind<Load>, 1);
+  table.InsertFromStackTop("load");
+
   table.Insert("scale", &lua::Bind<Scale>);
   table.Insert("setHue", &lua::Bind<SetHue>);
   table.Insert("setMaskedPattern", &lua::Bind<SetMaskedPattern>);

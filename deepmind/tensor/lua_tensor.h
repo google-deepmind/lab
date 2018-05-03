@@ -39,6 +39,8 @@
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/tensor_view.h"
+#include "deepmind/util/file_reader.h"
+#include "public/file_reader_types.h"
 
 namespace deepmind {
 namespace lab {
@@ -50,6 +52,7 @@ namespace tensor {
 void LuaTensorRegister(lua_State* L);
 
 // Returns a table of LuaTensor constructors.
+// Must be called with Lua upvalue pointing to a DeepMindReadOnlyFileSystem.
 // [1, 0, -]
 int LuaTensorConstructors(lua_State* L);
 
@@ -337,6 +340,13 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // values plus the offset would exceed the size of the file an error is
   // thrown.
   static lua::NResultsOr CreateFromFile(lua_State* L, lua::TableRef file_args) {
+    const DeepMindReadOnlyFileSystem* fs = nullptr;
+    if (IsTypeMismatch(lua::Read(L, lua_upvalueindex(1), &fs))) {
+      return "[Tensor.CreateFromFile] Invalid filesystem in upvalue";
+    }
+    if (fs == nullptr) {
+      return "[Tensor.CreateFromFile] Miising filesystem in upvalue";
+    }
     ShapeVector shape;
     std::vector<T> storage;
     std::ptrdiff_t offset = 0;
@@ -350,17 +360,17 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       return "[Tensor.CreateFromFile] 'byteOffset' must be >= 0.";
     }
 
-    std::ifstream ifs(name.c_str(), std::ifstream::binary);
+    util::FileReader ifs(fs, name.c_str());
 
-    if (!ifs) {
+    if (!ifs.Success()) {
       return "[Tensor.CreateFromFile] Failed to open file, name: " + name;
     }
 
-    if (!ifs.seekg(0, std::ios::end)) {
+    std::size_t file_size;
+    if (!ifs.GetSize(&file_size)) {
       return "[Tensor.CreateFromFile] Failed to read file, name: " + name;
     }
 
-    std::ptrdiff_t file_size = ifs.tellg();
     if (offset > file_size) {
       std::string error =
           "[Tensor.CreateFromFile] Must supply 'byteOffset' within file size";
@@ -385,8 +395,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     }
 
     storage.resize(count);
-    if (!ifs.seekg(offset, std::ios::beg) ||
-        !ifs.read(reinterpret_cast<char*>(storage.data()), sizeof(T) * count)) {
+    if (!ifs.Read(offset, sizeof(T) * count,
+                  reinterpret_cast<char*>(storage.data()))) {
       return "[Tensor.CreateFromFile] Failed to read file, name: " + name;
     }
     shape.push_back(count);
@@ -404,7 +414,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // If called with a file parameter, Tensor{file = {name=<filename>, ...}}
   // it will create a rank-1 tensor with the values read from the file.
   // Fails if the shape is inconsistent or contains values that cannot be read.
-  // [1, (n|1), e]
   static lua::NResultsOr Create(lua_State* L) {
     lua::TableRef table;
     if (lua::Read(L, 1, &table)) {
@@ -528,7 +537,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     }
   }
 
-  // [1, 3, e]
   lua::NResultsOr Select(lua_State* L) {
     std::size_t dim;
     std::size_t index;
@@ -542,7 +550,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
            lua::ToString(L, 2) + ", " + lua::ToString(L, 3);
   }
 
-  // [1, 3, e]
   lua::NResultsOr Narrow(lua_State* L) {
     std::size_t dim;
     std::size_t index;
@@ -559,7 +566,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
            lua::ToString(L, 4);
   }
 
-  // [1, 1, e]
   lua::NResultsOr Reverse(lua_State* L) {
     std::size_t dim;
     auto result = tensor_view_;
@@ -571,7 +577,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
            lua::ToString(L, 2);
   }
 
-  // [1, 2, e]
   lua::NResultsOr ApplyIndexed(lua_State* L) {
     lua::NResultsOr err = 0;
     tensor_view_.ForEachIndexedMutable(
@@ -605,14 +610,13 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       lua_pop(L, err.n_results());
       return err;
     }
-    lua_pop(L, lua_gettop(L) - 1);
+    lua_settop(L, 1);
     return 1;
   }
 
   // Clamps all values to the interval [arg1, arg2]; arg1 must not exceed arg2.
   // If either argument is not found, then clamping does not occour on that
   // side.
-  // [(0-2), 1, e]
   lua::NResultsOr Clamp(lua_State* L) {
     T min_value = std::numeric_limits<T>::lowest(),
       max_value = std::numeric_limits<T>::max();
@@ -642,7 +646,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     return 1;
   }
 
-  // [1, 2, e]
   lua::NResultsOr Apply(lua_State* L) {
     lua::NResultsOr err = 0;
     tensor_view_.ForEachMutable([L, &err](T* value) {
@@ -668,7 +671,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       lua_pop(L, err.n_results());
       return err;
     }
-    lua_pop(L, lua_gettop(L) - 1);
+    lua_settop(L, 1);
     return 1;
   }
 
@@ -685,19 +688,16 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     return 1;
   }
 
-  // [1, 0, -]
   lua::NResultsOr Type(lua_State* L) {
     lua::Push(L, ClassName());
     return 1;
   }
 
-  // [1, 0, -]
   lua::NResultsOr Size(lua_State* L) {
     lua::Push(L, tensor_view_.num_elements());
     return 1;
   }
 
-  // [1, 0, -]
   lua::NResultsOr Shape(lua_State* L) {
     lua::Push(L, tensor_view_.shape());
     return 1;
@@ -706,7 +706,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // Call with an array of integers. The tensor must be contiguous and the
   // number of elements in the new shape must match that of the original
   // otherwise an error is raised.
-  // [1, 1, e]
   lua::NResultsOr Reshape(lua_State* L) {
     auto result = tensor_view_;
     ShapeVector new_shape;
@@ -719,7 +718,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     }
   }
 
-  // [1, 0, -]
   lua::NResultsOr Clone(lua_State* L) {
     std::vector<T> storage;
     storage.reserve(tensor_view_.num_elements());
@@ -731,7 +729,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     return 1;
   }
 
-  // [1, 1, -]
   lua::NResultsOr Equal(lua_State* L) {
     bool result = false;
     // Equal self?
@@ -749,7 +746,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   }
 
   // Returns self on to the stack, after the operation is applied in-place.
-  // [0, 1, -]
   template <void (View::*Op)()>
   lua::NResultsOr UnaryOp(lua_State* L) {
     (tensor_view_.*Op)();
@@ -757,14 +753,13 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   }
 
   // Returns self on to the stack, after the operation is applied in-place.
-  // [1, 1, e]
   template <void (View::*Op)(double)>
   lua::NResultsOr ScalarOp(lua_State* L) {
     std::vector<T> values;
     double value;
     if (lua::Read(L, 2, &value)) {
       (tensor_view_.*Op)(value);
-      lua_pop(L, lua_gettop(L) - 1);
+      lua_settop(L, 1);
       return 1;
     } else if (lua::Read(L, 2, &values)) {
       const auto& shape = tensor_view_.shape();
@@ -774,7 +769,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
           new_view.Select(shape.size() - 1, i);
           (new_view.*Op)(values[i]);
         }
-        lua_pop(L, lua_gettop(L) - 1);
+        lua_settop(L, 1);
         return 1;
       }
     }
@@ -784,12 +779,11 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   }
 
   // Returns self on to the stack, after the operation is applied in place.
-  // [1, 1, e]
   template <bool (View::*Op)(const View&)>
   lua::NResultsOr ViewOp(lua_State* L) {
     if (LuaTensor* rhs = LuaTensor::ReadObject(L, 2)) {
       if ((tensor_view_.*Op)(rhs->tensor_view_)) {
-        lua_pop(L, lua_gettop(L) - 1);
+        lua_settop(L, 1);
         return 1;
       }
     }
@@ -797,8 +791,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
            lua::ToString(L, 2);
   }
 
-  // Returns self on to the stack.
-  // [1, 2, e]
+  // Returns transposed tensor.
   lua::NResultsOr Transpose(lua_State* L) {
     std::size_t index_from;
     std::size_t index_to;
@@ -816,7 +809,6 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // the matrix product self * rhs, returning the result on to the stack.
   // Fails if any of the operands is not a rank-2 tensor, or their respective
   // dimensions are not product-compatible (#colums(self) != #rows(rhs)).
-  // [1, 1, e]
   lua::NResultsOr MMul(lua_State* L) {
     if (LuaTensor* rhs = LuaTensor::ReadObject(L, 2)) {
       const auto& lhs_shape = tensor_view().shape();
@@ -847,11 +839,10 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // Fails if self is not a rank-1 tensor or if the parameter provided is not
   // a generator.
   // Returns self on to the stack.
-  // [1, 1, e]
   lua::NResultsOr Shuffle(lua_State* L) {
     LuaRandom* random = LuaRandom::ReadObject(L, 2);
     if (random && tensor_view_.Shuffle(random->GetPrbg())) {
-      lua_pop(L, lua_gettop(L) - 1);
+      lua_settop(L, 1);
       return 1;
     }
     return "[Tensor.Shuffle] Must call on a rank-1 Tensor with random number "

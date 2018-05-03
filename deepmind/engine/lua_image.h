@@ -39,6 +39,7 @@ namespace lab {
 //   tgt_width, ChannelCount}, where ChannelCount is the number of channels used
 //   by 'src'. Returns the scaled image.
 //   Supports only contiguous tensors as input.
+// Must be called with Lua upvalue pointing to a DeepMindReadOnlyFileSystem.
 
 // [0, +1, -]
 int LuaImageRequire(lua_State* L);

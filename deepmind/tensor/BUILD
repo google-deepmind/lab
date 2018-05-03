@@ -28,6 +28,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tensor_view",
+        "//:file_reader_types",
         "//deepmind/engine:lua_random",
         "//deepmind/lua",
         "//deepmind/lua:bind",
@@ -36,6 +37,7 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
+        "//deepmind/util:file_reader",
     ],
 )
 
@@ -52,6 +54,7 @@ cc_test(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/lua:vm",
+        "//deepmind/util:default_read_only_file_system",
         "@com_google_googletest//:gtest_main",
     ],
 )

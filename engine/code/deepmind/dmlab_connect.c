@@ -1428,5 +1428,6 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   gc->dm_ctx->context = gc;
   return dmlab_create_context(gc->runfiles_path, gc->dm_ctx,
                               params->file_reader_override,
+                              params->read_only_file_system,
                               params->optional_temp_folder);
 }

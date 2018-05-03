@@ -14,6 +14,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//:file_reader_types",
         "//:level_cache_types",
         "//third_party/rl_api:env_c_api",
     ],

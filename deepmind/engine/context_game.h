@@ -31,6 +31,7 @@
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/util/smoother.h"
+#include "public/file_reader_types.h"
 
 namespace deepmind {
 namespace lab {
@@ -59,17 +60,8 @@ class ContextGame {
 
   ContextGame(const char* executable_runfiles,
               const DeepmindCalls* deepmind_calls, Reader* file_reader_override,
-              std::string temp_folder)
-      : deepmind_calls_(deepmind_calls),
-        map_finished_(false),
-        player_view_{},
-        velocity_smoother_(
-            /*smooth_time=*/util::ConvertExpAt60FpsToSmoothTime(0.1),
-            /*start=*/{0.0, 0.0, 0.0}),
-        executable_runfiles_(executable_runfiles),
-        file_reader_override_(file_reader_override),
-        temp_folder_(std::move(temp_folder)) {}
-
+              const DeepMindReadOnlyFileSystem* read_only_file_system,
+              std::string temp_folder);
   ~ContextGame();
 
   // Returns an event module. A pointer to ContextGame must exist in the up
@@ -116,6 +108,10 @@ class ContextGame {
 
   Reader* FileReaderOverride() { return file_reader_override_; }
 
+  const DeepMindReadOnlyFileSystem* ReadOnlyFileSystem() const {
+    return &read_only_file_system_;
+  }
+
   // Retrieves what to render when render_custom_view engine command is called.
   // Returns whether to render the player or not.
   void GetCustomView(int* width, int* height, float position[3],
@@ -147,6 +143,9 @@ class ContextGame {
 
   // Optional override for reading contents of a file.
   Reader* file_reader_override_;
+
+  // Readonly filesystem for reading partial contents of a file.
+  DeepMindReadOnlyFileSystem read_only_file_system_;
 
   // The path level scripts should use for temporary files.
   std::string temp_folder_;

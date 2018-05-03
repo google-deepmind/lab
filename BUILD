@@ -553,6 +553,12 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "file_reader_types",
+    hdrs = ["public/file_reader_types.h"],
+    visibility = ["//visibility:public"],
+)
+
 IOQ3_RENDERERGL1_SRCS = [
     CODE_DIR + "/renderergl2/tr_image_dds.c",
 ] + glob(
@@ -614,6 +620,7 @@ IOQ3_COMMON_SRCS = [
 ) + IOQ3_RENDERERGL1_SRCS
 
 IOQ3_COMMON_DEPS = [
+    ":file_reader_types",
     ":level_cache_types",
     ":qcommon_hdrs",
     "//deepmind/engine:callbacks",
@@ -927,6 +934,7 @@ cc_library(
     linkopts = ["-ldl"],
     visibility = ["//testing:__subpackages__"],
     deps = [
+        ":file_reader_types",
         ":level_cache_types",
         "//third_party/rl_api:env_c_api",
     ],
@@ -938,6 +946,7 @@ cc_library(
     data = GAME_ASSETS,
     visibility = ["//testing:__subpackages__"],
     deps = [
+        ":file_reader_types",
         ":level_cache_types",
         "//third_party/rl_api:env_c_api",
     ] + select({

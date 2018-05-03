@@ -22,6 +22,7 @@
 
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/table_ref.h"
+#include "public/file_reader_types.h"
 
 namespace deepmind {
 namespace lab {
@@ -29,14 +30,22 @@ namespace tensor {
 
 int LuaTensorConstructors(lua_State* L) {
   lua::TableRef table = lua::TableRef::Create(L);
-  table.Insert("ByteTensor", &lua::Bind<LuaTensor<std::uint8_t>::Create>);
-  table.Insert("CharTensor", &lua::Bind<LuaTensor<std::int8_t>::Create>);
-  table.Insert("Int16Tensor", &lua::Bind<LuaTensor<std::int16_t>::Create>);
-  table.Insert("Int32Tensor", &lua::Bind<LuaTensor<std::int32_t>::Create>);
-  table.Insert("Int64Tensor", &lua::Bind<LuaTensor<std::int64_t>::Create>);
-  table.Insert("FloatTensor", &lua::Bind<LuaTensor<float>::Create>);
-  table.Insert("DoubleTensor", &lua::Bind<LuaTensor<double>::Create>);
-  table.Insert("Tensor", &lua::Bind<LuaTensor<double>::Create>);
+  void* fs = nullptr;
+  lua::Read(L, lua_upvalueindex(1) , &fs);
+  auto table_insert = [L, &table, fs](const char* name, lua_CFunction fn) {
+    lua_pushlightuserdata(L, fs);
+    lua_pushcclosure(L, fn, 1);
+    table.InsertFromStackTop(name);
+  };
+
+  table_insert("ByteTensor", &lua::Bind<LuaTensor<std::uint8_t>::Create>);
+  table_insert("CharTensor", &lua::Bind<LuaTensor<std::int8_t>::Create>);
+  table_insert("Int16Tensor", &lua::Bind<LuaTensor<std::int16_t>::Create>);
+  table_insert("Int32Tensor", &lua::Bind<LuaTensor<std::int32_t>::Create>);
+  table_insert("Int64Tensor", &lua::Bind<LuaTensor<std::int64_t>::Create>);
+  table_insert("FloatTensor", &lua::Bind<LuaTensor<float>::Create>);
+  table_insert("DoubleTensor", &lua::Bind<LuaTensor<double>::Create>);
+  table_insert("Tensor", &lua::Bind<LuaTensor<double>::Create>);
   lua::Push(L, table);
   return 1;
 }

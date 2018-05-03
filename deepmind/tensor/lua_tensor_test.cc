@@ -31,6 +31,7 @@
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/lua/vm.h"
+#include "deepmind/util/default_read_only_file_system.h"
 
 namespace deepmind {
 namespace lab {
@@ -47,12 +48,14 @@ class LuaTensorTest : public ::testing::Test {
   LuaTensorTest() : lua_vm_(lua::CreateVm()) {
     auto* L = lua_vm_.get();
     LuaRandom::Register(L);
+    void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+        util::DefaultReadOnlyFileSystem());
     lua_vm_.AddCModuleToSearchers(
         "dmlab.system.sys_random", &lua::Bind<LuaRandom::Require>,
         {&prbg_, reinterpret_cast<void*>(static_cast<std::uintptr_t>(0))});
     tensor::LuaTensorRegister(L);
     lua_vm_.AddCModuleToSearchers("dmlab.system.tensor",
-                                  tensor::LuaTensorConstructors);
+                                  tensor::LuaTensorConstructors, {default_fs});
   }
   std::mt19937_64 prbg_;
   uint32_t mixer_seed_;

@@ -26,6 +26,7 @@
 #include "deepmind/model_generation/geometry_util.h"
 #include "deepmind/support/test_srcdir.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "deepmind/util/default_read_only_file_system.h"
 
 namespace deepmind {
 namespace lab {
@@ -143,8 +144,10 @@ return cube
 TEST(DeepmindModelTest, ReadIndicesOutOfRange) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
@@ -177,8 +180,10 @@ return cube
 TEST(DeepmindModelTest, ReadNoVertices) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
@@ -213,8 +218,10 @@ return cube
 TEST(DeepmindModelTest, ReadVerticesWrongSize) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
@@ -247,8 +254,10 @@ return cube
 TEST(DeepmindModelTest, ReadNoIndices) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
@@ -283,8 +292,10 @@ return cube
 TEST(DeepmindModelTest, ReadIndicesWrongSize) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
@@ -319,8 +330,10 @@ return cube
 TEST(DeepmindModelTest, ReadNoShader) {
   auto lua_vm = lua::CreateVm();
   lua_vm.AddPathToSearchers(TestSrcDir());
+  void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+      util::DefaultReadOnlyFileSystem());
   lua_vm.AddCModuleToSearchers("dmlab.system.tensor",
-                               tensor::LuaTensorConstructors);
+                               tensor::LuaTensorConstructors, {default_fs});
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 

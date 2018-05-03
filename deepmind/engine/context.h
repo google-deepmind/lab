@@ -70,6 +70,7 @@ class Context {
       DeepmindHooks* hooks,
       bool (*file_reader_override)(const char* file_name, char** buff,
                                    std::size_t* size),
+      const DeepMindReadOnlyFileSystem* read_only_file_system,
       const char* temp_folder);
 
   // Inserts 'key' 'value' into settings_.
@@ -526,6 +527,9 @@ class Context {
 
   // Callbacks for fetching/writing levels to cache.
   DeepMindLabLevelCacheParams level_cache_params_;
+
+  // Readonly filesystem overridable via DeepMindLabLaunchParams.
+  DeepMindReadOnlyFileSystem readonly_filesystem_;
 
   // Last error message.
   std::string error_message_;

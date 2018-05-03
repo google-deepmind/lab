@@ -19,6 +19,7 @@ cc_library(
         ":lua_maze_generation",
         ":lua_random",
         ":lua_text_level_maker",
+        "//:file_reader_types",
         "//:level_cache_types",
         "//deepmind/include:context_hdrs",
         "//deepmind/level_generation:compile_map",
@@ -66,6 +67,7 @@ cc_library(
     srcs = ["context_game.cc"],
     hdrs = ["context_game.h"],
     deps = [
+        "//:file_reader_types",
         "//deepmind/include:context_hdrs",
         "//deepmind/lua",
         "//deepmind/lua:class",
@@ -75,6 +77,7 @@ cc_library(
         "//deepmind/lua:table_ref",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
+        "//deepmind/util:default_read_only_file_system",
         "//deepmind/util:files",
         "//deepmind/util:smoother",
         "@com_google_absl//absl/strings",
@@ -178,6 +181,7 @@ cc_library(
         ":lua_maze_generation",
         ":lua_random",
         ":lua_text_level_maker",
+        "//:file_reader_types",
         "//deepmind/include:context_hdrs",
         "//deepmind/level_generation/text_level:lua_bindings",
         "//deepmind/lua:vm",
@@ -224,7 +228,7 @@ cc_test(
     name = "lua_maze_generation_test",
     size = "large",
     srcs = ["lua_maze_generation_test.cc"],
-    tags = ["manual"],  # Platform specific tests.
+    tags = ["manual"],  # Different C++ library implementations may generate different results.
     deps = [
         ":lua_maze_generation",
         ":lua_random",
@@ -297,13 +301,14 @@ cc_library(
     srcs = ["lua_image.cc"],
     hdrs = ["lua_image.h"],
     deps = [
+        "//:file_reader_types",
         "//deepmind/lua",
         "//deepmind/lua:bind",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/tensor:lua_tensor",
-        "//deepmind/util:files",
+        "//deepmind/util:file_reader",
         "@com_google_absl//absl/strings",
         "@png_archive//:png",
     ],
@@ -320,6 +325,7 @@ cc_test(
         "//deepmind/lua:push_script",
         "//deepmind/lua:vm_test_util",
         "//deepmind/tensor:lua_tensor",
+        "//deepmind/util:default_read_only_file_system",
         "@com_google_googletest//:gtest_main",
     ],
 )

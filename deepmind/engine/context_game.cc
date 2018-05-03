@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Google Inc.
+// Copyright (C) 2017-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
 #include "deepmind/util/files.h"
+#include "deepmind/util/default_read_only_file_system.h"
 
 namespace deepmind {
 namespace lab {
@@ -381,6 +382,31 @@ double CanonicalAngle360(double angle) {
 }
 
 }  // namespace
+
+ContextGame::ContextGame(const char* executable_runfiles,
+              const DeepmindCalls* deepmind_calls, Reader* file_reader_override,
+              const DeepMindReadOnlyFileSystem* read_only_file_system,
+              std::string temp_folder)
+      : deepmind_calls_(deepmind_calls),
+        map_finished_(false),
+        player_view_{},
+        velocity_smoother_(
+            /*smooth_time=*/util::ConvertExpAt60FpsToSmoothTime(0.1),
+            /*start=*/{0.0, 0.0, 0.0}),
+        executable_runfiles_(executable_runfiles),
+        file_reader_override_(file_reader_override),
+        temp_folder_(std::move(temp_folder)) {
+  if (read_only_file_system == nullptr ||
+      read_only_file_system->open == nullptr ||
+      read_only_file_system->get_size == nullptr ||
+      read_only_file_system->read == nullptr ||
+      read_only_file_system->error == nullptr ||
+      read_only_file_system->close == nullptr) {
+    read_only_file_system_ = *util::DefaultReadOnlyFileSystem();
+  } else {
+    read_only_file_system_ = *read_only_file_system;
+  }
+}
 
 int ContextGame::Init() {
   temp_folder_owned_ = temp_folder_.empty();

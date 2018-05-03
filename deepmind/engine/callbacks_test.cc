@@ -30,8 +30,8 @@ using ::testing::ElementsAreArray;
 TEST(DeepmindCallbackTest, CreateAndDestroyContext) {
   DeepmindContext ctx{};
   const char arg0[] = "dmlab";
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/callbacks_test");
 
   ctx.hooks.add_setting(ctx.userdata, "command", "hello");
@@ -51,8 +51,8 @@ TEST(DeepmindCallbackTest, CustomObservations) {
   DeepmindContext ctx{};
   const char callbacks_test[] = "tests/callbacks_test";
   const char order[] = "Find Apples!";
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.add_setting(ctx.userdata, "order", order);
   ctx.hooks.set_level_name(ctx.userdata, callbacks_test);
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
@@ -104,8 +104,8 @@ TEST(DeepmindCallbackTest, CustomObservations) {
 
 TEST(DeepmindCallbackTest, CreateModel) {
   DeepmindContext ctx{};
-  ASSERT_EQ(0,
-            dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr, nullptr));
+  ASSERT_EQ(0, dmlab_create_context(TestSrcDir().c_str(), &ctx, nullptr,
+                                    nullptr, nullptr));
   ctx.hooks.set_level_name(ctx.userdata, "tests/callbacks_test");
   ASSERT_EQ(0, ctx.hooks.init(ctx.userdata));
 

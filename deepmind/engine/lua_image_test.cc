@@ -29,6 +29,7 @@
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/vm_test_util.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "deepmind/util/default_read_only_file_system.h"
 
 namespace deepmind {
 namespace lab {
@@ -41,7 +42,10 @@ class LuaImageTest : public ::testing::Test {
  protected:
   LuaImageTest() : lua_vm_(lua::CreateVm()) {
     auto* L = lua_vm_.get();
-    lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire);
+    void* default_fs = const_cast<DeepMindReadOnlyFileSystem*>(
+        util::DefaultReadOnlyFileSystem());
+    lua_vm_.AddCModuleToSearchers("dmlab.system.image", LuaImageRequire,
+                                  {default_fs});
     tensor::LuaTensorRegister(L);
     lua_vm_.AddCModuleToSearchers("dmlab.system.tensor",
                                   tensor::LuaTensorConstructors);

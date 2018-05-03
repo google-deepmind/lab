@@ -119,6 +119,7 @@ cc_test(
         "//deepmind/lua:vm",
         "//deepmind/support:test_srcdir",
         "//deepmind/tensor:lua_tensor",
+        "//deepmind/util:default_read_only_file_system",
         "@com_google_googletest//:gtest_main",
     ],
 )
