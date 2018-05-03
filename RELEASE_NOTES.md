@@ -1,5 +1,11 @@
 # DeepMind Lab Release Notes
 
+## Current Release
+
+### Minor Improvements:
+
+1.  Add support for absl::variant to lua::Push and lua::Read.
+
 ## release-2018-05-15 May 2018 release
 
 ### New Levels:

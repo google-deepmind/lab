@@ -30,6 +30,7 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "absl/types/variant.h"
 #include "deepmind/lua/lua.h"
 
 namespace deepmind {
@@ -99,6 +100,10 @@ void Push(lua_State* L, const absl::InlinedVector<T, N, A>& values);
 template <typename T>
 void Push(lua_State* L, absl::Span<T> values);
 
+// [0, +1, -]
+template <typename... T>
+void Push(lua_State* L, const absl::variant<T...>& value);
+
 // End of public header, implementation details follow.
 
 template <typename T>
@@ -134,6 +139,28 @@ void Push(lua_State* L, const std::unordered_map<K, T, H, C, A>& values) {
     Push(L, pair.second);
     lua_settable(L, -3);
   }
+}
+
+namespace internal {
+
+struct PushVariant {
+  template <typename T>
+  void operator()(const T& value) const {
+    Push(L, value);
+  }
+
+  void operator()(const absl::monostate) const {
+    lua_pushnil(L);
+  }
+
+  lua_State* L;
+};
+
+}  // namespace internal
+
+template <typename... T>
+void Push(lua_State* L, const absl::variant<T...>& value) {
+  absl::visit(internal::PushVariant{L}, value);
 }
 
 }  // namespace lua

@@ -30,6 +30,7 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "absl/types/variant.h"
 #include "deepmind/lua/lua.h"
 
 namespace deepmind {
@@ -301,6 +302,12 @@ template <typename K, typename T, typename H, typename C, typename A>
 ReadResult Read(lua_State* L, int idx,
                 std::unordered_map<K, T, H, C, A>* result);
 
+// Reads value from the Lua stack. On success, the varant stores the result of
+// the value on the stack. The reads are attempted in the order that the types
+// are presented in the variant.
+template <typename... T>
+ReadResult Read(lua_State* L, int idx, absl::variant<T...>* result);
+
 template <typename T>
 ReadResult Read(lua_State* L, int idx, absl::Span<T> values) {
   switch (lua_type(L, idx)) {
@@ -428,6 +435,39 @@ ReadResult Read(lua_State* L, int idx,
   }
   result->swap(local_result);
   return ReadFound();
+}
+
+namespace internal {
+
+template <typename Variant, typename T>
+ReadResult TryReadValueRecursive(lua_State* L, int idx, Variant* result) {
+  return Read(L, idx, &result->template emplace<T>());
+}
+
+// Attempts to read value in Lua stack at index 'idx' into 'result' when
+// 'result' is with variant of type 'T0'. Returns ReadFound if successful.
+// Otherwise continue attempting to read value with remaining types.
+template <typename Variant, typename T0, typename T1, typename... TN>
+ReadResult TryReadValueRecursive(lua_State* L, int idx, Variant* result) {
+  if (IsFound(TryReadValueRecursive<Variant, T0>(L, idx, result))) {
+    return ReadFound();
+  } else {
+    return TryReadValueRecursive<Variant, T1, TN...>(L, idx, result);
+  }
+}
+
+}  // namespace internal
+
+template <typename... T>
+ReadResult Read(lua_State* L, int idx, absl::variant<T...>* result) {
+  switch (lua_type(L, idx)) {
+    case LUA_TNONE:
+    case LUA_TNIL:
+      return ReadNotFound();
+    default:
+      return internal::TryReadValueRecursive<absl::variant<T...>, T...>(L, idx,
+                                                                        result);
+  }
 }
 
 // Coerce result into human readable string. (Does not fail.)

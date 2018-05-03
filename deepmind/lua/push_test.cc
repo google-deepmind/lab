@@ -215,6 +215,61 @@ TEST_F(PushTest, PushTable) {
   EXPECT_EQ(visited.size(), test.size());
 }
 
+TEST_F(PushTest, PushVariant) {
+  absl::variant<absl::string_view, int, double> value;
+
+  // Push default constructed string_view.
+  Push(L, value);
+  ASSERT_EQ(LUA_TSTRING, lua_type(L, 1));
+  EXPECT_STREQ(lua_tostring(L, 1), "");
+
+  value = "2 - hello";
+  Push(L, value);
+  ASSERT_EQ(LUA_TSTRING, lua_type(L, 2));
+  EXPECT_STREQ(lua_tostring(L, 2), "2 - hello");
+
+  value = 3;
+  Push(L, value);
+  ASSERT_EQ(LUA_TNUMBER, lua_type(L, 3));
+  EXPECT_EQ(lua_tonumber(L, 3), 3);
+
+  value = 4.5;
+  Push(L, value);
+  ASSERT_EQ(LUA_TNUMBER, lua_type(L, 4));
+  EXPECT_EQ(lua_tonumber(L, 4), 4.5);
+  lua_settop(L, 0);
+}
+
+TEST_F(PushTest, PushVariantMonostate) {
+  absl::variant<absl::monostate, int> value;
+  Push(L, value);
+  ASSERT_EQ(LUA_TNIL, lua_type(L, 1));
+  value = 10;
+  Push(L, value);
+  ASSERT_EQ(LUA_TNUMBER, lua_type(L, 2));
+  EXPECT_EQ(lua_tonumber(L, 2), 10);
+  lua_settop(L, 0);
+}
+
+
+TEST_F(PushTest, PushVariantArray) {
+  std::vector<absl::variant<absl::string_view, double>> values;
+  values.emplace_back(10);
+  values.emplace_back("Hello");
+  Push(L, values);
+  ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
+  std::size_t count = ArrayLength(L, 1);
+  ASSERT_EQ(count, 2);
+
+  lua_rawgeti(L, 1, 1);
+  ASSERT_EQ(LUA_TNUMBER, lua_type(L, 2));
+  EXPECT_EQ(lua_tonumber(L, 2), 10);
+
+  lua_rawgeti(L, 1, 2);
+  ASSERT_EQ(LUA_TSTRING, lua_type(L, 3));
+  EXPECT_STREQ(lua_tostring(L, 3), "Hello");
+}
+
 }  // namespace
 }  // namespace lua
 }  // namespace lab
