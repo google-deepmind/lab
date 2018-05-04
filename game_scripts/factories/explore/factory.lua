@@ -15,6 +15,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local custom_decals = require 'decorators.custom_decals_decoration'
 local custom_observations = require 'decorators.custom_observations'
 local helpers = require 'common.helpers'
 local make_map = require 'common.make_map'
@@ -46,6 +47,9 @@ Keyword arguments:
 *   `opts.roomMinSize` (number, default 3)
 *   `opts.spawnCount` (number, default 5)
 *   `opts.spawnEntity` (character, default 'P')
+*   `opts.decalFrequency` (number, default 0.1)
+*   `opts.decalScale` (number, default 1.0)
+*   `opts.wallDecoration` (string, default '')
 *   `level` (table) - Level table.
 ]]
 function factory.createLevelApi(kwargs)
@@ -68,6 +72,9 @@ function factory.createLevelApi(kwargs)
   kwargs.opts.roomMinSize = kwargs.opts.roomMinSize or 3
   kwargs.opts.spawnCount = kwargs.opts.spawnCount or 5
   kwargs.opts.spawnEntity = kwargs.opts.spawnEntity or 'P'
+  kwargs.opts.decalFrequency = kwargs.opts.decalFrequency or 0.1
+  kwargs.opts.decalScale = kwargs.opts.decalScale or 1.0
+  kwargs.opts.wallDecoration = kwargs.opts.wallDecoration or ''
 
   local api = {}
 
@@ -108,6 +115,14 @@ function factory.createLevelApi(kwargs)
         extraConnectionProbability = kwargs.opts.extraConnectionProbability,
     }
 
+    if kwargs.opts.decalScale and kwargs.opts.decalScale ~= 1 then
+      custom_decals.scale(kwargs.opts.decalScale)
+    end
+    if kwargs.opts.wallDecoration ~= '' then
+      custom_decals.randomize(kwargs.opts.wallDecoration, randomMap)
+      custom_decals.decorate(self)
+    end
+
     print('Maze Generated (seed ' .. seed .. '):')
     print(api._maze:entityLayer())
     io.flush()
@@ -117,6 +132,7 @@ function factory.createLevelApi(kwargs)
         mapEntityLayer = api._maze:entityLayer(),
         mapVariationsLayer = api._maze:variationsLayer(),
         useSkybox = true,
+        decalFrequency = kwargs.opts.decalFrequency,
     }
 
     if kwargs.level.start then
