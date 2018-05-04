@@ -79,8 +79,7 @@ class GameControllerTest(unittest.TestCase):
     steps_moving_fast = self._env.num_steps() - start_steps
     start_steps = self._env.num_steps()
     self._controller.move_to(.0, .0, max_speed=50.0)
-    self.assertLess(steps_moving_fast,
-                    (self._env.num_steps() - start_steps) / 2.)
+    self.assertLess(steps_moving_fast, self._env.num_steps() - start_steps)
 
   def testControllerThrowsExceptionWhenBlocked(self):
     self._controller.move_to(100.0, .0)
