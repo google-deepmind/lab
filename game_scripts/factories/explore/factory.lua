@@ -54,6 +54,7 @@ Keyword arguments:
 ]]
 function factory.createLevelApi(kwargs)
   assert(kwargs.level)
+  kwargs.opts.useSkybox = kwargs.opts.useSkybox == nil or kwargs.opts.useSkybox
   kwargs.opts.episodeLengthSeconds = kwargs.opts.episodeLengthSeconds or 90
   kwargs.opts.extraConnectionProbability =
       kwargs.opts.extraConnectionProbability or 0.0
@@ -131,7 +132,7 @@ function factory.createLevelApi(kwargs)
         mapName = mapName,
         mapEntityLayer = api._maze:entityLayer(),
         mapVariationsLayer = api._maze:variationsLayer(),
-        useSkybox = true,
+        useSkybox = kwargs.opts.useSkybox,
         decalFrequency = kwargs.opts.decalFrequency,
     }
 

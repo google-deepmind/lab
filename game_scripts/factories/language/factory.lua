@@ -82,6 +82,7 @@ end
 
 function factory.createLevelApi(kwargs)
   assert(kwargs.episodeLengthSeconds)
+  kwargs.useSkybox = kwargs.useSkybox == nil or kwargs.useSkybox
   local api = {}
 
   -- Called to select the next task.
@@ -251,7 +252,7 @@ function factory.createLevelApi(kwargs)
             mapEntityLayer = mapInfo.entityLayer,
             mapVariationsLayer = mapInfo.variationsLayer,
             textureSet = mapInfo.textureSet,
-            useSkybox = true,
+            useSkybox = kwargs.useSkybox,
             callback = function (i, j, c, maker)
               local pickup = api:_makePickup(c)
               if pickup then

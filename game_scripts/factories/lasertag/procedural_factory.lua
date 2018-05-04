@@ -72,6 +72,7 @@ Keyword arguments:
 *   `episodeLengthSeconds` (number, default 600) - Episode length in seconds.
 ]]
 function factory.createLevelApi(kwargs)
+  kwargs.useSkybox = kwargs.useSkybox == nil or kwargs.useSkybox
   kwargs.color = kwargs.color or false
   kwargs.skill = kwargs.skill or 4.0
   kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or false
@@ -125,7 +126,7 @@ function factory.createLevelApi(kwargs)
         mapName = 'lt_procedural',
         mapEntityLayer = maze:entityLayer(),
         mapVariationsLayer = maze:variationsLayer(),
-        useSkybox = true,
+        useSkybox = kwargs.useSkybox,
         callback = makeEntities,
         allowBots = true
     }
