@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local brady_konkle_oliva2008 = require 'datasets.brady_konkle_oliva2008'
 local cifar10 = require 'datasets.cifar10'
+local mnist = require 'datasets.mnist'
 local color_dataset = require 'datasets.color_dataset'
 
 local selector = {}
@@ -33,6 +34,8 @@ function selector.loadDataset(name)
     return brady_konkle_oliva2008{}
   elseif name == 'cifar10' then
     return cifar10{}
+  elseif name == 'mnist' then
+    return mnist{}
   elseif name == 'color' then
     return color_dataset(8, 8, 1500)
   end
