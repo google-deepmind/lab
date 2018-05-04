@@ -980,10 +980,10 @@ py_binary(
 LOAD_TEST_SCRIPTS = [
     level_script[len("game_scripts/levels/"):-len(".lua")]
     for level_script in glob(
-        ["game_scripts/levels/**/*.lua"],
+        include = ["game_scripts/levels/**/*.lua"],
         exclude = [
-            "**/tests/**",
-            "**/factories/**",
+            "game_scripts/levels/**/tests/**",
+            "game_scripts/levels/**/factories/**",
         ],
     )
 ]
@@ -1006,11 +1006,11 @@ test_suite(
 SEED_TEST_SCRIPTS = [
     level_script[len("game_scripts/levels/"):-len(".lua")]
     for level_script in glob(
-        ["game_scripts/levels/**/*.lua"],
+        include = ["game_scripts/levels/**/*.lua"],
         exclude = [
-            "**/demos/**",
-            "**/factories/**",
-            "**/tests/**",
+            "game_scripts/levels/**/demos/**",
+            "game_scripts/levels/**/factories/**",
+            "game_scripts/levels/**/tests/**",
         ],
     )
 ]
