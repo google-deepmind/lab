@@ -14,8 +14,6 @@ namespace deepmind {
 namespace lab {
 namespace {
 
-using ::testing::ElementsAre;
-
 const char* test_script = nullptr;
 
 // Invokes seed_test.lua to check that the random seed is initialised in the

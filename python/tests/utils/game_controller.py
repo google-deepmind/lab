@@ -32,6 +32,7 @@ POSITION_TOLERANCE = 5.
 _FPS = 60
 _TURN_ACTION_NAME = 'LOOK_LEFT_RIGHT_PIXELS_PER_FRAME'
 _MOVE_ACTION_NAME = 'MOVE_BACK_FORWARD'
+_JUMP_ACTION_NAME = 'JUMP'
 _NOOP_ACTION = np.array([0, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 _MIN_BRAKING_SPEED = 50.
 _VELOCITY_TOLERANCE = 1e-08
@@ -182,6 +183,10 @@ class GameController(object):
     else:
       raise AssertionError('Failed to stop in max steps.')
     self.look_at_2d(start_orientation, steps=1)
+
+  def jump(self):
+    self._step(self._get_actions(_JUMP_ACTION_NAME, 1), 1)
+    self.stop()
 
   def _step(self, actions, steps):
     try:

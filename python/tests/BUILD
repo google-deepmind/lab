@@ -145,9 +145,9 @@ py_test(
     name = "maze_generation_test",
     size = "enormous",
     srcs = ["maze_generation_test.py"],
-    tags = ["manual"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    tags = ["manual"],
 )
 
 py_test(

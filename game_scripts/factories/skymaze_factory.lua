@@ -16,12 +16,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local custom_observations = require 'decorators.custom_observations'
+local debug_observations = require 'decorators.debug_observations'
 local gen = require 'map_generators.platforms_v1.gen'
 local helpers = require 'common.helpers'
 local map_maker = require 'dmlab.system.map_maker'
+local maze_generation = require 'dmlab.system.maze_generation'
 local pickups = require 'common.pickups'
 local random = require 'common.random'
 local setting_overrides = require 'decorators.setting_overrides'
+local tensor = require 'dmlab.system.tensor'
 local texture_sets = require 'themes.texture_sets'
 local themes = require 'themes.themes'
 
@@ -69,6 +72,10 @@ function factory.createLevelApi(kwargs)
     api._asciiMap = levelMap.map
     print(api._asciiMap)
     io.flush()
+
+    local maze = maze_generation:mazeGeneration{entity = api._asciiMap}
+    debug_observations.setMaze(maze)
+
     api._player = levelMap.playerPosition
     api._goal = levelMap.goalPosition
     api._timeOut = nil
@@ -177,6 +184,14 @@ function factory.createLevelApi(kwargs)
       apiParams = kwargs,
       decorateWithTimeout = true
   }
+
+  local function goalPosition()
+    return tensor.DoubleTensor({api._goal.y, api._goal.x})
+  end
+
+  custom_observations.addSpec(
+    'DEBUG.SKYMAZE.GOAL_POSITION', 'Doubles', {2}, goalPosition)
+
   return api
 end
 

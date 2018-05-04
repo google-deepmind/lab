@@ -135,6 +135,7 @@ class DebugObservationTest(unittest.TestCase):
 
     camera_image = env.observations()[DEBUG_CAMERA_OBSERVATION]
     icamera_image = env.observations()[DEBUG_ICAMERA_OBSERVATION]
+
     for (x, y), rgb in RANDOM_DEBUG_CAMERA_PIXEL_POS_VALUES:
       self.assertTrue(np.allclose(camera_image[:, y, x], rgb, atol=6))
       self.assertTrue(np.allclose(icamera_image[y, x, :], rgb, atol=6))

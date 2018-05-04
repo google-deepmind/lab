@@ -36,7 +36,7 @@ cc_test(
     name = "algorithm_test",
     size = "small",
     srcs = ["algorithm_test.cc"],
-    tags = ["manual"],  # Platform specific tests.
+    tags = ["manual"],  # Different C++ library implementations may generate different results.
     deps = [
         ":algorithm",
         ":text_maze",

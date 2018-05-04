@@ -23,8 +23,8 @@
 
 #include <stddef.h>
 
-#include "public/level_cache_types.h"
 #include "public/file_reader_types.h"
+#include "public/level_cache_types.h"
 #include "third_party/rl_api/env_c_api.h"
 
 #ifdef __cplusplus
