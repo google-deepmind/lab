@@ -40,6 +40,8 @@ typedef struct DeepmindEntitiesHooks_s DeepmindEntitiesHooks;
 
 typedef struct DeepmindPickupHooks_s DeepmindPickupHooks;
 
+typedef struct DeepmindPropertyHooks_s DeepmindPropertyHooks;
+
 struct DeepmindEventsHooks_s {
   // Returns number of event types.
   int (*type_count)(void* userdata);
@@ -126,6 +128,19 @@ struct DeepmindPickupHooks_s {
   int (*register_dynamic_items)(void* userdata);
   void (*read_dynamic_item_name)(void* userdata, int item_index,
                                  char* item_name);
+};
+
+struct DeepmindPropertyHooks_s {
+  EnvCApi_PropertyResult (*write)(void* userdata, const char* key,
+                                  const char* value);
+
+  EnvCApi_PropertyResult (*read)(void* userdata, const char* key,
+                                 const char** value);
+
+  EnvCApi_PropertyResult (*list)(
+      void* ctx_userdata, void* userdata, const char* group,
+      void (*prop_callback)(void* userdata, const char* key,
+                            EnvCApi_PropertyAttributes flags));
 };
 
 struct DeepmindHooks_s {
@@ -420,6 +435,7 @@ struct DeepmindHooks_s {
   DeepmindEventsHooks events;
   DeepmindEntitiesHooks entities;
   DeepmindPickupHooks pickups;
+  DeepmindPropertyHooks properties;
 };
 
 #ifdef __cplusplus

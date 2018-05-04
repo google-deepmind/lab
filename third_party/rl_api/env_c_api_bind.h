@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2016-2019 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,9 @@ void Bind(std::unique_ptr<T> env, EnvCApi* api, void** context) {
   api->init = DEEPMIND_RL_API_BIND(Init);
   api->start = DEEPMIND_RL_API_BIND(Start);
   api->error_message = DEEPMIND_RL_API_BIND(ErrorMessage);
+  api->read_property = DEEPMIND_RL_API_BIND(ReadProperty);
+  api->write_property = DEEPMIND_RL_API_BIND(WriteProperty);
+  api->list_property = DEEPMIND_RL_API_BIND(ListProperty);
   api->environment_name = DEEPMIND_RL_API_BIND(EnvironmentName);
   api->action_discrete_count = DEEPMIND_RL_API_BIND(ActionDiscreteCount);
   api->action_discrete_name = DEEPMIND_RL_API_BIND(ActionDiscreteName);

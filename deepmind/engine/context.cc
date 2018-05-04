@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Google Inc.
+// Copyright (C) 2016-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -509,6 +509,24 @@ static void new_client_info(void* userdata, int player_id,
                                                  player_model);
 }
 
+static EnvCApi_PropertyResult write_property(void* context, const char* key,
+                                             const char* value) {
+  return static_cast<Context*>(context)->WriteProperty(key, value);
+}
+
+static EnvCApi_PropertyResult read_property(void* context, const char* key,
+                                            const char** value) {
+  return static_cast<Context*>(context)->ReadProperty(key, value);
+}
+
+static EnvCApi_PropertyResult list_property(
+    void* context, void* userdata, const char* list_key,
+    void (*prop_callback)(void* userdata, const char* key,
+                          EnvCApi_PropertyAttributes flags)) {
+  return static_cast<Context*>(context)->ListProperty(userdata, list_key,
+                                                      prop_callback);
+}
+
 }  // extern "C"
 
 namespace deepmind {
@@ -646,6 +664,9 @@ Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
   hooks->custom_view = custom_view;
   hooks->issue_console_commands = issue_console_commands;
   hooks->new_client_info = new_client_info;
+  hooks->properties.read = read_property;
+  hooks->properties.write = write_property;
+  hooks->properties.list = list_property;
 }
 
 void Context::AddSetting(const char* key, const char* value) {
@@ -1611,8 +1632,7 @@ void Context::CustomPlayerMovement(int mover_id, const float mover_pos[3],
   std::copy_n(vel_delta.data(), vel_delta.size(), player_vel_delta);
 }
 
-void Context::GameEvent(const char* event_name, int count,
-                        const float* data) {
+void Context::GameEvent(const char* event_name, int count, const float* data) {
   lua_State* L = script_table_ref_.LuaState();
   lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("gameEvent");
@@ -1645,6 +1665,168 @@ void Context::NewClientInfo(int player_id, const char* player_name,
   lua::Push(L, player_model);
   auto result = lua::Call(L, 4);
   CHECK(result.ok()) << result.error() << '\n';
+}
+
+EnvCApi_PropertyResult Context::WriteProperty(const char* key,
+                                              const char* value) {
+  lua_State* L = script_table_ref_.LuaState();
+  lua::StackResetter stack_resetter(L);
+  script_table_ref_.PushMemberFunction("writeProperty");
+  if (lua_isnil(L, -2)) {
+    return EnvCApi_PropertyResult_NotFound;
+  }
+  lua::Push(L, key);
+  lua::Push(L, value);
+  auto result = lua::Call(L, 3);
+  if (result.n_results() == 0) {
+    LOG_IF(ERROR, !result.ok()) << result.error();
+    return EnvCApi_PropertyResult_PermissionDenied;
+  }
+
+  int prop_result = EnvCApi_PropertyResult_NotFound;
+  auto status = lua::Read(L, 1, &prop_result);
+  if (IsFound(status)) {
+    switch (prop_result) {
+      case EnvCApi_PropertyResult_Success:
+        return EnvCApi_PropertyResult_Success;
+      case EnvCApi_PropertyResult_NotFound:
+        return EnvCApi_PropertyResult_NotFound;
+      case EnvCApi_PropertyResult_PermissionDenied:
+        return EnvCApi_PropertyResult_PermissionDenied;
+      case EnvCApi_PropertyResult_InvalidArgument:
+        return EnvCApi_PropertyResult_InvalidArgument;
+    }
+  }
+
+  LOG(ERROR) << "writeProperty - Invalid return type from write! Must return "
+                "integer in range [0, 3] -"
+                " 0 (RESULT.SUCCESS),"
+                " 1 (RESULT.NOT_FOUND),"
+                " 2 (RESULT.PERMISSION_DENIED),"
+                " 3 (RESULT.INVALID_ARGUMENT)";
+  return EnvCApi_PropertyResult_PermissionDenied;
+}
+
+EnvCApi_PropertyResult Context::ReadProperty(const char* key,
+                                             const char** value) {
+  lua_State* L = script_table_ref_.LuaState();
+  lua::StackResetter stack_resetter(L);
+  script_table_ref_.PushMemberFunction("readProperty");
+  if (lua_isnil(L, -2)) {
+    return EnvCApi_PropertyResult_NotFound;
+  }
+  lua::Push(L, key);
+  auto result = lua::Call(L, 2);
+  if (result.n_results() == 0) {
+    LOG_IF(ERROR, !result.ok()) << result.error();
+    return EnvCApi_PropertyResult_PermissionDenied;
+  }
+
+  auto status = lua::Read(L, 1, &property_storage_);
+  if (IsFound(status)) {
+    *value = property_storage_.c_str();
+    return EnvCApi_PropertyResult_Success;
+  }
+
+  int prop_result = EnvCApi_PropertyResult_NotFound;
+  status = lua::Read(L, 1, &prop_result);
+  if (IsFound(status)) {
+    switch (prop_result) {
+      case EnvCApi_PropertyResult_NotFound:
+        return EnvCApi_PropertyResult_NotFound;
+      case EnvCApi_PropertyResult_PermissionDenied:
+        return EnvCApi_PropertyResult_PermissionDenied;
+    }
+  }
+
+  LOG(ERROR) << "readProperty - Invalid return type from read! Must return "
+                "string or integer in range [1, 2] -"
+                " 1 (RESULT.NOT_FOUND),"
+                " 2 (RESULT.PERMISSION_DENIED)";
+  return EnvCApi_PropertyResult_PermissionDenied;
+}
+
+namespace {
+
+struct PropertyListCallbackData {
+  void* userdata;
+  void (*call)(void* userdata, const char* key,
+               EnvCApi_PropertyAttributes flags);
+};
+
+lua::NResultsOr PropertyListCallBackFunction(lua_State* L) {
+  auto* callback_data = static_cast<PropertyListCallbackData*>(
+      lua_touserdata(L, lua_upvalueindex(1)));
+  std::string key;
+  std::string mode = "rwl";
+  auto status_key = lua::Read(L, 1, &key);
+  auto status_mode = lua::Read(L, 2, &mode);
+  if (!IsFound(status_key)) {
+    return "Missing Key ";
+  }
+  if (!IsFound(status_mode)) {
+    return "Missing Mode";
+  }
+
+  for (auto c : mode) {
+    switch (c) {
+      case 'w':
+      case 'r':
+      case 'l':
+        break;
+      default:
+        return "Type mismatch mode must in the format [r][w][l] of: "
+               " 'r' - read-only,"
+               " 'w' - write-only,"
+               " 'l' - listable";
+    }
+  }
+
+  int flags = 0;
+  if (mode.find('w') != std::string::npos) {
+    flags |= EnvCApi_PropertyAttributes_Writable;
+  }
+  if (mode.find('r') != std::string::npos) {
+    flags |= EnvCApi_PropertyAttributes_Readable;
+  }
+  if (mode.find('l') != std::string::npos) {
+    flags |= EnvCApi_PropertyAttributes_Listable;
+  }
+  if (flags != 0) {
+    callback_data->call(callback_data->userdata, key.c_str(),
+                        static_cast<EnvCApi_PropertyAttributes>(flags));
+  }
+  return 0;
+}
+
+}  // namespace
+
+EnvCApi_PropertyResult Context::ListProperty(
+    void* userdata, const char* list_key,
+    void (*prop_callback)(void* userdata, const char* key,
+                          EnvCApi_PropertyAttributes flags)) {
+  lua_State* L = script_table_ref_.LuaState();
+  lua::StackResetter stack_resetter(L);
+  script_table_ref_.PushMemberFunction("listProperty");
+  if (lua_isnil(L, -2)) {
+    return EnvCApi_PropertyResult_NotFound;
+  }
+  lua::Push(L, list_key);
+  PropertyListCallbackData callback_data{userdata, prop_callback};
+  lua_pushlightuserdata(L, &callback_data);
+  lua_pushcclosure(L, lua::Bind<PropertyListCallBackFunction>, 1);
+  auto result = lua::Call(L, 3);
+  if (result.n_results() == 0) {
+    LOG_IF(ERROR, !result.ok()) << result.error();
+    return EnvCApi_PropertyResult_PermissionDenied;
+  }
+  bool success;
+  if (IsFound(lua::Read(L, 1, &success))) {
+    return success ? EnvCApi_PropertyResult_Success
+                   : EnvCApi_PropertyResult_PermissionDenied;
+  } else {
+    return EnvCApi_PropertyResult_NotFound;
+  }
 }
 
 }  // namespace lab

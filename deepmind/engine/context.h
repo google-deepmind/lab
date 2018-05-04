@@ -398,6 +398,18 @@ class Context {
   // cameras.
   bool HasAltCameras() const { return has_alt_cameras_; }
 
+  // Calls writeProperty on scripts. Returns whether write was successful.
+  EnvCApi_PropertyResult WriteProperty(const char* key, const char* value);
+
+  // Calls readProperty on scripts. Returns whether read was successful.
+  EnvCApi_PropertyResult ReadProperty(const char* key, const char** value);
+
+  // Calls listProperty on scripts. Returns whether list was successful.
+  EnvCApi_PropertyResult ListProperty(
+      void* userdata, const char* list_key,
+      void (*prop_callback)(void* userdata, const char* key,
+                            EnvCApi_PropertyAttributes flags));
+
   const ContextGame& Game() const { return game_; }
   ContextGame* MutableGame() { return &game_; }
 
@@ -527,6 +539,9 @@ class Context {
 
   // Last error message.
   std::string error_message_;
+
+  // Last property string storage.
+  std::string property_storage_;
 
   // An object for storing and retrieving events.
   ContextEvents events_;

@@ -1,5 +1,21 @@
 # DeepMind Lab Release Notes
 
+## Next Release
+
+### New Features:
+
+1.  A property system has been added that allows dynamic querying and modifying
+    of environment state. Level scripts can register and consume custom
+    properties.
+
+### EnvCApi Changes:
+
+1.  "Properties" have been added to the EnvCApi. Properties may be queried, set,
+    and enumerated.
+2.  The new API version is 1.4 (up from 1.3).
+3.  The EnvCApi function `fps` is now deprecated; environments should instead
+    use the new property system to communicate this information.
+
 ## release-2019-10-07 October 2019 release
 
 ### New Levels:

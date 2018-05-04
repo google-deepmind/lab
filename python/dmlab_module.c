@@ -686,9 +686,113 @@ static PyObject* Lab_close(PyObject* self, PyObject* no_arg) {
   }
 }
 
+static PyObject* Lab_write_property(PyObject* pself, PyObject* args,
+                                    PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
+  char* key = NULL;
+  char* value = NULL;
+  char* kwlist[] = {"key", "value", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist, &key, &value)) {
+    return NULL;
+  }
+  switch (self->env_c_api->write_property(self->context, key, value)) {
+    case EnvCApi_PropertyResult_Success:
+      Py_RETURN_NONE;
+    case EnvCApi_PropertyResult_PermissionDenied:
+      PyErr_Format(PyExc_TypeError, "'%s' not writable.", key);
+      break;
+    case EnvCApi_PropertyResult_InvalidArgument:
+      PyErr_Format(PyExc_TypeError, "Type error! Cannot assign '%s' to '%s'.",
+                   value, key);
+      break;
+    case EnvCApi_PropertyResult_NotFound:
+    default:
+      PyErr_Format(PyExc_KeyError, "'%s' not found.", key);
+      break;
+  }
+  return NULL;
+}
+
+static PyObject* Lab_read_property(PyObject* pself, PyObject* args,
+                                   PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
+  char* key = NULL;
+  const char* value = NULL;
+  char* kwlist[] = {"key", NULL};
+
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist, &key)) {
+    return NULL;
+  }
+
+  switch (self->env_c_api->read_property(self->context, key, &value)) {
+    case EnvCApi_PropertyResult_Success:
+#if PY_MAJOR_VERSION >= 3
+      return PyUnicode_FromString(value);
+#else
+      return PyString_FromString(value);
+#endif  // PY_MAJOR_VERSION >= 3
+    case EnvCApi_PropertyResult_PermissionDenied:
+      PyErr_Format(PyExc_TypeError, "'%s' not readable.", key);
+      break;
+    case EnvCApi_PropertyResult_InvalidArgument:
+      PyErr_Format(PyExc_TypeError, "Internal error while reading key '%s'.",
+                   key);
+      break;
+    case EnvCApi_PropertyResult_NotFound:
+    default:
+      PyErr_Format(PyExc_KeyError, "'%s' not found.", key);
+      break;
+  }
+  return NULL;
+}
+
+static void PropertyCallback(void* userdata, const char* key,
+                             EnvCApi_PropertyAttributes attributes) {
+  PyObject* dictionary = (PyObject*)userdata;
+  PyDict_SetItemString(dictionary, key, PyInt_FromLong((int)attributes));
+}
+
+static PyObject* Lab_properties(PyObject* pself, PyObject* args,
+                                PyObject* kwds) {
+  LabObject* self = (LabObject*)pself;
+  char* key = "";
+  char* kwlist[] = {"key", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|s", kwlist, &key)) {
+    return NULL;
+  }
+  PyObject* dictionary = PyDict_New();
+  if (dictionary == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+  switch (self->env_c_api->list_property(self->context, dictionary, key,
+                                         PropertyCallback)) {
+    case EnvCApi_PropertyResult_Success:
+      return dictionary;
+    case EnvCApi_PropertyResult_PermissionDenied:
+      PyErr_Format(PyExc_TypeError, "'%s' not listable.", key);
+      break;
+    case EnvCApi_PropertyResult_InvalidArgument:
+      PyErr_Format(PyExc_TypeError, "Internal error while listing key '%s'.",
+                   key);
+      break;
+    case EnvCApi_PropertyResult_NotFound:
+    default:
+      PyErr_Format(PyExc_KeyError, "'%s' not found.", key);
+      break;
+  }
+  return NULL;
+}
+
 static PyMethodDef LabObject_methods[] = {
     {"reset", (PyCFunction)Lab_reset, METH_VARARGS | METH_KEYWORDS,
      "Reset the environment"},
+    {"write_property", (PyCFunction)Lab_write_property,
+     METH_VARARGS | METH_KEYWORDS, "Write to an environment property"},
+    {"read_property", (PyCFunction)Lab_read_property,
+     METH_VARARGS | METH_KEYWORDS, "Read an environment property"},
+    {"properties", (PyCFunction)Lab_properties, METH_VARARGS | METH_KEYWORDS,
+     "List sub-properties of an environment property"},
     {"num_steps", Lab_num_steps, METH_NOARGS,
      "Number of frames since the last reset() call"},
     {"is_running", Lab_is_running, METH_NOARGS,
@@ -861,6 +965,16 @@ static int load_module_impl(PyObject* module, LabModuleState* state) {
   }
 
 #endif  // DEEPMIND_LAB_MODULE_RUNFILES_DIR
+
+  PyObject* d = PyModule_GetDict(module);
+  PyDict_SetItemString(d, "READABLE",
+                       PyInt_FromLong(EnvCApi_PropertyAttributes_Readable));
+  PyDict_SetItemString(d, "WRITABLE",
+                       PyInt_FromLong(EnvCApi_PropertyAttributes_Writable));
+  PyDict_SetItemString(d, "READ_WRITABLE",
+                       PyInt_FromLong(EnvCApi_PropertyAttributes_ReadWritable));
+  PyDict_SetItemString(d, "LISTABLE",
+                       PyInt_FromLong(EnvCApi_PropertyAttributes_Listable));
 
   srand(time(NULL));
   return 0;

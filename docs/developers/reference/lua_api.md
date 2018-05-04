@@ -524,6 +524,31 @@ controller. The script has an opportunity to modify the actions and return it to
 override the actions to be applied. If nothing or nil is returned, the method
 makes no effect.
 
+### `writeProperty`(*key*, *value*)
+
+Callback to support `RlCApi`'s `write_property`.
+Return `true` if `property[key]` is assigned `value`. Return `false` if
+`property[key]` cannot hold `value` and return `nil` if `property[key]` does
+not exist.
+
+### `readProperty`(*key*)
+
+Callback to support `RlCApi`'s `read_property`.
+Return value of `property[key]` if it exists otherwise return `nil`.
+
+### `listProperty`(*key*, *callback*)
+
+Callback to support `RlCApi`'s `list_property`.
+Return true if `property[key]` is a list and call `callback(key, type)` for
+each sub-property of `property[key]` where key is the full length key to the
+sub-property and type a string containing any combination of 'r', 'w' and 'l'.
+
+If the type contains:
+
+*   'l'  - Listable and `listProperty(key)` maybe called.
+*   'r'  - Readable and `readProperty(key)` maybe called.
+*   'w'  - Writable and `writeProperty(key, value)` maybe called.
+
 ### `registerDynamicItems`() -> table
 
 Called during level loading. The classname of any object which may be spawned

@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Google Inc.
+// Copyright 2016-2019 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@
 // function call.
 //
 #define DEEPMIND_ENV_C_API_VERSION_MAJOR 1
-#define DEEPMIND_ENV_C_API_VERSION_MINOR 3
+#define DEEPMIND_ENV_C_API_VERSION_MINOR 4
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -172,6 +172,41 @@ struct EnvCApi_TextAction_s {
   uint64_t len;
 };
 
+// A property is a key-value pair of strings that represent a current
+// environment's configuration. Some properties are editable and may take
+// effect immediately or during the next call to advance() or start().
+//
+// Each property has attributes that describes what operations are available for
+// a given property.
+//
+// * Readable:     Property can be read via a call to 'read_property'.
+// * Writable:     Property can be set via a call to 'write_property'.
+// * ReadWritable: Convenience flag to describe (Readable | Writable).
+// * Listable:     Property has sub-properties and can be retrieved via a
+//                 call to 'for_each_property_in_list'.
+enum EnvCApi_PropertyAttributes_enum {
+  EnvCApi_PropertyAttributes_Readable = 1 << 0,
+  EnvCApi_PropertyAttributes_Writable = 1 << 1,
+  EnvCApi_PropertyAttributes_ReadWritable =
+      EnvCApi_PropertyAttributes_Readable | EnvCApi_PropertyAttributes_Writable,
+  EnvCApi_PropertyAttributes_Listable = 1 << 2,
+};
+typedef enum EnvCApi_PropertyAttributes_enum EnvCApi_PropertyAttributes;
+
+// Result of property operations.
+//
+// * Success:          Operation was a success.
+// * NotFound:         Property does not exist.
+// * PermissionDenied: Operation not allowed on property.
+// * InvalidArgument:  Property could not accept value provided.
+enum EnvCApi_PropertyResult_enum {
+  EnvCApi_PropertyResult_Success = 0,
+  EnvCApi_PropertyResult_NotFound = 1,
+  EnvCApi_PropertyResult_PermissionDenied = 2,
+  EnvCApi_PropertyResult_InvalidArgument = 3,
+};
+typedef enum EnvCApi_PropertyResult_enum EnvCApi_PropertyResult;
+
 ///////////////
 //  The API  //
 ///////////////
@@ -233,12 +268,64 @@ struct EnvCApi_s {
   // 'start' or 'advance'.
   const char* (*error_message)(void* context);
 
-  // Meta data querying
+  // Meta data querying/setting
   /////////////////////
   //
   // Functions in this section shall only be called after a successful call of
   // 'init', but beyond that they may be called at any time, regardless of
   // whether 'start' has been called or whether the episode has terminated.
+
+  // Writes 'value' to property `key`.
+  // If the function returns:
+  //
+  // *   Success: property's value was updated. The value may not updated be
+  //     immediately and there is no round-trip guarantee so subsequent calls to
+  //     read may not produce the same value that was set.
+  //
+  // *   InvalidArgument: property's value was not updated. This could be caused
+  //     by 'value' not being in the acceptable range of values for the
+  //     property.
+  //
+  // *   PermissionDenied: property is not writable.
+  //
+  // *   NotFound: property does not exist.
+  //
+  // No other return values are valid.
+  EnvCApi_PropertyResult (*write_property)(void* context, const char* key,
+                                           const char* value);
+
+  // Reads the value of property 'key'.
+  // If the function returns:
+  //
+  // *   Success: '*value' is set to the property's value. The pointer to value
+  //     will only be valid until the next call to the API.
+  //
+  // *   PermissionDenied: property is not readable. '*value' is left unchanged.
+  //
+  // *   NotFound: property does not exist. '*value' is left unchanged.
+  //
+  // No other return values are valid.
+  EnvCApi_PropertyResult (*read_property)(void* context, const char* key,
+                                          const char** value);
+
+  // List sub-properties of property 'list_key'.
+  // If the function returns:
+  //
+  // *   Success: 'prop_callback' will be called for each sub-property.
+  //     `userdata` will be passed through to the callback. No other calls to
+  //     the API are allowed during the callback. Callback order is unspecified
+  //     and may change at any time. The string 'key' is only valid for the
+  //     duration of the callback.
+  //
+  // *   PermissionDenied: property is not listable.
+  //
+  // *   NotFound: property does not exist.
+  //
+  // No other return values are valid.
+  EnvCApi_PropertyResult (*list_property)(
+      void* context, void* userdata, const char* list_key,
+      void (*prop_callback)(void* userdata, const char* key,
+                            EnvCApi_PropertyAttributes attributes));
 
   // Name of the environment.
   const char* (*environment_name)(void* context);
@@ -304,6 +391,8 @@ struct EnvCApi_s {
   // 'event_type_idx' shall be in range [0, event_type_count()).
   const char* (*event_type_name)(void* context, int event_type_idx);
 
+  // DEPRECATED: use properties to communicate this information.
+  //
   // An advisory metric that correlates discrete environment steps ("steps")
   // with real (wallclock) time: the number of steps per (real) second.
   int (*fps)(void* context);

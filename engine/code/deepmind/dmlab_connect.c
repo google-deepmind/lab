@@ -69,6 +69,8 @@ static const double kEngineTimePerExternalTime = 0.96;
 
 static const int kMaxLookAngularVelocity = 512;  // Pixels per frame.
 
+static const char* const kReservedEnginePropertyList = "engine";
+
 enum ActionsEnum {
   kActions_LookLeftRight,
   kActions_LookDownUp,
@@ -1281,6 +1283,79 @@ static void dmlab_destroy_context(void* context) {
   DMLabUnloadIOQ3Module();
 }
 
+EnvCApi_PropertyResult dmlab_write_property(void* context, const char* key,
+                                            const char* value) {
+  if (strncmp(key, kReservedEnginePropertyList,
+              strlen(kReservedEnginePropertyList)) == 0) {
+    const char* sub_key = key + strlen(kReservedEnginePropertyList);
+    if (sub_key[0] == '.') {
+      ++sub_key;
+      if (strcmp(sub_key, "fps") == 0) {
+        return EnvCApi_PropertyResult_PermissionDenied;
+      } else {
+        return EnvCApi_PropertyResult_NotFound;
+      }
+    } else if (sub_key[0] == '\0') {
+      return EnvCApi_PropertyResult_PermissionDenied;
+    }
+  }
+  DeepmindContext* ctx = dmlab_context();
+  return ctx->hooks.properties.write(ctx->userdata, key, value);
+}
+
+EnvCApi_PropertyResult dmlab_read_property(void* context, const char* key,
+                                           const char** value) {
+  if (strncmp(key, kReservedEnginePropertyList,
+              strlen(kReservedEnginePropertyList)) == 0) {
+    const char* sub_key = key + strlen(kReservedEnginePropertyList);
+    if (sub_key[0] == '.') {
+      ++sub_key;
+      if (strcmp(sub_key, "fps") == 0) {
+        *value = va("%d", dmlab_fps(context));
+        return EnvCApi_PropertyResult_Success;
+      }
+      return EnvCApi_PropertyResult_NotFound;
+    } else if (sub_key[0] == '\0') {
+      return EnvCApi_PropertyResult_PermissionDenied;
+    }
+  }
+  DeepmindContext* ctx = dmlab_context();
+  return ctx->hooks.properties.read(ctx->userdata, key, value);
+}
+
+EnvCApi_PropertyResult dmlab_list_property(
+    void* context, void* userdata, const char* key,
+    void (*prop_callback)(void* userdata, const char* key,
+                          EnvCApi_PropertyAttributes flags)) {
+  if (strncmp(key, kReservedEnginePropertyList,
+              strlen(kReservedEnginePropertyList)) == 0) {
+    const char* sub_key = key + strlen(kReservedEnginePropertyList);
+    if (sub_key[0] == '\0') {
+      prop_callback(userdata, va("%s.%s", kReservedEnginePropertyList, "fps"),
+                    EnvCApi_PropertyAttributes_Readable);
+      return EnvCApi_PropertyResult_Success;
+    } else if (sub_key[0] == '.') {
+      ++sub_key;
+      if (strcmp(sub_key, "fps") == 0) {
+        return EnvCApi_PropertyResult_PermissionDenied;
+      } else {
+        return EnvCApi_PropertyResult_NotFound;
+      }
+    }
+  }
+
+  DeepmindContext* ctx = dmlab_context();
+  EnvCApi_PropertyResult result =
+      ctx->hooks.properties.list(ctx->userdata, userdata, key, prop_callback);
+  if (key[0] == '\0') {
+    // Advertise engine property list if empty key.
+    prop_callback(userdata, kReservedEnginePropertyList,
+                  EnvCApi_PropertyAttributes_Listable);
+    result = EnvCApi_PropertyResult_Success;
+  }
+  return result;
+}
+
 static void call_add_score(int player_id, double score) {
   DeepmindContext* ctx = dmlab_context();
   ctx->hooks.add_score(ctx->userdata, player_id, score);
@@ -1413,6 +1488,9 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
 
   env_c_api->setting = dmlab_setting;
   env_c_api->init = dmlab_init;
+  env_c_api->write_property = dmlab_write_property;
+  env_c_api->read_property = dmlab_read_property;
+  env_c_api->list_property = dmlab_list_property;
   env_c_api->start = dmlab_start;
   env_c_api->error_message = dmlab_error_message;
   env_c_api->environment_name = dmlab_environment_name;
@@ -1439,7 +1517,6 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->act_text = dmlab_act_text;
   env_c_api->advance = dmlab_advance;
   env_c_api->release_context = dmlab_destroy_context;
-
   gc->dm_ctx->calls.player_score = player_score;
   gc->dm_ctx->calls.add_score = call_add_score;
   gc->dm_ctx->calls.screen_shape = screen_shape;
