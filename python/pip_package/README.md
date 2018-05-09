@@ -16,7 +16,7 @@ The build and install process has the following steps:
 Here's the short version if you have already set up the dependencies.
 
 ```sh
-git clone git clone https://github.com/deepmind/lab.git && cd lab
+git clone https://github.com/deepmind/lab.git && cd lab
 bazel build python/pip_package:build_pip_package
 ./bazel-bin/python/pip_package/build_pip_package /tmp/dmlab_pkg
 pip install /tmp/dmlab_pkg/DeepMind_Lab-1.0-py2-none-any.whl --force-reinstall
