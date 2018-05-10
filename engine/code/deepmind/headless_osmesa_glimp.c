@@ -35,10 +35,11 @@ void GLimp_MakeCurrent(void) {
 
 void GLimp_Init(qboolean coreContext) {
   r_colorbits->value = 16;
+  r_depthbits->value = 24;
   GLimp_CommonPreInit();
   /* Create an RGBA-mode context */
   osmesa_ctx =
-      OSMesaCreateContextExt(OSMESA_RGBA, r_colorbits->value, 0, 0, NULL);
+      OSMesaCreateContextExt(OSMESA_RGBA, r_depthbits->value, 0, 0, NULL);
   if (!osmesa_ctx) {
     Sys_Error("OSMesaCreateContext failed!");
   }
