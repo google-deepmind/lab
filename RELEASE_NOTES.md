@@ -2,6 +2,16 @@
 
 ## Current Release
 
+### New Levels:
+
+1.  Psychlab.
+
+    1. contributed/psychlab/glass_pattern_detection
+    2. contributed/psychlab/landoltC_identification
+    3. contributed/psychlab/motion_discrimination{,_easy}
+    4. contributed/psychlab/multiple_object_tracking{,_easy}
+    5. contributed/psychlab/odd_one_out
+
 ### Bug Fixes:
 
 1.  Let Python level cache set to `None` mean the same as not setting it at all.
