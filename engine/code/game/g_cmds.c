@@ -1677,7 +1677,36 @@ void Cmd_SetViewpos_f( gentity_t *ent ) {
 	TeleportPlayer( ent, origin, angles );
 }
 
+void Cmd_Pickup_f( gentity_t *ent ) {
+	gentity_t *e;
+	int	id, i;
+	char		buffer[MAX_TOKEN_CHARS];
 
+	if ( !g_cheats.integer ) {
+		trap_SendServerCommand( ent-g_entities, "print \"Cheats are not enabled on this server.\n\"" );
+		return;
+	}
+	if ( trap_Argc() == 3 ) {
+		trap_Argv( 2, buffer, sizeof( buffer ) );
+		i = ClientNumberFromString( ent, buffer, qtrue, qtrue );
+		if (i == -1) {
+			trap_SendServerCommand( ent-g_entities, "print \"Invalid player name\n\"");
+		return;
+		}
+		ent = &g_entities[i];
+	} else if ( trap_Argc() != 2 ) {
+		trap_SendServerCommand( ent-g_entities, "print \"usage: pickup id <optional player name>\n\"" );
+		return;
+	}
+	trap_Argv( 1, buffer, sizeof( buffer ) );
+	id = atoi( buffer );
+	for (i = 0; i < level.num_entities; i++) {
+		e = &g_entities[i];
+		if (e->id && id == e->id) {
+			Touch_Item( e, ent, NULL );
+		}
+	}
+}
 
 /*
 =================
@@ -1817,6 +1846,8 @@ void ClientCommand( int clientNum ) {
 		Cmd_SetViewpos_f( ent );
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
+	else if (Q_stricmp (cmd, "dm_pickup") == 0)
+		Cmd_Pickup_f( ent );
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }

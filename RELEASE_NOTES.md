@@ -23,6 +23,7 @@
 1.  Add support for absl::variant to lua::Push and lua::Read.
 2.  The demo `:game` has a new flag `--start_index` to start at an episode index
     other than 0.
+3.  Add a console command `dm_pickup` to pick up an item identified by its `id`.
 
 ## release-2018-05-15 May 2018 release
 

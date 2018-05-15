@@ -639,16 +639,23 @@ materials to for the commands available.
 
 Here are some examples:
 
-Command            | Effect
------------------- | ------------------------------------
-set <cvar> <value> | Sets any internal <cvar> to <value>.
-set cg_drawFPS 1   | Draws the FPS counter to the screen
-set cg_fov 70      | Sets hoizontal field of view to 70.
-weapon <number>    | Selects <number> gadget.
-weapon 1           | Selects first gadget.
-weapon 2           | Selects second gadget.
-weapnext           | Selects next gadget.
-weapprev           | Selects previous gadget.
+Command              | Effect
+-------------------- | -----------------------------------------
+set <cvar> <value>   | Sets any internal <cvar> to <value>.
+set cg_drawFPS 1     | Draws the FPS counter to the screen
+set cg_fov 70        | Sets hoizontal field of view to 70.
+weapon <number>      | Selects <number> gadget.
+weapon 1             | Selects first gadget.
+weapon 2             | Selects second gadget.
+weapnext             | Selects next gadget.
+weapprev             | Selects previous gadget.
+setviewpos x y z yaw | Sets the player's x y z location and yaw.
+
+Here are some custom commands:
+
+Command      | Effect
+------------ | --------------------------------------------------
+dm_pickup id | Lets the player pickup all items with the id 'id'.
 
 ### `finishMap`()
 
