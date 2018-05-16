@@ -180,7 +180,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
       }
     }
 
-    if (level_cache != NULL) {
+    if (level_cache != NULL && level_cache != Py_None) {
       Py_INCREF(level_cache);
       params.level_cache_params.context = level_cache;
       params.level_cache_params.fetch_level_from_cache =

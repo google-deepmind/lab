@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### Bug Fixes:
+
+1.  Let Python level cache set to `None` mean the same as not setting it at all.
+
 ### Minor Improvements:
 
 1.  Add support for absl::variant to lua::Push and lua::Read.

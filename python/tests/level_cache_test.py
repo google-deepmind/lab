@@ -102,6 +102,12 @@ class LevelCacheTest(unittest.TestCase):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
+  def test_level_cache_none(self):
+    # This should be equivalent to not set the level cache at all and just work.
+    env = self._create_environment(level_cache=None)
+    env.reset(episode=1, seed=123)
+    env.step(self._dummy_action)
+
   def test_local_level_cache(self):
     num_successful_fetches = [0]
     num_failed_fetches = [0]
