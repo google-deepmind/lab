@@ -50,21 +50,29 @@ function api:updateSpawnVars(spawnVars)
     spawnVars.angle = '0'
     spawnVars.randomAngleRange = '0'
   else
-    spawnVars.id = '1'
+    local id = self._classnameToId[spawnVars.classname] or 1
+    spawnVars.id = tostring(id)
   end
   return spawnVars
 end
 
 function api:canPickup(id)
-  -- Turn off pickups so you can get up close and personal.
-  return false
+  -- Enable pickups so we can update the instruction channel.
+  return true
+end
+
+function api:pickup(id)
+  local shape = self._shapes[id]
+  if shape then self.setInstruction(shape) end
+  -- Respawn instantly.
+  return 0
 end
 
 function api:_makePickup(c)
   if c == 'O' then
     -- Make new pickup and classname to reference it.
     local id = hrp.pickupCount() + 1
-    return hrp.create{
+    local classname = hrp.create{
         shape = self._shapes[id],
         color1 = random:color(),
         color2 = random:color(),
@@ -72,12 +80,14 @@ function api:_makePickup(c)
         scale = SCALES[(id - 1) % #SCALES + 1],
         moveType = MOVE_TYPE[(id - 1) % #MOVE_TYPE + 1],
     }
+    self._classnameToId[classname] = id
+    return classname
   end
 end
 
 function api:_makeMap()
   hrp.reset()
-  self._pickups = {}
+  self._classnameToId = {}
 
   -- Repeat 'O' enough time to show each shape once, add spawn on next row.
   local map = ' ' .. string.rep(' ', #self._shapes) .. ' \n' ..
