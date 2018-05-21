@@ -66,6 +66,7 @@ static const char kUsage[] =
     "                        available to the level script. This flag may be provided\n"
     "                        multiple times.\n"
     "  -e, --num_episodes:   The number of episodes to play. Defaults to 1.\n"
+    "  -i, --start_index:    Starting episode index. Defaults to 0.\n"
     "  -p, --print_events:   Print events emitted.\n"
     "  -r, --random_seed:    A seed value used for randomly generated content; using\n"
     "                        the same seed should result in the same content. Defaults\n"
@@ -76,13 +77,14 @@ static const char kUsage[] =
     ;
 
 static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
-                                void* context, int* num_episodes, int* seed,
-                                int* mixer_seed, bool* log_events,
-                                const char** fps) {
+                                void* context, int* start_index,
+                                int* num_episodes, int* seed, int* mixer_seed,
+                                bool* log_events, const char** fps) {
   static struct option long_options[] = {
       {"help", no_argument, NULL, 'h'},
       {"level_script", required_argument, NULL, 'l'},
       {"level_setting", required_argument, NULL, 's'},
+      {"start_index", required_argument, NULL, 'i'},
       {"num_episodes", required_argument, NULL, 'e'},
       {"random_seed", required_argument, NULL, 'r'},
       {"mixer_seed", required_argument, NULL, 'm'},
@@ -92,7 +94,7 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
 
   char *key, *value;
 
-  for (int c; (c = getopt_long(argc, argv, "hl:s:e:r:m:pf:", long_options,
+  for (int c; (c = getopt_long(argc, argv, "hl:s:i:e:r:m:pf:", long_options,
                                0)) != -1;) {
     switch (c) {
       case 'h':
@@ -115,6 +117,11 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
         if (env_c_api->setting(context, key, value) != 0) {
           sys_error("Invalid level_setting '%s=%s'. Internal error: %s", key,
                     value, env_c_api->error_message(context));
+        }
+        break;
+      case 'i':
+        if (!parse_int(optarg, start_index) || *start_index < 0) {
+          sys_error("Failed to set start_index to '%s'.", optarg);
         }
         break;
       case 'e':
@@ -243,12 +250,13 @@ int main(int argc, char** argv) {
               env_c_api.error_message(context));
   }
 
+  int start_index = 0;
   int num_episodes = 1;
   int seed = 1;
   int mixer_seed = 0;
   const char* fps = NULL;
-  process_commandline(argc, argv, &env_c_api, context, &num_episodes, &seed,
-                      &mixer_seed, &log_events, &fps);
+  process_commandline(argc, argv, &env_c_api, context, &start_index,
+                      &num_episodes, &seed, &mixer_seed, &log_events, &fps);
   if (env_c_api.setting(context, "appendCommand", " +set com_maxfps ") != 0) {
     sys_error("Failed to apply 'appendCommand' setting. Internal error: %s",
               env_c_api.error_message(context));
@@ -280,9 +288,9 @@ int main(int argc, char** argv) {
   }
 
   EnvCApi_EnvironmentStatus status = EnvCApi_EnvironmentStatus_Running;
-  for (int episode = 0;
-       episode < num_episodes && status != EnvCApi_EnvironmentStatus_Error;
-       ++episode, ++seed) {
+  for (int i = 0; i < num_episodes && status != EnvCApi_EnvironmentStatus_Error;
+       ++i, ++seed) {
+    int episode = start_index + i;
     if (env_c_api.start(context, episode, seed) != 0) {
       sys_error("Failed to start environment. Internal error: %s",
                 env_c_api.error_message(context));

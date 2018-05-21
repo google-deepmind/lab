@@ -21,6 +21,8 @@
 ### Minor Improvements:
 
 1.  Add support for absl::variant to lua::Push and lua::Read.
+2.  The demo `:game` has a new flag `--start_index` to start at an episode index
+    other than 0.
 
 ## release-2018-05-15 May 2018 release
 
