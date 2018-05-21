@@ -15,6 +15,8 @@
 ### Bug Fixes:
 
 1.  Let Python level cache set to `None` mean the same as not setting it at all.
+2.  Change Python module initialization in Python-3 mode to make PIP packages
+    work in Python 3.
 
 ### Minor Improvements:
 
