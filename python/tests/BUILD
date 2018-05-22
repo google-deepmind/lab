@@ -18,6 +18,7 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     main = "dmlab_module_test.py",
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
