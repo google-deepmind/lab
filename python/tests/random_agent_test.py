@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import six
 import unittest
 
 from python import random_agent
@@ -43,7 +44,7 @@ class RandomAgentsTest(unittest.TestCase):
 
     reward = 0
 
-    for _ in xrange(length):
+    for _ in six.moves.range(length):
       if not env.is_running():
         print('Environment stopped early')
         env.reset()
@@ -66,7 +67,7 @@ class RandomAgentsTest(unittest.TestCase):
 
     reward = 0
 
-    for _ in xrange(length):
+    for _ in six.moves.range(length):
       if not env.is_running():
         print('Environment stopped early')
         env.reset()
@@ -86,7 +87,7 @@ class RandomAgentsTest(unittest.TestCase):
     agent = random_agent.DiscretizedRandomAgent()
 
     reward = 0
-    for frame in xrange(length):
+    for frame in six.moves.range(length):
       if not env.is_running():
         print('Environment stopped early')
         env.reset()

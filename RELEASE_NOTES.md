@@ -24,6 +24,7 @@
 2.  The demo `:game` has a new flag `--start_index` to start at an episode index
     other than 0.
 3.  Add a console command `dm_pickup` to pick up an item identified by its `id`.
+4.  More Python demos and tests now work with Python 3.
 
 ## release-2018-05-15 May 2018 release
 

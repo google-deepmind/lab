@@ -28,7 +28,10 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     main = "random_agent_test.py",
-    deps = ["//:python_random_agent"],
+    deps = [
+        "//:python_random_agent",
+        "@six_archive//:six",
+    ],
 )
 
 py_test(

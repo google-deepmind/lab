@@ -150,7 +150,8 @@ software libraries, which we ship in several different ways:
      software rendering via OSMesa, depending on the `--define headless=...`
      build setting.
    * Python 2.7 (other versions might work, too) with NumPy, PIL. (A few
-     tests require a NumPy version of at least 1.8.)
+     tests require a NumPy version of at least 1.8.) Python 3 is supported
+     experimentally.
 
 The build rules are using a few compiler settings that are specific to GCC. If
 some flags are not recognized by your compiler (typically those would be

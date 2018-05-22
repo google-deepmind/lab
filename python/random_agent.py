@@ -22,6 +22,7 @@ from __future__ import print_function
 import argparse
 import random
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -47,7 +48,7 @@ class DiscretizedRandomAgent(object):
       'crouch': _action(0, 0, 0, 0, 0, 0, 1)
   }
 
-  ACTION_LIST = ACTIONS.values()
+  ACTION_LIST = list(six.viewvalues(ACTIONS))
 
   def step(self, unused_reward, unused_image):
     """Gets an image state and a reward, returns an action."""
@@ -159,7 +160,7 @@ def run(length, width, height, fps, level, record, demo, video):
 
   reward = 0
 
-  for _ in xrange(length):
+  for _ in six.moves.range(length):
     if not env.is_running():
       print('Environment stopped early')
       env.reset()
