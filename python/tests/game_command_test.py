@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -42,7 +43,7 @@ class GameCommandTest(unittest.TestCase):
     events = env.events()
     self.assertEqual(events[0][1][0], 'DISC')
     action[action_index['NEXT_GADGET']] = 0
-    for _ in xrange(100):
+    for _ in six.moves.range(100):
       env.step(action)
       events = env.events()
       if events[0][1][0] == 'RAPID':
@@ -54,7 +55,7 @@ class GameCommandTest(unittest.TestCase):
     action[action_index['NEXT_GADGET']] = 1
     env.step(action)
     action[action_index['NEXT_GADGET']] = 0
-    for _ in xrange(100):
+    for _ in six.moves.range(100):
       env.step(action)
       events = env.events()
       if events[0][1][0] == 'BEAM':

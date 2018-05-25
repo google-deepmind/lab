@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -46,7 +47,7 @@ class ExtraEntitiesTest(unittest.TestCase):
 
     reward = env.reset()
     expected_reward = 1
-    for _ in xrange(60):
+    for _ in six.moves.range(60):
       reward = env.step(action, 1)
       if reward > 0:
         self.assertEqual(reward, expected_reward)

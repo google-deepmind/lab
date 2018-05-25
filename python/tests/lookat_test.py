@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -44,7 +45,7 @@ class LookatTest(unittest.TestCase):
     noop = np.array([0, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
     last_look_at = None
-    for _ in xrange(10):
+    for _ in six.moves.range(10):
       self.assertEqual(env.step(noop, 1), 0)
       next_look_at = env.observations()['LOOK_AT']
       self.assertEqual(1, next_look_at[kIsLooking])
@@ -57,7 +58,7 @@ class LookatTest(unittest.TestCase):
     self.assertAlmostEqual(last_look_at[kBrushU], 0.5, delta=0.1)
     look_left = np.array([-5, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
-    for _ in xrange(100):
+    for _ in six.moves.range(100):
       env.step(look_left, 1)
       next_look_at = env.observations()['LOOK_AT']
       if next_look_at[kIsLooking] != 1:
@@ -70,7 +71,7 @@ class LookatTest(unittest.TestCase):
 
     look_right = np.array([5, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
-    for _ in xrange(5):
+    for _ in six.moves.range(5):
       env.step(look_right, 1)
       next_look_at = env.observations()['LOOK_AT']
       if next_look_at[kIsLooking] == 1:
@@ -79,7 +80,7 @@ class LookatTest(unittest.TestCase):
     else:
       self.fail('Failed to look back to object')
 
-    for _ in xrange(100):
+    for _ in six.moves.range(100):
       env.step(look_right, 1)
       next_look_at = env.observations()['LOOK_AT']
       if next_look_at[kIsLooking] != 1:

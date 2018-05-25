@@ -20,6 +20,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -31,7 +32,7 @@ class MazeGenerationTest(unittest.TestCase):
 
   def test_maze_layout_spread(self):
     layouts = set()
-    for i in xrange(MAZE_LAYOUT_TRIALS):
+    for i in six.moves.range(MAZE_LAYOUT_TRIALS):
       print('phase 1: trial {} out of {}'.format(i+1, MAZE_LAYOUT_TRIALS))
       env = deepmind_lab.Lab(
           'tests/maze_generation_test', [MAZE_LAYOUT_OBSERVATION], config={})
@@ -39,7 +40,7 @@ class MazeGenerationTest(unittest.TestCase):
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
     num_layouts = len(layouts)
     self.assertTrue(np.isclose(num_layouts, MAZE_LAYOUT_TRIALS))
-    for i in xrange(MAZE_LAYOUT_TRIALS):
+    for i in six.moves.range(MAZE_LAYOUT_TRIALS):
       print('phase 2: trial {} out of {}'.format(i+1, MAZE_LAYOUT_TRIALS))
       env = deepmind_lab.Lab(
           'tests/maze_generation_test', [MAZE_LAYOUT_OBSERVATION],
@@ -49,7 +50,7 @@ class MazeGenerationTest(unittest.TestCase):
       env.reset(seed=i+1)
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
     self.assertEqual(len(layouts), num_layouts)
-    for i in xrange(MAZE_LAYOUT_TRIALS):
+    for i in six.moves.range(MAZE_LAYOUT_TRIALS):
       print('phase 3: trial {} out of {}'.format(i+1, MAZE_LAYOUT_TRIALS))
       env = deepmind_lab.Lab(
           'tests/maze_generation_test', [MAZE_LAYOUT_OBSERVATION],

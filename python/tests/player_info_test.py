@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 from python.tests.utils import math_utils
@@ -80,7 +81,7 @@ class PlayerInfo(unittest.TestCase):
     for op in ops:
       action[action_index['STRAFE_LEFT_RIGHT']] = op['lr']
       action[action_index['MOVE_BACK_FORWARD']] = op['bf']
-      for _ in xrange(60):
+      for _ in six.moves.range(60):
         env.step(action, 1)
         vel = env.observations()['VEL.TRANS']
         vel_axis = vel[op['axis']] / op['fact']
@@ -94,7 +95,7 @@ class PlayerInfo(unittest.TestCase):
       action[action_index['STRAFE_LEFT_RIGHT']] = 0
       action[action_index['MOVE_BACK_FORWARD']] = 0
 
-      for _ in xrange(60):
+      for _ in six.moves.range(60):
         env.step(action, 1)
         vel = env.observations()['VEL.TRANS']
         vel_axis = vel[op['axis']] / op['fact']

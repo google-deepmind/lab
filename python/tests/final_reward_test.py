@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -41,7 +42,7 @@ class FinalRewardTest(unittest.TestCase):
     action = np.zeros([len(action_spec)], dtype=np.intc)
     env.reset()
     reward = 0
-    for _ in xrange(11):
+    for _ in six.moves.range(11):
       if not env.is_running():
         break
       reward += env.step(action, 1)
@@ -61,7 +62,7 @@ class FinalRewardTest(unittest.TestCase):
     action = np.zeros([len(action_spec)], dtype=np.intc)
     env.reset()
     reward = 0
-    for _ in xrange(4):
+    for _ in six.moves.range(4):
       if not env.is_running():
         break
       reward += env.step(action, 4)

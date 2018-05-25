@@ -20,6 +20,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -57,7 +58,7 @@ class TeleporterTest(unittest.TestCase):
     # Player moves straight ahead through the teleporter
     action[action_index['MOVE_BACK_FORWARD']] = 1
     self.assertEqual(env.events(), [])
-    for _ in xrange(120):
+    for _ in six.moves.range(120):
       p_before = env.observations()['DEBUG.POS.TRANS']
       env.step(action, 1)
       p_after = env.observations()['DEBUG.POS.TRANS']

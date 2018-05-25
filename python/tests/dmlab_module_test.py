@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc.
+# Copyright 2016-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,18 +30,18 @@ import deepmind_lab
 class DeepMindLabTest(unittest.TestCase):
 
   def testInitArgs(self):
-    with self.assertRaisesRegexp(TypeError, 'must be dict, not list'):
+    with six.assertRaisesRegex(self, TypeError, 'must be dict, not list'):
       deepmind_lab.Lab('tests/empty_room_test', [], ['wrongconfig'])
-    with self.assertRaisesRegexp(TypeError, 'str|bad argument type'):
+    with six.assertRaisesRegex(self, TypeError, 'str|bad argument type'):
       deepmind_lab.Lab('tests/empty_room_test', [], {'wrongtype': 3})
-    with self.assertRaisesRegexp(TypeError, 'must be list, not None'):
+    with six.assertRaisesRegex(self, TypeError, 'must be list, not None'):
       deepmind_lab.Lab('tests/empty_room_test', None, {})
-    with self.assertRaisesRegexp(ValueError, 'Unknown observation'):
+    with six.assertRaisesRegex(self, ValueError, 'Unknown observation'):
       deepmind_lab.Lab('tests/empty_room_test', ['nonexisting_obs'], {})
 
   def testReset(self):
     lab = deepmind_lab.Lab('tests/empty_room_test', [], {})
-    with self.assertRaisesRegexp(ValueError,
+    with six.assertRaisesRegex(self, ValueError,
                                  '\'seed\' must be int or None, was \'str\''):
       lab.reset(seed='invalid')
 
@@ -100,9 +100,9 @@ class DeepMindLabTest(unittest.TestCase):
 
     action = np.zeros((7,), dtype=np.intc)
 
-    with self.assertRaisesRegexp(RuntimeError, 'wrong status to advance'):
+    with six.assertRaisesRegex(self, RuntimeError, 'wrong status to advance'):
       env.step(action)
-    with self.assertRaisesRegexp(RuntimeError, 'wrong status'):
+    with six.assertRaisesRegex(self, RuntimeError, 'wrong status'):
       env.observations()
 
   def testRunfilesPath(self):

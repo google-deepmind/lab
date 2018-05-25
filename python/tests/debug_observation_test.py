@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -88,7 +89,7 @@ class DebugObservationTest(unittest.TestCase):
 
     ## Empty player's gadget ammo.
     action[action_index['FIRE']] = 1
-    for _ in xrange(1000):
+    for _ in six.moves.range(1000):
       env.step(action)
       obs = env.observations()
       if obs['DEBUG.PLAYERS.GADGET_AMOUNT'][0] == 0:
@@ -101,7 +102,7 @@ class DebugObservationTest(unittest.TestCase):
     action[action_index['FIRE']] = 0
     action[action_index['MOVE_BACK_FORWARD']] = 1
 
-    for _ in xrange(1000):
+    for _ in six.moves.range(1000):
       env.step(action)
       obs = env.observations()
       if obs['DEBUG.PLAYERS.HEALTH'][0] <= 0:

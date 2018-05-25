@@ -40,6 +40,7 @@ py_test(
     srcs = ["raycast_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -48,6 +49,7 @@ py_test(
     srcs = ["in_fov_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -55,6 +57,7 @@ py_test(
     srcs = ["lookat_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -62,7 +65,10 @@ py_test(
     srcs = ["player_info_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["//python/tests/utils:math_utils"],
+    deps = [
+        "//python/tests/utils:math_utils",
+        "@six_archive//:six",
+    ],
 )
 
 py_test(
@@ -70,6 +76,7 @@ py_test(
     srcs = ["extra_entities_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -77,6 +84,7 @@ py_test(
     srcs = ["extra_entities_with_bots_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -84,6 +92,7 @@ py_test(
     srcs = ["episode_time_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -91,6 +100,7 @@ py_test(
     srcs = ["determinism_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -98,6 +108,7 @@ py_test(
     srcs = ["spawn_inventory_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -105,6 +116,7 @@ py_test(
     srcs = ["update_inventory_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -112,6 +124,7 @@ py_test(
     srcs = ["entity_info_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -119,6 +132,7 @@ py_test(
     srcs = ["debug_observation_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -134,7 +148,10 @@ py_test(
     srcs = ["teleporter_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["//python/tests/utils:math_utils"],
+    deps = [
+        "//python/tests/utils:math_utils",
+        "@six_archive//:six",
+    ],
 )
 
 py_test(
@@ -152,6 +169,7 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     tags = ["manual"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -161,6 +179,7 @@ py_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     tags = ["manual"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -175,6 +194,7 @@ py_test(
     srcs = ["game_command_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -182,6 +202,7 @@ py_test(
     srcs = ["final_reward_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(

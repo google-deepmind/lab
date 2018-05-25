@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -55,7 +56,7 @@ class InFovTest(unittest.TestCase):
     self.assertLess(entity_vis[1], 1)
     self.assertEqual(entity_vis[2], -1)
 
-    for _ in xrange(120):
+    for _ in six.moves.range(120):
       reward = env.step(action, 1)
       if reward > 0:
         self.assertEqual(reward, 1)
@@ -76,7 +77,7 @@ class InFovTest(unittest.TestCase):
     action[action_index['STRAFE_LEFT_RIGHT']] = 1
     action[action_index['MOVE_BACK_FORWARD']] = 0
 
-    for _ in xrange(160):
+    for _ in six.moves.range(160):
       reward = env.step(action, 1)
       if reward > 0:
         self.assertEqual(reward, 1)
@@ -97,7 +98,7 @@ class InFovTest(unittest.TestCase):
     action[action_index['STRAFE_LEFT_RIGHT']] = 0
     action[action_index['MOVE_BACK_FORWARD']] = -1
 
-    for _ in xrange(160):
+    for _ in six.moves.range(160):
       reward = env.step(action, 1)
       if reward > 0:
         self.assertEqual(reward, 1)

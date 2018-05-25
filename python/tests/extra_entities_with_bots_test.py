@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -40,7 +41,7 @@ class ExtraEntitiesWithBotsTest(unittest.TestCase):
 
     noop = np.zeros([len(env.action_spec())], dtype=np.intc)
     env.reset()
-    for _ in xrange(6000):
+    for _ in six.moves.range(6000):
       env.step(noop, 1)
       if [event for event in env.events() if event[0] == 'PLAYER_TAGGED']:
         break

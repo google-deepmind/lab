@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import os
 import pprint
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -36,7 +37,7 @@ def make_dmlab_environment(args=None, observations=None):
   }
 
   if args:
-    for k, v in args.iteritems():
+    for k, v in six.iteritems(args):
       config[k] = v
   if observations is None:
     observations = ['DEBUG.POS.TRANS']
@@ -55,7 +56,7 @@ class DeterminismTest(unittest.TestCase):
     env2 = make_dmlab_environment()
 
     move_fwd = np.array([0, 0, 0, 1, 0, 0, 0], dtype=np.intc)
-    for _ in xrange(num_steps):
+    for _ in six.moves.range(num_steps):
       self.assertEqual(env1.step(move_fwd, 1), env2.step(move_fwd, 1))
       pos1 = env1.observations()['DEBUG.POS.TRANS']
       pos2 = env2.observations()['DEBUG.POS.TRANS']
@@ -72,8 +73,8 @@ class DeterminismTest(unittest.TestCase):
     env2 = make_dmlab_environment()
 
     move_fwd = np.array([0, 0, 0, 1, 0, 0, 0], dtype=np.intc)
-    for _ in xrange(num_steps):
-      for _ in xrange(repeated_actions):
+    for _ in six.moves.range(num_steps):
+      for _ in six.moves.range(repeated_actions):
         env1.step(move_fwd, 1)
       env2.step(move_fwd, repeated_actions)
       pos1 = env1.observations()['DEBUG.POS.TRANS']
@@ -92,9 +93,9 @@ class DeterminismTest(unittest.TestCase):
     self.assertEqual(num_steps % repeated_actions, 0)
 
     move_fwd = np.array([0, 0, 0, 1, 0, 0, 0], dtype=np.intc)
-    for _ in xrange(int(num_steps / repeated_actions)):
+    for _ in six.moves.range(int(num_steps / repeated_actions)):
       accum_reward = 0.0
-      for _ in xrange(repeated_actions):
+      for _ in six.moves.range(repeated_actions):
         accum_reward += env.step(move_fwd, 1)
       self.assertEqual(
           env_repeated.step(move_fwd, repeated_actions), accum_reward)
@@ -113,7 +114,7 @@ class DeterminismTest(unittest.TestCase):
         args={'use_pbos': 'true'}, observations=['RGBD'])
 
     move_fwd = np.array([0, 0, 0, 1, 0, 0, 0], dtype=np.intc)
-    for _ in xrange(5):
+    for _ in six.moves.range(5):
       self.assertEqual(env.step(move_fwd, 1), pbo_env.step(move_fwd, 1))
       pixels = env.observations()['RGBD']
       pbo_pixels = pbo_env.observations()['RGBD']

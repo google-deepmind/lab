@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -58,7 +59,7 @@ class UpdateInventoryTest(unittest.TestCase):
     self.assertEqual(env.observations()['DEBUG.AMOUNT'][0], 2)
 
     ## Fire two orbs.
-    for _ in xrange(600):
+    for _ in six.moves.range(600):
       env.step(action, 1)
       self.assertEqual(env.observations()['DEBUG.GADGET'][0], GADGETS['ORB'])
       if env.observations()['DEBUG.AMOUNT'][0] == 0:
@@ -67,7 +68,7 @@ class UpdateInventoryTest(unittest.TestCase):
       self.fail('Failed use orbs!')
 
     ## Wait for weapon switch.
-    for _ in xrange(600):
+    for _ in six.moves.range(600):
       env.step(action, 1)
       if env.observations()['DEBUG.GADGET'][0] == GADGETS['RAPID']:
         break
@@ -75,7 +76,7 @@ class UpdateInventoryTest(unittest.TestCase):
       self.fail('Failed to auto switch weapon!')
 
     self.assertEqual(env.observations()['DEBUG.AMOUNT'][0], 10)
-    for _ in xrange(600):
+    for _ in six.moves.range(600):
       env.step(action, 1)
       if env.observations()['DEBUG.AMOUNT'][0] == 0:
         break

@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -40,7 +41,7 @@ class EpisodeTimeTest(unittest.TestCase):
     env.reset()
     nop = np.zeros((7,), dtype=np.intc)
 
-    for _ in xrange(0, fps):
+    for _ in six.moves.range(0, fps):
       env.step(nop, 1)
 
     obs = env.observations()

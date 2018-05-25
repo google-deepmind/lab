@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017-2018 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -54,7 +55,7 @@ class EntityInfo(unittest.TestCase):
     action = np.zeros([len(action_spec)], dtype=np.intc)
     action[action_index['MOVE_BACK_FORWARD']] = 1
     reward = 0
-    for _ in xrange(0, 60):
+    for _ in six.moves.range(0, 60):
       reward += env.step(action, 1)
       if reward == 3:
         break
@@ -70,7 +71,7 @@ class EntityInfo(unittest.TestCase):
     obs = env.observations()
     self.assertEqual(
         np.isclose(obs['DEBUG.PICKUPS'], pickups_state).all(), True)
-    for _ in xrange(0, 600):
+    for _ in six.moves.range(0, 600):
       reward += env.step(action, 1)
       if reward == 0:
         break
