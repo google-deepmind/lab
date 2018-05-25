@@ -144,7 +144,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
         return 1;
     }
   } else {
-    std::cerr << "Require runfiles_diectory!\n";
+    std::cerr << "Require runfiles_directory!\n";
     return 1;
   }
 
