@@ -49,7 +49,6 @@
 // zero-initialized.
 typedef struct {
   char runfiles_path[4096];  // Populated during module initialization below.
-  PyTypeObject lab_type;
 } LabModuleState;
 
 static LabModuleState* get_module_state(PyObject* module);  // defined below
@@ -166,7 +165,8 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
   }
   {
 #if PY_MAJOR_VERSION >= 3
-    PyObject* module = PyImport_AddModule("deepmind_lab");
+    PyObject* module =
+        PyImport_AddModule("deepmind_lab");
     if (module == NULL) {
       PyErr_SetString(PyExc_RuntimeError, "deepmind_lab module not loaded");
       return -1;
@@ -644,13 +644,13 @@ static PyObject* Lab_events(PyObject* pself, PyObject* no_arg) {
       return NULL;
     }
     for (int obs_id = 0; obs_id < event.observation_count; ++obs_id) {
-      PyObject* obs_enty = make_observation(&event.observations[obs_id]);
-      if (obs_enty == NULL) {
+      PyObject* obs_entry = make_observation(&event.observations[obs_id]);
+      if (obs_entry == NULL) {
         Py_DECREF(observation_list);
         Py_DECREF(result);
         return NULL;
       }
-      PyList_SetItem(observation_list, obs_id, obs_enty);
+      PyList_SetItem(observation_list, obs_id, obs_entry);
     }
     PyTuple_SetItem(entry, 1, observation_list);
     PyList_SetItem(result, event_id, entry);
@@ -774,7 +774,7 @@ static PyMethodDef module_methods[] = {
 
 static int load_module_impl(PyObject* module, LabModuleState* state) {
 #if PY_MAJOR_VERSION >= 3
-  PyTypeObject* lab_type = &state->lab_type;
+  PyTypeObject* lab_type = malloc(sizeof(PyTypeObject));
   memcpy(lab_type, &deepmind_lab_LabType, sizeof(PyTypeObject));
 #else  // PY_MAJOR_VERSION >= 3
   PyTypeObject* lab_type = &deepmind_lab_LabType;
@@ -787,14 +787,20 @@ static int load_module_impl(PyObject* module, LabModuleState* state) {
   PyObject *v = PyObject_GetAttrString(module, "__file__");
 #if PY_MAJOR_VERSION >= 3
   if (v && PyUnicode_Check(v)) {
-    const char* file = PyBytes_AsString(PyUnicode_EncodeFSDefault(v));
+    PyObject* bv = PyUnicode_EncodeFSDefault(v);
+    const char* file = PyBytes_AsString(bv);
+    if (strlen(file) < sizeof(state->runfiles_path)) {
+      strcpy(state->runfiles_path, file);
+      Py_DECREF(bv);
+    } else {
+      Py_DECREF(bv);
 #else  // PY_MAJOR_VERSION >= 3
   if (v && PyString_Check(v)) {
     const char* file = PyString_AsString(v);
-#endif  // PY_MAJOR_VERSION >= 3
     if (strlen(file) < sizeof(state->runfiles_path)) {
       strcpy(state->runfiles_path, file);
     } else {
+#endif  // PY_MAJOR_VERSION >= 3
       PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
       return -1;
     }
@@ -813,25 +819,35 @@ static int load_module_impl(PyObject* module, LabModuleState* state) {
     strcpy(state->runfiles_path, ".");
   }
 #else  // DEEPMIND_LAB_MODULE_RUNFILES_DIR
+  static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
+  LabModuleState* module_state = get_module_state(module);
+
 #if PY_MAJOR_VERSION >= 3
   PyObject* u = PyUnicode_FromWideChar(Py_GetProgramFullPath(), -1);
   if (u == NULL) return -1;
   PyObject* p = PyUnicode_EncodeFSDefault(u);
   const char* s = PyBytes_AsString(p);
   size_t n = PyBytes_Size(p);
+  if (n + strlen(kRunfiles) < sizeof(module_state->runfiles_path)) {
+    strcpy(module_state->runfiles_path, s);
+    strcat(module_state->runfiles_path, kRunfiles);
+    Py_DECREF(p);
+    Py_DECREF(u);
+  } else {
+    Py_DECREF(p);
+    Py_DECREF(u);
 #else  // PY_MAJOR_VERSION >= 3
   const char* s = Py_GetProgramFullPath();
   size_t n = strlen(s);
-#endif  // PY_MAJOR_VERSION >= 3
-  static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
-  LabModuleState* module_state = get_module_state(module);
   if (n + strlen(kRunfiles) < sizeof(module_state->runfiles_path)) {
     strcpy(module_state->runfiles_path, s);
     strcat(module_state->runfiles_path, kRunfiles);
   } else {
+#endif  // PY_MAJOR_VERSION >= 3
     PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
     return -1;
   }
+
 #endif  // DEEPMIND_LAB_MODULE_RUNFILES_DIR
 
   srand(time(NULL));
