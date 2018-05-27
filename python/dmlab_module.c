@@ -787,20 +787,16 @@ static int load_module_impl(PyObject* module, LabModuleState* state) {
   PyObject *v = PyObject_GetAttrString(module, "__file__");
 #if PY_MAJOR_VERSION >= 3
   if (v && PyUnicode_Check(v)) {
-    PyObject* bv = PyUnicode_EncodeFSDefault(v);
-    const char* file = PyBytes_AsString(bv);
-    if (strlen(file) < sizeof(state->runfiles_path)) {
-      strcpy(state->runfiles_path, file);
-      Py_DECREF(bv);
-    } else {
-      Py_DECREF(bv);
+    Py_ssize_t len;
+    const char* file = PyUnicode_AsUTF8AndSize(v, &len);
+    if (len < sizeof(state->runfiles_path)) {
 #else  // PY_MAJOR_VERSION >= 3
   if (v && PyString_Check(v)) {
     const char* file = PyString_AsString(v);
     if (strlen(file) < sizeof(state->runfiles_path)) {
+#endif  // PY_MAJOR_VERSION >= 3
       strcpy(state->runfiles_path, file);
     } else {
-#endif  // PY_MAJOR_VERSION >= 3
       PyErr_SetString(PyExc_RuntimeError, "Runfiles directory name too long!");
       return -1;
     }
@@ -825,16 +821,13 @@ static int load_module_impl(PyObject* module, LabModuleState* state) {
 #if PY_MAJOR_VERSION >= 3
   PyObject* u = PyUnicode_FromWideChar(Py_GetProgramFullPath(), -1);
   if (u == NULL) return -1;
-  PyObject* p = PyUnicode_EncodeFSDefault(u);
-  const char* s = PyBytes_AsString(p);
-  size_t n = PyBytes_Size(p);
+  Py_ssize_t n;
+  const char* s = PyUnicode_AsUTF8AndSize(u, &n);
   if (n + strlen(kRunfiles) < sizeof(module_state->runfiles_path)) {
     strcpy(module_state->runfiles_path, s);
     strcat(module_state->runfiles_path, kRunfiles);
-    Py_DECREF(p);
     Py_DECREF(u);
   } else {
-    Py_DECREF(p);
     Py_DECREF(u);
 #else  // PY_MAJOR_VERSION >= 3
   const char* s = Py_GetProgramFullPath();
