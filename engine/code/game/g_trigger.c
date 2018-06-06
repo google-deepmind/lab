@@ -289,10 +289,10 @@ void trigger_teleporter_touch (gentity_t *self, gentity_t *other, trace_t *trace
 		return;
 	}
 
-	if ( !dmlab_can_trigger(self->id, self->target) ) {
+	if ( !dmlab_can_trigger( self->id, self->target, &other->client->ps ) ) {
 		return;
 	}
-	if ( dmlab_override_trigger(self->id, self->target) ) {
+	if ( dmlab_override_trigger( self->id, self->target, &other->client->ps ) ) {
 		return;
 	}
 
@@ -443,7 +443,7 @@ void func_lookat_look(gentity_t *self, gentity_t *other, const trace_t *trace) {
 	if (trace) {
 		MoveToEntitySpace(self, trace->endpos, local_point);
 	}
-	dmlab_trigger_lookat( self->id, trace != NULL, local_point );
+	dmlab_trigger_lookat( self->id, trace != NULL, local_point, &other->client->ps );
 }
 
 /*QUAKED trigger_lookat

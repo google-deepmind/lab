@@ -249,11 +249,13 @@ void G_UseTargets( gentity_t *ent, gentity_t *activator ) {
 		return;
 	}
 
-	if ( !dmlab_can_trigger(ent->id, ent->target) ) {
+	if ( activator->client &&
+			!dmlab_can_trigger( ent->id, ent->target, &activator->client->ps ) ) {
 		return;
 	}
 
-	if ( dmlab_override_trigger(ent->id, ent->target) ) {
+	if ( activator->client &&
+			dmlab_override_trigger( ent->id, ent->target, &activator->client->ps ) ) {
 		return;
 	}
 

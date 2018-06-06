@@ -88,22 +88,36 @@ int dmlab_callback(
     case DEEPMIND_FINISH_MAP:
       ctx->hooks.set_map_finished(ctx->userdata, /*map_finished=*/a1);
       return 1;
-    case DEEPMIND_CAN_PICKUP:
-      return ctx->hooks.can_pickup(ctx->userdata, /*entity_id=*/a1);
-    case DEEPMIND_OVERRIDE_PICKUP:
+    case DEEPMIND_CAN_PICKUP: {
+      const playerState_t* ps = VM_ArgPtr(a2);
+      return ctx->hooks.can_pickup(ctx->userdata, /*entity_id=*/a1,
+                                   /*player_id=*/ps->clientNum);
+    }
+    case DEEPMIND_OVERRIDE_PICKUP: {
+      const playerState_t* ps = VM_ArgPtr(a3);
       return ctx->hooks.override_pickup(ctx->userdata, /*entity_id=*/a1,
-                                        /*respawn=*/VM_ArgPtr(a2));
-    case DEEPMIND_CAN_TRIGGER:
+                                        /*respawn=*/VM_ArgPtr(a2),
+                                        /*player_id=*/ps->clientNum);
+    }
+    case DEEPMIND_CAN_TRIGGER: {
+      const playerState_t* ps = VM_ArgPtr(a3);
       return ctx->hooks.can_trigger(ctx->userdata, /*entity_id=*/a1,
-                                    /*target_name=*/VM_ArgPtr(a2));
-    case DEEPMIND_OVERRIDE_TRIGGER:
+                                    /*target_name=*/VM_ArgPtr(a2),
+                                    /*player_id=*/ps->clientNum);
+    }
+    case DEEPMIND_OVERRIDE_TRIGGER: {
+      const playerState_t* ps = VM_ArgPtr(a3);
       return ctx->hooks.override_trigger(ctx->userdata, /*entity_id=*/a1,
-                                         /*target_name=*/VM_ArgPtr(a2));
-    case DEEPMIND_OVERRIDE_LOOKAT:
+                                         /*target_name=*/VM_ArgPtr(a2),
+                                         /*player_id=*/ps->clientNum);
+    }
+    case DEEPMIND_OVERRIDE_LOOKAT: {
+      const playerState_t* ps = VM_ArgPtr(a4);
       ctx->hooks.trigger_lookat(ctx->userdata, /*entity_id=*/a1,
                                 /*looked_at=*/a2,
-                                /*position=*/VM_ArgPtr(a3));
-      break;
+                                /*position=*/VM_ArgPtr(a3),
+                                /*player_id=*/ps->clientNum);
+    } break;
     case DEEPMIND_REWARD_OVERRIDE:
       return ctx->hooks.reward_override(ctx->userdata,
                                         /*reason=*/VM_ArgPtr(a1),

@@ -75,26 +75,30 @@ void dmlab_clearitems(void);
 void dmlab_set_map_finished(int map_finished);
 
 // Returns if we can pickup the specified entity.
-qboolean dmlab_can_pickup(int entity_id);
+qboolean dmlab_can_pickup(int entity_id, const playerState_t* ps);
 
 // Hook to allow customization of the entity's pickup behaviour. Users are
 // expected to implement their own game logic for picking up the specified item.
 // Can also return the default respawn time for the entity.
 // Returns true if the pickup behaviour has been overridden.
-qboolean dmlab_override_pickup(int entity_id, int* respawn);
+qboolean dmlab_override_pickup(int entity_id, int* respawn,
+                               const playerState_t* ps);
 
 // Returns if the specified entity can trigger.
-qboolean dmlab_can_trigger(int entity_id, const char* target_name);
+qboolean dmlab_can_trigger(int entity_id, const char* target_name,
+                           const playerState_t* ps);
 
 // Hook to allow customization of the entity's trigger behaviour. Users are
 // expected to implement their own game logic for triggering the specified item.
 // Returns whether the trigger behaviour has been overridden.
 // If the default trigger behaviour has been overridden then the custom trigger
 // logic will execute instead.
-qboolean dmlab_override_trigger(int entity_id, const char* target_name);
+qboolean dmlab_override_trigger(int entity_id, const char* target_name,
+                                const playerState_t* ps);
 
 // Hook to allow customization of the entity's lookat behaviour.
-void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position);
+void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position,
+                          const playerState_t* ps);
 
 // Customization point for overriding the value of a reward and consuming reward
 // stored in external context for player 'player_id'.

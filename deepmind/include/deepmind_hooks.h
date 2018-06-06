@@ -235,23 +235,25 @@ struct DeepmindHooks_s {
   void (*set_map_finished)(void* userdata, bool map_finished);
 
   // Returns if the specified entity id can be picked up.
-  bool (*can_pickup)(void* userdata, int entity_id);
+  bool (*can_pickup)(void* userdata, int entity_id, int player_id);
 
   // Hook to determine if we're overriding the entity's default pickup
   // behaviour. Optionally sets the default respawn time.
-  bool (*override_pickup)(void* userdata, int entity_id, int* respawn);
+  bool (*override_pickup)(void* userdata, int entity_id, int* respawn,
+                          int player_id);
 
   // Returns if the specified entity has a trigger.
-  bool (*can_trigger)(void* userdata, int entity_id, const char* target_name);
+  bool (*can_trigger)(void* userdata, int entity_id, const char* target_name,
+                      int player_id);
 
   // Hook to determine if we're overriding the entity's default trigger
   // behaviour.
   bool (*override_trigger)(void* userdata, int entity_id,
-                           const char* target_name);
+                           const char* target_name, int player_id);
 
   // Hook which is invoked on reply to a trigger lookat.
   void (*trigger_lookat)(void* userdata, int entity_id, bool looked_at,
-                         const float position[3]);
+                         const float position[3], int player_id);
 
   // Get reward override for player.
   int (*reward_override)(void* userdata, const char* reason_opt, int player_id,

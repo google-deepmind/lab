@@ -288,31 +288,33 @@ static void set_map_finished(void* userdata, bool map_finished) {
   static_cast<Context*>(userdata)->MutableGame()->SetMapFinished(map_finished);
 }
 
-static bool can_pickup(void* userdata, int entity_id) {
+static bool can_pickup(void* userdata, int entity_id, int player_id) {
   return static_cast<Context*>(userdata)->MutablePickups()->CanPickup(
-      entity_id);
+      entity_id, player_id);
 }
 
-static bool override_pickup(void* userdata, int entity_id, int* respawn) {
+static bool override_pickup(void* userdata, int entity_id, int* respawn,
+                            int player_id) {
   return static_cast<Context*>(userdata)->MutablePickups()->OverridePickup(
-      entity_id, respawn);
+      entity_id, respawn, player_id);
 }
 
-static bool can_trigger(void* userdata, int entity_id,
-                        const char* target_name) {
-  return static_cast<Context*>(userdata)->CanTrigger(entity_id, target_name);
+static bool can_trigger(void* userdata, int entity_id, const char* target_name,
+                        int player_id) {
+  return static_cast<Context*>(userdata)->CanTrigger(entity_id, target_name,
+                                                     player_id);
 }
 
 static bool override_trigger(void* userdata, int entity_id,
-                             const char* target_name) {
-  return static_cast<Context*>(userdata)->OverrideTrigger(entity_id,
-                                                          target_name);
+                             const char* target_name, int player_id) {
+  return static_cast<Context*>(userdata)->OverrideTrigger(
+      entity_id, target_name, player_id);
 }
 
 static void trigger_lookat(void* userdata, int entity_id, bool looked_at,
-                           const float position[3]) {
-  static_cast<Context*>(userdata)->TriggerLookat(entity_id, looked_at,
-                                                 position);
+                           const float position[3], int player_id) {
+  static_cast<Context*>(userdata)->TriggerLookat(entity_id, looked_at, position,
+                                                 player_id);
 }
 
 static int reward_override(void* userdata, const char* reason_opt,
@@ -1112,7 +1114,8 @@ void Context::GetModelGetters(DeepmindModelGetters* model_getters,
   *model_data = model_.get();
 }
 
-bool Context::CanTrigger(int entity_id, const char* target_name) {
+bool Context::CanTrigger(int entity_id, const char* target_name,
+                         int player_id) {
   lua_State* L = lua_vm_.get();
   lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("canTrigger");
@@ -1124,8 +1127,9 @@ bool Context::CanTrigger(int entity_id, const char* target_name) {
 
   lua::Push(L, entity_id);
   lua::Push(L, target_name);
+  lua::Push(L, player_id + 1);
 
-  auto result = lua::Call(L, 3);
+  auto result = lua::Call(L, 4);
   CHECK(result.ok()) << "[canTrigger] - " << result.error();
 
   CHECK(result.n_results() != 0 && !lua_isnil(L, -1))
@@ -1139,7 +1143,8 @@ bool Context::CanTrigger(int entity_id, const char* target_name) {
   return can_trigger;
 }
 
-bool Context::OverrideTrigger(int entity_id, const char* target_name) {
+bool Context::OverrideTrigger(int entity_id, const char* target_name,
+                              int player_id) {
   lua_State* L = lua_vm_.get();
   lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("trigger");
@@ -1151,8 +1156,9 @@ bool Context::OverrideTrigger(int entity_id, const char* target_name) {
 
   lua::Push(L, entity_id);
   lua::Push(L, target_name);
+  lua::Push(L, player_id + 1);
 
-  auto result = lua::Call(L, 3);
+  auto result = lua::Call(L, 4);
   CHECK(result.ok()) << "[trigger] - " << result.error();
 
   // If nothing was returned or if the first return value is nil, the trigger
@@ -1169,7 +1175,7 @@ bool Context::OverrideTrigger(int entity_id, const char* target_name) {
 }
 
 void Context::TriggerLookat(int entity_id, bool looked_at,
-                            const float position[3]) {
+                            const float position[3], int player_id) {
   lua_State* L = lua_vm_.get();
   lua::StackResetter stack_resetter(L);
   script_table_ref_.PushMemberFunction("lookat");
@@ -1184,8 +1190,8 @@ void Context::TriggerLookat(int entity_id, bool looked_at,
   std::array<float, 3> float_array3;
   std::copy_n(position, float_array3.size(), float_array3.data());
   lua::Push(L, float_array3);
-
-  auto result = lua::Call(L, 4);
+  lua::Push(L, player_id + 1);
+  auto result = lua::Call(L, 5);
   CHECK(result.ok()) << "[lookat] - " << result.error();
 }
 

@@ -1190,7 +1190,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 	// If we have an id set, then call deepmind callback to see if it can be
 	// grabbed.
 	if ( ent->id ) {
-		can_pickup = dmlab_can_pickup( ent->id );
+		can_pickup = dmlab_can_pickup( ent->id, ps );
 	}
 
 	switch( item->giType ) {

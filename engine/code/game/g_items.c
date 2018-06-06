@@ -459,7 +459,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	predict = other->client->pers.predictItemPickup;
 
 	respawn = -1;
-	if (!ent->id || !dmlab_override_pickup(ent->id, &respawn)) {
+	if (!ent->id || !dmlab_override_pickup(ent->id, &respawn, &other->client->ps )) {
 		// call the item-specific pickup function
 		switch( ent->item->giType ) {
 		case IT_WEAPON:

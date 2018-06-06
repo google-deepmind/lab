@@ -108,13 +108,13 @@ class ContextPickups {
 
   // Returns whether we can pickup the specified entity id. By default this
   // returns true.
-  bool CanPickup(int entity_id);
+  bool CanPickup(int entity_id, int player_id);
 
   // Customization point for overriding the entity's pickup behaviour. Also
   // allows for modifying the default respawn time for the entity.
   // Returns true if the pickup behaviour has been overridden by the user,
   // otherwise calls the default pickup behaviour based on the item type.
-  bool OverridePickup(int entity_id, int* respawn);
+  bool OverridePickup(int entity_id, int* respawn, int player_id);
 
   // Adds spawn_entity to list of entities to be spawned next frame.
   void SpawnDynamicEntity(EntityInstance spawn_entity);

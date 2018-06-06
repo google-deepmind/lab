@@ -297,7 +297,7 @@ bool ContextPickups::GetItem(int index, char* item_name, int max_item_name,  //
   return true;
 }
 
-bool ContextPickups::CanPickup(int entity_id) {
+bool ContextPickups::CanPickup(int entity_id, int player_id) {
   lua_State* L = script_table_ref_.LuaState();
   script_table_ref_.PushMemberFunction("canPickup");
 
@@ -308,8 +308,9 @@ bool ContextPickups::CanPickup(int entity_id) {
   }
 
   lua::Push(L, entity_id);
+  lua::Push(L, player_id + 1);
 
-  auto result = lua::Call(L, 2);
+  auto result = lua::Call(L, 3);
   CHECK(result.ok()) << result.error();
 
   // If nothing returned or the return is nil, the default.
@@ -326,7 +327,8 @@ bool ContextPickups::CanPickup(int entity_id) {
   return can_pickup;
 }
 
-bool ContextPickups::OverridePickup(int entity_id, int* respawn) {
+bool ContextPickups::OverridePickup(int entity_id, int* respawn,
+                                    int player_id) {
   lua_State* L = script_table_ref_.LuaState();
   script_table_ref_.PushMemberFunction("pickup");
 
@@ -337,8 +339,9 @@ bool ContextPickups::OverridePickup(int entity_id, int* respawn) {
   }
 
   lua::Push(L, entity_id);
+  lua::Push(L, player_id + 1);
 
-  auto result = lua::Call(L, 2);
+  auto result = lua::Call(L, 3);
   CHECK(result.ok()) << result.error();
 
   // If nothing returned or the return is nil, we're not overriding the

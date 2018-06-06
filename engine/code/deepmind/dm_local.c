@@ -116,33 +116,37 @@ void dmlab_set_map_finished(int map_finished) {
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-qboolean dmlab_can_pickup(int entity_id) {
+qboolean dmlab_can_pickup(int entity_id, const playerState_t* ps) {
   return trap_DeepmindCallback(DEEPMIND_CAN_PICKUP, (intptr_t)entity_id,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                               (intptr_t)ps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-qboolean dmlab_override_pickup(int entity_id, int* respawn) {
+qboolean dmlab_override_pickup(int entity_id, int* respawn,
+                               const playerState_t* ps) {
   return trap_DeepmindCallback(DEEPMIND_OVERRIDE_PICKUP, (intptr_t)entity_id,
-                               (intptr_t)respawn, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                               (intptr_t)respawn, (intptr_t)ps, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-qboolean dmlab_can_trigger(int entity_id, const char* target_name) {
+qboolean dmlab_can_trigger(int entity_id, const char* target_name,
+                           const playerState_t* ps) {
   return trap_DeepmindCallback(DEEPMIND_CAN_TRIGGER,
                                (intptr_t)entity_id, (intptr_t)target_name,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                               (intptr_t)ps, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-qboolean dmlab_override_trigger(int entity_id, const char* target_name) {
+qboolean dmlab_override_trigger(int entity_id, const char* target_name,
+                                const playerState_t* ps) {
   return trap_DeepmindCallback(DEEPMIND_OVERRIDE_TRIGGER,
                                (intptr_t)entity_id, (intptr_t)target_name,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                               (intptr_t)ps, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
-void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position) {
+void dmlab_trigger_lookat(int entity_id, qboolean looked_at, vec3_t position,
+                          const playerState_t* ps) {
   trap_DeepmindCallback(DEEPMIND_OVERRIDE_LOOKAT,
                         (intptr_t)entity_id, (intptr_t)looked_at,
                         (intptr_t)position,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0);
+                        (intptr_t)ps, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 int dmlab_reward_override(const char* reason_opt, int player_id, int team,

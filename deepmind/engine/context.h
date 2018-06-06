@@ -185,17 +185,18 @@ class Context {
 
   // Returns whether the specified entity id can trigger. By default this
   // returns true.
-  bool CanTrigger(int entity_id, const char* target_name);
+  bool CanTrigger(int entity_id, const char* target_name, int player_id);
 
   // Customization point for overriding the entity's trigger behaviour.
   // Returns whether the trigger behaviour has been overridden by the user.
   // If the trigger behaviour is not overridden, calls the default trigger
   // behaviour based on the item type.
-  bool OverrideTrigger(int entity_id, const char* target_name);
+  bool OverrideTrigger(int entity_id, const char* target_name, int player_id);
 
   // Customization point for triggering a callback in response to a trigger
   // lookat.
-  void TriggerLookat(int entity_id, bool looked_at, const float position[3]);
+  void TriggerLookat(int entity_id, bool looked_at, const float position[3],
+                     int player_id);
 
   // Customization point for overriding the value of a reward.
   //

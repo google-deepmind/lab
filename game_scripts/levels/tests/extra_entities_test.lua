@@ -44,7 +44,8 @@ function api:init(params)
   }
 end
 
-function api:pickup(id)
+function api:pickup(id, playerId)
+  assert(playerId == 1)
   if id == 1 then
     pickups_spawn:spawn{
         classname = 'strawberry_reward',
