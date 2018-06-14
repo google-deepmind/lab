@@ -25,6 +25,7 @@
     other than 0.
 3.  Add a console command `dm_pickup` to pick up an item identified by its `id`.
 4.  More Python demos and tests now work with Python 3.
+5.  Add a shader for rendering decals with transparency.
 
 ## release-2018-05-15 May 2018 release
 
