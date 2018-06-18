@@ -13,6 +13,8 @@
 ### Minor Improvements:
 
 1.  Quake console commands can now be issued via a write-only property.
+2.  New numeric "accumulate" operations for TensorView and the Lua Tensor types:
+    sum, product, sum-of-squares, and dot product of two tensors.
 
 ### EnvCApi Changes:
 

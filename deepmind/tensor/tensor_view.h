@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -452,6 +452,19 @@ class TensorView : public Layout {
         });
   }
 
+  // If '*this' matches the number of elements in 'rhs', 'op' is applied to the
+  // elements of '*this' and 'rhs' and returns true, otherwise returns false.
+  template <typename U, typename F>
+  bool ComponentOp(const TensorView<U>& rhs, F&& op) const {
+    const T* lhs_storage = storage();
+    const U* rhs_storage = rhs.storage();
+    return PairwiseForEachOffset(
+        rhs, [&op, lhs_storage, rhs_storage](std::size_t lhs_offset,
+                                             std::size_t rhs_offset) {
+          op(lhs_storage[lhs_offset], rhs_storage[rhs_offset]);
+        });
+  }
+
   // Returns whether *this and 'rhs' have the same shape and the elements are
   // equal.
   bool operator==(const TensorView& rhs) const {
@@ -585,6 +598,43 @@ class TensorView : public Layout {
   // Assigns '*this' component-wise to 'round(rhs)'.
   void Round() {
     ForEachMutable([](T* val) { *val = std::round(*val); });
+  }
+
+  // Calculates the sum of all elements using an accumulator of type R.
+  template <typename R = T>
+  R Sum() const {
+    R acc = 0;
+    ForEach([&acc](R val) { acc += val; });
+    return acc;
+  }
+
+  // Calculates the product of all elements using an accumulator of type R.
+  template <typename R = T>
+  R Product() const {
+    R acc = 1;
+    ForEach([&acc](R val) { acc *= val; });
+    return acc;
+  }
+
+  // Calculates the sum of all the squares of each element using an accumulator
+  // of type R.
+  template <typename R = T>
+  R LengthSquared() const {
+    R acc = 0;
+    ForEach([&acc](R val) { acc += val * val; });
+    return acc;
+  }
+
+  // Calculates the sum of all the element-wise products of this tensor and
+  // 'rhs', using '*acc' as the accumulator (which holds the result). Returns
+  // true if the operation succeeded, and false otherwise (which happens when
+  // the tensors have different sizes).
+  template <typename U, typename R = T>
+  bool DotProduct(const TensorView<U>& rhs, R* acc) const {
+    *acc = 0;
+    return ComponentOp(rhs, [acc](R v_lhs, R v_rhs) {
+      *acc += v_lhs * v_rhs;
+    });
   }
 
   // Shuffles a rank-1 tensor.

@@ -134,6 +134,11 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         {"shape", &Class::template Member<&LuaTensor<T>::Shape>},
         {"reshape", &Class::template Member<&LuaTensor<T>::Reshape>},
         {"clone", &Class::template Member<&LuaTensor<T>::Clone>},
+        {"sum", &Class::template Member<&LuaTensor<T>::Sum>},
+        {"product", &Class::template Member<&LuaTensor<T>::Product>},
+        {"lengthSquared",
+         &Class::template Member<&LuaTensor<T>::LengthSquared>},
+        {"dot", &Class::template Member<&LuaTensor<T>::DotProduct>},
         {"val", &Class::template Member<&LuaTensor<T>::Val>},
         {"transpose", &Class::template Member<&LuaTensor<T>::Transpose>},
         {"select", &Class::template Member<&LuaTensor<T>::Select>},
@@ -729,6 +734,34 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     });
     LuaTensor::CreateObject(L, tensor_view_.shape(), std::move(storage));
     return 1;
+  }
+
+  lua::NResultsOr Sum(lua_State* L) {
+    lua::Push(L, tensor_view_.template Sum<double>());
+    return 1;
+  }
+
+  lua::NResultsOr Product(lua_State* L) {
+    lua::Push(L, tensor_view_.template Product<double>());
+    return 1;
+  }
+
+  lua::NResultsOr LengthSquared(lua_State* L) {
+    lua::Push(L, tensor_view_.template LengthSquared<double>());
+    return 1;
+  }
+
+  lua::NResultsOr DotProduct(lua_State* L) {
+    if (LuaTensor* rhs = LuaTensor::ReadObject(L, 2)) {
+      double result;
+      if (tensor_view_.DotProduct(rhs->tensor_view_, &result)) {
+        lua_settop(L, 0);
+        lua::Push(L, result);
+        return 1;
+      }
+    }
+    return absl::StrCat("Must call with same sized tensor, received: ",
+                        lua::ToString(L, 2));
   }
 
   lua::NResultsOr Equal(lua_State* L) {

@@ -582,6 +582,65 @@ Shape: [4, 3]
  [12,  8,  4]]
 ```
 
+## Accumulate Operations
+
+Accumulate Operations accumulate (or "fold") the elements of a tensor over a
+binary operation. The shape of the tensor is ignored, and elements are traversed
+in layout order. The element values are converted to, and the result is returned
+as the double-precision floating point type. This implies that operations on
+small integer values do not overflow (even when they would as values of the
+tensor's type), and if values get large, the binary operation may no longer be
+associative (even when the mathematical operation is).
+
+### `sum`()
+
+Calculates the sum of all the elements. Returns 0 if the tensor is empty.
+
+```lua
+> z = tensor.DoubleTensor{3, 3, 3, 3}
+> assert(z:sum() == 4 * 3)
+```
+
+Elements are converted to double before accumulation:
+
+```lua
+> z = tensor.ByteTensor{255, 255}
+> assert(z:sum() == 255 + 255)
+```
+
+### `product`()
+
+Calculates the product of all the elements. Returns 1 if the tensor is empty.
+
+```lua
+> z = tensor.DoubleTensor{3, 3, 3, 3}
+> assert(z:product() == 3 * 3 * 3 * 3)
+```
+
+Elements are converted to double before accumulation:
+
+```lua
+> z = tensor.ByteTensor{2, 4, 8, 16}
+> assert(z:product() == 2 * 4 * 8 * 16)
+```
+
+### `lengthSquared`()
+
+Calculates the sum of all the squares of the elements. Returns 0 if the tensor
+is empty.
+
+```lua
+> z = tensor.DoubleTensor{1, 2, 3, 4}
+> assert(z:lengthSquared() == 1 + 2 * 2 + 3 * 3 + 4 * 4)
+```
+
+Elements are converted to double before accumulation:
+
+```lua
+> z = tensor.ByteTensor{5, 25, 100}
+> assert(z:lengthSquared() == 5 * 5 + 25 * 25 + 100 * 100)
+```
+
 ## Scalar Operations
 
 Scalar operations work on the tensor object and a single scalar argument value.
@@ -827,6 +886,36 @@ Shape: [3, 2]
 [[1, 2],
  [3, 4],
  [5, 6]]
+```
+
+## Accumulate Component Operations
+
+Accumulate Component Operations work on two tensors (the object and the
+argument) that have the same *number* of elements, but the tensor *shapes* are
+ignored. The respective element-wise binary operation is applied consecutively
+to pairs of tensor elements visited in their respective layout order. The
+accumulation is applied to the result of each element-wise binary operation.
+
+It is an error if the two tensors do not have the same number of elements or the
+same type.
+
+### `dot`(*value*)
+
+The element-wise operation is multiply, the accumulation operation is add.
+Returns 0 if the tensors are empty.
+
+```lua
+> z1 = tensor.DoubleTensor{1, 2, 3, 4}
+> z2 = tensor.DoubleTensor{-1, 2, -3, 4}
+> assert(z1:dot(z2) == -1 + 4 - 9 + 16)
+```
+
+Elements are converted to double before accumulation:
+
+```lua
+> z1 = tensor.ByteTensor{128, 64}
+> z2 = tensor.ByteTensor{16, 64}
+> assert(z1:dot(z2) == 128 * 16 + 64 * 64)
 ```
 
 ## Matrix operations

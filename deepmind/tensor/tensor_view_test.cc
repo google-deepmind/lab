@@ -390,6 +390,116 @@ TEST(TensorViewTest, TestRound) {
   EXPECT_THAT(storage, ElementsAre(-2.0, -2.0, 1.0, 1.0));
 }
 
+TEST(TensorViewTest, TestSum) {
+  ShapeVector shape = {4};
+  std::vector<int> storage = {1, 2, 3, 4};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Sum(), 10);
+}
+
+TEST(TensorViewTest, TestSumEmpty) {
+  ShapeVector shape = {0};
+  std::vector<int> storage = {};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Sum(), 0);
+}
+
+TEST(TensorViewTest, TestSumByteToInt) {
+  ShapeVector shape = {3};
+  std::vector<unsigned char> storage = {255, 255, 255};
+  TensorView<unsigned char> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Sum<int>(), 255 + 255 + 255);
+}
+
+TEST(TensorViewTest, TestSumSignedCharToInt) {
+  ShapeVector shape = {3};
+  std::vector<signed char> storage = {-128, -100, -50};
+  TensorView<signed char> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Sum<int>(), -128 - 100 - 50);
+}
+
+TEST(TensorViewTest, TestProduct) {
+  ShapeVector shape = {4};
+  std::vector<int> storage = {2, 3, 5, 7};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Product(), 2 * 3 * 5 * 7);
+}
+
+TEST(TensorViewTest, TestProductEmpty) {
+  ShapeVector shape = {0};
+  std::vector<int> storage = {};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Product(), 1);
+}
+
+TEST(TensorViewTest, TestProductByteToInt) {
+  ShapeVector shape = {4};
+  std::vector<unsigned char> storage = {16, 32, 64, 128};
+  TensorView<unsigned char> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.Product<int>(), 16 * 32 * 64 * 128);
+}
+
+TEST(TensorViewTest, TestLengthSquard) {
+  ShapeVector shape = {2};
+  std::vector<int> storage = {5, 5};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.LengthSquared(), 25 + 25);
+}
+
+TEST(TensorViewTest, TestLengthSquardEmpty) {
+  ShapeVector shape = {0};
+  std::vector<int> storage = {};
+  TensorView<int> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.LengthSquared(), 0);
+}
+
+TEST(TensorViewTest, TestLengthSquardByteToInt) {
+  ShapeVector shape = {2};
+  std::vector<unsigned char> storage = {255, 128};
+  TensorView<unsigned char> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.LengthSquared<int>(), 255 * 255 + 128 * 128);
+}
+
+TEST(TensorViewTest, TestLengthSquardSignedCharToInt) {
+  ShapeVector shape = {2};
+  std::vector<signed char> storage = {-120, 100};
+  TensorView<signed char> view(Layout(shape), storage.data());
+  EXPECT_EQ(view.LengthSquared<int>(), 120 * 120 + 100 * 100);
+}
+
+TEST(TensorViewTest, TestDotProduct) {
+  ShapeVector shape = {2};
+  std::vector<int> storage1 = {-2, 3};
+  TensorView<int> view1(Layout(shape), storage1.data());
+  std::vector<int> storage2 = {2, 5};
+  TensorView<int> view2(Layout(shape), storage2.data());
+  int result;
+  EXPECT_TRUE(view1.DotProduct(view2, &result));
+  EXPECT_EQ(result, 11);
+}
+
+TEST(TensorViewTest, TestDotProductNoOverflow) {
+  ShapeVector shape = {2};
+  std::vector<signed char> storage1 = {-20, 30};
+  TensorView<signed char> view1(Layout(shape), storage1.data());
+  std::vector<signed char> storage2 = {20, 50};
+  TensorView<signed char> view2(Layout(shape), storage2.data());
+  int result;
+  EXPECT_TRUE(view1.DotProduct(view2, &result));
+  EXPECT_EQ(result, 1100);
+}
+
+TEST(TensorViewTest, TestDotProductSizeMismatch) {
+  ShapeVector shape1 = {2};
+  std::vector<signed char> storage1 = {-20, 30};
+  TensorView<signed char> view1(Layout(shape1), storage1.data());
+  ShapeVector shape2 = {3};
+  std::vector<signed char> storage2 = {20, 50, 3};
+  TensorView<signed char> view2(Layout(shape2), storage2.data());
+  int result;
+  EXPECT_FALSE(view1.DotProduct(view2, &result));
+}
+
 TEST(TensorViewTest, TestShuffle) {
   ShapeVector shape = {5};
   std::vector<float> storage = {1.0, 2.0, 3.0, 4.0, 5.0};
