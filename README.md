@@ -85,9 +85,10 @@ lab$ bazel run :python_random_agent
 The [Python API](/docs/users/python_api.md)
 is used for agent-environment interactions.
 
-*DeepMind Lab* ships with different levels implementing different tasks. These
-tasks can be configured using Lua scripts, as described in the
-[Lua API](/docs/developers/reference/lua_api.md).
+*DeepMind Lab* ships with [different
+levels](/docs/levels.md) implementing different
+tasks. These tasks can be configured using Lua scripts, as described in the [Lua
+API](/docs/developers/reference/lua_api.md).
 
 -----------------
 
