@@ -1,5 +1,12 @@
 # DeepMind Lab Release Notes
 
+## Next Release
+
+### Minor Improvements:
+
+1.  Improve documentation of how to configure non-hermetic dependencies (Lua,
+    Python, NumPy).
+
 ## release-2018-06-20 June 2018 release
 
 ### New Levels:
