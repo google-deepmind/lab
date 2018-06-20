@@ -15,6 +15,7 @@ Key                    | Default | Description
 `episodeLengthSeconds` | 90      | An episode (one run with potentially many level restarts) ends after this many seconds.
 `gadgetSelect`         | false   | Enables gadget selection. See [actions](/docs/users/actions.md)
 `gadgetSwitch`         | false   | Enables gadget switching. See [actions](/docs/users/actions.md)
+`allowHoldOutLevels`   | false   | Enables hold-out levels that have been decorated with test_only.
 
 The levels that are shipped with DeepMind Lab can be found in
 [game_scripts/levels](../game_scripts/levels).

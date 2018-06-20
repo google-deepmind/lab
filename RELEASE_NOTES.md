@@ -6,6 +6,8 @@
 
 1.  Improve documentation of how to configure non-hermetic dependencies (Lua,
     Python, NumPy).
+2.  Add 'allowHoldOutLevels' setting to allow running of levels that should not
+    be trained on, but held out for evaluation.
 
 ## release-2018-06-20 June 2018 release
 

@@ -39,7 +39,7 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
       << env_c_api.error_message(context);
   ASSERT_EQ(env_c_api.setting(context, "fps", "15"), 0)
       << env_c_api.error_message(context);
-  ASSERT_EQ(env_c_api.setting(context, "invocationMode", "testbed"), 0)
+  ASSERT_EQ(env_c_api.setting(context, "allowHoldOutLevels", "true"), 0)
       << env_c_api.error_message(context);
   ASSERT_EQ(env_c_api.setting(context, "datasetPath", "dummy"), 0)
       << env_c_api.error_message(context);

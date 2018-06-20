@@ -26,6 +26,7 @@ local gadget_selection = require 'decorators.gadget_selection'
 local PARAMS_WHITELIST = {
     episodeLengthSeconds = true,
     invocationMode = true,
+    allowHoldOutLevels = true,
     levelGenerator = true,
     playerId = true,
     players = true,

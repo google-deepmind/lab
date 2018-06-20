@@ -23,12 +23,18 @@ invoked in an evaluation context (e.g. from the Testbed or a human agent).
 This may be used to prevent researchers from accidentally training agents
 against evaluation levels that they are not meant to train against.
 ]]
+
 function test_only.decorate(api)
   local init = api.init
   function api:init(params)
-    assert(params.invocationMode == "testbed",
-           "This level must only be used during evaluation. " ..
-           "For training, use the *_train.lua version of the level.")
+    local holdOutAllowed = params.allowHoldOutLevels == 'true' or
+                           params.invocationMode == 'testbed'  -- Legacy
+
+    assert(holdOutAllowed,
+           'This level must only be used during evaluation. ' ..
+           'For training, use the *_train.lua version of the level. ' ..
+           'If you really want to use this level, add the setting ' ..
+           '"allowHoldOutLevels" = "true" explicitly')
     return init and init(api, params)
   end
   return api

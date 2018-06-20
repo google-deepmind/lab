@@ -49,7 +49,8 @@ function factory.createLevelApi(kwargs)
 
   function api:init(params)
     -- Option to disable idle timeout, false for test runs.
-    api.opts.timeoutIfIdle = params.invocationMode ~= 'testbed'
+    api.opts.timeoutIfIdle = params.allowHoldOutLevels == 'true' or
+                             params.invocationMode == 'testbed'  -- Legacy
   end
 
   function api:loadTexture(textureName)
