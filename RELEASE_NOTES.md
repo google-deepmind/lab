@@ -1,6 +1,6 @@
 # DeepMind Lab Release Notes
 
-## Current Release
+## release-2018-06-20 June 2018 release
 
 ### New Levels:
 
