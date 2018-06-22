@@ -21,6 +21,7 @@ The optotypes are presented at a range of scales and contrasts.
 ]]
 
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
@@ -249,8 +250,7 @@ function factory.createLevelApi(kwargs)
   -- init gets called at the start of each episode
   function env:_init(pac, opts)
     self.screenSize = opts.screenSize
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
     -- use the screenSize to compute the actual size in pixels for each image
     self.sizeInPixels = {
@@ -275,7 +275,7 @@ function factory.createLevelApi(kwargs)
     -- if self.jitter then randomly perturb the target location on each trial
     self.jitter = nil
     if self.jitter then
-      print('Jitter target location')
+      log.info('Jitter target location')
       self._jitteredCenter = {}
     end
 

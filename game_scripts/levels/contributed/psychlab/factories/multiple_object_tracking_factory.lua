@@ -21,6 +21,7 @@ Pylyshyn, Z.W. and R.W. Storm, Spatial Vision, 1988. 3(3): p. 1-19.
 ]]
 
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local point_and_click = require 'factories.psychlab.point_and_click'
 local psychlab_helpers = require 'factories.psychlab.helpers'
@@ -122,8 +123,7 @@ function factory.createLevelApi(kwargs)
 
   -- init gets called at the start of each episode
   function env:_init(pac, opts)
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
     self.screenSize = opts.screenSize
 

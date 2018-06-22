@@ -8,6 +8,8 @@
     Python, NumPy).
 2.  Add 'allowHoldOutLevels' setting to allow running of levels that should not
     be trained on, but held out for evaluation.
+3.  Add logging library 'common.log', which provides the ability to control which
+    log messages are emitted via the setting 'logLevel'.
 
 ## release-2018-06-20 June 2018 release
 

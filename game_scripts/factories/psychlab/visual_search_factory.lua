@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local game = require 'dmlab.system.game'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
@@ -244,16 +245,14 @@ function factory.createLevelApi(kwargs)
 
   -- 'init' gets called at the start of each episode.
   function env:_init(pac, opts)
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
     ARG.searchMode = opts.searchMode or 'interleaved'
     ARG.jitter = opts.jitter or false
 
-    print('ARGs in _init:')
-    print(helpers.tostring(ARG))
+    log.info('ARGs passed to _init:\n' .. helpers.tostring(ARG))
 
     ARG = parseArgs(ARG)
-    print('visual_search args parsed correctly')
+    log.info('visual_search args parsed correctly')
 
     self.screenSize = opts.screenSize
 
@@ -266,7 +265,7 @@ function factory.createLevelApi(kwargs)
     -- If requested, randomly perturb the target location for each trial.
     self.jitter = ARG.jitter
     if self.jitter then
-      print('Jitter target location')
+      log.info('Jitter target location')
       self.jitteredCenter = {}
     end
 

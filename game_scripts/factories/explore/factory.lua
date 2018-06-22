@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local custom_decals = require 'decorators.custom_decals_decoration'
 local custom_observations = require 'decorators.custom_observations'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local make_map = require 'common.make_map'
 local map_maker = require 'dmlab.system.map_maker'
@@ -124,10 +125,8 @@ function factory.createLevelApi(kwargs)
       custom_decals.decorate(self)
     end
 
-    print('Maze Generated (seed ' .. seed .. '):')
-    print(api._maze:entityLayer())
-    io.flush()
-
+    log.info('Maze Generated (seed ' .. seed .. '):\n' ..
+             api._maze:entityLayer())
     api._map = make_map.makeMap{
         mapName = mapName,
         mapEntityLayer = api._maze:entityLayer(),

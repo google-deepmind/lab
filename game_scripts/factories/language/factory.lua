@@ -19,6 +19,7 @@ local custom_entities = require 'common.custom_entities'
 local custom_floors = require 'decorators.custom_floors'
 local custom_observations = require 'decorators.custom_observations'
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local hrp = require 'common.human_recognisable_pickups'
 local make_map = require 'common.make_map'
 local map_maker = require 'dmlab.system.map_maker'
@@ -279,7 +280,7 @@ function factory.createLevelApi(kwargs)
   function api:nextMap()
     self._task = self._taskSelector()
     -- Log the task name if present to help with debugging multiple tasks.
-    if self._task.name then print("Selected task: " .. self._task.name) end
+    if self._task.name then log.info("Selected task: " .. self._task.name) end
 
     local mapInfo = self._task.taskMapSelector and self._task.taskMapSelector()
       or api._levelMapSelector()
@@ -335,7 +336,7 @@ function factory.createLevelApi(kwargs)
     local instructionGenerator = self._task.instructor or self._levelInstructor
     local instruction = instructionGenerator(self._task.key, objectContext,
                                              self._task.goalGroup or 1)
-    print('Instruction: ' .. instruction)
+    log.info('Instruction: ' .. instruction)
     self.setInstruction(instruction)
 
     self._playerSpawnAngle = function()

@@ -28,6 +28,7 @@ local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
+local log = require 'common.log'
 local random = require 'common.random'
 local set = require 'common.set'
 local tensor = require 'dmlab.system.tensor'
@@ -407,8 +408,7 @@ function factory.createLevelApi(kwargs)
   -- init is called at the start of each episode.
   function env:_init(pac, opts)
     self.screenSize = opts.screenSize
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
     -- Parse task parameters
     self.concentric = stringOrNilToBool(opts.concentric)
@@ -432,7 +432,7 @@ function factory.createLevelApi(kwargs)
                               'hyperbolic',
                               'spiral'}) do
       if self[pattern] then
-        print('Use ' .. pattern .. ' Glass Patterns')
+        log.info('Use ' .. pattern .. ' Glass Patterns')
         table.insert(self.patternTypes, pattern)
       end
     end

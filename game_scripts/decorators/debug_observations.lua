@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local game = require 'dmlab.system.game'
 local tensor = require 'dmlab.system.tensor'
 local game_entities = require 'dmlab.system.game_entities'
+local log = require 'common.log'
 local inventory = require 'common.inventory'
 
 local SCREEN_SHAPE = game:screenShape().buffer
@@ -363,14 +364,26 @@ function debug_observations.extend(custom_observations)
   co.addSpec('DEBUG.FLAGS.BLUE_HOME', 'Doubles', {4}, blueFlagHome)
 end
 
+
+local CAM_ENABLED = [[
+----
+Warning debug camera controlls activated!
+Move camera with WASD and Ctrl/Space to move up and down.
+Click to print current camera position.
+----
+]]
+
+local CAM_POS_STRING = [[
+----
+'Cam Pos: {%.2f, %.2f,  %.2f}')
+----
+]]
+
 function debug_observations.enableCameraMovement(api)
   local time = 0
   local buttonsDown = 0
   local modifyControl = api.modifyControl
-  print('----\nWarning debug camera controlls activated!')
-  print('Move camera with WASD and Ctrl/Space to move up and down.')
-  print('Click to print current camera position.\n----')
-  io.flush()
+  log.warn(CAM_ENABLED)
   function api:modifyControl(actions)
     local dt = game:episodeTimeSeconds() - time
     time = game:episodeTimeSeconds()
@@ -379,10 +392,7 @@ function debug_observations.enableCameraMovement(api)
     pos[2] = pos[2] + actions.moveBackForward * 2 * dt
     pos[3] = pos[3] + actions.crouchJump * 2 * dt
     if buttonsDown == 0 and actions.buttonsDown > 0 then
-      print('----')
-      print('Cam Pos: {' .. pos[1] .. ', ' .. pos[2] .. ', ' .. pos[3] .. '}')
-      print('----')
-      io.flush()
+      log.warn(string.format(CAM_POS_STRING, pos[1], pos[2], pos[3]))
     end
     buttonsDown = actions.buttonsDown
     actions.buttonsDown = 0

@@ -15,7 +15,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
-local common = require 'common.random'
+local log = require 'common.log'
 local events = require 'dmlab.system.events'
 local image = require 'dmlab.system.image'
 local random = require 'common.random'
@@ -140,7 +140,7 @@ end
 'fixationSize' (float) size of fixation image [0,1] as proportion of screen
 ]]
 function helpers.finishTrialCommon(env, delay, fixationSize)
-  print('finished trial')
+  log.info('finished trial')
   env:removeArray()
   env.pac:addTimer{
       name = 'delay',
@@ -155,8 +155,8 @@ function helpers.finishTrialCommon(env, delay, fixationSize)
     env._currNumTrialsThisEpisode = env._currNumTrialsThisEpisode + 1
 
     if env._currNumTrialsThisEpisode >= env._maxTrialsPerEpisode then
-      print('Episode ended after ' .. tonumber(env._currNumTrialsThisEpisode) ..
-            ' trials')
+      log.info('Episode ended after ' ..
+               tonumber(env._currNumTrialsThisEpisode) .. ' trials')
       env.pac:endEpisode()
     end
   end
@@ -239,8 +239,8 @@ Returns: (tensor) jittered point
 function helpers._randomShift(env, center)
   env.jitteredCenter[1] = center[1] + helpers.getJitter(MAX_JITTER)
   env.jitteredCenter[2] = center[2] + helpers.getJitter(MAX_JITTER)
-  print('jittered target center: ' .. tostring(env.jitteredCenter[1]) ..
-        ', ' .. tostring(env.jitteredCenter[2]))
+  log.info('jittered target center: ' .. tostring(env.jitteredCenter[1]) ..
+           ', ' .. tostring(env.jitteredCenter[2]))
   return env.jitteredCenter
 end
 

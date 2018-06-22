@@ -16,6 +16,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
@@ -230,16 +231,14 @@ function factory.createLevelApi(kwargs)
   -- init gets called at the start of each episode
   function env:_init(pac, opts)
     self.screenSize = opts.screenSize
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
-    print('arg passed to _init:')
-    print(helpers.tostring(arg))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
+    log.info('arg passed to _init:\n' .. helpers.tostring(arg))
 
     -- apply command line arguments
     self.jitter = stringOrNilToBool(opts.jitter)
     if self.jitter then
       -- if ARG.jitter then randomly perturb the target location on each trial
-      print('Jitter target location')
+      log.info('Jitter target location')
       self.jitteredCenter = {}
     end
     self.allowTranslation = opts.allowTranslation or false

@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 local custom_observations = require 'decorators.custom_observations'
 local debug_observations = require 'decorators.debug_observations'
 local gen = require 'map_generators.platforms_v1.gen'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local map_maker = require 'dmlab.system.map_maker'
 local maze_generation = require 'dmlab.system.maze_generation'
@@ -65,13 +66,12 @@ function factory.createLevelApi(kwargs)
     random:seed(seed)
     randomMap:seed(random:mapGenerationSeed())
     if not kwargs.levelMap then
-      print('Generating levelMap with from seed ' .. seed)
+      log.info('Generating levelMap with from seed ' .. seed)
     end
     local levelMap = kwargs.levelMap or
                      gen.makeLevel(kwargs.difficulty, randomMap)
     api._asciiMap = levelMap.map
-    print(api._asciiMap)
-    io.flush()
+    log.info('\n' .. api._asciiMap)
 
     local maze = maze_generation:mazeGeneration{entity = api._asciiMap}
     debug_observations.setMaze(maze)

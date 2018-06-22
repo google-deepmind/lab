@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local maze_generation = require 'dmlab.system.maze_generation'
 local tensor = require 'dmlab.system.tensor'
+local log = require 'common.log'
 local random = require 'common.random'
 local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
@@ -104,10 +105,8 @@ function api:start(episode, seed, params)
 
   maze:setEntityCell(goal[1], goal[2], 'G')
 
-  print('Maze Generated:')
-  print(maze:entityLayer())
-
-  print('Adding spawn points and apples:')
+  log.info('Maze Generated:\n' .. maze:entityLayer())
+  log.info('Adding spawn points and apples:')
   maze:visitFill{
       cell = goal,
       func = function(row, col, distance)
@@ -120,8 +119,7 @@ function api:start(episode, seed, params)
       end
   }
 
-  print(maze:entityLayer())
-  io.flush()
+  log.info('Maze:\n' .. maze:entityLayer())
   api._maze_name = make_map.makeMap{
       mapName = 'map_random_maze',
       mapEntityLayer = maze:entityLayer(),

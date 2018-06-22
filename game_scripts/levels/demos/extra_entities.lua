@@ -15,6 +15,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local log = require 'common.log'
 local make_map = require 'common.make_map'
 local pickups = require 'common.pickups'
 local custom_observations = require 'decorators.custom_observations'
@@ -54,8 +55,7 @@ function api:updateSpawnVars(spawnVars)
     spawnVars.randomAngleRange = '0'
   end
   -- This will also print the origins of the extra entities.
-  print(spawnVars.origin)
-  io.flush()
+  log.info(spawnVars.origin)
   return spawnVars
 end
 

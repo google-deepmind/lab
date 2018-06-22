@@ -16,6 +16,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
 local psychlab_staircase = require 'levels.contributed.psychlab.factories.staircase'
@@ -126,8 +127,8 @@ function factory.createLevelApi(kwargs)
 
   -- 'init' gets called at the start of each episode.
   function env:_init(pac, opts)
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
+
     self.screenSize = opts.screenSize
 
     self:setupImages()

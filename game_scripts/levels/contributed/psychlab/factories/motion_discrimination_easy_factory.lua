@@ -25,6 +25,7 @@ so that the full and easy versions of the task use the same factory code.
 ]]
 
 local game = require 'dmlab.system.game'
+local log = require 'common.log'
 local helpers = require 'common.helpers'
 local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
@@ -111,8 +112,7 @@ function factory.createLevelApi(kwargs)
   -- init is called at the start of each episode.
   function env:_init(pac, opts)
     self.screenSize = opts.screenSize
-    print('opts passed to _init:')
-    print(helpers.tostring(opts))
+    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
     self._stepsSinceInteraction = 0
 

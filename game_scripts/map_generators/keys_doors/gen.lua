@@ -15,6 +15,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local log = require 'common.log'
 local random = require 'common.random'
 local configs = require 'map_generators.keys_doors.configs'
 local RoomGrid = require 'map_generators.keys_doors.room_grid'
@@ -43,7 +44,7 @@ local unopenableColors
 -- Prints the value if config.verbose is true. For tables, it will print the
 -- key/value pairs.
 local function verbosePrint(val)
-  if config.verbose then
+  if config.verbose or log.getLogLevel() > log.INFO then
     if type(val) == 'table' then
       print('{')
       for k, v in pairs(val) do

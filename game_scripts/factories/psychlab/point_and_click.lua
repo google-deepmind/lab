@@ -16,6 +16,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local tensor = require 'dmlab.system.tensor'
+local log = require 'common.log'
 
 --[[ This is the interface for Point and Click environments. All co-ordinates
 are normalised to [0, 1]. Hover and callback times are in seconds as floating
@@ -59,7 +60,7 @@ end
 function pac:addReward(reward)
   local _, fraction = math.modf(reward)
   if fraction ~= 0 then
-    print('Fractional rewards may get floored: ' .. reward)
+    log.warn('Fractional rewards may get floored: ' .. reward)
   end
   self._reward = self._reward + reward
 end

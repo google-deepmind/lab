@@ -16,6 +16,7 @@ Key                    | Default | Description
 `gadgetSelect`         | false   | Enables gadget selection. See [actions](/docs/users/actions.md)
 `gadgetSwitch`         | false   | Enables gadget switching. See [actions](/docs/users/actions.md)
 `allowHoldOutLevels`   | false   | Enables hold-out levels that have been decorated with test_only.
+`logLevel`             | INFO    | Controls the verbosity of log messages. Must be one of NEVER, ERROR, WARNING, INFO, or any positive integer. See game_scripts/common/log.lua.
 
 The levels that are shipped with DeepMind Lab can be found in
 [game_scripts/levels](../game_scripts/levels).
