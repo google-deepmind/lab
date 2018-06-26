@@ -35,6 +35,17 @@
     }                                                                      \
   } while (0)
 
+#define RETURN_IF_EGL_ERROR(egl_expr)                                      \
+  do {                                                                     \
+    (egl_expr);                                                            \
+    EGLint egl_error = eglGetError();                                      \
+    if (egl_error != EGL_SUCCESS) {                                        \
+      Sys_Print(va("EGL ERROR: 0x%x file:%s, line:%d\n", egl_error,        \
+                   __FILE__, __LINE__));                                   \
+      return;                                                              \
+    }                                                                      \
+  } while (0)
+
 static const EGLint kConfigAttribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
@@ -94,10 +105,10 @@ void GLimp_Init(qboolean coreContext) {
 void* GLimp_GetProcAddress(const char* func) { return eglGetProcAddress(func); }
 
 void GLimp_Shutdown(void) {
-  CHECK_EGL_SUCCESS(eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                   EGL_NO_CONTEXT));
-  CHECK_EGL_SUCCESS(eglDestroySurface(egl_display, egl_surface));
-  CHECK_EGL_SUCCESS(eglDestroyContext(egl_display, egl_context));
-  CHECK_EGL_SUCCESS(TerminateInitializedEGLDisplay(egl_display));
+  RETURN_IF_EGL_ERROR(eglMakeCurrent(egl_display, EGL_NO_SURFACE,
+                                     EGL_NO_SURFACE, EGL_NO_CONTEXT));
+  RETURN_IF_EGL_ERROR(eglDestroySurface(egl_display, egl_surface));
+  RETURN_IF_EGL_ERROR(eglDestroyContext(egl_display, egl_context));
+  RETURN_IF_EGL_ERROR(TerminateInitializedEGLDisplay(egl_display));
   ShutDownEGLSubsystem();
 }
