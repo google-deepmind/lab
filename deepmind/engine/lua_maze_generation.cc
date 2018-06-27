@@ -136,7 +136,9 @@ lua::NResultsOr LuaMazeGeneration::Require(lua_State* L) {
 
 lua::NResultsOr LuaMazeGeneration::Create(lua_State* L) {
   lua::TableRef table;
-  lua::Read(L, -1, &table);
+  if (!lua::Read(L, -1, &table)) {
+    return  "[mazeGeneration] - Must be called with a table.";
+  }
   if (table.Contains("entity")) {
     std::string entity_layer;
     if (!table.LookUp("entity", &entity_layer) || entity_layer.empty()) {
