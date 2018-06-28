@@ -59,6 +59,11 @@ lab$ bazel run :python_random_agent --define graphics=sdl -- \
 Here is some [more detailed build documentation](/docs/users/build.md),
 including how to install dependencies if you don't have them.
 
+To enable compiler optimizations, pass the flag `--compilation_mode=opt`, or
+`-c opt` for short, to each `bazel build`, `bazel test` and `bazel run` command.
+The flag is omitted from the examples here for brevity, but it should be used
+for real training and evaluation where performance matters.
+
 ### Play as a human
 
 To test the game using human input controls, run

@@ -62,19 +62,20 @@ below.
 4. If necessary, edit `lua.BUILD` and `python.BUILD` according to the [Lua and
    Python instructions](#lua-and-python-dependencies) below.
 
-5. Build *DeepMind Lab* and run a random agent:
+5. Build *DeepMind Lab* and run a random agent. (Use the `-c opt` flag to enable
+   optimizations.)
 
    ```shell
    $ cd lab
 
    # Build the Python interface to DeepMind Lab
-   lab$ bazel build //:deepmind_lab.so
+   lab$ bazel build -c opt //:deepmind_lab.so
 
    # Build and run the tests for it
-   lab$ bazel test //python/tests:python_module_test
+   lab$ bazel test -c opt //python/tests:python_module_test
 
    # Run a random agent
-   lab$ bazel run //:python_random_agent
+   lab$ bazel run -c opt //:python_random_agent
    ```
 
 The Bazel target `:deepmind_lab.so` builds the Python module that interfaces
