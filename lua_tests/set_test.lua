@@ -1,6 +1,5 @@
 local asserts = require 'testing.asserts'
 local test_runner = require 'testing.test_runner'
-
 local set = require 'common.set'
 
 local Set = set.Set
@@ -87,7 +86,6 @@ function tests.union_shouldReturnFirstPlusSecond()
   assert(set.isSame(rhs, Set(rhsElements)))
 end
 
-
 function tests.insert_shouldAddNewValuesFromList()
   local newSet = Set({'foo', 'bar', 'foo'})
   asserts.EQ(elementCount(newSet), 2)
@@ -100,7 +98,5 @@ function tests.insert_shouldAddNewValuesFromList()
   asserts.EQ(newSet['bar'], true)
   asserts.EQ(newSet['baz'], true)
 end
-
-
 
 return test_runner.run(tests)

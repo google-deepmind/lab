@@ -31,4 +31,3 @@ function tests:readSelf()
 end
 
 return test_runner.run(tests)
-

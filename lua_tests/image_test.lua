@@ -6,7 +6,9 @@ local tensor = require 'dmlab.system.tensor'
 local helpers = require 'common.helpers'
 
 local FILE_NAME = ...
+
 local tests = {}
+
 function tests:loadImageRGB()
   local image = image.load(helpers.dirname(FILE_NAME) .. "data/testRGB.png")
   local expected = tensor.ByteTensor(32, 32 * 3, 3)
