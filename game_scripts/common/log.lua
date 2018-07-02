@@ -96,7 +96,7 @@ local function _logInternal(messageType, ...)
   _output:write(loc)
   for i, arg in ipairs{...} do
     if i ~= 1 then _output:write('\t') end
-    _output:write(arg)
+    _output:write(tostring(arg))
   end
   _output:write('\n')
   _output:flush()

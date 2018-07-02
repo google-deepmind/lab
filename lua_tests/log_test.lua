@@ -135,4 +135,12 @@ function tests.v()
   assert(writer.messageWritten and writer.expectedText)
 end
 
+function tests.infoToString()
+  local writer = mockWriter('25')
+  log.setOutput(writer)
+  log.setLogLevel(log.INFO)
+  log.info(25)
+  assert(writer.messageWritten and writer.expectedText)
+end
+
 return test_runner.run(tests)
