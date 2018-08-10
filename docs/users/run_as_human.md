@@ -11,7 +11,7 @@ target.
 
 Build and run *DeepMind Lab* using Bazel.
 Specify the level name (without `.lua`) with the `-l` or `--level_script`
-flag. For example, to run `game_scripts/lt_chasm.lua`,
+flag. For example, to run `game_scripts/levels/lt_chasm.lua`,
 
 ```shell
 lab$ bazel run :game -- -l lt_chasm
