@@ -11,6 +11,10 @@
 3.  Add logging library 'common.log', which provides the ability to control which
     log messages are emitted via the setting 'logLevel'.
 
+### Bug Fixes:
+
+1.  Prevent missing sounds from causing clients to disconnect.
+
 ## release-2018-06-20 June 2018 release
 
 ### New Levels:
