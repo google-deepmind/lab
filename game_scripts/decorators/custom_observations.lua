@@ -32,8 +32,11 @@ custom_observations.playerInventory = {}
 custom_observations.playerTeams = {}
 
 function custom_observations.addSpec(name, type, shape, callback)
-  obsSpec[#obsSpec + 1] = {name = name, type = type, shape = shape}
-  obs[name] = callback
+  -- Only add spec if not already present.
+  if obs[name] == nil then
+    obsSpec[#obsSpec + 1] = {name = name, type = type, shape = shape}
+    obs[name] = callback
+  end
 end
 
 local function velocity()
