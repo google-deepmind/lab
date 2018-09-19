@@ -38,7 +38,9 @@ void (*qglUnlockArraysEXT)(void);
 
 #define GLE(ret, name, ...) name##proc *qgl##name;
 QGL_1_1_PROCS;
+QGL_1_1_FIXED_FUNCTION_PROCS;
 QGL_DESKTOP_1_1_PROCS;
+QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
 QGL_3_0_PROCS;
 #undef GLE
 
@@ -82,7 +84,9 @@ void GLimp_CommonPostInit(void) {
 
   if (QGL_VERSION_ATLEAST(1, 1)) {
     QGL_1_1_PROCS;
+    QGL_1_1_FIXED_FUNCTION_PROCS;
     QGL_DESKTOP_1_1_PROCS;
+    QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
   } else {
     Com_Error(ERR_FATAL, "Unsupported OpenGL Version: %s\n", version);
   }

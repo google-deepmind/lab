@@ -38,6 +38,17 @@
 #include "../renderercommon/tr_common.h"
 #include "../sys/sys_local.h"
 
+#define GLE(ret, name, ...) extern name##proc * qgl##name;
+QGL_1_1_PROCS;
+QGL_1_1_FIXED_FUNCTION_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
+QGL_1_3_PROCS;
+QGL_1_5_PROCS;
+QGL_2_0_PROCS;
+QGL_3_0_PROCS;
+#undef GLE
+
 static const double kPixelsPerFrameToDegreesPerMilliseconds = 0.11 * 60 / 1000;
 
 // We define a notion of "external time" for convenience and to avoid rounding
