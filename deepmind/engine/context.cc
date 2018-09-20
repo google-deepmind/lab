@@ -1623,7 +1623,7 @@ void Context::GameEvent(const char* event_name, int count,
 
   lua::Push(L, event_name);
   lua_createtable(L, count, 0);
-  for (std::size_t i = 0; i < count; ++i) {
+  for (int i = 0; i < count; ++i) {
     lua::Push(L, i + 1);
     lua::Push(L, data[i]);
     lua_settable(L, -3);

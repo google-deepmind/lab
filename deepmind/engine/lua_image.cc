@@ -625,7 +625,7 @@ lua::NResultsOr SetHue(lua_State* L) {
   std::size_t num_elements = view->num_elements();
   std::size_t num_channels = view->shape().back();
   unsigned char* tensor_start = &view->mutable_storage()[view->start_offset()];
-  for (int i = 0; i < num_elements; i += num_channels) {
+  for (std::size_t i = 0; i < num_elements; i += num_channels) {
     unsigned char* r = &tensor_start[i + 0];
     unsigned char* g = &tensor_start[i + 1];
     unsigned char* b = &tensor_start[i + 2];
