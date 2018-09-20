@@ -894,10 +894,7 @@ config_setting(
 
 cc_binary(
     name = "libdmlab_headless_hw.so",
-    linkopts = [
-        "-Wl,--version-script",
-        ":dmlab.lds",
-    ],
+    linkopts = ["-Wl,--version-script,$(location :dmlab.lds)"],
     linkshared = 1,
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
@@ -910,10 +907,7 @@ cc_binary(
 
 cc_binary(
     name = "libdmlab_headless_sw.so",
-    linkopts = [
-        "-Wl,--version-script",
-        ":dmlab.lds",
-    ],
+    linkopts = ["-Wl,--version-script,$(location :dmlab.lds)"],
     linkshared = 1,
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
