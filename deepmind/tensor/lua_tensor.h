@@ -349,15 +349,15 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     }
     ShapeVector shape;
     std::vector<T> storage;
-    std::ptrdiff_t offset = 0;
+    std::size_t offset = 0;
     std::string name;
     if (!file_args.LookUp("name", &name)) {
       return "[Tensor.CreateFromFile] Field 'name' must exist and be a string.";
     }
 
-    file_args.LookUp("byteOffset", &offset);
-    if (offset < 0) {
-      return "[Tensor.CreateFromFile] 'byteOffset' must be >= 0.";
+    if (IsTypeMismatch(file_args.LookUp("byteOffset", &offset))) {
+      return "[Tensor.CreateFromFile] 'byteOffset' must be a non-negative "
+             "integral value.";
     }
 
     util::FileReader ifs(fs, name.c_str());
@@ -379,27 +379,33 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       error += ", file size: " + std::to_string(file_size);
       return std::move(error);
     }
-    std::ptrdiff_t count = (file_size - offset) / sizeof(T);
-    file_args.LookUp("numElements", &count);
-    if (!(0 <= count &&
-          count * static_cast<std::ptrdiff_t>(sizeof(T)) + offset <=
-              file_size)) {
-      std::string error = "[Tensor.CreateFromFile] Must supply in range count.";
+
+    const std::size_t max_num_elements = (file_size - offset) / sizeof(T);
+    std::size_t num_elements = max_num_elements;
+
+    auto parse_result = file_args.LookUp("numElements", &num_elements);
+    if (IsTypeMismatch(parse_result)) {
+      std::string error =
+          "[Tensor.CreateFromFile] 'numElements' must be a non-negative "
+          "integral value.";
+      return std::move(error);
+    } else if (IsFound(parse_result) && num_elements > max_num_elements) {
+      std::string error =
+          "[Tensor.CreateFromFile] Attempted to read past end of file";
       error += ", name: " + name;
-      error += ", numElements: " + std::to_string(count);
-      error += ", max numElements: " +
-               std::to_string((file_size - offset) / sizeof(T));
+      error += ", numElements: " + std::to_string(num_elements);
+      error += ", max numElements: " + std::to_string(max_num_elements);
       error += ", offset: " + std::to_string(offset);
       error += ", file size: " + std::to_string(file_size);
       return std::move(error);
     }
 
-    storage.resize(count);
-    if (!ifs.Read(offset, sizeof(T) * count,
+    storage.resize(num_elements);
+    if (!ifs.Read(offset, sizeof(T) * num_elements,
                   reinterpret_cast<char*>(storage.data()))) {
       return "[Tensor.CreateFromFile] Failed to read file, name: " + name;
     }
-    shape.push_back(count);
+    shape.push_back(num_elements);
     LuaTensor::CreateObject(L, std::move(shape), std::move(storage));
     return 1;
   }

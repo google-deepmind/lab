@@ -886,8 +886,7 @@ TEST_F(LuaTensorTest, kBadNumElementsNegative) {
                               "kBadNumElementsNegative"),
               IsOkAndHolds(1));
   lua::Push(L, CreateBytesRawFile());
-  ASSERT_THAT(lua::Call(L, 1),
-              StatusIs(AllOf(HasSubstr("numElements"), HasSubstr("-1"))));
+  ASSERT_THAT(lua::Call(L, 1), StatusIs(HasSubstr("numElements")));
 }
 
 constexpr char kBadByteOffset[] = R"(
