@@ -57,7 +57,7 @@ winding_t	*AllocWinding (int points)
 	if (c_active_windings > c_peak_windings)
 		c_peak_windings = c_active_windings;
 
-	s = sizeof(vec_t)*3*points + sizeof(int);
+	s = sizeof(*w) + sizeof(*w->p) * points;
 	w = Z_Malloc (s);
 	Com_Memset (w, 0, s); 
 	return w;
@@ -108,7 +108,7 @@ void	RemoveColinearPoints (winding_t *w)
 
 	c_removed += w->numpoints - nump;
 	w->numpoints = nump;
-	Com_Memcpy (w->p, p, nump*sizeof(p[0]));
+	Com_Memcpy (w->p, p, nump * sizeof(*w->p));
 }
 
 /*
@@ -276,7 +276,7 @@ winding_t	*CopyWinding (winding_t *w)
 	winding_t	*c;
 
 	c = AllocWinding (w->numpoints);
-	size = (intptr_t)&(w->p[w->numpoints]) - (intptr_t)w;
+	size = sizeof(*w) + sizeof(*w->p) * w->numpoints;
 	Com_Memcpy (c, w, size);
 	return c;
 }
