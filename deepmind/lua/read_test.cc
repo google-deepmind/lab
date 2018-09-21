@@ -272,7 +272,7 @@ TEST_F(ReadTest, ReadVariantMissing) {
 
 TEST_F(ReadTest, ReadVariantVectorFail) {
   std::vector<absl::variant<bool, int>> vars;
-  std::array<const char*, 5> string_args = {"0", "1", "2", "3", "4"};
+  std::array<const char*, 5> string_args{{"0", "1", "2", "3", "4"}};
   Push(L, string_args);
   EXPECT_TRUE(IsTypeMismatch(lua::Read(L, 1, &vars)));
 }
