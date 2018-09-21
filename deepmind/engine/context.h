@@ -483,9 +483,6 @@ class Context {
   // The result of the script that was run when Init was first called.
   lua::TableRef script_table_ref_;
 
-  // Calls into the engine.
-  const DeepmindCalls* deepmind_calls_;
-
   // Cached command-line to enable returning a pointer to its contents.
   std::string command_line_;
 
@@ -528,9 +525,6 @@ class Context {
 
   // Callbacks for fetching/writing levels to cache.
   DeepMindLabLevelCacheParams level_cache_params_;
-
-  // Readonly filesystem overridable via DeepMindLabLaunchParams.
-  DeepMindReadOnlyFileSystem readonly_filesystem_;
 
   // Last error message.
   std::string error_message_;
