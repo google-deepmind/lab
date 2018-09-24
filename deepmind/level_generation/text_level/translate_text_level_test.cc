@@ -26,10 +26,11 @@
 #include "deepmind/support/logging.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/flags/flag.h"
 #include "deepmind/level_generation/text_level/text_level_settings.h"
 #include "deepmind/support/test_srcdir.h"
 
-DEFINE_FLAG(
+ABSL_FLAG(
     string, map_outfile, "",
     "If this argument is provided, write the .map output of the test map to "
     "the specified file. Useful for testing other parts of the pipeline.");
@@ -74,7 +75,7 @@ TEST(TranslateTextLevel, Simple) {
   ASSERT_THAT(actual, testing::HasSubstr("\"classname\" \"trigger_multiple\""));
 
   if (base::SpecifiedOnCommandLine("map_outfile")) {
-    std::string filename = base::GetFlag(FLAGS_map_outfile);
+    std::string filename = absl::GetFlag(FLAGS_map_outfile);
     if (std::ofstream(filename) << actual) {
       LOG(INFO) << "Test map written to '" << filename << "'.";
     } else {
