@@ -213,6 +213,14 @@ function View:captures()
   return self._loadOut.persistents[PERSISTANT.CAPTURES]
 end
 
+function View:rank()
+  return self._loadOut.persistents[PERSISTANT.RANK]
+end
+
+function View:tagged()
+  return self._loadOut.persistents[PERSISTANT.TAGGED]
+end
+
 function View:score()
   return self._loadOut.persistents[PERSISTANT.SCORE]
 end
