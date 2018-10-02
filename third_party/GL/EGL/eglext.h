@@ -33,12 +33,12 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.khronos.org/registry/egl
 **
-** Khronos $Git commit SHA1: 32dd280a66 $ on $Git commit date: 2017-11-23 11:41:55 -0800 $
+** Khronos $Git commit SHA1: bae3518c48 $ on $Git commit date: 2018-05-17 10:56:57 -0700 $
 */
 
 #include <EGL/eglplatform.h>
 
-#define EGL_EGLEXT_VERSION 20171123
+#define EGL_EGLEXT_VERSION 20180517
 
 /* Generated C header for:
  * API: egl
@@ -618,6 +618,16 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 #define EGL_EXT_client_extensions 1
 #endif /* EGL_EXT_client_extensions */
 
+#ifndef EGL_EXT_client_sync
+#define EGL_EXT_client_sync 1
+#define EGL_SYNC_CLIENT_EXT               0x3364
+#define EGL_SYNC_CLIENT_SIGNAL_EXT        0x3365
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLCLIENTSIGNALSYNCEXTPROC) (EGLDisplay dpy, EGLSync sync, const EGLAttrib *attrib_list);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglClientSignalSyncEXT (EGLDisplay dpy, EGLSync sync, const EGLAttrib *attrib_list);
+#endif
+#endif /* EGL_EXT_client_sync */
+
 #ifndef EGL_EXT_compositor
 #define EGL_EXT_compositor 1
 #define EGL_PRIMARY_COMPOSITOR_CONTEXT_EXT 0x3460
@@ -763,6 +773,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQueryDmaBufModifiersEXT (EGLDisplay dpy, EGLint
 #endif
 #endif /* EGL_EXT_image_dma_buf_import_modifiers */
 
+#ifndef EGL_EXT_image_gl_colorspace
+#define EGL_EXT_image_gl_colorspace 1
+#define EGL_GL_COLORSPACE_DEFAULT_EXT     0x314D
+#endif /* EGL_EXT_image_gl_colorspace */
+
 #ifndef EGL_EXT_image_implicit_sync_control
 #define EGL_EXT_image_implicit_sync_control 1
 #define EGL_IMPORT_SYNC_TYPE_EXT          0x3470
@@ -897,6 +912,14 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC) (EGLDisplay
 EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffersWithDamageEXT (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
 #endif
 #endif /* EGL_EXT_swap_buffers_with_damage */
+
+#ifndef EGL_EXT_sync_reuse
+#define EGL_EXT_sync_reuse 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLUNSIGNALSYNCEXTPROC) (EGLDisplay dpy, EGLSync sync, const EGLAttrib *attrib_list);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglUnsignalSyncEXT (EGLDisplay dpy, EGLSync sync, const EGLAttrib *attrib_list);
+#endif
+#endif /* EGL_EXT_sync_reuse */
 
 #ifndef EGL_EXT_yuv_surface
 #define EGL_EXT_yuv_surface 1
@@ -1141,6 +1164,14 @@ EGLAPI EGLBoolean EGLAPIENTRY eglStreamConsumerGLTextureExternalAttribsNV (EGLDi
 #define EGL_NV_stream_fifo_synchronous 1
 #define EGL_STREAM_FIFO_SYNCHRONOUS_NV    0x3336
 #endif /* EGL_NV_stream_fifo_synchronous */
+
+#ifndef EGL_NV_stream_flush
+#define EGL_NV_stream_flush 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMFLUSHNVPROC) (EGLDisplay dpy, EGLStreamKHR stream);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglStreamFlushNV (EGLDisplay dpy, EGLStreamKHR stream);
+#endif
+#endif /* EGL_NV_stream_flush */
 
 #ifndef EGL_NV_stream_frame_limits
 #define EGL_NV_stream_frame_limits 1
