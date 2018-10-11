@@ -31,7 +31,7 @@ genrule(
         "config.h",
         "include/libxml/xmlversion.h",
     ],
-    cmd = "./$(location configure) --without-lzma " +
+    cmd = "./$(location configure) --silent --without-lzma " +
           "&& cp --verbose -- config.h $(location config.h) " +
           "&& cp --verbose -- include/libxml/xmlversion.h $(location include/libxml/xmlversion.h)",
 )
