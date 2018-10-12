@@ -261,7 +261,7 @@ TEST(DeepmindModelTest, ReadNoIndices) {
   auto* L = lua_vm.get();
   tensor::LuaTensorRegister(L);
 
-  ASSERT_THAT(lua::PushScript(L, kModelNoVertices, "kModelNoIndices"),
+  ASSERT_THAT(lua::PushScript(L, kModelNoIndices, "kModelNoIndices"),
               lua::testing::IsOkAndHolds(1))
       << "Missing script";
   ASSERT_THAT(lua::Call(L, 0), lua::testing::IsOkAndHolds(1))
