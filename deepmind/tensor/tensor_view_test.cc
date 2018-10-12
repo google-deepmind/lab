@@ -129,25 +129,25 @@ TEST(TensorViewTest, Reverse) {
 
   ASSERT_TRUE(int_tensor_view.Reverse(0));
 
-  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+  int_tensor_view.ForEachIndexed([](const ShapeVector& id, int value) {
     EXPECT_EQ(id[0] * 5 + id[1], value);
   });
 
   ASSERT_TRUE(int_tensor_view.Reverse(0));
 
-  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+  int_tensor_view.ForEachIndexed([](const ShapeVector& id, int value) {
     EXPECT_EQ((4 - id[0]) * 5 + id[1], value);
   });
 
   ASSERT_TRUE(int_tensor_view.Reverse(1));
 
-  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+  int_tensor_view.ForEachIndexed([](const ShapeVector& id, int value) {
     EXPECT_EQ((4 - id[0]) * 5 + 4 - id[1], value);
   });
 
   ASSERT_TRUE(int_tensor_view.Reverse(0));
 
-  int_tensor_view.ForEachIndexed([&storage](const ShapeVector& id, int value) {
+  int_tensor_view.ForEachIndexed([](const ShapeVector& id, int value) {
     EXPECT_EQ(id[0] * 5 + 4 - id[1], value);
   });
 

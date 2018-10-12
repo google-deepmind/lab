@@ -640,11 +640,11 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         *value = std::max(std::min(*value, max_value), min_value);
       });
     } else if (min_value != std::numeric_limits<T>::lowest()) {
-      tensor_view_.ForEachMutable([min_value, max_value](T* value) {
+      tensor_view_.ForEachMutable([min_value](T* value) {
         *value = std::max(min_value, *value);
       });
     } else if (max_value != std::numeric_limits<T>::max()) {
-      tensor_view_.ForEachMutable([min_value, max_value](T* value) {
+      tensor_view_.ForEachMutable([max_value](T* value) {
         *value = std::min(*value, max_value);
       });
     }
