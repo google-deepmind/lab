@@ -19,7 +19,6 @@
 #include "deepmind/level_generation/text_level/lua_bindings.h"
 
 #include <algorithm>
-#include <functional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -84,7 +83,7 @@ bool LuaCustomEntityCallback(
              !(lua::Read(L, -1, &data) || lua::Read(L, -1, &data.front()))) {
     LOG(FATAL) << "User callback returned invalid results.";
   } else {
-    auto is_empty = std::mem_fn(&std::string::empty);
+    auto is_empty = [](const std::string& s) { return s.empty(); };
     data.erase(std::remove_if(data.begin(), data.end(), is_empty), data.end());
 
     VLOG(1) << "User callback(" << i << ", " << j << ", '" << ent
