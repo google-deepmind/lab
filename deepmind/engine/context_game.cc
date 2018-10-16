@@ -18,6 +18,9 @@
 
 #include "deepmind/engine/context_game.h"
 
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
