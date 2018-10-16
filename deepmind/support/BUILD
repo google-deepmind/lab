@@ -23,3 +23,13 @@ cc_library(
     hdrs = ["test_srcdir.h"],
     defines = ["SUPPRESS_COMMANDLINE_FLAGS"],
 )
+
+cc_binary(
+    name = "realpath",
+    srcs = ["realpath.c"],
+    copts = [
+        "-std=c99",
+        "-D_BSD_SOURCE",
+        "-D_POSIX_C_SOURCE",
+    ],
+)

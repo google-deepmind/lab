@@ -14,6 +14,8 @@
     state](https://github.com/ioquake/ioq3/tree/29db64070aa0bae49953bddbedbed5e317af48ba).
 5.  Lua 5.1 is now downloaded and built from source, and is thus no longer a
     required local dependency.
+6.  A minimal version of the "realpath" utility is now bundled with the code,
+    and thus "realpath" is no longer a required local dependency.
 
 ### Bug Fixes:
 

@@ -686,8 +686,9 @@ genrule(
           "  A=$$(dirname $$s); " +
           "  B=$${A/assets/}; " +
           "  mkdir -p $(@D)/baselab$${B}; " +
-          "  ln -s -L -t $(@D)/baselab$${B} $$(realpath $${s}); " +
+          "  ln -s -L -t $(@D)/baselab$${B} $$($(location //deepmind/support:realpath) $${s}); " +
           "done",
+    tools = ["//deepmind/support:realpath"],
     visibility = ["//visibility:public"],
 )
 
@@ -703,8 +704,9 @@ genrule(
     cmd = "for s in $(SRCS); do " +
           "  A=$$(dirname $$s); " +
           "  mkdir -p $(@D)/baselab/$${A}; " +
-          "  ln -s -L -t $(@D)/baselab/$${A} $$(realpath $${s}); " +
+          "  ln -s -L -t $(@D)/baselab/$${A} $$($(location //deepmind/support:realpath) $${s}); " +
           "done",
+    tools = ["//deepmind/support:realpath"],
     visibility = ["//visibility:public"],
 )
 
@@ -719,8 +721,9 @@ genrule(
     outs = ["baselab/maps" + f[len("assets/maps/built"):] for f in BUILT_MAPS],
     cmd = "for s in $(SRCS); do " +
           "  mkdir -p $(@D)/baselab/maps; " +
-          "  ln -s -L -t $(@D)/baselab/maps $$(realpath $${s}); " +
+          "  ln -s -L -t $(@D)/baselab/maps $$($(location //deepmind/support:realpath) $${s}); " +
           "done",
+    tools = ["//deepmind/support:realpath"],
     visibility = ["//visibility:public"],
 )
 

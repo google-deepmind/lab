@@ -18,7 +18,6 @@ addons:
       - python-dev
       - python-numpy
       - python-pil
-      - realpath
 
 before_install:
   - curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
