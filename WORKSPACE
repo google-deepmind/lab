@@ -86,13 +86,18 @@ new_http_archive(
     ],
 )
 
-# TODO: Replace with hermetic build
-new_local_repository(
-    name = "lua_system",
+new_http_archive(
+    name = "lua_archive",
     build_file = "lua.BUILD",
-    path = "/usr",
+    sha256 = "2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333",
+    strip_prefix = "lua-5.1.5/src",
+    urls = [
+        "https://mirror.bazel.build/www.lua.org/ftp/lua-5.1.5.tar.gz",
+        "https://www.lua.org/ftp/lua-5.1.5.tar.gz",
+    ],
 )
 
+# TODO: Replace with hermetic build
 new_local_repository(
     name = "sdl_system",
     build_file = "sdl.BUILD",

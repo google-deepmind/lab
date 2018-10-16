@@ -5,7 +5,7 @@ licenses(["restricted"])  # GPLv2
 
 package(default_visibility = ["//visibility:public"])
 
-LUA_VERSION = "@lua_system//:lua"
+LUA_VERSION = "@lua_archive//:lua"
 
 cc_library(
     name = "lua",

@@ -16,9 +16,8 @@ modern compiler. GCC 4.8 should suffice.
 Instructions for installing Bazel can be found in the [Bazel install
 guide](https://docs.bazel.build/versions/master/install.html).
 
-You may need to deal with some details concerning Lua and Python dependencies.
-Those are documented in a [separate section](#lua-and-python-dependencies)
-below.
+You may need to deal with some details concerning Python dependencies. Those
+are documented in a [separate section](#python-dependencies) below.
 
 ## Step-by-step instructions for building and running
 
@@ -31,9 +30,8 @@ below.
      Tested on Debian 8.6 (Jessie) and Ubuntu 14.04 (Trusty) and newer.
 
      ```shell
-     $ sudo apt-get install lua5.1 liblua5.1-0-dev libffi-dev gettext \
-           freeglut3-dev libsdl2-dev libosmesa6-dev python-dev python-numpy \
-           python-pil realpath
+     $ sudo apt-get install libffi-dev gettext freeglut3-dev libsdl2-dev \
+           libosmesa6-dev python-dev python-numpy python-pil realpath
      ```
 
    * On Red Hat Enterprise Linux Server:
@@ -42,9 +40,9 @@ below.
      some modifications of the package installation commands on Centos 6.
 
      ```shell
-     sudo yum -y install unzip java-1.8.0-openjdk lua lua-devel libffi-devel \
-         java-1.8.0-openjdk-devel gcc gcc-c++ freeglut-devel SDL2 SDL2-devel \
-         mesa-libOSMesa-devel python-devel python-imaging zip numpy
+     sudo yum -y install unzip java-1.8.0-openjdk libffi-devel gcc gcc-c++ \
+         java-1.8.0-openjdk-devel freeglut-devel python-devel python-imaging \
+         SDL2 SDL2-devel mesa-libOSMesa-devel zip numpy
      ```
 
    * On SUSE Linux:
@@ -52,15 +50,15 @@ below.
      Tested on SUSE Linux Enterprise Server 12.
 
      ```shell
-     sudo zypper --non-interactive install gcc gcc-c++ lua java-1_8_0-openjdk \
-         java-1_8_0-openjdk-devel lua-devel python-devel python-numpy-devel \
-         python-imaging libSDL-devel libOSMesa-devel freeglut-devel
+     sudo zypper --non-interactive install gcc gcc-c++ java-1_8_0-openjdk \
+         java-1_8_0-openjdk-devel libOSMesa-devel freeglut-devel libSDL-devel \
+         python-devel python-numpy-devel python-imaging
      ```
 
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
 
-4. If necessary, edit `lua.BUILD` and `python.BUILD` according to the [Lua and
-   Python instructions](#lua-and-python-dependencies) below.
+4. If necessary, edit `python.BUILD` according to the [Python
+   instructions](#python-dependencies) below.
 
 5. Build *DeepMind Lab* and run a random agent. (Use the `-c opt` flag to enable
    optimizations.)
@@ -84,32 +82,17 @@ with *DeepMind Lab*.
 The random agent target `:python_random_agent` has a number of optional command line
 arguments. Run `bazel run :random_agent -- --help` to see those.
 
-## Lua and Python dependencies
+## Python dependencies
 
 *DeepMind Lab* does not include every dependency hermetically. In particular,
-Lua and Python are not included, but instead must already be installed on your
-system. This means that depending on the details of where those libraries are
+Python is not included, but instead must already be installed on your
+system. This means that depending on the details of where that library is
 installed, you may need to adjust the Bazel build rules in
-[`lua.BUILD`](../../lua.BUILD) and [`python.BUILD`](../../python.BUILD) to
-locate them correctly.
+[`python.BUILD`](../../python.BUILD) to locate it correctly.
 
 The default build rules should work for Debian and Ubuntu. Note that paths in
 the build rules are relative to the root path specified in the
 [`WORKSPACE`](../../WORKSPACE) file (which is `"/usr"` by default).
-
-Lua, for example, is installed directly in `/usr/include` on some systems like
-Red Hat and SUSE Linux. Therefore you need to edit `lua.BUILD` to reflect that
-location (or rather, the absence of a special location):
-
-```python
-cc_library(
-    name = "lua",
-    linkopts = ["-llua"],
-    visibility = ["//visibility:public"],
-)
-```
-The output of `pkg-config lua --libs --cflags` might be helpful to find the
-right include directories and linker options.
 
 Python requires two separate dependencies: The CPython extension API, and NumPy.
 If, say, NumPy is installed in a custom location, like it is on SUSE Linux, you

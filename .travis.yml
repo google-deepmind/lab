@@ -10,8 +10,6 @@ language: c++
 addons:
   apt:
     packages:
-      - lua5.1
-      - liblua5.1-0-dev
       - libffi-dev
       - gettext
       - freeglut3-dev

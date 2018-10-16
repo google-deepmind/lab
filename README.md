@@ -148,7 +148,6 @@ software libraries, which we ship in several different ways:
  * Several additional libraries are required but are not shipped in any form;
    they must be present on your system:
    * SDL 2
-   * Lua 5.1 (later versions might work, too)
    * gettext (required by `glib`)
    * OpenGL: A hardware driver and library are needed for hardware-accelerated
      human play. The headless library that machine learning agents will want to
