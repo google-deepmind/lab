@@ -1,3 +1,31 @@
+# Experimental MacOSX port
+
+This is _not_ the main _DeepMind Lab_ branch.
+
+This is an experimental, non-functional development branch that contains
+incompatible changes to make _DeepMind Lab_ work on MacOSX.
+
+**Notable changes:**
+
+* `glib` is no longer compiled from source, but must instead be
+  provided locally.
+* The use of `sendfile` in `public/dmlab_so_loader.cc` has been replaced with
+  `fcopyfile`.
+
+You need to pass `--apple_platform_type=macos` to all Bazel invocations.
+
+You may want to use homebrew to install the following packages:
+`glib`, `sdl2`, `python@2`, `numpy`. We also consume a dependency `-liconv`,
+but that just seems to work.
+
+The headful SDL renderer works (e.g. `//:game`, or `//:python_random_agent`
+with `--define=graphics=sdl`). The headless renderers for OSMesa, GLX and EGL
+do not work yet, apparently because we are missing the relevant library
+dependencies. A native MacOSX "glimp" implementation seems like the best next
+step (but is not complete yet).
+
+<br><br><br>
+
 # <img src="/docs/template/logo.png" alt="DeepMind Lab">
 
 *DeepMind Lab* is a 3D learning environment based on id Software's

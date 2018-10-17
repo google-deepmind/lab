@@ -66,4 +66,5 @@ jobs:
         if: matrix.cfg.os == 'macos-10.15'
         timeout-minutes: 45
         run: |
-          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare -c opt --dynamic_mode=off --show_progress_rate_limit=10 //:game_lib_headless_macos
+          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare -c opt --dynamic_mode=off --show_progress_rate_limit=10 //:game
+          bazel --bazelrc=.precommit.bazelrc  test ${{matrix.cfg.config}} --copt=-Wno-sign-compare -c opt --dynamic_mode=off --show_progress_rate_limit=10 --test_output=errors //third_party/... //deepmind/... //lua_tests/... $(bazel query //... | grep seed_level_)
