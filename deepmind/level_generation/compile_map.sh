@@ -70,9 +70,9 @@ readonly MPF="$(basename "${MAPBASE}")"
 readonly MPB="${MPF/.map/}"
 
 if [[ -n $MAP_LOCATION ]]; then
-  mkdir --parents -- "${DIR}"
-  cp --force -- "${MAP_LOCATION}" "${MAPBASE}.map"
-  chmod 660 -- "${MAPBASE}.map"
+  mkdir -p "${DIR}"
+  cp --force "${MAP_LOCATION}" "${MAPBASE}.map"
+  chmod 660 "${MAPBASE}.map"
 fi
 
 function die {
@@ -94,7 +94,7 @@ check_exe "${BSPC}" "bspc"
 ## Main logic
 
 function clean_up {
-  rm --force -- "${DIR}/${MPB}."{bsp,map,prt,srf}
+  rm -f "${DIR}/${MPB}."{bsp,map,prt,srf}
 }
 
 # Step 1: q3map2 to generate the BSP
@@ -113,23 +113,23 @@ fi
 
 # Step 3: Zip .bsp and .aas into a .pk3 archive.
 
-mkdir --parents -- "${DIR}/maps"
+mkdir -p "${DIR}/maps"
 if [[ $GENERATE_AAS = true ]]; then
-  mv --target-directory="${DIR}/maps" -- "${DIR}/${MPB}.bsp" "${DIR}/${MPB}.aas"
+  mv "${DIR}/${MPB}.bsp" "${DIR}/${MPB}.aas" "${DIR}/maps"
 else
-  mv --target-directory="${DIR}/maps" -- "${DIR}/${MPB}.bsp"
+  mv "${DIR}/${MPB}.bsp" "${DIR}/maps"
 fi
 
-rm -f -- "${DIR}/${MPB}.pk3"
+rm -f "${DIR}/${MPB}.pk3"
 if [[ $GENERATE_AAS = true ]]; then
-  (cd -- "${DIR}" && zip "${MPB}.pk3" -- "maps/${MPB}.bsp" "maps/${MPB}.aas")
-  rm -- "${DIR}/maps/${MPB}.bsp" "${DIR}/maps/${MPB}.aas"
+  (cd "${DIR}" && zip "${MPB}.pk3" "maps/${MPB}.bsp" "maps/${MPB}.aas")
+  rm "${DIR}/maps/${MPB}.bsp" "${DIR}/maps/${MPB}.aas"
 else
-  (cd -- "${DIR}" && zip "${MPB}.pk3" -- "maps/${MPB}.bsp")
-  rm -- "${DIR}/maps/${MPB}.bsp"
+  (cd "${DIR}" && zip "${MPB}.pk3" "maps/${MPB}.bsp")
+  rm "${DIR}/maps/${MPB}.bsp"
 fi
 
-rmdir -- "${DIR}/maps"
+rmdir "${DIR}/maps"
 clean_up
 
 # Done!
