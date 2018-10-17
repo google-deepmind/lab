@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc., 2016-2017 Google Inc.
+Copyright (C) 1999-2005 Id Software, Inc., 2016-2018 Google Inc.
 
 This file is part of Quake III Arena source code.
 
@@ -591,7 +591,6 @@ void Sys_ErrorDialog( const char *error )
 	close( f );
 }
 
-#ifndef __APPLE__
 /*
 ==============
 Sys_Dialog
@@ -603,7 +602,6 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 	Sys_Print( message );
 	return type == DT_YES_NO ? DR_NO : DR_OK;
 }
-#endif
 
 /*
 ==============
