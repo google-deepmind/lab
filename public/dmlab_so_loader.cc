@@ -25,10 +25,15 @@
 
 #include <dlfcn.h>
 #include <fcntl.h>
-#include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifdef __APPLE__
+#  include <copyfile.h>
+#else  // defined(__APPLE__)
+#  include <sys/sendfile.h>
+#endif  // defined(__APPLE__)
 
 #include <cerrno>
 #include <cstdio>
@@ -105,9 +110,12 @@ void close_handle(void* context) {
 
 // Copies the input file to the output file, where both files are given by open
 // file descriptors. Returns 0 on success and a negative value on error. In the
-// error case, the return value comes from an underlying library call, and
-// errno may be set accordingly.
+// error case, the return value comes from an underlying library call, and errno
+// may be set accordingly.
 ssize_t copy_complete_file(int in_fd, int out_fd) {
+#ifdef __APPLE__
+  return fcopyfile(in_fd, out_fd, nullptr, COPYFILE_ALL);
+#else  // defined(__APPLE__)
   off_t offset = 0;
   struct stat stat_in;
 
@@ -137,6 +145,7 @@ ssize_t copy_complete_file(int in_fd, int out_fd) {
   }
 
   return 0;
+#endif  // defined(__APPLE__)
 }
 
 }  // namespace
