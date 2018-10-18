@@ -104,18 +104,18 @@ void close_handle(void* context) {
 }
 
 ssize_t send_complete_file(int out_fd, int in_fd, off_t offset, ssize_t count) {
-  ssize_t bytes;
   ssize_t bytes_count = 0;
-  do {
-    bytes = sendfile(out_fd, in_fd, &offset, count - bytes_count);
-    if (bytes <= 0) {
+  while (bytes_count < count) {
+    ssize_t res = sendfile(out_fd, in_fd, &offset, count - bytes_count);
+    if (res <= 0) {
       if (errno == EINTR || errno == EAGAIN) {
         continue;
+      } else {
+        return res;
       }
-      return bytes;
     }
-    bytes_count += bytes;
-  } while (bytes_count < count);
+    bytes_count += res;
+  }
   return bytes_count;
 }
 

@@ -29,7 +29,7 @@ cc_binary(
     srcs = ["realpath.c"],
     copts = [
         "-std=c99",
-        "-D_BSD_SOURCE",
+        "-D_DEFAULT_SOURCE",
         "-D_POSIX_C_SOURCE",
     ],
 )
