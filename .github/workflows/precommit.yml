@@ -13,18 +13,17 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test ${{matrix.cfg.name}} ${{matrix.os.name}}
+    name: Build and test ${{matrix.cfg.name}}
 
-    runs-on: ${{matrix.os.id}}
+    runs-on: ${{matrix.cfg.os}}
 
     strategy:
       matrix:
-        os:
-          - { name: 'Linux', id: 'ubuntu-20.04' }
         cfg:
-          - { name: 'GCC', cc: gcc-10, cxx: g++-10, config: --copt=-Wno-maybe-uninitialized }
-          - { name: 'LLVM+libstdc++', cc: clang, cxx: clang++, config: --copt=-Wno-uninitialized }
-          - { name: 'LLVM+libc++', cc: clang, cxx: clang++, config: --config=libc++ --copt=-Wno-uninitialized }
+          - { name: 'Linux GCC', os: 'ubuntu-20.04', cc: gcc-10, cxx: g++-10, config: --copt=-Wno-maybe-uninitialized }
+          - { name: 'Linux LLVM+libstdc++', os: 'ubuntu-20.04', cc: clang, cxx: clang++, config: --copt=-Wno-uninitialized }
+          - { name: 'Linux LLVM+libc++', os: 'ubuntu-20.04', cc: clang, cxx: clang++, config: --config=libc++ --copt=-Wno-uninitialized }
+          - { name: 'MacOS LLVM+libc++', os: 'macos-10.15', config: --config=libc++ --copt=-Wno-uninitialized }
 
     env:
       CC:  ${{matrix.cfg.cc}}
@@ -32,23 +31,39 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: install infrastructure
+      - name: install infrastructure (Linux)
+        if: matrix.cfg.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update
           sudo apt-get install gettext python2-dev python3-dev libsdl2-dev libosmesa6-dev python-numpy-dev python3-numpy-dev python-pil python3-pil python-enum34
           sudo find /usr -type f -name Python.h -o -name arrayobject.h -o -name functional -o -name -filesystem
           sudo ln -s /usr/lib/llvm-10/include/c++/v1 /usr/include/c++/v1
           sed -i -e 's/py_version = "PY3"/py_version = "PY2AND3"/' WORKSPACE
-      - name: build
+      - name: install infrastructure (MacOS)
+        if: matrix.cfg.os == 'macos-10.15'
+        run: |
+          brew install SDL2
+          sudo -H pip install numpy
+          sudo -H pip3 install numpy
+          sudo find -L /usr /Library -type f -name SDL.h -o -name glib.h -o -name Python.h -o -name arrayobject.h
+      - name: build (Linux)
+        if: matrix.cfg.os == 'ubuntu-20.04'
         run: |
           bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
-      - name: run-tests
+      - name: run-tests (Linux)
+        if: matrix.cfg.os == 'ubuntu-20.04'
         timeout-minutes: 45
         run: |
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py2 --test_tag_filters="" --test_arg=--verbose
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py3 --test_tag_filters="" --test_arg=--verbose
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:dmenv_module_test --test_tag_filters="" --test_arg=--verbose
-      - name: run-agent
+      - name: run-agent (Linux)
+        if: matrix.cfg.os == 'ubuntu-20.04'
         run: |
           bazel --bazelrc=.precommit.bazelrc run   ${{matrix.cfg.config}} --copt=-Wno-sign-compare --define headless=osmesa //:python_random_agent
+      - name: build-and-run-tests (MacOS)
+        if: matrix.cfg.os == 'macos-10.15'
+        timeout-minutes: 45
+        run: |
+          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare -c opt --dynamic_mode=off --show_progress_rate_limit=10 //:game_lib_headless_macos

@@ -828,6 +828,27 @@ cc_library(
 )
 
 cc_library(
+    name = "game_lib_headless_macos",
+    srcs = IOQ3_COMMON_SRCS + [
+        CODE_DIR + "/deepmind/dmlab_connect.c",
+        CODE_DIR + "/null/null_input.c",
+        CODE_DIR + "/null/null_snddma.c",
+
+        ## OpenGL rendering
+        CODE_DIR + "/deepmind/headless_macos_glimp.c",
+        CODE_DIR + "/deepmind/glimp_common.h",
+        CODE_DIR + "/deepmind/glimp_common.c",
+    ],
+    hdrs = ["public/dmlab.h"],
+    copts = IOQ3_COMMON_COPTS,
+    defines = IOQ3_COMMON_DEFINES,
+    linkopts = ["-framework OpenGL"],
+    tags = ["manual"],  # don't build on Linux with //...
+    deps = IOQ3_COMMON_DEPS,
+    alwayslink = 1,
+)
+
+cc_library(
     name = "game_lib_headless_osmesa",
     srcs = IOQ3_COMMON_SRCS + [
         CODE_DIR + "/deepmind/dmlab_connect.c",
@@ -945,11 +966,13 @@ config_setting(
 
 config_setting(
     name = "dmlab_graphics_osmesa_or_glx",
+    constraint_values = ["@platforms//os:linux"],
     define_values = {"graphics": "osmesa_or_glx"},
 )
 
 config_setting(
     name = "dmlab_graphics_osmesa_or_egl",
+    constraint_values = ["@platforms//os:linux"],
     define_values = {"graphics": "osmesa_or_egl"},
 )
 
@@ -963,6 +986,7 @@ cc_binary(
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
     deps = [":dmlab.lds"] + select({
+        "is_macos": [":game_lib_headless_macos"],
         "dmlab_graphics_osmesa_or_egl": [":game_lib_headless_egl"],
         "dmlab_graphics_osmesa_or_glx": [":game_lib_headless_glx"],
         "//conditions:default": [":game_lib_headless_egl"],
