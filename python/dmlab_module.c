@@ -185,7 +185,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
 
     DeepMindLabLaunchParams params = {};
     params.runfiles_path = get_module_state(module)->runfiles_path;
-    params.renderer = DeepMindLabRenderer_Software;
+    params.renderer = DeepMindLabRenderer_Hardware;
     if (renderer != NULL && renderer[0] != '\0') {
       if (strcmp(renderer, "hardware") == 0) {
         params.renderer = DeepMindLabRenderer_Hardware;

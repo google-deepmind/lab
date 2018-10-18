@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 #include "deepmind/support/test_srcdir.h"
 #include "public/dmlab.h"
+#include "testing/test_renderer.h"
 
 namespace deepmind {
 namespace lab {
@@ -32,7 +33,7 @@ TEST(LuaUnitTest, RunsTest) {
 
   DeepMindLabLaunchParams params = {};
   params.runfiles_path = runfiles_path.c_str();
-  params.renderer = DeepMindLabRenderer_Software;
+  params.renderer = kTestRenderer_you_must_have_only_one;
 
   EnvCApi env_c_api;
   void* context;

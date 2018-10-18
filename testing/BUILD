@@ -3,6 +3,24 @@
 
 licenses(["restricted"])  # GPLv2
 
+cc_library(
+    name = "test_renderer_hw",
+    testonly = 1,
+    srcs = ["test_renderer.cc"],
+    hdrs = ["test_renderer.h"],
+    copts = ["-DDML_TEST_RENDERER=Hardware"],
+    deps = ["//:dmlablib"],
+)
+
+cc_library(
+    name = "test_renderer_sw",
+    testonly = 1,
+    srcs = ["test_renderer.cc"],
+    hdrs = ["test_renderer.h"],
+    copts = ["-DDML_TEST_RENDERER=Software"],
+    deps = ["//:dmlablib"],
+)
+
 cc_test(
     name = "recording_test",
     srcs = ["recording_test.cc"],
@@ -24,7 +42,10 @@ cc_test(
         "//deepmind/util:files",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googletest//:gtest_main",
-    ],
+    ] + select({
+        "//:is_linux": [":test_renderer_sw"],
+        "//:is_macos": [":test_renderer_hw"],
+    }),
 )
 
 cc_library(
@@ -65,7 +86,10 @@ cc_library(
         "//:dmlablib",
         "//deepmind/support:test_srcdir",
         "@com_google_googletest//:gtest",
-    ],
+    ] + select({
+        "//:is_linux": [":test_renderer_sw"],
+        "//:is_macos": [":test_renderer_hw"],
+    }),
 )
 
 cc_library(
@@ -90,7 +114,10 @@ cc_library(
         "//deepmind/support:test_srcdir",
         "//deepmind/util:files",
         "@com_google_googletest//:gtest",
-    ],
+    ] + select({
+        "//:is_linux": [":test_renderer_sw"],
+        "//:is_macos": [":test_renderer_hw"],
+    }),
 )
 
 cc_library(
@@ -114,5 +141,8 @@ cc_library(
         "//deepmind/support:test_srcdir",
         "//deepmind/util:files",
         "@com_google_googletest//:gtest",
-    ],
+    ] + select({
+        "//:is_linux": [":test_renderer_sw"],
+        "//:is_macos": [":test_renderer_hw"],
+    }),
 )

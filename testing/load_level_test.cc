@@ -10,6 +10,7 @@
 #include "deepmind/util/files.h"
 #include "public/dmlab.h"
 #include "testing/env_observation.h"
+#include "testing/test_renderer.h"
 
 namespace deepmind {
 namespace lab {
@@ -26,7 +27,7 @@ TEST(LoadLevelTest, LoadLevelAndWait) {
 
   DeepMindLabLaunchParams params = {};
   params.runfiles_path = runfiles_path.c_str();
-  params.renderer = DeepMindLabRenderer_Software;
+  params.renderer = kTestRenderer_you_must_have_only_one;
 
   EnvCApi env_c_api;
   void* context;
