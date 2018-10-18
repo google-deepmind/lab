@@ -145,6 +145,6 @@ cc_library(
 ```
 
 (In that case you may also want to pass `--python_path=/usr/bin/python3` to
-Bazel.)
+Bazel. Additionally, to run the script `./bazel-bin/python/pip_package/build_pip_package`, which creates a python wheel package, you will need to set the `PYTHON_BIN_PATH` like so: `export PYTHON_BIN_PATH=/usr/bin/python3.5`)
 
 
