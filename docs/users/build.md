@@ -55,6 +55,9 @@ are documented in a [separate section](#python-dependencies) below.
          python-devel python-numpy-devel python-imaging
      ```
 
+For Python3, replace the various `python-*` packages with their corresponding
+`python3-*` versions.
+
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
 
 4. If necessary, edit `python.BUILD` according to the [Python
@@ -145,6 +148,11 @@ cc_library(
 ```
 
 (In that case you may also want to pass `--python_path=/usr/bin/python3` to
-Bazel.)
+Bazel. For building PIP packages, you may need to run the PIP packaging script
+with `PYTHON_BIN_PATH="/usr/bin/python3"
+bazel-bin/python/pip_package/build_pip_package /your/outputdir` and then use the
+`pip3` command. As before, the Python binary needs to match the Python and NumPy
+libraries that you linked against, which may need some care when a user's local
+installation differs from the system-wide one.)
 
 

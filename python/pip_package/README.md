@@ -40,6 +40,15 @@ used to build the Python module itself. If necessary, change the `WORKSPACE` and
 [build documentation](../../docs/users/build.md#lua-and-python-dependencies) for
 details.
 
+#### Python3
+
+If you would like to use Python3 rather than Python2, then you may need to
+install `python3-*` variants of the dependencies, as well as `pip3`. You will
+probably want to invoke Bazel with `--python_path=/usr/bin/python3` and
+virtualenv with `virtualenv --python=python3`. You may also want to set the
+Python binary path, e.g. via `export PYTHON_BIN_PATH="/usr/bin/python3"` (unless
+you are already in a hermetic Python3 virtualenv environment).
+
 #### Build assets/binaries
 
 Following this are more detailed instructions on how to build and install if you
