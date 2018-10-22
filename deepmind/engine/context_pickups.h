@@ -20,9 +20,9 @@
 #define DML_DEEPMIND_ENGINE_CONTEXT_PICKUPS_H_
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/include/deepmind_calls.h"
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/table_ref.h"
@@ -33,7 +33,7 @@ namespace lab {
 class ContextPickups {
  public:
   // Parameters for a custom pickup item.
-  using EntityInstance = std::unordered_map<std::string, std::string>;
+  using EntityInstance = absl::flat_hash_map<std::string, std::string>;
 
   void SetScriptTableRef(lua::TableRef script_table_ref) {
     script_table_ref_ = std::move(script_table_ref);

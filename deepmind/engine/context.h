@@ -26,9 +26,9 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/engine/context_actions.h"
 #include "deepmind/engine/context_entities.h"
 #include "deepmind/engine/context_events.h"
@@ -471,7 +471,7 @@ class Context {
   std::string executable_runfiles_;
 
   // The settings to run the script with.
-  std::unordered_map<std::string, std::string> settings_;
+  absl::flat_hash_map<std::string, std::string> settings_;
 
   // When a levelName is set without the suffix '.lua' the level is found
   // relative to this directory.

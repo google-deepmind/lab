@@ -21,6 +21,7 @@
 #include <fstream>
 #include <functional>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "deepmind/engine/lua_random.h"
@@ -241,7 +242,7 @@ class LuaTheme : public Theme {
 
  private:
   Texture ReadThemeTexture(const std::string& name, int variation) {
-    auto pair = theme_cache_.emplace(variation, lua::TableRef());
+    auto pair = theme_cache_.try_emplace(variation, lua::TableRef());
     if (pair.second) {
       theme_.PushMemberFunction("mazeVariation");
       const char variation_char = variation;
@@ -298,7 +299,7 @@ class LuaTheme : public Theme {
     return Model{std::move(name), scale, angle};
   }
 
-  std::unordered_map<int, lua::TableRef> theme_cache_;
+  absl::flat_hash_map<int, lua::TableRef> theme_cache_;
   lua_State* lua_state_;
   lua::TableRef theme_;
 };

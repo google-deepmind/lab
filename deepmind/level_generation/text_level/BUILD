@@ -107,6 +107,7 @@ cc_library(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 

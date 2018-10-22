@@ -43,10 +43,10 @@ static int PackageLoader(lua_State* L) {
     }
 
     auto* embedded_c_modules =
-        static_cast<const std::unordered_map<std::string, EmbeddedClosure>*>(
+        static_cast<const absl::flat_hash_map<std::string, EmbeddedClosure>*>(
             lua_touserdata(L, upidx_c));
     auto* embedded_lua_modules =
-        static_cast<const std::unordered_map<std::string, EmbeddedLuaFile>*>(
+        static_cast<const absl::flat_hash_map<std::string, EmbeddedLuaFile>*>(
             lua_touserdata(L, upidx_lua));
 
     if (lua_type(L, 1) != LUA_TSTRING) {
@@ -121,9 +121,9 @@ void Vm::AddLuaModuleToSearchers(
 Vm::Vm(lua_State* L)
     : lua_state_(L),
       embedded_c_modules_(
-          new std::unordered_map<std::string, EmbeddedClosure>()),
+          new absl::flat_hash_map<std::string, EmbeddedClosure>()),
       embedded_lua_modules_(
-          new std::unordered_map<std::string, EmbeddedLuaFile>()) {
+          new absl::flat_hash_map<std::string, EmbeddedLuaFile>()) {
   lua_getglobal(L, "package");
   lua_getfield(L, -1, kSearcher);
   int array_size = ArrayLength(L, -1);

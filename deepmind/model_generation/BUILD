@@ -10,6 +10,7 @@ cc_library(
     deps = [
         ":transform",
         "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@eigen_archive//:eigen",
     ],
@@ -86,7 +87,10 @@ cc_library(
     name = "model",
     hdrs = ["model.h"],
     visibility = ["//visibility:public"],
-    deps = [":transform"],
+    deps = [
+        ":transform",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
 )
 
 cc_library(

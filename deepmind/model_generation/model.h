@@ -20,9 +20,9 @@
 #define DML_DEEPMIND_MODEL_GENERATION_MODEL_H_
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/model_generation/transform.h"
 
 namespace deepmind {
@@ -50,7 +50,7 @@ struct Model {
 
   // Custom models also include named reference frames which serve as locators
   // where to attach child models.
-  using LocatorMap = std::unordered_map<std::string, Transform>;
+  using LocatorMap = absl::flat_hash_map<std::string, Transform>;
 
   LocatorMap locators;
 };

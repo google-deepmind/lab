@@ -20,9 +20,9 @@
 
 #include <cstdlib>
 #include <string>
-#include <unordered_map>
 
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/support/test_srcdir.h"
 #include "deepmind/util/files.h"
 #include "public/dmlab.h"
@@ -36,7 +36,7 @@ namespace {
 using ::testing::UnitTest;
 
 // A map used to simplify passing settings to dmlab before initialization.
-using SettingsMap = std::unordered_map<std::string, std::string>;
+using SettingsMap = absl::flat_hash_map<std::string, std::string>;
 
 const int kFramesPerSecond = 30;
 

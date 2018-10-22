@@ -24,9 +24,9 @@
 #include <cstddef>
 #include <functional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "Eigen/Geometry"
 #include "deepmind/model_generation/transform.h"
 
@@ -105,7 +105,7 @@ void BuildRectMesh(                                                 //
 void BuildDefaultLocators(                                             //
     const std::function<Transform(float, float, float)>& eval_socket,  //
     const std::function<Transform(float, float, float)>& eval_plug,    //
-    std::unordered_map<std::string, Transform>* locators);
+    absl::flat_hash_map<std::string, Transform>* locators);
 
 // Computes the z_dir vector used to construct the default locator set for most
 // primitives. Coefficients [u, v, w] are the normalised coordinates (range [-1,

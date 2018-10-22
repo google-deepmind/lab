@@ -19,6 +19,7 @@
 #include "deepmind/model_generation/geometry_util.h"
 
 #include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 
 namespace deepmind {
@@ -142,7 +143,7 @@ void BuildRectMesh(                                                 //
 void BuildDefaultLocators(                                             //
     const std::function<Transform(float, float, float)>& eval_socket,  //
     const std::function<Transform(float, float, float)>& eval_plug,    //
-    std::unordered_map<std::string, Transform>* locators) {
+    absl::flat_hash_map<std::string, Transform>* locators) {
   static const char* const kHeightPrefix[] = {"bottom_", "centre_", "top_"};
   for (int k = 0; k < 3; ++k) {
     const float w = k - 1.0f;

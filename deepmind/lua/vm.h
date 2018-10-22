@@ -22,9 +22,9 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/lua/lua.h"
 
 namespace deepmind {
@@ -95,11 +95,12 @@ class Vm {
   explicit Vm(lua_State* L);
 
   std::unique_ptr<lua_State, internal::Close> lua_state_;
+
   // These are unique_ptrs as the pointers are stored in upvalues for a Lua
   // module search function.
-  std::unique_ptr<std::unordered_map<std::string, internal::EmbeddedClosure>>
+  std::unique_ptr<absl::flat_hash_map<std::string, internal::EmbeddedClosure>>
       embedded_c_modules_;
-  std::unique_ptr<std::unordered_map<std::string, internal::EmbeddedLuaFile>>
+  std::unique_ptr<absl::flat_hash_map<std::string, internal::EmbeddedLuaFile>>
       embedded_lua_modules_;
 };
 

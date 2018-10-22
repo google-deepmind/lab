@@ -43,6 +43,7 @@ cc_library(
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -59,6 +60,7 @@ cc_library(
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 
@@ -165,6 +167,7 @@ cc_library(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 
@@ -292,6 +295,7 @@ cc_library(
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
         "//deepmind/util:files",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
     ],
 )

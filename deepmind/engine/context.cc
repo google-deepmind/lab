@@ -27,10 +27,10 @@
 #include <iterator>
 #include <limits>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
 #include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
@@ -950,7 +950,7 @@ bool Context::UpdatePlayerInfo(int player_id, char* info, int info_size) {
   script_table_ref_.PushMemberFunction("playerModel");
   if (!lua_isnil(L, -2)) {
     lua::Push(L, player_id + 1);
-    std::unordered_map<std::string, absl::string_view> player_info =
+    absl::flat_hash_map<std::string, absl::string_view> player_info =
         absl::StrSplit(info + 1, '\\');
     lua::Push(L, player_info["name"]);
     lua::Push(L, player_info["model"]);

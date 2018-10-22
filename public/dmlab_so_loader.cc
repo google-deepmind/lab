@@ -20,6 +20,7 @@
 // Requires the macro DMLAB_SO_LOCATION to be defined as the path to the
 // shared object file.
 
+#include "absl/container/flat_hash_map.h"
 #include "public/dmlab.h"
 
 #include <dlfcn.h>
@@ -36,7 +37,6 @@
 #include <iostream>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 
 #ifdef LEAK_SANITIZER
 #include <sanitizer/lsan_interface.h>
@@ -51,8 +51,8 @@ struct InternalContext {
   void* dlhandle;
 };
 
-std::unordered_map<void*, InternalContext>* context_map() {
-  static std::unordered_map<void*, InternalContext> internal_context;
+absl::flat_hash_map<void*, InternalContext>* context_map() {
+  static absl::flat_hash_map<void*, InternalContext> internal_context;
   return &internal_context;
 }
 

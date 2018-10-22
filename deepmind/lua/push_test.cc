@@ -21,6 +21,7 @@
 #include <set>
 
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -181,7 +182,7 @@ TEST_F(PushTest, PushFixedSizeArray) {
 }
 
 TEST_F(PushTest, PushTable) {
-  std::unordered_map<std::string, double> test = {
+  absl::flat_hash_map<std::string, double> test = {
       {"one", 1},  //
       {"2", 2.0},  //
       {"3", 3.0},  //

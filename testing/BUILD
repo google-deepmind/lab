@@ -22,6 +22,7 @@ cc_test(
         "//:dmlablib",
         "//deepmind/support:test_srcdir",
         "//deepmind/util:files",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googletest//:gtest_main",
     ],
 )

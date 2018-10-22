@@ -20,11 +20,11 @@
 
 #include <algorithm>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
@@ -103,7 +103,7 @@ lua::NResultsOr LuaSnippetEmitter::MakeEntity(lua_State* L) {
 
   double i, j, height;
   std::string classname;
-  std::unordered_map<std::string, std::string> attrs;
+  absl::flat_hash_map<std::string, std::string> attrs;
 
   if (!table.LookUp("i", &i) || !table.LookUp("j", &j) ||
       !table.LookUp("classname", &classname)) {

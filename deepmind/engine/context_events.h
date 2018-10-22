@@ -20,9 +20,9 @@
 #define DML_DEEPMIND_ENGINE_CONTEXT_EVENTS_H_
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
 #include "third_party/rl_api/env_c_api.h"
@@ -103,7 +103,7 @@ class ContextEvents {
   std::vector<const char*> names_;
 
   // Reverse lookup of event_name to type_id.
-  std::unordered_map<std::string, int> name_to_id_;
+  absl::flat_hash_map<std::string, int> name_to_id_;
 
   // Event observation storage.
   std::vector<std::vector<int>> shapes_;

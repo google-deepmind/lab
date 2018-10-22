@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -300,7 +301,7 @@ ReadResult Read(lua_State* L, int idx, absl::InlinedVector<T, N, A>* values);
 // whose value cannot be read as T.
 template <typename K, typename T, typename H, typename C, typename A>
 ReadResult Read(lua_State* L, int idx,
-                std::unordered_map<K, T, H, C, A>* result);
+                absl::flat_hash_map<K, T, H, C, A>* result);
 
 // Reads value from the Lua stack. On success, the varant stores the result of
 // the value on the stack. The reads are attempted in the order that the types
@@ -402,8 +403,8 @@ ReadResult Read(lua_State* L, int idx, std::vector<T, A>* result) {
 
 template <typename K, typename T, typename H, typename C, typename A>
 ReadResult Read(lua_State* L, int idx,
-                std::unordered_map<K, T, H, C, A>* result) {
-  std::unordered_map<K, T, H, C, A> local_result;
+                absl::flat_hash_map<K, T, H, C, A>* result) {
+  absl::flat_hash_map<K, T, H, C, A> local_result;
 
   switch (lua_type(L, idx)) {
     case LUA_TTABLE:
@@ -430,7 +431,7 @@ ReadResult Read(lua_State* L, int idx,
       lua_pop(L, 2);
       return ReadTypeMismatch();
     }
-    local_result.emplace(std::move(key), std::move(value));
+    local_result.try_emplace(std::move(key), std::move(value));
     lua_pop(L, 1);
   }
   result->swap(local_result);
