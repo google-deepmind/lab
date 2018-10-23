@@ -49,8 +49,7 @@ class EntityInfo(unittest.TestCase):
                               [450., 50., 16.125, 1., -1.],
                               [550., 50., 16.125, 1., -1.],
                               [650., 50., 16.125, 1., -1.]])
-    self.assertEqual(
-        np.isclose(obs['DEBUG.PICKUPS'], pickups_state).all(), True)
+    self.assertTrue(np.allclose(obs['DEBUG.PICKUPS'], pickups_state))
 
     action = np.zeros([len(action_spec)], dtype=np.intc)
     action[action_index['MOVE_BACK_FORWARD']] = 1
@@ -69,8 +68,7 @@ class EntityInfo(unittest.TestCase):
                               [550., 50., 16.125, 1., -1.],
                               [650., 50., 16.125, 1., -1.]])
     obs = env.observations()
-    self.assertEqual(
-        np.isclose(obs['DEBUG.PICKUPS'], pickups_state).all(), True)
+    self.assertTrue(np.allclose(obs['DEBUG.PICKUPS'], pickups_state))
     for _ in six.moves.range(0, 600):
       reward += env.step(action, 1)
       if reward == 0:
@@ -86,8 +84,8 @@ class EntityInfo(unittest.TestCase):
                               [650., 50., 16.125, 0., -1.]])
 
     obs = env.observations()
-    self.assertEqual(
-        np.isclose(obs['DEBUG.PICKUPS'], pickups_state).all(), True)
+    self.assertTrue(np.allclose(obs['DEBUG.PICKUPS'], pickups_state))
+
 
 if __name__ == '__main__':
   if os.environ.get('TEST_SRCDIR'):

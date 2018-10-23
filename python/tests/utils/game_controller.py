@@ -167,9 +167,9 @@ class GameController(object):
     start_orientation = self.orientation[1]
     for _ in xrange(max_steps):
       speed = np.linalg.norm(self.velocity[:2])
-      if speed < _VELOCITY_TOLERANCE and np.isclose(
+      if speed < _VELOCITY_TOLERANCE and np.allclose(
           self.rotation_velocity, [0.0, 0.0, 0.0],
-          atol=_VELOCITY_TOLERANCE).all():
+          atol=_VELOCITY_TOLERANCE):
         break
       if speed < _MIN_BRAKING_SPEED:
         self._step(_NOOP_ACTION, 1)

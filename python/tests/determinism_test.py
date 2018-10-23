@@ -60,11 +60,12 @@ class DeterminismTest(unittest.TestCase):
       self.assertEqual(env1.step(move_fwd, 1), env2.step(move_fwd, 1))
       pos1 = env1.observations()['DEBUG.POS.TRANS']
       pos2 = env2.observations()['DEBUG.POS.TRANS']
-      self.assertEqual(np.isclose(pos1, pos2).all(), True,
-                       'Player positions differ!\n' + pprint.pformat({
-                           'pos1': pos1,
-                           'pos2': pos2
-                       }))
+      self.assertTrue(
+          np.allclose(pos1, pos2),
+          'Player positions differ!\n' + pprint.pformat({
+              'pos1': pos1,
+              'pos2': pos2
+          }))
 
   # Test that skipping render frames simulates the same player positions as not
   # frame skipping
@@ -79,11 +80,12 @@ class DeterminismTest(unittest.TestCase):
       env2.step(move_fwd, repeated_actions)
       pos1 = env1.observations()['DEBUG.POS.TRANS']
       pos2 = env2.observations()['DEBUG.POS.TRANS']
-      self.assertEqual(np.isclose(pos1, pos2).all(), True,
-                       'Player positions differ!\n' + pprint.pformat({
-                           'pos1': pos1,
-                           'pos2': pos2
-                       }))
+      self.assertTrue(
+          np.allclose(pos1, pos2),
+          'Player positions differ!\n' + pprint.pformat({
+              'pos1': pos1,
+              'pos2': pos2
+          }))
 
   # Tests that calling step(a, N) is the same as calling step(a, 1) N times.
   def test_repeated_actions(self, num_steps=20, repeated_actions=4):
@@ -101,11 +103,12 @@ class DeterminismTest(unittest.TestCase):
           env_repeated.step(move_fwd, repeated_actions), accum_reward)
       pos1 = env.observations()['DEBUG.POS.TRANS']
       pos2 = env.observations()['DEBUG.POS.TRANS']
-      self.assertEqual(np.isclose(pos1, pos2).all(), True,
-                       'Player positions differ!\n' + pprint.pformat({
-                           'pos1': pos1,
-                           'pos2': pos2
-                       }))
+      self.assertTrue(
+          np.allclose(pos1, pos2),
+          'Player positions differ!\n' + pprint.pformat({
+              'pos1': pos1,
+              'pos2': pos2
+          }))
 
   def test_pbo_pixels(self):
     env = make_dmlab_environment(
@@ -119,8 +122,8 @@ class DeterminismTest(unittest.TestCase):
       pixels = env.observations()['RGBD']
       pbo_pixels = pbo_env.observations()['RGBD']
 
-      self.assertEqual(
-          np.isclose(pixels, pbo_pixels).all(), True,
+      self.assertTrue(
+          np.allclose(pixels, pbo_pixels),
           'Pixels differ using PBOs!\n' + pprint.pformat({
               'pixels': pixels,
               'pbo pixels': pbo_pixels

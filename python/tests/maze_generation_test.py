@@ -39,7 +39,7 @@ class MazeGenerationTest(unittest.TestCase):
       env.reset(seed=i+1)
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
     num_layouts = len(layouts)
-    self.assertTrue(np.isclose(num_layouts, MAZE_LAYOUT_TRIALS))
+    self.assertEqual(num_layouts, MAZE_LAYOUT_TRIALS)
     for i in six.moves.range(MAZE_LAYOUT_TRIALS):
       print('phase 2: trial {} out of {}'.format(i+1, MAZE_LAYOUT_TRIALS))
       env = deepmind_lab.Lab(
@@ -59,7 +59,7 @@ class MazeGenerationTest(unittest.TestCase):
           })
       env.reset(seed=i+1)
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
-    self.assertTrue(np.isclose(len(layouts) - num_layouts, MAZE_LAYOUT_TRIALS))
+    self.assertEqual(len(layouts) - num_layouts, MAZE_LAYOUT_TRIALS)
 
 if __name__ == '__main__':
   if 'TEST_SRCDIR' in os.environ:
