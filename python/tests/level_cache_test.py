@@ -83,7 +83,8 @@ class LevelCacheTest(unittest.TestCase):
         pass
 
     env = self._create_environment(LevelCache())
-    with six.assertRaisesRegex(self, TypeError, 'exactly 1 argument'):
+    with six.assertRaisesRegex(self, TypeError,
+                               '(exactly 1|takes 1 positional) argument'):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
