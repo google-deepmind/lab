@@ -23,6 +23,7 @@ import os
 import tempfile
 import unittest
 import numpy as np
+import six
 from PIL import Image
 
 from python.tests.utils import test_environment_decorator
@@ -119,13 +120,14 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
   def testRewardHistory(self):
     self._decorator.step(None, 1)
     self._decorator.step(None, 1)
-    self.assertItemsEqual(self._decorator.reward_history(),
-                          self._env.test_rewards[0:2])
+    six.assertCountEqual(self,
+                         self._decorator.reward_history(),
+                         self._env.test_rewards[0:2])
 
   def testResetRewardHistory(self):
     self._decorator.step(None, 1)
     self._decorator.reset()
-    self.assertItemsEqual(self._decorator.reward_history(), [])
+    six.assertCountEqual(self, self._decorator.reward_history(), [])
 
   def testAccumulatedEvents(self):
     events = ['event1', 'event2', 'event3']
@@ -135,7 +137,7 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
     self._decorator.step(None, 1)
     self._env.events_return = events[2]
     self._decorator.step(None, 1)
-    self.assertItemsEqual(self._decorator.accumulated_events(), events)
+    six.assertCountEqual(self, self._decorator.accumulated_events(), events)
 
   def testResetAccumulatedEvents(self):
     events = ['event1', 'event2']
@@ -144,7 +146,8 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
     self._decorator.step(None, 1)
     self._env.events_return = events[1]
     self._decorator.reset()
-    self.assertItemsEqual(self._decorator.accumulated_events(), [events[1]])
+    six.assertCountEqual(self,
+                         self._decorator.accumulated_events(), [events[1]])
 
   def testObservationDelegation(self):
     self.assertEqual(self._env.test_observations[0],

@@ -22,6 +22,7 @@ from __future__ import print_function
 import argparse
 import random
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -50,7 +51,7 @@ def run(width, height, level_script, frame_count):
 
   reward = 0
   agent = RandomAgent(env.action_spec())
-  for _ in xrange(frame_count):
+  for _ in six.moves.range(frame_count):
     if not env.is_running():
       print('Environment stopped early')
       env.reset()

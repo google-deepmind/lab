@@ -23,6 +23,7 @@ import argparse
 import pprint
 import sys
 import numpy as np
+import six
 
 import deepmind_lab
 
@@ -50,7 +51,7 @@ def run(level_script, config, num_episodes):
   action[3] = 1
 
   score = 0
-  for _ in xrange(num_episodes):
+  for _ in six.moves.range(num_episodes):
     while env.is_running():
       # Advance the environment 4 frames while executing the action.
       reward = env.step(action, num_steps=4)

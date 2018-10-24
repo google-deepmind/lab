@@ -9,6 +9,7 @@ py_binary(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     main = "benchmark.py",
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -148,10 +149,7 @@ py_test(
     srcs = ["teleporter_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = [
-        "//python/tests/utils:math_utils",
-        "@six_archive//:six",
-    ],
+    deps = ["@six_archive//:six"],
 )
 
 py_test(
@@ -210,4 +208,5 @@ py_test(
     srcs = ["level_cache_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@six_archive//:six"],
 )

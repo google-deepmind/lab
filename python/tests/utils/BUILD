@@ -34,7 +34,10 @@ py_test(
     srcs = ["test_environment_decorator_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = [":test_environment_decorator"],
+    deps = [
+        ":test_environment_decorator",
+        "@six_archive//:six",
+    ],
 )
 
 py_library(
@@ -43,7 +46,10 @@ py_library(
     srcs = ["game_controller.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = [":math_utils"],
+    deps = [
+        ":math_utils",
+        "@six_archive//:six",
+    ],
 )
 
 py_test(
@@ -53,7 +59,9 @@ py_test(
     imports = ["python"],
     deps = [
         ":game_controller",
+        ":math_utils",
         ":test_environment_decorator",
+        "@six_archive//:six",
     ],
 )
 
@@ -63,10 +71,7 @@ py_library(
     srcs = ["maze_game_controller.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = [
-        ":game_controller",
-        ":math_utils",
-    ],
+    deps = [":game_controller"],
 )
 
 py_test(
@@ -77,5 +82,6 @@ py_test(
     deps = [
         ":maze_game_controller",
         ":test_environment_decorator",
+        "@six_archive//:six",
     ],
 )

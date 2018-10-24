@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 from python.tests.utils import maze_game_controller
@@ -59,7 +60,7 @@ class MazeGameControllerTest(unittest.TestCase):
 
   def testPathExists(self):
     path = self._controller.find_path(2, 5)
-    self.assertItemsEqual(path, [(1, 3), (1, 4), (1, 5), (2, 5)])
+    six.assertCountEqual(self, path, [(1, 3), (1, 4), (1, 5), (2, 5)])
 
   def testPathDoesNotExist(self):
     self.assertIsNone(self._controller.find_path(3, 4))

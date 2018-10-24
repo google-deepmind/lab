@@ -22,6 +22,7 @@ from __future__ import print_function
 import argparse
 import random
 import numpy as np
+import six
 import time
 
 import deepmind_lab
@@ -69,7 +70,7 @@ def run(length, width, height, fps, level, observation_spec):
 
   t0 = time.time()
 
-  for _ in xrange(length):
+  for _ in six.moves.range(length):
     if not env.is_running():
       print('Environment stopped early')
       env.reset()

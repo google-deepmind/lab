@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+import six
 
 import deepmind_lab
 from python.tests.utils import game_controller
@@ -61,7 +62,7 @@ class GameControllerTest(unittest.TestCase):
       self._controller.look_at_2d(0.0)
       move_forward_action = self._controller._get_actions(
           game_controller._MOVE_ACTION_NAME, 1)
-      for _ in xrange(10):
+      for _ in six.moves.range(10):
         self._env.step(move_forward_action, 1)
       self._controller.look_at_2d(angle)
       num_steps_before_stopping = self._env.num_steps()
@@ -88,7 +89,7 @@ class GameControllerTest(unittest.TestCase):
 
   def testControllerThrowsExceptionWhenEpisodeFinishes(self):
     with self.assertRaises(game_controller.EpisodeFinishedError):
-      for _ in xrange(1000):
+      for _ in six.moves.range(1000):
         self._controller.move_to(100.0, .0)
         self._controller.move_to(0.0, .0)
 

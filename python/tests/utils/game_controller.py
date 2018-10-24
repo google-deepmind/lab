@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import six
 
 from python.tests.utils import math_utils
 
@@ -90,7 +91,7 @@ class GameController(object):
 
     error_message = ('Failed to reach requested orientation. Start: {0}, '
                      'target: {1}, current: {2}.')
-    for _ in xrange(steps):
+    for _ in six.moves.range(steps):
       if self._env.is_running():
         self._step(actions, 1)
       else:
@@ -125,7 +126,7 @@ class GameController(object):
     self.look_at_2d(target_orientation)
 
     blocked_frames_count = 0
-    for _ in xrange(max_steps):
+    for _ in six.moves.range(max_steps):
       move_action_value = 1
       pos = self.position
       direction = (target - pos)[:2]
@@ -165,7 +166,7 @@ class GameController(object):
   def stop(self, max_steps=2000):
     """Stops the player as soon as possible."""
     start_orientation = self.orientation[1]
-    for _ in xrange(max_steps):
+    for _ in six.moves.range(max_steps):
       speed = np.linalg.norm(self.velocity[:2])
       if speed < _VELOCITY_TOLERANCE and np.allclose(
           self.rotation_velocity, [0.0, 0.0, 0.0],

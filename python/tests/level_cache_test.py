@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import six
 import tempfile
 import unittest
 
@@ -57,7 +58,7 @@ class LevelCacheTest(unittest.TestCase):
         return False
 
     env = self._create_environment(LevelCache())
-    with self.assertRaisesRegexp(AttributeError, 'write'):
+    with six.assertRaisesRegex(self, AttributeError, 'write'):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
@@ -68,7 +69,7 @@ class LevelCacheTest(unittest.TestCase):
         pass
 
     env = self._create_environment(LevelCache())
-    with self.assertRaisesRegexp(AttributeError, 'fetch'):
+    with six.assertRaisesRegex(self, AttributeError, 'fetch'):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
@@ -82,7 +83,7 @@ class LevelCacheTest(unittest.TestCase):
         pass
 
     env = self._create_environment(LevelCache())
-    with self.assertRaisesRegexp(TypeError, 'exactly 1 argument'):
+    with six.assertRaisesRegex(self, TypeError, 'exactly 1 argument'):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
@@ -98,7 +99,7 @@ class LevelCacheTest(unittest.TestCase):
         pass
 
     env = self._create_environment(LevelCache())
-    with self.assertRaisesRegexp(ValueError, 'foo'):
+    with six.assertRaisesRegex(self, ValueError, 'foo'):
       env.reset(episode=1, seed=123)
       env.step(self._dummy_action)
 
