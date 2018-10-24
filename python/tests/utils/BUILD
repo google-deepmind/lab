@@ -1,9 +1,9 @@
 # Description:
 #   Utility libraries for DM Lab tests.
 
-licenses(["restricted"])  # GPLv2
-
 package(default_visibility = ["//python/tests:__subpackages__"])
+
+licenses(["restricted"])  # GPLv2
 
 py_library(
     name = "math_utils",

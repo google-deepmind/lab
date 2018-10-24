@@ -172,7 +172,6 @@ py_test(
 
 py_test(
     name = "team_model_select_test",
-    size = "large",
     srcs = ["team_model_select_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],

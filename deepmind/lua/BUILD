@@ -1,9 +1,9 @@
 # Description:
 #   A collection of libraries for interacting with Lua.
 
-licenses(["restricted"])  # GPLv2
-
 package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # GPLv2
 
 LUA_VERSION = "@lua_archive//:lua"
 

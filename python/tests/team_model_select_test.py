@@ -37,7 +37,7 @@ class TeamModelSelectTest(unittest.TestCase):
     action = np.zeros([len(action_spec)], dtype=np.intc)
     event_names = sorted([name for name, _ in env.events()])
     self.assertEqual(len(event_names), player_count * 2)
-    for i in xrange(player_count):
+    for i in six.moves.range(player_count):
       self.assertEqual(event_names[i], 'newClientInfo' + str(i + 1))
       self.assertEqual(event_names[i + player_count],
                        'skinModified' + str(i + 1))

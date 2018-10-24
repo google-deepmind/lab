@@ -1,9 +1,9 @@
 # Description:
 #   Infrastructure support.
 
-licenses(["restricted"])  # GPLv2
-
 package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # GPLv2
 
 cc_library(
     name = "logging",
