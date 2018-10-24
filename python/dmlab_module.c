@@ -106,6 +106,9 @@ static bool fetch_level_from_cache(void* level_cache_context,
                                    int num_cache_paths,
                                    const char* key,
                                    const char* pk3_path) {
+  // If an error is already pending in the runtime, we take no further action.
+  if (PyErr_Occurred()) return false;
+
   // We ignore cache paths. They can be set in level cache Python object.
   PyObject* output = PyObject_CallMethod(
       level_cache_context, "fetch", "ss", key, pk3_path);
@@ -122,6 +125,9 @@ static void write_level_to_cache(void* level_cache_context,
                                  int num_cache_paths,
                                  const char* key,
                                  const char* pk3_path) {
+  // If an error is already pending in the runtime, we take no further action.
+  if (PyErr_Occurred()) return;
+
   // We ignore cache paths. They can be set in level cache Python object.
   PyObject* output = PyObject_CallMethod(
       level_cache_context, "write", "ss", key, pk3_path);
@@ -328,6 +334,13 @@ static PyObject* Lab_reset(PyObject* pself, PyObject* args, PyObject* kwds) {
                  self->env_c_api->error_message(self->context));
     return NULL;
   }
+
+  // Check if any other Python exception has been thrown, e.g. in the level
+  // cache.
+  if (PyErr_Occurred() != NULL) {
+    return NULL;
+  }
+
   self->num_steps = 0;
   ++self->episode;
   self->status = ENV_STATUS_INITIALIZED;
