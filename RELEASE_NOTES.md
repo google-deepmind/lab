@@ -20,6 +20,9 @@
 ### Bug Fixes:
 
 1.  Prevent missing sounds from causing clients to disconnect.
+2.  Fix a bug in the call of the theme callback 'placeFloorModels', which had
+    caused an "'index' is missing" error during compilation of text levels with
+    texture sets that use floor models, such as MINESWEEPER, GO, and PACMAN.
 
 ## release-2018-06-20 June 2018 release
 

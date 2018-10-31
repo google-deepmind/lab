@@ -206,6 +206,7 @@ class LuaTheme : public Theme {
     lua::TableRef floor_locs = lua::TableRef::Create(lua_state_);
     for (std::size_t i = 0, e = floor_locations.size(); i < e; ++i) {
       lua::TableRef floor_loc_table = lua::TableRef::Create(lua_state_);
+      floor_loc_table.Insert("index", i + 1);
       floor_loc_table.Insert("i", floor_locations[i].cell.x());
       floor_loc_table.Insert("j", floor_locations[i].cell.y());
       floor_loc_table.Insert("variation", floor_locations[i].variation);
