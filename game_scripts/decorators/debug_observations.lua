@@ -30,6 +30,7 @@ local teams = {}
 local camera = {pos = {0, 0, 500}, look = {90, 90, 0}}
 
 local mazeLayout = ''
+local mazeVariation = ''
 
 local ASPECT = SCREEN_SHAPE.height / SCREEN_SHAPE.width
 local function cameraUp(x, y, maxHeight)
@@ -246,8 +247,13 @@ local function getMazeLayout()
   return mazeLayout
 end
 
+local function getMazeVariation()
+  return mazeVariation
+end
+
 function debug_observations.setMaze(maze)
   mazeLayout = maze:entityLayer()
+  mazeVariation = maze:variationsLayer()
   setMazeShape(unpack{maze:size()})
 end
 
@@ -334,6 +340,7 @@ function debug_observations.extend(custom_observations)
 
   -- Maze layout
   co.addSpec('DEBUG.MAZE.LAYOUT', 'String', {0}, getMazeLayout)
+  co.addSpec('DEBUG.MAZE.VARIATION', 'String', {0}, getMazeVariation)
 
   co.addSpec('DEBUG.POS.TRANS', 'Doubles', {3}, playerPosition)
   co.addSpec('DEBUG.POS.ROT', 'Doubles', {3}, playerOrientation)
