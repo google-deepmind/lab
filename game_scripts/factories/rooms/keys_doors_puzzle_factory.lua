@@ -79,6 +79,7 @@ local PARAMS_WHITELIST = {
     players = true,
     randomSeed = true,
     datasetPath = true,
+    logLevel = true,
 }
 
 --[[ Creates a Keysdoors API.
