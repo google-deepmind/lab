@@ -25,6 +25,8 @@
     texture sets that use floor models, such as MINESWEEPER, GO, and PACMAN.
 3.  Fix bug where levels 'keys_doors_medium', 'keys_doors_random' and
     'rooms_keys_doors_puzzle' would not accept the common 'logLevel' setting.
+4.  Expose a 'demofiles' command line flag for the Python random agent, without
+    which the agent was not able to record or play back demos.
 
 ## release-2018-06-20 June 2018 release
 
