@@ -24,11 +24,9 @@
 #include <cstring>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "absl/types/variant.h"
@@ -91,15 +89,7 @@ void Push(lua_State* L, const std::array<T, N>& values);
 
 // [0, +1, -]
 template <typename K, typename T, typename H, typename C, typename A>
-void Push(lua_State* L, const std::unordered_map<K, T, H, C, A>& values);
-
-// [0, +1, -]
-template <typename K, typename T, typename H, typename C, typename A>
 void Push(lua_State* L, const absl::flat_hash_map<K, T, H, C, A>& values);
-
-// [0, +1, -]
-template <typename T, size_t N, typename A>
-void Push(lua_State* L, const absl::InlinedVector<T, N, A>& values);
 
 // [0, +1, -]
 template <typename T>
@@ -129,21 +119,6 @@ void Push(lua_State* L, const std::vector<T, A>& values) {
 template <typename T, std::size_t N>
 void Push(lua_State* L, const std::array<T, N>& values) {
   Push(L, absl::MakeConstSpan(values));
-}
-
-template <typename T, size_t N, typename A>
-void Push(lua_State* L, const absl::InlinedVector<T, N, A>& values) {
-  Push(L, absl::MakeConstSpan(values));
-}
-
-template <typename K, typename T, typename H, typename C, typename A>
-void Push(lua_State* L, const std::unordered_map<K, T, H, C, A>& values) {
-  lua_createtable(L, 0, values.size());
-  for (const auto& pair : values) {
-    Push(L, pair.first);
-    Push(L, pair.second);
-    lua_settable(L, -3);
-  }
 }
 
 template <typename K, typename T, typename H, typename C, typename A>

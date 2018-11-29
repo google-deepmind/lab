@@ -22,7 +22,6 @@
 
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "deepmind/lua/vm_test_util.h"
@@ -113,22 +112,6 @@ TEST_F(PushTest, PushVoidStar) {
 
 TEST_F(PushTest, PushVector) {
   std::vector<double> test = {1, 2, 3, 4, 5};
-  Push(L, test);
-  ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
-
-  std::size_t count = ArrayLength(L, 1);
-  ASSERT_EQ(test.size(), count);
-  for (std::size_t i = 0; i < count; ++i) {
-    lua_rawgeti(L, 1, i + 1);
-    ASSERT_EQ(LUA_TNUMBER, lua_type(L, -1));
-    double value = lua_tonumber(L, -1);
-    EXPECT_EQ(test[i], value);
-    lua_pop(L, 1);
-  }
-}
-
-TEST_F(PushTest, PushInlinedVector) {
-  absl::InlinedVector<double, 5> test = {1, 2, 3, 4, 5};
   Push(L, test);
   ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
 

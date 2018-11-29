@@ -24,7 +24,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "absl/types/variant.h"
@@ -164,19 +163,6 @@ TEST_F(ReadTest, ReadArray) {
   EXPECT_TRUE(IsTypeMismatch(Read(L, 3, &result)));
   EXPECT_TRUE(IsNotFound(Read(L, 4, &result)));
   EXPECT_EQ(result, test);
-}
-
-TEST_F(ReadTest, ReadInlinedVector) {
-  absl::InlinedVector<double, 5> test{{1, 2, 3, 4, 5}};
-  Push(L, "Junk");
-  Push(L, test);
-  Push(L, "Junk");
-  absl::InlinedVector<double, 5> result;
-  ASSERT_TRUE(IsFound(Read(L, 2, &result)));
-  EXPECT_EQ(result, test);
-  ASSERT_TRUE(IsFound(Read(L, -2, &result)));
-  EXPECT_EQ(result, test);
-  EXPECT_EQ(3, lua_gettop(L));
 }
 
 TEST_F(ReadTest, ReadArrayFloat) {
