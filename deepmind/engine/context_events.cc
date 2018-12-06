@@ -20,6 +20,7 @@
 
 #include <utility>
 
+#include "deepmind/support/logging.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/read.h"
@@ -187,10 +188,14 @@ void ContextEvents::Export(int event_idx, EnvCApi_Event* event) {
         observation_out.payload.doubles = tensor.data();
         break;
       }
-      case EnvCApi_ObservationString:
+      case EnvCApi_ObservationString: {
         const auto& string_value = strings_[observation.array_id];
         observation_out.payload.string = string_value.c_str();
         break;
+      }
+      default:
+        LOG(FATAL) << "Observation type: " << observation.type
+                   << " not supported";
     }
   }
   event->id = internal_event.type_id;

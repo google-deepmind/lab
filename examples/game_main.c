@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -208,6 +208,8 @@ static int print_events(EnvCApi* env_c_api, void* context) {
           }
           fputs(">", stdout);
           break;
+        default:
+          sys_error("Observation type: %d not supported", obs->spec.type);
       }
     }
     fputs("\n", stdout);

@@ -57,6 +57,7 @@ cc_library(
         "//deepmind/lua:class",
         "//deepmind/lua:n_results_or",
         "//deepmind/lua:read",
+        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",

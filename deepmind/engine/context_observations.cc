@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Google Inc.
+// Copyright (C) 2017-2018 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -133,6 +133,8 @@ void ContextObservations::Observation(int idx,
       observation->spec.shape = tensor_shape_.data();
       break;
     }
+    default:
+      LOG(FATAL) << "Observation type: " << info.type << " not supported";
   }
 
   if (layout != nullptr) {
