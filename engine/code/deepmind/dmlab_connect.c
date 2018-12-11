@@ -748,7 +748,7 @@ static int dmlab_init(void* context) {
 }
 
 static void connect_client(GameContext* gc) {
-  Cmd_ExecuteString(va("connect -6 [::]:%d\n", gc->server_port));
+  Cmd_ExecuteString(va("connect -6 [::1]:%d\n", gc->server_port));
   Cvar_Set("fixedtime", va("%d", gc->engine_frame_period_msec));
   Com_Frame();
   gc->is_connecting = true;
