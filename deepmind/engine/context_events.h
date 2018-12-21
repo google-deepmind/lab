@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
+#include "absl/container/node_hash_map.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
 #include "third_party/rl_api/env_c_api.h"
@@ -99,11 +99,10 @@ class ContextEvents {
   // Events generated since construction or last call to Clear().
   std::vector<Event> events_;
 
-  // Lookup type_id to event_name.
+  // Bidirectional lookup for the mapping between type_id and event_name.
+  // Strings in the primary container (the map) need to be stable.
   std::vector<const char*> names_;
-
-  // Reverse lookup of event_name to type_id.
-  absl::flat_hash_map<std::string, int> name_to_id_;
+  absl::node_hash_map<std::string, int> name_to_id_;
 
   // Event observation storage.
   std::vector<std::vector<int>> shapes_;
