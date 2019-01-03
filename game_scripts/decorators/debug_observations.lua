@@ -235,7 +235,7 @@ local function blueFlagHome()
   return tensor.DoubleTensor{0, 0, 0, HOME_FLAG_STATE.NONE}
 end
 
-local function setMazeShape(width, height)
+local function setMazeShape(height, width)
   debug_observations.setCameraPos{
       width * 50,
       height * 50,
