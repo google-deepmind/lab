@@ -49,7 +49,12 @@ function level:start(maze, episode, seed)
   -- Find goals.
   level._goalLocations = {}
   local height, width = maze:size()
-  for i = 1, height do
+  local first = level.opts.overrideGoalStartRow > 0 and
+    level.opts.overrideGoalStartRow or 1
+  local last = level.opts.overrideGoalEndRow > 0 and
+    level.opts.overrideGoalEndRow or height
+  assert(first <= last and first + 2 <= height and 2 <= last, "No rows used")
+  for i = first, last do
     for j = 1, width do
       local c = maze:getEntityCell(i, j)
       if c == 'G' then
@@ -85,13 +90,14 @@ level.spawnVarsUpdater = {
 
 local function createLevelApi(opts)
   opts = opts or {}
-
+  opts.overrideGoalStartRow = opts.overrideGoalStartRow or 0
+  opts.overrideGoalEndRow = opts.overrideGoalEndRow or 0
   -- Set base class options.
   opts.objectEntity = 'G'
+  level.opts = opts
   return factory.createLevelApi{opts = opts, level = level}
 end
 
 return {
     createLevelApi = createLevelApi
 }
-
