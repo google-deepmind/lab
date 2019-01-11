@@ -381,7 +381,8 @@ lua::NResultsOr LuaTextLevelMaker::MapFromTextLevel(lua_State* L) {
     mapstr = TranslateTextLevel(ents, vars, &prng_, NoOp, &level_settings);
   } else {
     using namespace std::placeholders;
-    auto user_cb = std::bind(LuaCustomEntityCallback, L, -1, _1, _2, _3, _4, _5);
+    auto user_cb =
+        std::bind(LuaCustomEntityCallback, L, -1, _1, _2, _3, _4, _5);
     mapstr = TranslateTextLevel(ents, vars, &prng_, user_cb, &level_settings);
   }
 

@@ -70,7 +70,8 @@ struct PitchYawRoll {
 // http://www.gamers.org/dEngine/quake/QDP/qmapspec.html#2.2.1 for details.
 class Entity {
  public:
-  explicit Entity(std::string class_name) : class_name_(std::move(class_name)) {}
+  explicit Entity(std::string class_name)
+      : class_name_(std::move(class_name)) {}
 
   // Lots of entity types have a position attribute, so we provide this
   // overloaded constructor as a helper.

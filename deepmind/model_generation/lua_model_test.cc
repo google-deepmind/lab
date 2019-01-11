@@ -247,7 +247,7 @@ TEST(DeepmindModelLibTest, LayoutCircular) {
       EXPECT_NEAR(test_y_dir[j], ref_y_dir[j], kEpsilon);
       EXPECT_NEAR(test_z_dir[j], ref_z_dir[j], kEpsilon);
     }
-  };
+  }
 
   dmlab_release_context(&ctx);
 }

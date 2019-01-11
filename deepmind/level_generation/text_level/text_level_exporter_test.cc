@@ -158,11 +158,12 @@ TEST_F(TextLevelExporterTest, AddBrushEntity) {
 
 TEST_F(TextLevelExporterTest, AddEntity) {
   TextLevelExporter exporter(&settings_);
-  exporter.Add(exporter.MakeEntity(
-      {1, 2, 3}, "custom_class",
-      {{"key_00", "value_00"}, {"key_01", "value_01"}, {"key_02", "value_02"}}));
+  exporter.Add(exporter.MakeEntity({1, 2, 3}, "custom_class",
+                                   {{"key_00", "value_00"},
+                                    {"key_01", "value_01"},
+                                    {"key_02", "value_02"}}));
 
-    const char kExpectedSubstr[] = R"(
+  const char kExpectedSubstr[] = R"(
 {
   "classname" "custom_class"
   "key_00" "value_00"

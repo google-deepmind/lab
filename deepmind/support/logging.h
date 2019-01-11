@@ -59,8 +59,11 @@ CheckOpString MakeCheckOpString(const T1& v1, const T2& v2,
   template <typename T1, typename T2>                                          \
   inline CheckOpString name##Impl(const T1& v1, const T2& v2,                  \
                                   const char* exprtext) {                      \
-    if (PREDICT_TRUE(v1 op v2)) return CheckOpString(nullptr);                 \
-    else return (MakeCheckOpString)(v1, v2, exprtext);                         \
+    if (PREDICT_TRUE(v1 op v2)) {                                              \
+      return CheckOpString(nullptr);                                           \
+    } else {                                                                   \
+      return (MakeCheckOpString)(v1, v2, exprtext);                            \
+    }                                                                          \
   }                                                                            \
   inline CheckOpString name##Impl(int v1, int v2, const char* exprtext) {      \
     return (name##Impl<int, int>)(v1, v2, exprtext);                           \

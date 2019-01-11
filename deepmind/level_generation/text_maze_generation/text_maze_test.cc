@@ -369,7 +369,7 @@ constexpr char kToPaste[] =
 
 // Test Paste for various locations.
 TEST(TextMazeTest, Paste) {
-  TextMaze insert({3,2});
+  TextMaze insert({3, 2});
   int loc = 0;
   insert.VisitMutable(TextMaze::kEntityLayer,
                       [&loc](int, int, char* c) { *c = '1' + loc++; });
