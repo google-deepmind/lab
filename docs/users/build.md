@@ -31,7 +31,7 @@ are documented in a [separate section](#python-dependencies) below.
 
      ```shell
      $ sudo apt-get install libffi-dev gettext freeglut3-dev libsdl2-dev \
-           libosmesa6-dev python-dev python-numpy python-pil
+           zip libosmesa6-dev python-dev python-numpy python-pil
      ```
 
    * On Red Hat Enterprise Linux Server:
