@@ -386,10 +386,12 @@ double CanonicalAngle360(double angle) {
 
 }  // namespace
 
-ContextGame::ContextGame(const char* executable_runfiles,
-              const DeepmindCalls* deepmind_calls, Reader* file_reader_override,
-              const DeepMindReadOnlyFileSystem* read_only_file_system,
-              std::string temp_folder)
+ContextGame::ContextGame(
+    const char* executable_runfiles,
+    const DeepmindCalls* deepmind_calls,
+    DeepmindFileReaderType* file_reader_override,
+    const DeepMindReadOnlyFileSystem* read_only_file_system,
+    std::string temp_folder)
       : deepmind_calls_(deepmind_calls),
         map_finished_(false),
         player_view_{},

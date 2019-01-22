@@ -55,13 +55,13 @@ struct PlayerView {
 // Receive calls from lua_script.
 class ContextGame {
  public:
-  // Optional override for reading contents of a file.
-  using Reader = bool(const char* file_name, char** buff, std::size_t* size);
+  ContextGame(
+      const char* executable_runfiles,
+      const DeepmindCalls* deepmind_calls,
+      DeepmindFileReaderType* file_reader_override,
+      const DeepMindReadOnlyFileSystem* read_only_file_system,
+      std::string temp_folder);
 
-  ContextGame(const char* executable_runfiles,
-              const DeepmindCalls* deepmind_calls, Reader* file_reader_override,
-              const DeepMindReadOnlyFileSystem* read_only_file_system,
-              std::string temp_folder);
   ~ContextGame();
 
   // Returns an event module. A pointer to ContextGame must exist in the up
@@ -106,7 +106,9 @@ class ContextGame {
     return velocity_smoother_.velocity();
   }
 
-  Reader* FileReaderOverride() { return file_reader_override_; }
+  DeepmindFileReaderType* FileReaderOverride() {
+    return file_reader_override_;
+  }
 
   const DeepMindReadOnlyFileSystem* ReadOnlyFileSystem() const {
     return &read_only_file_system_;
@@ -142,7 +144,7 @@ class ContextGame {
   std::string executable_runfiles_;
 
   // Optional override for reading contents of a file.
-  Reader* file_reader_override_;
+  DeepmindFileReaderType* file_reader_override_;
 
   // Readonly filesystem for reading partial contents of a file.
   DeepMindReadOnlyFileSystem read_only_file_system_;

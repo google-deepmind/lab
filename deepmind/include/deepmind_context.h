@@ -56,9 +56,9 @@ struct DeepmindContext_s {
 // size of the file and after use 'buff' must be freed with 'free'. Otherwise
 // returns false.
 int dmlab_create_context(
-    const char* runfiles_path, DeepmindContext* ctx,
-    bool (*file_reader_override)(const char* file_name, char** buff,
-                                 size_t* size),
+    const char* runfiles_path,
+    DeepmindContext* ctx,
+    DeepmindFileReaderType* file_reader_override,
     const DeepMindReadOnlyFileSystem* read_only_file_system,
     const char* temp_folder);
 

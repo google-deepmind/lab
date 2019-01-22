@@ -31,6 +31,9 @@ extern "C" {
 typedef struct DeepMindReadOnlyFileSystem_s DeepMindReadOnlyFileSystem;
 typedef void* DeepMindReadOnlyFileHandle;
 
+typedef bool (DeepmindFileReaderType)(const char* file_name, char** buff,
+                                      size_t* size);
+
 // These are optional function pointers. If null they will not be used and the
 // local filesystem is used instead.
 //

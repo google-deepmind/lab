@@ -552,8 +552,7 @@ lua::NResultsOr ModelModule(lua_State* L) {
 
 Context::Context(lua::Vm lua_vm, const char* executable_runfiles,
                  const DeepmindCalls* calls, DeepmindHooks* hooks,
-                 bool (*file_reader_override)(const char* file_name,
-                                              char** buff, size_t* size),
+                 DeepmindFileReaderType* file_reader_override,
                  const DeepMindReadOnlyFileSystem* read_only_file_system,
                  const char* temp_folder)
     : lua_vm_(std::move(lua_vm)),

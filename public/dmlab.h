@@ -50,8 +50,8 @@ struct DeepMindLabLaunchParams_s {
   // whether the file 'file_name' was read successfully and if so 'buff' points
   // to the content and 'size' contains the size of the file and after use
   // 'buff' must be freed with 'free'. Otherwise returns false.
-  bool (*file_reader_override)(const char* file_name, char** buff,
-                               size_t* size);
+  DeepmindFileReaderType* file_reader_override;
+
   const char* optional_temp_folder;
 
   // Optional readonly filesystem. Set null to use local file operations.

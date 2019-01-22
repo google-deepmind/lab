@@ -68,8 +68,7 @@ class Context {
       const char* executable_runfiles,
       const DeepmindCalls* calls,
       DeepmindHooks* hooks,
-      bool (*file_reader_override)(const char* file_name, char** buff,
-                                   std::size_t* size),
+      DeepmindFileReaderType* file_reader_override,
       const DeepMindReadOnlyFileSystem* read_only_file_system,
       const char* temp_folder);
 
