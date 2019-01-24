@@ -2,6 +2,12 @@
 
 ## Next Release
 
+### New Levels:
+
+1.  Psychlab.
+
+    1. contributed/psychlab/harlow
+
 ### Minor Improvements:
 
 1.  Improve documentation of how to configure non-hermetic dependencies (Lua,
