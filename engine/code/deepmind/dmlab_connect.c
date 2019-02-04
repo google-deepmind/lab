@@ -1260,8 +1260,8 @@ static void dmlab_destroy_context(void* context) {
   free(gc->temp_buffer);
   free(gc->image_buffer);
   free(gc);
-  DMLabUnloadIOQ3Module();
   GLimp_Shutdown();
+  DMLabUnloadIOQ3Module();
 }
 
 static void call_add_score(int player_id, double score) {
