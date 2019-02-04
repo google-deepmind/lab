@@ -979,8 +979,14 @@ cc_binary(
 py_binary(
     name = "python_random_agent",
     srcs = ["python/random_agent.py"],
-    data = [":deepmind_lab.so"],
     main = "python/random_agent.py",
+    deps = [":python_random_agent_lib"],
+)
+
+py_library(
+    name = "python_random_agent_lib",
+    srcs = ["python/random_agent.py"],
+    data = [":deepmind_lab.so"],
     visibility = ["//python/tests:__subpackages__"],
     deps = ["@six_archive//:six"],
 )

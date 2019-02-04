@@ -30,7 +30,7 @@ py_test(
     imports = ["python"],
     main = "random_agent_test.py",
     deps = [
-        "//:python_random_agent",
+        "//:python_random_agent_lib",
         "@six_archive//:six",
     ],
 )
