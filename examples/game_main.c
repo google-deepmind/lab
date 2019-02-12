@@ -29,6 +29,10 @@
 
 #include "public/dmlab.h"
 
+enum {
+  MAX_RUNFILES_PATH = 4096
+};
+
 static void __attribute__((noreturn, format(printf, 1, 2)))
 sys_error(const char* fmt, ...) {
   va_list ap;
@@ -57,6 +61,8 @@ static const char kUsage[] =
     "Usage: game --level_script <level>            \\\n"
     "            [--level_setting key=value [...]] \\\n"
     "            [--num_episodes <N>]              \\\n"
+    "            [--start_index <N>]               \\\n"
+    "            [--print_events]                  \\\n"
     "            [--random_seed <S>]\n"
     "\n"
     "  -l, --level_script:   Mandatory. The level that is to be played. Levels are\n"
@@ -161,6 +167,46 @@ static void process_commandline(int argc, char** argv, EnvCApi* env_c_api,
   }
 }
 
+static void print_observation(const EnvCApi_Observation* obs) {
+  switch (obs->spec.type) {
+    case EnvCApi_ObservationString:
+      printf("\"%.*s\"", obs->spec.shape[0], obs->payload.string);
+      break;
+    case EnvCApi_ObservationDoubles:
+      if (obs->spec.dims == 1) {
+        if (obs->spec.shape[0] == 1) {
+          printf("%f", obs->payload.doubles[0]);
+          break;
+        } else if (obs->spec.shape[0] < 6) {
+          fputs("{", stdout);
+          for (int i = 0; i < obs->spec.shape[0]; ++i) {
+            if (i != 0) fputs(", ", stdout);
+            printf("%f", obs->payload.doubles[i]);
+          }
+          fputs("}", stdout);
+          break;
+        }
+      }
+      fputs("<DoubleTensor ", stdout);
+      for (int i = 0; i < obs->spec.dims; ++i) {
+        if (i != 0) fputs("x", stdout);
+        printf("%d", obs->spec.shape[i]);
+      }
+      fputs(">", stdout);
+      break;
+    case EnvCApi_ObservationBytes:
+      fputs("<ByteTensor ", stdout);
+      for (int i = 0; i < obs->spec.dims; ++i) {
+        if (i != 0) fputs("x", stdout);
+        printf("%d", obs->spec.shape[i]);
+      }
+      fputs(">", stdout);
+      break;
+    default:
+      sys_error("Observation type: %d not supported", obs->spec.type);
+  }
+}
+
 // Prints events to stdout. Returns number printed.
 static int print_events(EnvCApi* env_c_api, void* context) {
   int event_count = env_c_api->event_count(context);
@@ -173,44 +219,7 @@ static int print_events(EnvCApi* env_c_api, void* context) {
       if (obs_id != 0) {
         fputs(", ", stdout);
       }
-      const EnvCApi_Observation* obs = &event.observations[obs_id];
-      switch (obs->spec.type) {
-        case EnvCApi_ObservationString:
-          printf("\"%.*s\"", obs->spec.shape[0], obs->payload.string);
-          break;
-        case EnvCApi_ObservationDoubles:
-          if (obs->spec.dims == 1) {
-            if (obs->spec.shape[0] == 1) {
-              printf("%f", obs->payload.doubles[0]);
-              break;
-            } else if (obs->spec.shape[0] < 6) {
-              fputs("{", stdout);
-              for (int i = 0; i < obs->spec.shape[0]; ++i) {
-                if (i != 0) fputs(", ", stdout);
-                printf("%f", obs->payload.doubles[i]);
-              }
-              fputs("}", stdout);
-              break;
-            }
-          }
-          fputs("<DoubleTensor ", stdout);
-          for (int i = 0; i < obs->spec.dims; ++i) {
-            if (i != 0) fputs("x", stdout);
-            printf("%d", obs->spec.shape[i]);
-          }
-          fputs(">", stdout);
-          break;
-        case EnvCApi_ObservationBytes:
-          fputs("<ByteTensor ", stdout);
-          for (int i = 0; i < obs->spec.dims; ++i) {
-            if (i != 0) fputs("x", stdout);
-            printf("%d", obs->spec.shape[i]);
-          }
-          fputs(">", stdout);
-          break;
-        default:
-          sys_error("Observation type: %d not supported", obs->spec.type);
-      }
+      print_observation(&event.observations[obs_id]);
     }
     fputs("\n", stdout);
   }
@@ -221,7 +230,8 @@ int main(int argc, char** argv) {
   static const char kRunfiles[] = ".runfiles/org_deepmind_lab";
   static EnvCApi env_c_api;
   static void* context;
-  static char runfiles_path[4096];
+  static char runfiles_path[MAX_RUNFILES_PATH];
+
   bool log_events = false;
 
   if (sizeof(runfiles_path) < strlen(argv[0]) + sizeof(kRunfiles)) {
