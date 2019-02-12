@@ -1,5 +1,11 @@
 # DeepMind Lab Release Notes
 
+## Next Release
+
+### Minor Improvements:
+
+1.  The `game` demo executable can now print observations at each step.
+
 ## release-2019-02-04 February 2019 release
 
 ### New Levels:

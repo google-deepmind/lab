@@ -76,6 +76,14 @@ lab$ bazel run :game -- -l tests/empty_room_test -s logToStdErr=true
 
 Leave the `logToStdErr` setting off to disable most log output.
 
+The values of observations that the environment exposes can be printed at every
+step by adding a flag `--observation OBSERVATION_NAME` for each observation of
+interest.
+
+```shell
+lab$ bazel run :game -- --level_script=lt_chasm --observation VEL.TRANS --observation VEL.ROT
+```
+
 ### Train an agent
 
 *DeepMind Lab* ships with an example random agent in
