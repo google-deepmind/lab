@@ -991,6 +991,16 @@ py_library(
     deps = ["@six_archive//:six"],
 )
 
+# Adding my agent to play harlow level
+py_binary(
+    name = "python_harlow",
+    srcs = ["python/meta_rl/harlow.py"],
+    data = [":deepmind_lab.so"],
+    main = "python/meta_rl/harlow.py",
+    visibility = ["//python/tests:__subpackages__"],
+    deps = ["@six_archive//:six"],
+)
+
 LOAD_TEST_SCRIPTS = [
     level_script[len("game_scripts/levels/"):-len(".lua")]
     for level_script in glob(
