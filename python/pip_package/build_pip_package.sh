@@ -16,7 +16,7 @@ function main() {
   fi
 
   DEST="${1}"
-  TMPDIR=$(mktemp --directory -t tmp.XXXXXXXXXX)
+  TMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 
   if [[ ! -d bazel-bin ]]; then
     echo "Could not find bazel-bin. Did you run from the root of the build tree?"
@@ -25,12 +25,12 @@ function main() {
 
   if [[ ! -d bazel-bin/python/pip_package/build_pip_package.runfiles/org_deepmind_lab ]]; then
     # Old-style runfiles structure without the org name.
-    cp --dereference --recursive -- \
+    cp -L -R -- \
         bazel-bin/python/pip_package/build_pip_package.runfiles \
         "${TMPDIR}/deepmind_lab"
   else
     # New-style runfiles structure
-    cp --dereference --recursive -- \
+    cp -L -R -- \
         bazel-bin/python/pip_package/build_pip_package.runfiles/org_deepmind_lab \
         "${TMPDIR}/deepmind_lab"
   fi
@@ -54,10 +54,10 @@ function main() {
   pushd "${TMPDIR}" > /dev/null
   echo $(date) : "=== Building wheel"
   "${PYTHON_BIN_PATH}" setup.py bdist_wheel > /dev/null
-  mkdir --parents -- "${DEST}"
+  mkdir -p -- "${DEST}"
   cp -- dist/* "${DEST}"
   popd > /dev/null
-  rm --recursive --force -- "${TMPDIR}"
+  rm -Rf -- "${TMPDIR}"
   echo $(date) : "=== Output wheel file is in: ${DEST}"
 }
 
