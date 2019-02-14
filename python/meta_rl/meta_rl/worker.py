@@ -1,11 +1,15 @@
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
-import threading
-import multiprocessing
+# import tensorflow.contrib.slim as slim
+# import threading
+# import multiprocessing
 import numpy as np
-from utils import *
-from ac_network import AC_Network
-import matplotlib.pyplot as plt
+from meta_rl.utils import *
+from meta_rl.ac_network import AC_Network
+# import matplotlib.pyplot as plt
+
+import os
+import random
+import six
 
 # encoding of the higher stages
 S_1 = 0
@@ -13,8 +17,26 @@ S_2 = 1
 S_3 = 2
 nb_states = 3
 
+def _action(*entries):
+  return np.array(entries, dtype=np.intc)
+
+def deepmind_action_api(action):
+  return random.choice(Worker.ACTION_LIST[action:action + 1])
+
 class Worker():
-  def __init__(self,game,name,a_size,trainer,model_path,global_episodes,make_gif=False, collect_seed_transition_probs=[], plot_path="", frame_path=""):
+
+  ACTIONS = {
+    'look_left': _action(-120, 0, 0, 0, 0, 0, 0),
+    'look_right': _action(120, 0, 0, 0, 0, 0, 0),
+  }
+
+  ACTION_LIST = list(six.viewvalues(ACTIONS))
+
+  def __init__(self,game,name,a_size,trainer,model_path,global_episodes,
+                make_gif, collect_seed_transition_probs,
+                plot_path, frame_path, width, height):
+    self.width = width
+    self.height = height
     self.name = "worker_" + str(name)
     self.number = name
     self.model_path = model_path
@@ -27,7 +49,7 @@ class Worker():
     self.summary_writer = tf.summary.FileWriter(model_path)
 
     #Create the local copy of the network and the tensorflow op to copy global paramters to local network
-    self.local_AC = AC_Network(a_size,self.name,trainer)
+    self.local_AC = AC_Network(a_size,self.name,trainer, width, height)
     self.update_local_ops = update_target_graph('global',self.name)
     self.env = game
     self.make_gif = make_gif
@@ -68,6 +90,7 @@ class Worker():
       self.local_AC.advantages:advantages,
       self.local_AC.state_in[0]:rnn_state[0],
       self.local_AC.state_in[1]:rnn_state[1]}
+
     v_l,p_l,e_l,g_n,v_n,_ = sess.run([self.local_AC.value_loss,
       self.local_AC.policy_loss,
       self.local_AC.entropy,
@@ -115,21 +138,27 @@ class Worker():
             self.local_AC.prev_actions:[a],
             self.local_AC.state_in[0]:rnn_state[0],
             self.local_AC.state_in[1]:rnn_state[1]})
+
           a = np.random.choice(a_dist[0],p=a_dist[0])
           a = np.argmax(a_dist == a)
 
           rnn_state = rnn_state_new
-          s1,r,d,t = self.env.trial(a)
+
+          action = deepmind_action_api(a)
+          # s1,r,d,t = self.env.trial(action)
+          s1,r,d,t = self.env.step(action)
+
+
           episode_buffer.append([s,a,r,t,d,v[0,0]])
           episode_values.append(v[0,0])
 
-          if episode_count % 10 == 0 and self.name == 'worker_0':
-            if self.make_gif and self.env.last_state == S_2 or self.env.last_state == S_3:
-              episode_frames.append(make_frame(self.frame_path,self.env.transitions,
-                                  self.env.get_rprobs(),
-                                  t, action=self.env.last_action,
-                                  final_state=self.env.last_state,
-                                  reward=r))
+          # if episode_count % 10 == 0 and self.name == 'worker_0':
+          #   if self.make_gif and self.env.last_state == S_2 or self.env.last_state == S_3:
+          #     episode_frames.append(make_frame(self.frame_path,self.env.transitions,
+          #                         self.env.get_rprobs(),
+          #                         t, action=self.env.last_action,
+          #                         final_state=self.env.last_state,
+          #                         reward=r))
 
 
 
@@ -146,15 +175,14 @@ class Worker():
         if len(episode_buffer) != 0 and train == True:
           v_l,p_l,e_l,g_n,v_n = self.train(episode_buffer,sess,gamma,0.0)
 
-
         # Periodically save gifs of episodes, model parameters, and summary statistics.
-        if episode_count % 10 == 0 and episode_count != 0:
-          if episode_count % 100 == 0 and self.name == 'worker_0':
+        if episode_count % 1 == 0 and episode_count != 0:
+          if episode_count % 1 == 0:# and self.name == 'worker_0':
             if train == True:
               # save model
-              os.makedirs(model_path+'/model-'+str(episode_count))
-              saver.save(sess,model_path+'/model-'+str(episode_count)+
-                     '/model-'+str(episode_count)+'.cptk')
+              os.makedirs(self.model_path+'/model-'+str(episode_count))
+              # saver.save(sess,model_path+'/model-'+str(episode_count)+
+              #       '/model-'+str(episode_count)+'.cptk')
               print ("Saved Model")
 
               # generate plot
@@ -188,32 +216,40 @@ class Worker():
         if self.name == 'worker_0':
           sess.run(self.increment)
         episode_count += 1
-        if (episode_count % 10 == 0):
-          print("episode_count is: ", episode_count)
+        if (episode_count % 1 == 0):
+          for _ in range(5):
+            print()
+          print("#####################################################################################")
+          print(">>>>>>>>>>>>>>>>>>>                           " +   str(episode_count) + "            <<<<<<<<<<<<<<<<<<<<<<<<<<")
+          print("#####################################################################################")
+          for _ in range(5):
+            print()
+
     if not train:
       self.plot(episode_count-1, train)
 
   def plot(self, episode_count, train):
-    fig, ax = plt.subplots()
-    x = np.arange(2)
-    ax.set_ylim([0.0, 1.0])
-    ax.set_ylabel('Stay Probability')
+    pass
+    # fig, ax = plt.subplots()
+    # x = np.arange(2)
+    # ax.set_ylim([0.0, 1.0])
+    # ax.set_ylabel('Stay Probability')
 
-    stay_probs = self.env.stayProb()
+    # stay_probs = self.env.stayProb()
 
-    common = [stay_probs[0,0,0],stay_probs[1,0,0]]
-    uncommon = [stay_probs[0,1,0],stay_probs[1,1,0]]
+    # common = [stay_probs[0,0,0],stay_probs[1,0,0]]
+    # uncommon = [stay_probs[0,1,0],stay_probs[1,1,0]]
 
-    self.collect_seed_transition_probs.append([common,uncommon])
+    # self.collect_seed_transition_probs.append([common,uncommon])
 
-    ax.set_xticks([1.3,3.3])
-    ax.set_xticklabels(['Last trial rewarded', 'Last trial not rewarded'])
+    # ax.set_xticks([1.3,3.3])
+    # ax.set_xticklabels(['Last trial rewarded', 'Last trial not rewarded'])
 
-    c = plt.bar([1,3],  common, color='b', width=0.5)
-    uc = plt.bar([1.8,3.8], uncommon, color='r', width=0.5)
-    ax.legend( (c[0], uc[0]), ('common', 'uncommon') )
-    if train:
-      plt.savefig(self.plot_path +"/"+ 'train_' + str(episode_count) + ".png")
-    else:
-      plt.savefig(self.plot_path +"/"+ 'test_' + str(episode_count) + ".png")
-    self.env.transition_count = np.zeros((2,2,2))
+    # c = plt.bar([1,3],  common, color='b', width=0.5)
+    # uc = plt.bar([1.8,3.8], uncommon, color='r', width=0.5)
+    # ax.legend( (c[0], uc[0]), ('common', 'uncommon') )
+    # if train:
+    #   plt.savefig(self.plot_path +"/"+ 'train_' + str(episode_count) + ".png")
+    # else:
+    #   plt.savefig(self.plot_path +"/"+ 'test_' + str(episode_count) + ".png")
+    # self.env.transition_count = np.zeros((2,2,2))

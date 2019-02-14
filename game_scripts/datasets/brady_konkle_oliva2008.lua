@@ -21,9 +21,9 @@ local setting_overrides = require 'decorators.setting_overrides'
 local color_dataset = require 'datasets.color_dataset'
 
 local DATASET_TEMPLATE = '%04d.png'
-local DATASET_PATH = ''
+local DATASET_PATH = '/floyd/home/data/brady_konkle_oliva2008'
 local PRELOAD_CONTENT = false
-local DATASET_SIZE = 2400
+local DATASET_SIZE = 2
 
 
 local function brady_konkle_oliva2008()

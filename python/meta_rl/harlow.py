@@ -25,50 +25,45 @@ import six
 
 import deepmind_lab
 
+import os
+import tensorflow as tf
+from meta_rl.ac_network import AC_Network
+from meta_rl.worker import Worker
 
-def _action(*entries):
-  return np.array(entries, dtype=np.intc)
+from datetime import datetime
 
+MAX_STEP = 3600
 
-class MetaRLAgent(object):
+class WrapperEnv(object):
+  """A gym-like wrapper environment for DeepMind Lab.
+
+  Attributes:
+      env: The corresponding DeepMind Lab environment.
+      length: Maximum number of frames
+
+  Args:
+      env (deepmind_lab.Lab): DeepMind Lab environment.
+
   """
-  Agent implementing MetaRL for the Harlow task as described in 
+  def __init__(self, env, length):
+    self.env = env
+    self.length = length
+    self.reset()
 
-  Wang, J. X., Kurth-Nelson, Z., Tirumala, D., Soyer, H., Leibo, J. Z., Munos, R.,
-  ... & Botvinick, M. (2016). Learning to reinforcement learn. arXiv preprint
-  arXiv:1611.05763.
+  def step(self, action):
+    done = not self.env.is_running()
+    print(self.env.num_steps())
+    if (done):
+      self.reset()
+    obs = self.env.observations()
+    reward = self.env.step(action, num_steps=1)
 
-  and
+    return obs['RGB_INTERLEAVED'], reward, done, self.env.num_steps()
 
-  Wang, J. X., Kurth-Nelson, Z., Kumaran, D., Tirumala, D., Soyer, H., Leibo,
-  J. Z., ... & Botvinick, M. (2018). Prefrontal cortex as a meta-reinforcement
-  learning system. Nature neuroscience, 21(6), 860.
-  """
-
-  ACTIONS = {
-      'look_left': _action(-120, 0, 0, 0, 0, 0, 0),
-      'look_right': _action(120, 0, 0, 0, 0, 0, 0),
-  }
-
-  ACTION_LIST = list(six.viewvalues(ACTIONS))
-
-  def __init__(self):
-    self.i = 0
-
-    self.rewards = 0
-
-  def step(self, reward, unused_image):
-    """defines what is the next action using the previous reward and current observation (==current frame)"""
-    self.i += 1
-    self.rewards += reward
-    print("Score:", self.rewards)
-    return random.choice(MetaRLAgent.ACTION_LIST[0:1]) if self.i % 2 == 0 else random.choice(MetaRLAgent.ACTION_LIST[1:2])
-    
-    """Gets an image state and a reward, returns an action."""
-    return random.choice(MetaRLAgent.ACTION_LIST)
-  
   def reset(self):
-    pass
+    self.env.reset()
+    obs = self.env.observations()
+    return obs['RGB_INTERLEAVED']
 
 
 def run(length, width, height, fps, level, record, demo, demofiles, video):
@@ -88,56 +83,86 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
     config['video'] = video
   env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
 
-  # testing the wrapper env
-  wrapped_env = wrapper_env(env)
-  wrapped_env.step()
-  wrapped_env.reset()
+  dir_name = "/floyd/home/python/meta_rl/train_" + datetime.now().strftime("%m%d-%H%M%S")
 
-  env.reset()
+  # Hyperparameters for training/testing
+  gamma = .91
+  a_size = 2
+  n_seeds = 1
+  num_episode_train = 20000
+  num_episode_test = 50
+  collect_seed_transition_probs = []
+  for seed_nb in range(n_seeds):
 
-  agent = MetaRLAgent()
+    # initialize the directories' names to save the models for this particular seed
+    model_path = dir_name+'/model_' + str(seed_nb)
+    frame_path = dir_name+'/frames_' + str(seed_nb)
+    plot_path = dir_name+'/plots_' + str(seed_nb)
+    load_model_path = "meta_rl/results/biorxiv/final/model_" + str(seed_nb) + "/model-20000"
 
-  reward = 0
+    # create the directories
+    if not os.path.exists(model_path):
+      os.makedirs(model_path)
+    if not os.path.exists(frame_path):
+      os.makedirs(frame_path)
+    if not os.path.exists(plot_path):
+      os.makedirs(plot_path)
 
-  for _ in six.moves.range(length):
-    if not env.is_running():
-      print('Environment stopped early')
-      env.reset()
-      agent.reset()
-    obs = env.observations()
-    action = agent.step(reward, obs['RGB_INTERLEAVED'])
-    reward = env.step(action, num_steps=1)
+    # in train don't load the model and set train=True
+    # in test, load the model and set train=False
+    for train, load_model, num_episodes in [[True, False, num_episode_test]]:#[[True,False,num_episode_train], [False, True, num_episode_test]]:
 
-  print('Finished after %i steps. Total reward received is %f'
-        % (length, agent.rewards))
+      print ("seed_nb is:", seed_nb)
 
-class wrapper_env(object):
-  """A gym-like wrapper environment for DeepMind Lab.
+      tf.reset_default_graph()
 
-  Attributes:
-      env: The corresponding DeepMind Lab environment.
-      timestep: the number of frames/actions since the beginnning.
+      with tf.device("/cpu:0"):
+        global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
+        trainer = tf.train.RMSPropOptimizer(learning_rate=7.5e-4)
+        master_network = AC_Network(a_size,'global',None, width, height) # Generate global network
+        num_worker = 1
+        # Create worker classes
+        worker = Worker(WrapperEnv(env, length), num_worker, a_size, trainer,
+                        model_path, global_episodes, make_gif=False,
+                        collect_seed_transition_probs=collect_seed_transition_probs,
+                        plot_path=plot_path, frame_path=frame_path,
+                        width=width, height=height)
+        saver = tf.train.Saver(max_to_keep=5)
 
-  Args:
-      env (deepmind_lab.Lab): DeepMind Lab environment.
+      with tf.Session() as sess:
+        # set the seed
+        np.random.seed(seed_nb)
+        tf.set_random_seed(seed_nb)
 
-  """
-  def __init__(self, env):
+        coord = tf.train.Coordinator()
+        if load_model == True:
+          print ('Loading Model...')
+          ckpt = tf.train.get_checkpoint_state(load_model_path)
+          saver.restore(sess,ckpt.model_checkpoint_path)
+        else:
+          sess.run(tf.global_variables_initializer())
 
-    self.env = env
-    self.timestep = 0
+        worker.work(gamma, sess, coord, saver, train, num_episodes)
+        # worker_threads = []
+        # for worker in workers:
+        #   worker_work = lambda: worker.work(gamma,sess,coord,saver,train,num_episodes)
+        #   thread = threading.Thread(target=(worker_work))
+        #   thread.start()
+        #   worker_threads.append(thread)
+        # coord.join(worker_threads)
 
-  def observations(self):
-    return env.observations()
-  def step(self, action):
-    reward = self.env.step(action, num_steps=1)
-    obs = self.observations()
-    
-    #self.env.step()
-  def reset(self):
-    self.env.reset()
-    return self.observations()
-    
+
+  # for _ in six.moves.range(length):
+  #   if not env.is_running():
+  #     print('Environment stopped early')
+  #     env.reset()
+  #     agent.reset()
+  #   obs = env.observations()
+  #   action = agent.step(reward, obs['RGB_INTERLEAVED'])
+  #   reward = env.step(action, num_steps=1)
+
+  # print('Finished after %i steps. Total reward received is %f'
+  #       % (length, agent.rewards))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description=__doc__)
