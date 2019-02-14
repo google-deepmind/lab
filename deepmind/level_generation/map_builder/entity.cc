@@ -96,10 +96,9 @@ Entity Entity::CreateModel(const std::string& model_filename,
 
 std::string Entity::ToString() const {
   auto result = absl::StrCat("{\n  \"classname\" \"", class_name(), "\"");
-  using abslstring = decltype(result);
   // Add attributes (if we have any).
   if (!attributes_.empty()) {
-    const auto quote_formatter = [](abslstring* out, const std::string& in) {
+    const auto quote_formatter = [](std::string* out, const std::string& in) {
       absl::StrAppend(out, "\"", in, "\"");
     };
 
@@ -112,7 +111,7 @@ std::string Entity::ToString() const {
   if (!brushes_.empty()) {
     absl::StrAppend(&result, "\n  ",
                     absl::StrJoin(brushes_, "\n  ",
-                                  [](abslstring* out, const Brush& brush) {
+                                  [](std::string* out, const Brush& brush) {
                                     absl::StrAppend(out, brush.ToString());
                                   }));
   }
@@ -120,7 +119,7 @@ std::string Entity::ToString() const {
   if (!patches_.empty()) {
     absl::StrAppend(&result, "\n  ",
                     absl::StrJoin(patches_, "\n  ",
-                                  [](abslstring* out, const Patch& patch) {
+                                  [](std::string* out, const Patch& patch) {
                                     absl::StrAppend(out, patch.ToString());
                                   }));
   }

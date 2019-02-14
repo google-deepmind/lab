@@ -38,7 +38,7 @@ Builder::Builder() { entities_.emplace_back(Entity::CreateWorld()); }
 std::string Builder::ToString() const {
   return absl::StrCat(
       absl::StrJoin(entities_, "\n\n",
-                    [](decltype(absl::StrCat())* out, const Entity& entity) {
+                    [](std::string* out, const Entity& entity) {
                       absl::StrAppend(out, entity.ToString());
                     }),
       "\n");
