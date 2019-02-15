@@ -117,7 +117,7 @@ function factory.createLevelApi(kwargs)
   function api:updateSpawnVars(spawnVars)
     if spawnVars.classname == 'info_player_start' then
       spawnVars.angle = '90'
-      spawnVars.randomAngleRange = '45'
+      spawnVars.randomAngleRange = '0' -- '45'
     end
     return spawnVars
   end

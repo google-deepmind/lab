@@ -88,8 +88,11 @@ class Worker():
       self.local_AC.actions:actions,
       self.local_AC.timestep:np.vstack(timesteps),
       self.local_AC.advantages:advantages,
-      self.local_AC.state_in[0]:rnn_state[0],
-      self.local_AC.state_in[1]:rnn_state[1]}
+      #STACKED LSTM
+      self.local_AC.state_in[0][0]:rnn_state[0][0],
+      self.local_AC.state_in[0][1]:rnn_state[0][1],
+      self.local_AC.state_in[1][0]:rnn_state[1][0],
+      self.local_AC.state_in[1][1]:rnn_state[1][1]}
 
     v_l,p_l,e_l,g_n,v_n,_ = sess.run([self.local_AC.value_loss,
       self.local_AC.policy_loss,
@@ -136,8 +139,10 @@ class Worker():
             self.local_AC.prev_rewards:[[r]],
             self.local_AC.timestep:[[t]],
             self.local_AC.prev_actions:[a],
-            self.local_AC.state_in[0]:rnn_state[0],
-            self.local_AC.state_in[1]:rnn_state[1]})
+            self.local_AC.state_in[0][0]:rnn_state[0][0],
+            self.local_AC.state_in[0][1]:rnn_state[0][1],
+            self.local_AC.state_in[1][0]:rnn_state[1][0],
+            self.local_AC.state_in[1][1]:rnn_state[1][1]})
 
           a = np.random.choice(a_dist[0],p=a_dist[0])
           a = np.argmax(a_dist == a)
@@ -217,13 +222,7 @@ class Worker():
           sess.run(self.increment)
         episode_count += 1
         if (episode_count % 1 == 0):
-          for _ in range(5):
-            print()
-          print("#####################################################################################")
-          print(">>>>>>>>>>>>>>>>>>>                           " +   str(episode_count) + "            <<<<<<<<<<<<<<<<<<<<<<<<<<")
-          print("#####################################################################################")
-          for _ in range(5):
-            print()
+          desperate(episode_count, "Episode Count:")
 
     if not train:
       self.plot(episode_count-1, train)

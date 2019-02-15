@@ -58,8 +58,8 @@ TRAIN_BATCH + TEST_BATCH images. Set IS_TRAIN = false for
 evaluation images (held out from training).
 ]]
 
-local TIME_TO_FIXATE_CROSS = 4 -- in frames
-local TIME_TO_FIXATE_TARGET = 4 -- in frames
+local TIME_TO_FIXATE_CROSS = 1 -- 4 -- in frames
+local TIME_TO_FIXATE_TARGET = 1 -- 4 -- in frames
 local FAST_INTER_TRIAL_INTERVAL = 5 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local BG_COLOR = {0, 0, 0}
@@ -77,8 +77,8 @@ local CENTER = {0.5, 0.5}
 local LEFT = {.25, .5}
 local RIGHT = {.75, .5}
 
-local TRAIN_BATCH = 1000
-local TEST_BATCH = 1000
+local TRAIN_BATCH = 2
+local TEST_BATCH = 2
 local IS_TRAIN = true
 
 local factory = {}
