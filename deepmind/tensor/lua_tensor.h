@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/str_cat.h"
 #include "deepmind/engine/lua_random.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
@@ -363,21 +364,21 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     util::FileReader ifs(fs, name.c_str());
 
     if (!ifs.Success()) {
-      return "[Tensor.CreateFromFile] Failed to open file, name: " + name;
+      return absl::StrCat(
+          "[Tensor.CreateFromFile] Failed to open file, name: ", name);
     }
 
     std::size_t file_size;
     if (!ifs.GetSize(&file_size)) {
-      return "[Tensor.CreateFromFile] Failed to read file, name: " + name;
+      return absl::StrCat(
+          "[Tensor.CreateFromFile] Failed to read file, name: ", name);
     }
 
     if (offset > file_size) {
-      std::string error =
-          "[Tensor.CreateFromFile] Must supply 'byteOffset' within file size";
-      error += ", name: " + name;
-      error += ", offset: " + std::to_string(offset);
-      error += ", file size: " + std::to_string(file_size);
-      return std::move(error);
+      return absl::StrCat(
+          "[Tensor.CreateFromFile] Must supply 'byteOffset' "
+          "within file size, name: ",
+          name, ", offset: ", offset, ", file size: ", file_size);
     }
 
     const std::size_t max_num_elements = (file_size - offset) / sizeof(T);
@@ -385,25 +386,20 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
 
     auto parse_result = file_args.LookUp("numElements", &num_elements);
     if (IsTypeMismatch(parse_result)) {
-      std::string error =
-          "[Tensor.CreateFromFile] 'numElements' must be a non-negative "
-          "integral value.";
-      return std::move(error);
+      return absl::StrCat("[Tensor.CreateFromFile] 'numElements' must be a "
+                          "non-negative integral value.");
     } else if (IsFound(parse_result) && num_elements > max_num_elements) {
-      std::string error =
-          "[Tensor.CreateFromFile] Attempted to read past end of file";
-      error += ", name: " + name;
-      error += ", numElements: " + std::to_string(num_elements);
-      error += ", max numElements: " + std::to_string(max_num_elements);
-      error += ", offset: " + std::to_string(offset);
-      error += ", file size: " + std::to_string(file_size);
-      return std::move(error);
+      return absl::StrCat(
+          "[Tensor.CreateFromFile] Attempted to read past end of file, name: ",
+          name, ", numElements: ", num_elements, ", max numElements: ",
+          max_num_elements, ", offset: ", offset, ", file size: ", file_size);
     }
 
     storage.resize(num_elements);
     if (!ifs.Read(offset, sizeof(T) * num_elements,
                   reinterpret_cast<char*>(storage.data()))) {
-      return "[Tensor.CreateFromFile] Failed to read file, name: " + name;
+      return absl::StrCat(
+          "[Tensor.CreateFromFile] Failed to read file, name: ", name);
     }
     shape.push_back(num_elements);
     LuaTensor::CreateObject(L, std::move(shape), std::move(storage));
@@ -552,8 +548,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return "[Tensor.Select] Must contain 1 based dim, index, received: " +
-           lua::ToString(L, 2) + ", " + lua::ToString(L, 3);
+    return absl::StrCat(
+        "[Tensor.Select] Must contain 1 based dim, index, received: ",
+        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
   }
 
   lua::NResultsOr Narrow(lua_State* L) {
@@ -566,10 +563,10 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return "[Tensor.Narrow] Must contain 1 based dim, index, size "
-           "received: " +
-           lua::ToString(L, 2) + ", " + lua::ToString(L, 3) + ", " +
-           lua::ToString(L, 4);
+    return absl::StrCat(
+        "[Tensor.Narrow] Must contain 1 based dim, index, size received: ",
+        lua::ToString(L, 2), ", ", lua::ToString(L, 3), ", ",
+        lua::ToString(L, 4));
   }
 
   lua::NResultsOr Reverse(lua_State* L) {
@@ -579,8 +576,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return "[Tensor.Reverse] Must contain 1 based dim received: " +
-           lua::ToString(L, 2);
+    return absl::StrCat(
+        "[Tensor.Reverse] Must contain 1 based dim received: ",
+        lua::ToString(L, 2));
   }
 
   lua::NResultsOr ApplyIndexed(lua_State* L) {
@@ -779,9 +777,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         return 1;
       }
     }
-    return "[Tensor.ScalerOp] Must call with number or an array that matches "
-           "last dimension received: " +
-           lua::ToString(L, 2);
+    return absl::StrCat(
+        "[Tensor.ScalerOp] Must call with number or an array that matches last "
+        "dimension received: ", lua::ToString(L, 2));
   }
 
   // Returns self on to the stack, after the operation is applied in place.
@@ -793,8 +791,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         return 1;
       }
     }
-    return "[Tensor.ViewOp] Must call with same sized tensor, received: " +
-           lua::ToString(L, 2);
+    return absl::StrCat(
+        "[Tensor.ViewOp] Must call with same sized tensor, received: ",
+        lua::ToString(L, 2));
   }
 
   // Returns transposed tensor.
@@ -807,8 +806,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return "[Tensor.Transpose] Must contain 1 based indexes, received: " +
-           lua::ToString(L, 2) + ", " + lua::ToString(L, 3);
+    return absl::StrCat(
+        "[Tensor.Transpose] Must contain 1 based indexes, received: ",
+        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
   }
 
   // Retrieves a tensor operand 'rhs' from the top of the stack and computes
@@ -835,8 +835,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       }
       return 1;
     }
-    return std::string("[Tensor.MMul] Must contain 1 RHS tensor of type ") +
-           ClassName() + ", received: " + lua::ToString(L, 2);
+    return absl::StrCat(
+        "[Tensor.MMul] Must contain 1 RHS tensor of type ",
+        ClassName(), ", received: ", lua::ToString(L, 2));
   }
 
   // Retrieves a random bit generator (random) from the top of the stack and
@@ -851,25 +852,21 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       lua_settop(L, 1);
       return 1;
     }
-    return "[Tensor.Shuffle] Must call on a rank-1 Tensor with random number "
-           "generator, received: " +
-           lua::ToString(L, 2);
+    return absl::StrCat(
+        "[Tensor.Shuffle] Must call on a rank-1 Tensor with random number "
+        "generator, received: ", lua::ToString(L, 2));
   }
 
   lua::NResultsOr ToString(lua_State* L) {
     std::ostringstream ss;
-    ss << "[" << ClassName() << "]\n";
-    ss << tensor_view_;
+    ss << "[" << ClassName() << "]\n" << tensor_view_;
     lua::Push(L, ss.str());
     return 1;
   }
 
   static LuaTensor* ReadObject(lua_State* L, int idx) {
-    LuaTensor* tensor = Class::ReadObject(L, idx);
-    if (tensor && tensor->IsValid()) {
-      return tensor;
-    }
-    return nullptr;
+    LuaTensor* const tensor = Class::ReadObject(L, idx);
+    return (tensor && tensor->IsValid()) ? tensor : nullptr;
   }
 
   lua::NResultsOr OwnsStorage(lua_State* L) {

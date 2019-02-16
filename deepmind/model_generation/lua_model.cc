@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Google Inc.
+// Copyright (C) 2017-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -242,8 +242,7 @@ lua::NResultsOr LuaModel::CreateHierarchy(lua_State* L) {
     Eigen::AlignedBox3f bbox;
     std::string rec_error;
     if (!RecurseHierarchy(table, "root_", xfrm, &model, &bbox, &rec_error)) {
-      std::string error = absl::StrCat("[model.hierarchy] ", rec_error);
-      return error;
+      return absl::StrCat("[model.hierarchy] ", rec_error);
     }
     // Construct locators
     geometry::Cube cube;
@@ -262,11 +261,10 @@ lua::NResultsOr LuaModel::CreateCircularLayout(lua_State* L) {
   int num_samples;
   if (lua::Read(L, -2, &radius) && lua::Read(L, -1, &num_samples)) {
     if (num_samples < 1) {
-      std::string error = absl::StrCat(
+      return absl::StrCat(
           "[model.circularLayout] number of samples must be greater than 0, "
           "received: ",
           lua::ToString(L, -1));
-      return error;
     }
     Model::LocatorMap locators;
     for (int i = 0; i < num_samples; ++i) {
@@ -279,11 +277,10 @@ lua::NResultsOr LuaModel::CreateCircularLayout(lua_State* L) {
     Push(L, res);
     return 1;
   }
-  std::string error = absl::StrCat(
+  return absl::StrCat(
       "[model.circularLayout] Must contain layout radius and number of "
       "samples, received: ",
       lua::ToString(L, -2), ", ", lua::ToString(L, -1));
-  return error;
 }
 
 lua::NResultsOr LuaModel::CreateLinearLayout(lua_State* L) {
@@ -291,11 +288,10 @@ lua::NResultsOr LuaModel::CreateLinearLayout(lua_State* L) {
   int num_samples;
   if (lua::Read(L, -2, &length) && lua::Read(L, -1, &num_samples)) {
     if (num_samples < 1) {
-      std::string error = absl::StrCat(
+      return absl::StrCat(
           "[model.linearLayout] number of samples must be greater than 0, "
           "received: ",
           lua::ToString(L, -1));
-      return error;
     }
     Model::LocatorMap locators;
     if (num_samples == 1) {
@@ -313,11 +309,10 @@ lua::NResultsOr LuaModel::CreateLinearLayout(lua_State* L) {
     Push(L, res);
     return 1;
   }
-  std::string error = absl::StrCat(
+  return absl::StrCat(
       "[model.linearLayout] Must contain layout length and number of samples, "
       "received: ",
       lua::ToString(L, -2), ", ", lua::ToString(L, -1));
-  return error;
 }
 
 lua::NResultsOr LuaModel::LoadMD3(lua_State* L) {
@@ -331,8 +326,8 @@ lua::NResultsOr LuaModel::LoadMD3(lua_State* L) {
     Push(L, model_data.model);
     return 1;
   }
-  return "[model.loadMD3] Must call with model path, received: " +
-         lua::ToString(L, -1);
+  return absl::StrCat("[model.loadMD3] Must call with model path, received: ",
+                      lua::ToString(L, -1));
 }
 
 lua::NResultsOr LuaModel::SaveMD3(lua_State* L) {
@@ -341,12 +336,14 @@ lua::NResultsOr LuaModel::SaveMD3(lua_State* L) {
   if (Read(L, -2, &model) && lua::Read(L, -1, &model_path)) {
     DeepmindModelGetters model_getters = ModelGetters();
     if (!calls_->save_model(&model_getters, &model, model_path.c_str())) {
-      return "[model.saveMD3] Unable to save model file: " + model_path;
+      return absl::StrCat("[model.saveMD3] Unable to save model file: ",
+                          model_path);
     }
     return 0;
   }
-  return "[model.saveMD3] Must call with model and model_path, received: " +
-         lua::ToString(L, -2) + ", " + lua::ToString(L, -1);
+  return absl::StrCat(
+      "[model.saveMD3] Must call with model and model_path, received: ",
+      lua::ToString(L, -2), ", ", lua::ToString(L, -1));
 }
 
 }  // namespace lab

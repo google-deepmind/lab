@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include <string>
 
+#include "absl/strings/str_cat.h"
 #include "deepmind/lua/read.h"
 
 namespace deepmind {
@@ -40,10 +41,7 @@ NResultsOr PushScript(lua_State* L, const char* buffer, std::size_t buffer_size,
 NResultsOr PushScriptFile(lua_State* L, const char* filename) {
   int error = luaL_loadfile(L, filename);
   if (error == LUA_ERRFILE) {
-    std::string error("Failed to open file '");
-    error.append(filename);
-    error.append("'");
-    return error;
+    return absl::StrCat("Failed to open file '", filename, "'");
   } else if (error != 0) {
     std::string error;
     if (!IsFound(Read(L, -1, &error)))

@@ -151,6 +151,7 @@ cc_library(
         ":lua",
         ":n_results_or",
         ":read",
+        "@com_google_absl//absl/strings",
     ],
 )
 
