@@ -653,7 +653,7 @@ MAPS = glob(["assets/maps/src/*.map"])
 genrule(
     name = "map_assets",
     srcs = MAPS,
-    outs = ["baselab/" + f[12:-3] + "pk3" for f in MAPS],
+    outs = ["baselab/" + f[16:-3] + "pk3" for f in MAPS],
     cmd = "cp -t $(@D)/baselab $(SRCS); " +
           "for s in $(SRCS); do " +
           "  BM=$$(basename $${s}); M=$${BM/.map/}; " +
