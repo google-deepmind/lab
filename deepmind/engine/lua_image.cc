@@ -714,12 +714,14 @@ lua::NResultsOr SetMaskedPattern(lua_State* L) {
     std::string error =
         absl::StrCat("[image.setMaskedPattern] - Arg 3 \"", lua::ToString(L, 3),
                      "\" - Invalid color1.");
+    return error;
   }
 
-  if (IsFound(lua::Read(L, 4, &color2))) {
+  if (!IsFound(lua::Read(L, 4, &color2))) {
     std::string error =
         absl::StrCat("[image.setMaskedPattern] - Arg 4 \"", lua::ToString(L, 3),
-                     "\" - Invalid color1.");
+                     "\" - Invalid color2.");
+    return error;
   }
   auto* source_view = source->mutable_tensor_view();
   const auto& pattern_view = pattern->tensor_view();
