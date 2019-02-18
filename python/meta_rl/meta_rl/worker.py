@@ -122,58 +122,72 @@ class Worker():
         episode_frames = []
         episode_reward = 0
         episode_step_count = 0
-        d = False
-        r = 0
-        a = 0
-        t = 0
-        s = self.env.reset()
         rnn_state = self.local_AC.state_init
+
+        for _ in range(180):
+          # because max_step = 20, so 20 * 180 == 3600
+          d = False
+          r = 0
+          a = 0
+          t = 0
+          s = self.env.reset()
+          
+          start_time = time.time()
+          while d == False:
+            #possible switch of S_2 <-> S_3 with probability 2.5% at the beginning of a trial (every two steps)
+            # if (self.env.state == S_1):
+            #   self.env.possible_switch()
+
+            #Take an action using probabilities from policy network output.
+            a_dist,v,rnn_state_new = sess.run([self.local_AC.policy,self.local_AC.value,self.local_AC.state_out],
+              feed_dict={
+              self.local_AC.state:[s],
+              self.local_AC.prev_rewards:[[r]],
+              self.local_AC.timestep:[[t]],
+              self.local_AC.prev_actions:[a],
+              self.local_AC.state_in[0][0]:rnn_state[0][0],
+              self.local_AC.state_in[0][1]:rnn_state[0][1],
+              self.local_AC.state_in[1][0]:rnn_state[1][0],
+              self.local_AC.state_in[1][1]:rnn_state[1][1]})
+
+            a = np.random.choice(a_dist[0],p=a_dist[0])
+            a = np.argmax(a_dist == a)
+
+            rnn_state = rnn_state_new
+
+            action = deepmind_action_api(a)
+            # s1,r,d,t = self.env.trial(action)
+            s1,r,d,t = self.env.step(action)
+
+
+            episode_buffer.append([s,a,r,t,d,v[0,0]])
+            episode_values.append(v[0,0])
+
+            # if episode_count % 10 == 0 and self.name == 'worker_0':
+            #   if self.make_gif and self.env.last_state == S_2 or self.env.last_state == S_3:
+            #     episode_frames.append(make_frame(self.frame_path,self.env.transitions,
+            #                         self.env.get_rprobs(),
+            #                         t, action=self.env.last_action,
+            #                         final_state=self.env.last_state,
+            #                         reward=r))
+
+
+
+            episode_reward += r
+            total_steps += 1
+            episode_step_count += 1
+            s = s1
         
-        start_time = time.time()
-        while d == False:
-          #possible switch of S_2 <-> S_3 with probability 2.5% at the beginning of a trial (every two steps)
-          # if (self.env.state == S_1):
-          #   self.env.possible_switch()
-
-          #Take an action using probabilities from policy network output.
-          a_dist,v,rnn_state_new = sess.run([self.local_AC.policy,self.local_AC.value,self.local_AC.state_out],
-            feed_dict={
-            self.local_AC.state:[s],
-            self.local_AC.prev_rewards:[[r]],
-            self.local_AC.timestep:[[t]],
-            self.local_AC.prev_actions:[a],
-            self.local_AC.state_in[0][0]:rnn_state[0][0],
-            self.local_AC.state_in[0][1]:rnn_state[0][1],
-            self.local_AC.state_in[1][0]:rnn_state[1][0],
-            self.local_AC.state_in[1][1]:rnn_state[1][1]})
-
-          a = np.random.choice(a_dist[0],p=a_dist[0])
-          a = np.argmax(a_dist == a)
-
-          rnn_state = rnn_state_new
-
-          action = deepmind_action_api(a)
-          # s1,r,d,t = self.env.trial(action)
-          s1,r,d,t = self.env.step(action)
-
-
-          episode_buffer.append([s,a,r,t,d,v[0,0]])
-          episode_values.append(v[0,0])
-
-          # if episode_count % 10 == 0 and self.name == 'worker_0':
-          #   if self.make_gif and self.env.last_state == S_2 or self.env.last_state == S_3:
-          #     episode_frames.append(make_frame(self.frame_path,self.env.transitions,
-          #                         self.env.get_rprobs(),
-          #                         t, action=self.env.last_action,
-          #                         final_state=self.env.last_state,
-          #                         reward=r))
-
-
-
-          episode_reward += r
-          total_steps += 1
-          episode_step_count += 1
-          s = s1
+            
+          episode_count += 1
+          episode_time = time.time() - start_time
+          print("\033[92mWORKER NAME >> " + self.name + " << " + "s\033[0m")
+          print("\033[92mEpisode #" + str(episode_count) + " completed in (only) " + str(episode_time) + "s\033[0m")
+          self.list_time.append(episode_time)
+          if (episode_count % 10 == 0):
+            desperate(episode_count / num_episodes, "Progress (%):")
+            print("\033[34mMean time for the last 10 episodes was (only) " + str(np.mean(self.list_time)) + "s\033[0m")
+            self.list_time = []
 
         self.episode_rewards.append(episode_reward)
         self.episode_lengths.append(episode_step_count)
@@ -181,7 +195,11 @@ class Worker():
 
         # Update the network using the experience buffer at the end of the episode.
         if len(episode_buffer) != 0 and train == True:
+          print("\033[36mWORKER " + self.name + " started training..." + "\033[0m")
+          start_train = time.time()
           v_l,p_l,e_l,g_n,v_n = self.train(episode_buffer,sess,gamma,0.0)
+          time_to_train = time.time() - start_train
+          print("\033[31mWORKER " + self.name + " finished training in only " + str(time_to_train) + "s, so fast!!!" + "\033[0m")
 
         # Periodically save gifs of episodes, model parameters, and summary statistics.
         if episode_count % 10 == 0 and episode_count != 0:
@@ -223,15 +241,6 @@ class Worker():
             self.summary_writer.flush()
         if self.name == 'worker_0':
           sess.run(self.increment)
-        episode_count += 1
-        episode_time = time.time() - start_time
-        print("\033[92mWORKER NAME >>" + self.name + "<< " + "s\033[0m")
-        print("\033[92mEpisode #" + str(episode_count) + " completed in (only) " + str(episode_time) + "s\033[0m")
-        self.list_time.append(episode_time)
-        if (episode_count % 10 == 0):
-          desperate(episode_count / num_episodes, "Progress (%):")
-          print("\033[34mMean time for the last 10 episodes was (only) " + str(np.mean(self.list_time)) + "s\033[0m")
-          self.list_time = []
 
     if not train:
       self.plot(episode_count-1, train)

@@ -35,7 +35,7 @@ from datetime import datetime
 import threading
 import multiprocessing
 
-MAX_STEP = 20
+MAX_STEP = 12
 
 class WrapperEnv(object):
   """A gym-like wrapper environment for DeepMind Lab.
@@ -129,7 +129,7 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
         global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
         trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4)
         master_network = AC_Network(a_size,'global',None, width, height) # Generate global network
-        num_workers = 8
+        num_workers = 32
         workers = []
         # Create worker classes
         env_list = [deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config) for _ in range(num_workers)]
@@ -143,8 +143,10 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
                            
         saver = tf.train.Saver(max_to_keep=5)
 
-      config = tf.ConfigProto(allow_soft_placement = True)
-      with tf.Session(config = config) as sess:
+      config_t = tf.ConfigProto(allow_soft_placement = True)
+      config_t.intra_op_parallelism_threads = 3000
+      config_t.inter_op_parallelism_threads = 3000
+      with tf.Session(config = config_t) as sess:
         # set the seed
         np.random.seed(seed_nb)
         tf.set_random_seed(seed_nb)
