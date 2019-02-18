@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-# import threading
-# import multiprocessing
+import threading
+import multiprocessing
 import numpy as np
 from meta_rl.utils import *
 # import matplotlib.pyplot as plt
@@ -13,7 +13,6 @@ class AC_Network():
       #Input and visual encoding layers
       self.state = tf.placeholder(shape=[None, height, width, 3], dtype=tf.float32)
 
-      #Added a conv layer as described here: https://github.com/awjuliani/Meta-RL/blob/master/A3C-Meta-Grid.ipynb
       #parameters: inputs, num_outputs, activation_fn
       self.cnn_first_layer = tf.layers.conv2d(self.state, 16, (8, 8), strides=(4, 4))
       self.cnn_second_layer = tf.layers.conv2d(self.cnn_first_layer, 32, (4, 4), strides=(2, 2))
@@ -29,7 +28,7 @@ class AC_Network():
 
       with tf.variable_scope('lstm1'):
         #LSTM 1: x, r, t
-        hidden_1 = tf.concat([slim.flatten(self.conv), self.prev_rewards, self.timestep], 1)
+        hidden_1 = tf.concat([slim.flatten(self.conv), self.prev_rewards], 1)
 
         #Recurrent network for temporal dependencies
         lstm_cell_1 = tf.nn.rnn_cell.LSTMCell(256, state_is_tuple=True)
@@ -58,7 +57,7 @@ class AC_Network():
 
       with tf.variable_scope('lstm2'):
         #LSTM 2: x, a, t
-        hidden_2 = tf.concat([slim.flatten(self.conv), slim.flatten(rnn_out_1), self.prev_actions_onehot, self.timestep], 1)
+        hidden_2 = tf.concat([slim.flatten(self.conv), slim.flatten(rnn_out_1), self.prev_actions_onehot], 1)
 
         lstm_cell_2 = tf.nn.rnn_cell.LSTMCell(64, state_is_tuple=True)
 

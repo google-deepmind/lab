@@ -1,7 +1,7 @@
 import tensorflow as tf
-# import tensorflow.contrib.slim as slim
-# import threading
-# import multiprocessing
+import tensorflow.contrib.slim as slim
+import threading
+import multiprocessing
 import numpy as np
 from meta_rl.utils import *
 from meta_rl.ac_network import AC_Network
@@ -181,13 +181,13 @@ class Worker():
           v_l,p_l,e_l,g_n,v_n = self.train(episode_buffer,sess,gamma,0.0)
 
         # Periodically save gifs of episodes, model parameters, and summary statistics.
-        if episode_count % 1 == 0 and episode_count != 0:
-          if episode_count % 1 == 0:# and self.name == 'worker_0':
+        if episode_count % 10 == 0 and episode_count != 0:
+          if episode_count % 100 == 0 and self.name == 'worker_0':
             if train == True:
               # save model
               os.makedirs(self.model_path+'/model-'+str(episode_count))
-              # saver.save(sess,model_path+'/model-'+str(episode_count)+
-              #       '/model-'+str(episode_count)+'.cptk')
+              saver.save(sess,model_path+'/model-'+str(episode_count)+
+                    '/model-'+str(episode_count)+'.cptk')
               print ("Saved Model")
 
               # generate plot
@@ -221,7 +221,7 @@ class Worker():
         if self.name == 'worker_0':
           sess.run(self.increment)
         episode_count += 1
-        if (episode_count % 1 == 0):
+        if (episode_count % 10 == 0):
           desperate(episode_count, "Episode Count:")
 
     if not train:

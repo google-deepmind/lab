@@ -32,6 +32,9 @@ from meta_rl.worker import Worker
 
 from datetime import datetime
 
+import threading
+import multiprocessing
+
 MAX_STEP = 3600
 
 class WrapperEnv(object):
@@ -48,7 +51,7 @@ class WrapperEnv(object):
   def __init__(self, env, length):
     self.env = env
     self.length = length
-#     self.l = []
+    self.l = []
     self.reset()
 
   def step(self, action):
@@ -57,9 +60,8 @@ class WrapperEnv(object):
       self.reset()
     obs = self.env.observations()
     reward = self.env.step(action, num_steps=1)
-    print("Increment! num_steps():", self.env.num_steps())
 
-#     self.l.append(obs['RGB_INTERLEAVED'])
+    self.l.append(obs['RGB_INTERLEAVED'])
     
     return obs['RGB_INTERLEAVED'], reward, done, self.env.num_steps()
 
@@ -67,10 +69,10 @@ class WrapperEnv(object):
     self.env.reset()
     obs = self.env.observations()
 
-#     with open("/floyd/home/obs.npy", "bw") as file:
-#         d = np.array(self.l)
-#         file.write(d.dumps())
-#     self.l = []
+    with open("/floyd/home/obs.npy", "bw") as file:
+        d = np.array(self.l)
+        file.write(d.dumps())
+    self.l = []
 
     return obs['RGB_INTERLEAVED']
 
@@ -89,15 +91,14 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
     config['demofiles'] = demofiles
   if video:
     config['video'] = video
-  env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
 
   dir_name = "/floyd/home/python/meta_rl/train_" + datetime.now().strftime("%m%d-%H%M%S")
 
   # Hyperparameters for training/testing
-  gamma = .91
+  gamma = .9
   a_size = 2
   n_seeds = 1
-  num_episode_train = 20000
+  num_episode_train = 1e5
   num_episode_test = 50
   collect_seed_transition_probs = []
   for seed_nb in range(n_seeds):
@@ -124,20 +125,26 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
 
       tf.reset_default_graph()
 
-      with tf.device("/cpu:0"):
+      with tf.device("/device:GPU:0"):
         global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
-        trainer = tf.train.RMSPropOptimizer(learning_rate=7.5e-4)
+        trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4)
         master_network = AC_Network(a_size,'global',None, width, height) # Generate global network
-        num_worker = 1
+        num_workers = 1
+        workers = []
         # Create worker classes
-        worker = Worker(WrapperEnv(env, length), num_worker, a_size, trainer,
-                        model_path, global_episodes, make_gif=False,
-                        collect_seed_transition_probs=collect_seed_transition_probs,
-                        plot_path=plot_path, frame_path=frame_path,
-                        width=width, height=height)
+        env_list = [deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config) for _ in range(num_workers)]
+        for i in range(num_workers):
+            env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
+            workers.append(Worker(WrapperEnv(env_list[i], length), i, a_size, trainer,
+                model_path, global_episodes, make_gif=False,
+                collect_seed_transition_probs=collect_seed_transition_probs,
+                plot_path=plot_path, frame_path=frame_path,
+                width=width, height=height))
+                           
         saver = tf.train.Saver(max_to_keep=5)
 
-      with tf.Session() as sess:
+      config = tf.ConfigProto(allow_soft_placement = True)
+      with tf.Session(config = config) as sess:
         # set the seed
         np.random.seed(seed_nb)
         tf.set_random_seed(seed_nb)
@@ -150,27 +157,14 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
         else:
           sess.run(tf.global_variables_initializer())
 
-        worker.work(gamma, sess, coord, saver, train, num_episodes)
-        # worker_threads = []
-        # for worker in workers:
-        #   worker_work = lambda: worker.work(gamma,sess,coord,saver,train,num_episodes)
-        #   thread = threading.Thread(target=(worker_work))
-        #   thread.start()
-        #   worker_threads.append(thread)
-        # coord.join(worker_threads)
-
-
-  # for _ in six.moves.range(length):
-  #   if not env.is_running():
-  #     print('Environment stopped early')
-  #     env.reset()
-  #     agent.reset()
-  #   obs = env.observations()
-  #   action = agent.step(reward, obs['RGB_INTERLEAVED'])
-  #   reward = env.step(action, num_steps=1)
-
-  # print('Finished after %i steps. Total reward received is %f'
-  #       % (length, agent.rewards))
+#         worker.work(gamma, sess, coord, saver, train, num_episodes)
+        worker_threads = []
+        for worker in workers:
+          worker_work = lambda: worker.work(gamma,sess,coord,saver,train,num_episodes)
+          thread = threading.Thread(target=(worker_work))
+          thread.start()
+          worker_threads.append(thread)
+        coord.join(worker_threads)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description=__doc__)
