@@ -57,6 +57,7 @@ class Worker():
     self.collect_seed_transition_probs = collect_seed_transition_probs
     self.plot_path = plot_path
     self.frame_path = frame_path
+    self.list_time = []
 
   def train(self,rollout,sess,gamma,bootstrap_value):
     rollout = np.array(rollout)
@@ -223,10 +224,14 @@ class Worker():
         if self.name == 'worker_0':
           sess.run(self.increment)
         episode_count += 1
-        print("\033[92mEpisode #" + str(episode_count) + " completed in (only) " + str(time.time() - start_time) + "s\033[0m")
+        episode_time = time.time() - start_time
+        print("\033[92mWORKER NAME >>" + self.name + "<< " + "s\033[0m")
+        print("\033[92mEpisode #" + str(episode_count) + " completed in (only) " + str(episode_time) + "s\033[0m")
+        self.list_time.append(episode_time)
         if (episode_count % 10 == 0):
           desperate(episode_count / num_episodes, "Progress (%):")
-        
+          print("\033[34mMean time for the last 10 episodes was (only) " + str(np.mean(self.list_time)) + "s\033[0m")
+          self.list_time = []
 
     if not train:
       self.plot(episode_count-1, train)
