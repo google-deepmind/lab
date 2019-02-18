@@ -123,8 +123,8 @@ function factory.createLevelApi(kwargs)
 
   -- 'init' gets called at the start of each episode.
   function env:_init(pac, opts)
-    log.info('opts passed to _init:\n' .. helpers.tostring(opts))
-    log.info('ARG passed to _init:\n' .. helpers.tostring(ARG))
+    --log.info('opts passed to _init:\n' .. helpers.tostring(opts))
+    --log.info('ARG passed to _init:\n' .. helpers.tostring(ARG))
 
     if self.dataset == nil then
       self.dataset = brady_konkle_oliva2008(opts)
@@ -181,8 +181,8 @@ function factory.createLevelApi(kwargs)
     if self.incorrectID >= self.correctID then
       self.incorrectID = self.incorrectID + 1
     end
-    log.info('Episode set up, corrID=' .. self.correctID ..
-             ', incorrID=' .. self.incorrectID)
+    --log.info('Episode set up, corrID=' .. self.correctID ..
+    --         ', incorrID=' .. self.incorrectID)
   end
 
   function env:setupImages()

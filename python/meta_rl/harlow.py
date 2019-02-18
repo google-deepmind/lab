@@ -119,7 +119,7 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
 
     # in train don't load the model and set train=True
     # in test, load the model and set train=False
-    for train, load_model, num_episodes in [[True, False, num_episode_test]]:#[[True,False,num_episode_train], [False, True, num_episode_test]]:
+    for train, load_model, num_episodes in [[True, False, num_episode_train]]: #[[True,False,num_episode_train], [False, True, num_episode_test]]:
 
       print ("seed_nb is:", seed_nb)
 

@@ -6,6 +6,7 @@ import numpy as np
 from meta_rl.utils import *
 from meta_rl.ac_network import AC_Network
 # import matplotlib.pyplot as plt
+import time
 
 import os
 import random
@@ -126,7 +127,8 @@ class Worker():
         t = 0
         s = self.env.reset()
         rnn_state = self.local_AC.state_init
-
+        
+        start_time = time.time()
         while d == False:
           #possible switch of S_2 <-> S_3 with probability 2.5% at the beginning of a trial (every two steps)
           # if (self.env.state == S_1):
@@ -221,8 +223,10 @@ class Worker():
         if self.name == 'worker_0':
           sess.run(self.increment)
         episode_count += 1
+        print("\033[92mEpisode #" + str(episode_count) + " completed in (only) " + str(time.time() - start_time) + "s\033[0m")
         if (episode_count % 10 == 0):
-          desperate(episode_count, "Episode Count:")
+          desperate(episode_count / num_episodes, "Progress (%):")
+        
 
     if not train:
       self.plot(episode_count-1, train)
