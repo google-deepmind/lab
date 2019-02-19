@@ -124,8 +124,8 @@ class Worker():
         episode_step_count = 0
         rnn_state = self.local_AC.state_init
 
-        for _ in range(180):
-          # because max_step = 20, so 20 * 180 == 3600
+        for _ in range(1):
+          # to optimize for GPU, update on large batches of episodes
           d = False
           r = 0
           a = 0
@@ -207,7 +207,7 @@ class Worker():
             if train == True:
               # save model
               os.makedirs(self.model_path+'/model-'+str(episode_count))
-              saver.save(sess,model_path+'/model-'+str(episode_count)+
+              saver.save(sess,self.model_path+'/model-'+str(episode_count)+
                     '/model-'+str(episode_count)+'.cptk')
               print ("Saved Model")
 

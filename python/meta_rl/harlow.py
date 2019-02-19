@@ -129,7 +129,7 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
         global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
         trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4)
         master_network = AC_Network(a_size,'global',None, width, height) # Generate global network
-        num_workers = 32
+        num_workers = 1
         workers = []
         # Create worker classes
         env_list = [deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config) for _ in range(num_workers)]
