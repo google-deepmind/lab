@@ -1,0 +1,3 @@
+[submodule "python/meta-rl"]
+	path = python/meta-rl
+	url = https://github.com/mtrazzi/meta-rl.git
