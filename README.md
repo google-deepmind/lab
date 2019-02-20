@@ -5,10 +5,8 @@
 [ioquake3](https://github.com/ioquake/ioq3) and
 [other open source software](#upstream-sources).
 
-<div align="center">
-  <img src="/docs/template/harlow_task.gif" alt="Harlow Task">
-  *In environment footage, captured via human player.*
-</div>
+# <img src="/docs/template/harlow_task.gif" alt="Harlow Task">
+*In environment footage, captured via human player.*
 
 *DeepMind Lab* provides a suite of challenging 3D navigation and puzzle-solving
 tasks for learning agents. Its primary purpose is to act as a testbed for
