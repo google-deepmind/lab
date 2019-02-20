@@ -38,6 +38,30 @@ the [DeepMind Lab paper](https://arxiv.org/abs/1612.03801).
 
 You can reach us at [lab@deepmind.com](mailto:lab@deepmind.com).
 
+## Floydhub Installation
+
+To download the repository:
+
+`git clone https://github.com/mtrazzi/lab.git`
+
+You also need to fetch the [`meta-rl`](https://github.com/mtrazzi/meta-rl.git) repository:
+
+```
+cd lab/python
+git submodule init
+git submodule update
+cd ..
+```
+
+Then install the repository:
+```
+sh install.sh
+sh build.sh
+```
+
+To train the *Harlow Agent* present in `meta-rl` run:
+`sh train.sh`
+
 ## Getting started on Linux
 
 * Get [Bazel from bazel.io](https://docs.bazel.build/versions/master/install.html).
