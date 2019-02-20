@@ -5,24 +5,8 @@
 [ioquake3](https://github.com/ioquake/ioq3) and
 [other open source software](#upstream-sources).
 
-<div align="center">
-  <a href="https://www.youtube.com/watch?v=M40rN7afngY" target="_blank">
-    <img src="http://img.youtube.com/vi/M40rN7afngY/0.jpg"
-         alt="DeepMind Lab - Nav Maze Level 1"
-         width="240" height="180" border="10" />
-  </a>
-  <a href="https://www.youtube.com/watch?v=gC_e8AHzvOw" target="_blank">
-    <img src="http://img.youtube.com/vi/gC_e8AHzvOw/0.jpg"
-         alt="DeepMind Lab - Stairway to Melon Level"
-         width="240" height="180" border="10" />
-  </a>
-  <a href="https://www.youtube.com/watch?v=7syZ42HWhHE" target="_blank">
-    <img src="http://img.youtube.com/vi/7syZ42HWhHE/0.jpg"
-         alt="DeepMind Lab - Laser Tag Space Bounce Level (Hard)"
-         width="240" height="180" border="10" />
-  </a>
-  <br /><br />
-</div>
+# <img src="/docs/template/harlow_task.gif" alt="Harlow Task">
+*In environment footage, captured via human player.*
 
 *DeepMind Lab* provides a suite of challenging 3D navigation and puzzle-solving
 tasks for learning agents. Its primary purpose is to act as a testbed for
@@ -47,7 +31,9 @@ To download the repository:
 You also need to fetch the [`meta-rl`](https://github.com/mtrazzi/meta-rl.git) repository:
 
 ```
-cd lab/python
+cd lab
+git checkout floydhub
+cd python
 git submodule init
 git submodule update
 cd ..
