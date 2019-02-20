@@ -35,8 +35,6 @@ from datetime import datetime
 import threading
 import multiprocessing
 
-MAX_STEP = 12
-
 class WrapperEnv(object):
   """A gym-like wrapper environment for DeepMind Lab.
 
@@ -55,23 +53,34 @@ class WrapperEnv(object):
     self.reset()
 
   def step(self, action):
-    done = not self.env.is_running() or self.env.num_steps() > MAX_STEP
+    tmp_obs = self.env.observations()
+    reward = self.env.step(np.array([0, 0, 0, 0, 0, 0, 0], dtype=np.intc), num_steps=1)
+    self.l.append(tmp_obs['RGB_INTERLEAVED'])
+    
+    done = not self.env.is_running() or self.env.num_steps() > 3600
     if done:
       self.reset()
-    obs = self.env.observations()
-    reward = self.env.step(action, num_steps=1)
-
-    self.l.append(obs['RGB_INTERLEAVED'])
     
+    print("\033[34mAction Taken: " + ("Left" if action[0] > 0 else "Right") + "\033[0m")
+    # real step
+    obs = self.env.observations()
+    reward += self.env.step(action, num_steps=1)
+    self.l.append(obs['RGB_INTERLEAVED'])
+
+    if reward > 0:
+        print("\033[1;32mTrial reward: " + str(reward) + " :)\033[0m")
+    else:
+        print("\033[1;31mTrial reward: " + str(reward) + " :(\033[0m")
     return obs['RGB_INTERLEAVED'], reward, done, self.env.num_steps()
 
   def reset(self):
     self.env.reset()
     obs = self.env.observations()
 
-    with open("/floyd/home/obs.npy", "bw") as file:
-        d = np.array(self.l)
-        file.write(d.dumps())
+    d = np.array(self.l)
+    if (len(d) > 2):
+        with open("/floyd/home/obs.npy", "bw") as file:
+            file.write(d.dumps())
     self.l = []
 
     return obs['RGB_INTERLEAVED']
@@ -125,7 +134,7 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
 
       tf.reset_default_graph()
 
-      with tf.device("/device:GPU:0"):
+      with tf.device("/cpu:0"):
         global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
         trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4)
         master_network = AC_Network(a_size,'global',None, width, height) # Generate global network
@@ -144,8 +153,8 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
         saver = tf.train.Saver(max_to_keep=5)
 
       config_t = tf.ConfigProto(allow_soft_placement = True)
-      config_t.intra_op_parallelism_threads = 3000
-      config_t.inter_op_parallelism_threads = 3000
+#       config_t.intra_op_parallelism_threads = 3000
+#       config_t.inter_op_parallelism_threads = 3000
       with tf.Session(config = config_t) as sess:
         # set the seed
         np.random.seed(seed_nb)

@@ -60,14 +60,14 @@ evaluation images (held out from training).
 
 local TIME_TO_FIXATE_CROSS = 1 -- 4 -- in frames
 local TIME_TO_FIXATE_TARGET = 1 -- 4 -- in frames
-local FAST_INTER_TRIAL_INTERVAL = 5 -- in frames
+local FAST_INTER_TRIAL_INTERVAL = 2 -- 5 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local BG_COLOR = {0, 0, 0}
 local TRIALS_PER_EPISODE_CAP = 6
 
 local TARGET_SIZE = 0.4
 
-local FIXATION_REWARD = 1
+local FIXATION_REWARD = 0
 local CORRECT_REWARD = 5
 local INCORRECT_REWARD = -5
 
