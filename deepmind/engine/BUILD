@@ -250,10 +250,7 @@ cc_library(
     name = "lua_random",
     srcs = ["lua_random.cc"],
     hdrs = ["lua_random.h"],
-    visibility = [
-        "//deepmind/include:__pkg__",
-        "//deepmind/tensor:__pkg__",
-    ],
+    visibility = ["//deepmind/tensor:__pkg__"],
     deps = [
         "//deepmind/lua",
         "//deepmind/lua:class",
