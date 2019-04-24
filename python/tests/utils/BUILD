@@ -7,8 +7,6 @@ load("//python/tests:build_defs.bzl", "py2and3_test")
 
 licenses(["restricted"])  # GPLv2
 
-py_test = py2and3_test
-
 py_library(
     name = "math_utils",
     testonly = 1,
@@ -17,7 +15,7 @@ py_library(
     imports = ["python"],
 )
 
-py_test(
+py2and3_test(
     name = "math_utils_test",
     srcs = ["math_utils_test.py"],
     data = ["//:deepmind_lab.so"],
@@ -33,7 +31,7 @@ py_library(
     imports = ["python"],
 )
 
-py_test(
+py2and3_test(
     name = "test_environment_decorator_test",
     srcs = ["test_environment_decorator_test.py"],
     data = ["//:deepmind_lab.so"],
@@ -56,7 +54,7 @@ py_library(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "game_controller_test",
     srcs = ["game_controller_test.py"],
     data = ["//:deepmind_lab.so"],
@@ -78,7 +76,7 @@ py_library(
     deps = [":game_controller"],
 )
 
-py_test(
+py2and3_test(
     name = "maze_game_controller_test",
     srcs = ["maze_game_controller_test.py"],
     data = ["//:deepmind_lab.so"],
