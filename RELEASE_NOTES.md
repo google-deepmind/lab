@@ -6,6 +6,19 @@
 
 1.  The `game` demo executable can now print observations at each step.
 
+### Bug Fixes
+
+1.  Observation 'DEBUG.CAMERA_INTERLEAVED.TOP_DOWN' is now correct for levels
+    `dmlab30/explore_object_rewards_{few,many}`.
+
+    An error is now raised if there is not enough space to place every possible
+    room (regardless of whether the random generation _actually_ produces a room
+    of excessive size) and if a non-zero number of rooms was requested.
+
+    The affected levels have been updated and will generate layouts similar to
+    before, but the whole maze is offset by 100 units, and object placements
+    will change.
+
 ## release-2019-02-04 February 2019 release
 
 ### New Levels:

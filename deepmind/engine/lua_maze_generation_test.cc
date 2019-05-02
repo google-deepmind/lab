@@ -379,7 +379,7 @@ sys_random:seed(123)
 local maze = maze_generation.randomMazeGeneration{
     random = sys_random,
     width = 11,
-    height = 7,
+    height = 9,
     roomMinSize = 5,
     maxRooms = 1,
     extraConnectionProbability = 0.0,
@@ -399,6 +399,8 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze2) {
   ASSERT_TRUE(lua::Read(L, 2, &var_layer));
   EXPECT_EQ(
       "***********\n"
+      "***********\n"
+      "***********\n"
       "***       *\n"
       "***       *\n"
       "***       *\n"
@@ -407,6 +409,8 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze2) {
       "***********\n",
       ent_layer);
   EXPECT_EQ(
+      "...........\n"
+      "...........\n"
       "...........\n"
       "...AAAAAAA.\n"
       "...AAAAAAA.\n"

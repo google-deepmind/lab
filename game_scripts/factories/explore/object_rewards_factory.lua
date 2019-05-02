@@ -217,6 +217,8 @@ local function createLevelApi(optsOverride)
   opts.minGoodCategory = opts.minGoodCategory or 2
   opts.pickupDensity = opts.pickupDensity or 0.5
   opts.roomCount = opts.roomCount or 1
+  opts.mazeWidth = opts.mazeWidth or 13
+  opts.mazeHeight = opts.mazeHeight or 13
   opts.roomMaxSize = opts.roomMaxSize or 11
   opts.roomMinSize = opts.roomMinSize or 11
 

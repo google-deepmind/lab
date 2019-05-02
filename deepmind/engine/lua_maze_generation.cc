@@ -212,6 +212,15 @@ lua::NResultsOr LuaMazeGeneration::CreateRandom(lua_State* L) {
     return "[randomMazeGeneration] - Must construct with positive odd "
            "roomMaxSize";
   }
+
+  if (max_rooms > 0 &&
+      (room_max_size + 2 > height || room_max_size + 2 > width)) {
+    return absl::StrCat(
+        "[randomMazeGeneration] - roomMaxSize must be less than width or "
+        "height. roomMaxSize: ",
+        room_max_size, " height: ", height, " width: ", width);
+  }
+
   int retry_count = kDefaultRetryCount;
   table.LookUp("retryCount", &retry_count);
   if (retry_count <= 0) {

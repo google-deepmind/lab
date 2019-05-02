@@ -183,6 +183,24 @@ TEST(AlgorithmTest, MakeSeparateRooms) {
   }
 }
 
+TEST(AlgorithmTest, MakeLargeOneRoom) {
+  std::mt19937_64 prbg(10);
+  SeparateRectangleParams params{};
+  params.min_size = Size{9, 13};
+  params.max_size = Size{9, 13};
+  params.retry_count = 1;
+  params.max_rects = 1;
+  params.density = 1.0;
+  auto rects =
+      MakeSeparateRectangles(Rectangle{{0, 0}, {11, 15}}, params, &prbg);
+  ASSERT_EQ(rects.size(), 1);
+  const auto& rect = rects.front();
+  EXPECT_EQ(rect.pos.col, 1);
+  EXPECT_EQ(rect.pos.row, 1);
+  EXPECT_EQ(rect.size.height, 9);
+  EXPECT_EQ(rect.size.width, 13);
+}
+
 TEST(AlgorithmTest, RemoveDeadEnds) {
   TextMaze maze =
       FromCharGrid(CharGrid("**********\n"

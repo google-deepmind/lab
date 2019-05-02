@@ -68,6 +68,8 @@ struct SeparateRectangleParams {
 
 // Generates non-overlapping rectangles on the odd grid points.
 // The rooms are placed within the width and height and according to the params.
+// The params.max_size shall be at least two less than bounds.size in height and
+// width directions.
 std::vector<Rectangle> MakeSeparateRectangles(
     const Rectangle& bounds, const SeparateRectangleParams& params,
     std::mt19937_64* prbg);
@@ -79,7 +81,7 @@ void RemoveDeadEnds(char empty, char wall, const std::vector<char>& wall_chars,
                     TextMaze* text_maze);
 
 // Implements the recursive backtracking maze generation algorithm, starting
-// from 'pos' and spreading accross space with the same id value, and replacing
+// from 'pos' and spreading across space with the same id value, and replacing
 // it with 'maze_id'.
 void FillWithMaze(         //
     const Pos& pos,        //
