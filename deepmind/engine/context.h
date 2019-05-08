@@ -82,7 +82,7 @@ class Context {
   void SetLevelName(std::string level_name);
 
   // 'level_directory': Sets the directory to find level scripts in. If a local
-  // path is used it will be relative to the 'games_cripts' directory. (Default
+  // path is used it will be relative to the 'game_scripts' directory. (Default
   // is 'levels'.)
   void SetLevelDirectory(std::string level_directory);
 

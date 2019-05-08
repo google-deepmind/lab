@@ -346,7 +346,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       return "[Tensor.CreateFromFile] Invalid filesystem in upvalue";
     }
     if (fs == nullptr) {
-      return "[Tensor.CreateFromFile] Miising filesystem in upvalue";
+      return "[Tensor.CreateFromFile] Missing filesystem in upvalue";
     }
     ShapeVector shape;
     std::vector<T> storage;
