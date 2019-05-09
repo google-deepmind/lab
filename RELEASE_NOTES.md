@@ -19,6 +19,8 @@
     before, but the whole maze is offset by 100 units, and object placements
     will change.
 2.  Fix top-down camera for language levels.
+3.  Correct typo in bot `Leonis`, skill level 1, based on OpenArena's bot code
+    `gargoyle_c.c`.
 
 ## release-2019-02-04 February 2019 release
 
