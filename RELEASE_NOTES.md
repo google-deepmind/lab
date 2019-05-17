@@ -18,6 +18,7 @@
     The affected levels have been updated and will generate layouts similar to
     before, but the whole maze is offset by 100 units, and object placements
     will change.
+2.  Fix top-down camera for language levels.
 
 ## release-2019-02-04 February 2019 release
 

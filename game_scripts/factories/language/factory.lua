@@ -32,6 +32,7 @@ local random = require 'common.random'
 local setting_overrides = require 'decorators.setting_overrides'
 local texter = require 'language.texter'
 local Timer = require 'common.timer'
+local debug_observations = require 'decorators.debug_observations'
 
 local randomMap = random(map_maker:randomGen())
 
@@ -247,6 +248,7 @@ function factory.createLevelApi(kwargs)
 
     local maze = maze_generation.mazeGeneration{entity = mapInfo.entityLayer}
     local result = {
+        maze = maze,
         source = mapInfo,
         generatedMap = make_map.makeMap{
             mapName = mapInfo.name,
@@ -294,6 +296,9 @@ function factory.createLevelApi(kwargs)
       self._maps[mapInfo.name] = self:_makeMap(mapInfo)
     end
     local map = self._maps[mapInfo.name]
+
+    debug_observations.setMaze(map.maze)
+
     self._objectPlaceholderCount = map.objectPlaceholderCount
 
     -- Add a level of indirection so map position i doesn't have to always
