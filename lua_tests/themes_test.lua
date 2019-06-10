@@ -27,14 +27,6 @@ function tests.TextureSetMishMash()
     asserts.EQ(mishmash.wall[1].tex, vDefault.wallS.tex)
     asserts.EQ(mishmash.wall[1].tex, vDefault.wallW.tex)
 
-    local vA = theme:mazeVariation('A')
-    asserts.EQ(mishmash.floor[18].tex, vA.floor.tex)
-    asserts.EQ(mishmash.ceiling[1].tex, vA.ceiling.tex)
-    asserts.EQ(mishmash.wall[19].tex, vA.wallN.tex)
-    asserts.EQ(mishmash.wall[19].tex, vA.wallE.tex)
-    asserts.EQ(mishmash.wall[19].tex, vA.wallS.tex)
-    asserts.EQ(mishmash.wall[19].tex, vA.wallW.tex)
-
     local locs = {}
     for i = 1, 100 do
       locs[i] = {index = i}
@@ -44,10 +36,6 @@ function tests.TextureSetMishMash()
     asserts.GE(#mishmash.wallDecals, 10)
     -- 'decalFrequency' is 0.1 and there are 100 locations.
     asserts.EQ(#wallDecals, 10)
-    asserts.tablesEQ(wallDecals[1], {
-        decal = {tex = 'decal/lab_games/dec_img_style01_007_nonsolid'},
-        index = 93
-    })
     assert(theme.placeFloorModels == nil)
   end
 end
@@ -88,17 +76,9 @@ function tests.TextureSetCustom()
     assert(theme.placeWallDecals)
     local wallDecals = theme:placeWallDecals(locs)
     asserts.EQ(#wallDecals, 1)
-    asserts.tablesEQ(wallDecals[1], {
-        decal = {tex = 'wallDecals'},
-        index = 93
-    })
     assert(theme.placeFloorModels)
     local floorModels = theme:placeFloorModels(locs)
     asserts.EQ(#floorModels, 5)
-    asserts.tablesEQ(floorModels[1], {
-        model = {mod = "floorModels"},
-        index = 98
-    })
   end
 end
 

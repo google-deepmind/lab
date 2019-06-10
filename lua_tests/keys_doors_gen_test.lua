@@ -79,7 +79,8 @@ end
 
 function tests.confRedHerringKey()
   local level = gen.makeLevel(CONF_RED_HERRING_KEY, SEED)
-  asserts.EQ(level.map, [[
+  -- When complied with libstdc++ GCC 4.9.
+  local map0 = [[
 ***********
 ***********
 **   I   **
@@ -89,9 +90,25 @@ function tests.confRedHerringKey()
 **KP ******
 ***********
 ***********
-]])
-  asserts.tablesEQ(level.keys, {'black', 'blue'})
-  asserts.tablesEQ(level.doors, {'black'})
+]]
+  -- When complied with libc++.
+  local map1 = [[
+***********
+***********
+**P  ******
+**K  ******
+*** *******
+**   I   **
+**  K*  G**
+***********
+***********
+]]
+  assert(level.map == map0 or level.map == map1, level.map)
+
+  asserts.EQ(#level.keys, 2)
+  asserts.EQ(#level.doors, 1)
+  assert(level.doors[1] == level.keys[1] or level.doors[1] == level.keys[2],
+         'Actual ' .. level.doors[1])
 end
 
 function tests.batchConfRedHerringKey()
@@ -125,9 +142,11 @@ function tests.batchConfRedHerringKey()
   asserts.GT(20, num_dup)
 end
 
+
 function tests.confSimpleTrap()
   local level = gen.makeLevel(CONF_SIMPLE_TRAP, SEED)
-  asserts.EQ(level.map, [[
+  -- When complied with libstdc++ GCC 4.9.
+  local map0 = [[
 ***************
 ***************
 **   I   I   **
@@ -137,9 +156,22 @@ function tests.confSimpleTrap()
 ******K  ******
 ***************
 ***************
-]])
-  asserts.tablesEQ(level.keys, {'black', 'green', 'white'})
-  asserts.tablesEQ(level.doors, {'white', 'black', 'black'})
+]]
+  -- When complied with libc++.
+  local map1 = [[
+***************
+***************
+**   I   I   **
+**  G*KP *K  **
+*******H*******
+******   ******
+******  K******
+***************
+***************
+]]
+  assert(level.map == map0 or level.map == map1, level.map)
+  asserts.EQ(#level.keys, 3)
+  asserts.EQ(#level.doors, 3)
 end
 
 function tests.batchConfSimpleTrap()
@@ -230,7 +262,8 @@ end
 
 function tests.confTrap()
   local level = gen.makeLevel(CONF_TRAP, SEED)
-  asserts.EQ(level.map, [[
+  -- When complied with libstdc++ GCC 4.9.
+  local map0 = [[
 ***************
 ***************
 **   I P *   **
@@ -240,9 +273,22 @@ function tests.confTrap()
 ******K  *K  **
 ***************
 ***************
-]])
-  asserts.tablesEQ(level.keys, {'white', 'black', 'white'})
-  asserts.tablesEQ(level.doors, {'black', 'white', 'black'})
+]]
+  -- When complied with libc++.
+  local map1 = [[
+***************
+***************
+**   I  P*   **
+**  K*K  *  G**
+******* ***H***
+******   I   **
+******   *  K**
+***************
+***************
+]]
+  assert(level.map == map0 or level.map == map1, level.map)
+  asserts.EQ(#level.keys, 3)
+  asserts.EQ(#level.doors, 3)
 end
 
 function tests.batchConfTrap()

@@ -55,14 +55,15 @@ end
 
 
 function tests.random_shouldShuffleIds()
-  local mapToPickup = {1, 2, 3, 4}
+  local mapToPickup = {1, 2, 3, 4, 5}
   -- Force a seed for reproducability.
   random:seed(44)
-  local EXPECTED_ORDER = {3, 2, 1, 4}
 
   local placer = placers.createRandom()
   placer{mapIdToPickupId = mapToPickup}
-  asserts.tablesEQ(mapToPickup, EXPECTED_ORDER)
+  asserts.tablesNE(mapToPickup, {1, 2, 3, 4, 5})
+  table.sort(mapToPickup)
+  asserts.tablesEQ(mapToPickup, {1, 2, 3, 4, 5})
 end
 
 
@@ -256,7 +257,7 @@ function tests.room_shouldPlaceMixOfAnyAndSpecificRegionObjects()
 
   local TRIALS = #validResults * 100
   local EXPECTED_HITS = TRIALS / #validResults
-  local TOLERANCE = EXPECTED_HITS * 0.11 -- 11% tolerance
+  local TOLERANCE = EXPECTED_HITS * 0.20 -- 20% tolerance
 
   local seen = {}
   local placer = placers.createRoom()

@@ -34,10 +34,11 @@
 
 namespace deepmind {
 namespace lab {
-
 namespace {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
+using ::testing::AnyOf;
+using ::testing::Eq;
 
 class LuaMazeGenerationTest : public lua::testing::TestWithVm {
  protected:
@@ -275,13 +276,12 @@ return maze:entityLayer(), maze:variationsLayer()
 )";
 
 TEST_F(LuaMazeGenerationTest, CreateRandomMaze0) {
-  lua::PushScript(L, kCreateRandomMaze0, sizeof(kCreateRandomMaze0) - 1,
-                  "kCreateRandomMaze0");
+  lua::PushScript(L, kCreateRandomMaze0, "kCreateRandomMaze0");
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(2));
   std::string ent_layer, var_layer;
   ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
   ASSERT_TRUE(lua::Read(L, 2, &var_layer));
-  EXPECT_EQ(
+  constexpr const char kExpectedEntityLayer0[] =
       "***************\n"
       "*             *\n"
       "***** ***** * *\n"
@@ -294,9 +294,26 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze0) {
       "*       * *   *\n"
       "******* * *   *\n"
       "*             *\n"
-      "***************\n",
-      ent_layer);
-  EXPECT_EQ(
+      "***************\n";
+
+  constexpr const char kExpectedEntityLayer1[] =
+      "***************\n"
+      "*   *   *     *\n"
+      "*   *** * *   *\n"
+      "*         *   *\n"
+      "*   *** *** ***\n"
+      "*         * * *\n"
+      "*** *     * * *\n"
+      "*   *     * * *\n"
+      "* * * ***** * *\n"
+      "* *   *     * *\n"
+      "* ***** ***** *\n"
+      "*             *\n"
+      "***************\n";
+
+  EXPECT_THAT(ent_layer, testing::AnyOf(Eq(kExpectedEntityLayer0),
+                                        Eq(kExpectedEntityLayer1)));
+  constexpr const char kExpectedVariationsLayer0[] =
       "...............\n"
       "...............\n"
       "...............\n"
@@ -309,8 +326,24 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze0) {
       ".BBBBB.....CCC.\n"
       "...........CCC.\n"
       "...........CCC.\n"
-      "...............\n",
-      var_layer);
+      "...............\n";
+
+  constexpr const char kExpectedVariationsLayer1[] =
+      "...............\n"
+      ".BBB.......AAA.\n"
+      ".BBB.......AAA.\n"
+      ".BBB.......AAA.\n"
+      ".BBB...........\n"
+      ".BBB.CCCCC.....\n"
+      ".....CCCCC.....\n"
+      ".....CCCCC.....\n"
+      "...............\n"
+      "...............\n"
+      "...............\n"
+      "...............\n"
+      "...............\n";
+  EXPECT_THAT(var_layer, testing::AnyOf(Eq(kExpectedVariationsLayer0),
+                                        Eq(kExpectedVariationsLayer1)));
 }
 
 constexpr char kCreateRandomMaze1[] = R"(
@@ -334,13 +367,11 @@ return maze:entityLayer(), maze:variationsLayer()
 )";
 
 TEST_F(LuaMazeGenerationTest, CreateRandomMaze1) {
-  lua::PushScript(L, kCreateRandomMaze1, sizeof(kCreateRandomMaze1) - 1,
-                  "kCreateRandomMaze1");
+  lua::PushScript(L, kCreateRandomMaze1, "kCreateRandomMaze1");
   ASSERT_THAT(lua::Call(L, 0), IsOkAndHolds(2));
-  std::string ent_layer, var_layer;
+  std::string ent_layer;
   ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
-  ASSERT_TRUE(lua::Read(L, 2, &var_layer));
-  EXPECT_EQ(
+  constexpr const char kExpectedEntityLayer0[] =
       "***************\n"
       "*****         *\n"
       "***** *****H* *\n"
@@ -353,23 +384,25 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze1) {
       "*     I ***   *\n"
       "******* ***   *\n"
       "*******   I 2A*\n"
-      "***************\n",
-      ent_layer);
-  EXPECT_EQ(
-      "...............\n"
-      "...............\n"
-      "...............\n"
-      ".......AAAAA...\n"
-      ".......AAAAA...\n"
-      ".BBBBB.AAAAA...\n"
-      ".BBBBB.AAAAA...\n"
-      ".BBBBB.AAAAA...\n"
-      ".BBBBB.........\n"
-      ".BBBBB.....CCC.\n"
-      "...........CCC.\n"
-      "...........CCC.\n"
-      "...............\n",
-      var_layer);
+      "***************\n";
+
+  constexpr const char kExpectedEntityLayer1[] =
+      "***************\n"
+      "*A  ***** IA  *\n"
+      "* 2 ***** *2  *\n"
+      "*   I     *   *\n"
+      "*   ***H***H***\n"
+      "*   I 2   * ***\n"
+      "***H*    A* ***\n"
+      "*   *     * ***\n"
+      "* * *H***** ***\n"
+      "* *   *     ***\n"
+      "* ***** *******\n"
+      "*       *******\n"
+      "***************\n";
+
+  EXPECT_THAT(ent_layer, testing::AnyOf(Eq(kExpectedEntityLayer0),
+                                        Eq(kExpectedEntityLayer1)));
 }
 
 constexpr char kCreateRandomMaze2[] = R"(
@@ -378,9 +411,10 @@ local maze_generation = require 'dmlab.system.maze_generation'
 sys_random:seed(123)
 local maze = maze_generation.randomMazeGeneration{
     random = sys_random,
-    width = 11,
+    width = 9,
     height = 9,
-    roomMinSize = 5,
+    roomMinSize = 7,
+    roomMaxSize = 7,
     maxRooms = 1,
     extraConnectionProbability = 0.0,
     roomSpawnCount = 0,
@@ -398,26 +432,26 @@ TEST_F(LuaMazeGenerationTest, CreateRandomMaze2) {
   ASSERT_TRUE(lua::Read(L, 1, &ent_layer));
   ASSERT_TRUE(lua::Read(L, 2, &var_layer));
   EXPECT_EQ(
-      "***********\n"
-      "***********\n"
-      "***********\n"
-      "***       *\n"
-      "***       *\n"
-      "***       *\n"
-      "***       *\n"
-      "***       *\n"
-      "***********\n",
+      "*********\n"
+      "*       *\n"
+      "*       *\n"
+      "*       *\n"
+      "*       *\n"
+      "*       *\n"
+      "*       *\n"
+      "*       *\n"
+      "*********\n",
       ent_layer);
   EXPECT_EQ(
-      "...........\n"
-      "...........\n"
-      "...........\n"
-      "...AAAAAAA.\n"
-      "...AAAAAAA.\n"
-      "...AAAAAAA.\n"
-      "...AAAAAAA.\n"
-      "...AAAAAAA.\n"
-      "...........\n",
+      ".........\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".AAAAAAA.\n"
+      ".........\n",
       var_layer);
 }
 

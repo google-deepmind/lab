@@ -20,6 +20,7 @@
 
 #include <random>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "deepmind/level_generation/text_maze_generation/text_maze.h"
 
@@ -27,6 +28,9 @@ namespace deepmind {
 namespace lab {
 namespace maze_generation {
 namespace {
+
+using ::testing::AnyOf;
+using ::testing::Eq;
 
 TEST(AlgorithmTest, FromCharGrid) {
   TextMaze maze =
@@ -310,14 +314,13 @@ TEST(AlgorithmTest, RemoveDeadEndsEdge) {
 // - AddNEntitiesToEachRoom
 // is somewhat limited: Their outputs depend on the specific implementation of
 // various random algorithms, and thus they are really only reliable on a fixed
-
 // platform. When moving platforms, you will most likely need to generate new
 // expected outputs.
 TEST(AlgorithmTest, FillSpaceWithMaze) {
   std::mt19937_64 prbg(0);
   TextMaze maze({11, 11});
   FillSpaceWithMaze(1, 0, &maze, &prbg);
-  EXPECT_EQ(
+  constexpr char kMaze0[] =
       "***********\n"
       "* *       *\n"
       "* *** *** *\n"
@@ -328,8 +331,20 @@ TEST(AlgorithmTest, FillSpaceWithMaze) {
       "*     * * *\n"
       "* * *** * *\n"
       "* *       *\n"
-      "***********\n",
-      maze.Text(TextMaze::kEntityLayer));
+      "***********\n";
+  constexpr char kMaze1[] =
+      "***********\n"
+      "* *   *   *\n"
+      "* * * * * *\n"
+      "*   * * * *\n"
+      "***** * * *\n"
+      "*     * * *\n"
+      "* ******* *\n"
+      "* *     * *\n"
+      "* * *** * *\n"
+      "*   *     *\n"
+      "***********\n";
+  EXPECT_THAT(maze.Text(TextMaze::kEntityLayer), AnyOf(Eq(kMaze0), Eq(kMaze1)));
 }
 
 TEST(AlgorithmTest, RandomConnectRegions) {
@@ -355,7 +370,7 @@ TEST(AlgorithmTest, RandomConnectRegions) {
     }
   }
   RandomConnectRegions('#', 0.5, &maze, &prbg);
-  EXPECT_EQ(
+  constexpr char kMaze0[] =
       "***********\n"
       "*     *****\n"
       "*     *****\n"
@@ -366,8 +381,21 @@ TEST(AlgorithmTest, RandomConnectRegions) {
       "*   *     *\n"
       "*   *     *\n"
       "*   #     *\n"
-      "***********\n",
-      maze.Text(TextMaze::kEntityLayer));
+      "***********\n";
+  constexpr char kMaze1[] =
+      "***********\n"
+      "*     *****\n"
+      "*     *****\n"
+      "*     #   *\n"
+      "*#*#***   *\n"
+      "*   ***   *\n"
+      "*   *****#*\n"
+      "*   *     *\n"
+      "*   *     *\n"
+      "*   #     *\n"
+      "***********\n";
+
+  EXPECT_THAT(maze.Text(TextMaze::kEntityLayer), AnyOf(Eq(kMaze0), Eq(kMaze1)));
 }
 
 TEST(AlgorithmTest, RemoveAllHorseshoeBends) {
@@ -457,7 +485,21 @@ TEST(AlgorithmTest, AddNEntitiesToEachRoom) {
                             "***********\n"));
   std::vector<Rectangle> rooms = {{{1, 1}, {3, 5}}, {{7, 7}, {3, 3}}};
   AddNEntitiesToEachRoom(rooms, 3, 'A', ' ', &maze, &prbg);
-  EXPECT_EQ(
+
+  constexpr char kMaze0[] =
+      "***********\n"
+      "*       * *\n"
+      "*     * * *\n"
+      "* AA A*   *\n"
+      "* ******* *\n"
+      "*   *     *\n"
+      "* * ***** *\n"
+      "* *     A *\n"
+      "* *****AA *\n"
+      "*     *   *\n"
+      "***********\n";
+
+  constexpr char kMaze1[] =
       "***********\n"
       "*A   A  * *\n"
       "* A   * * *\n"
@@ -468,8 +510,8 @@ TEST(AlgorithmTest, AddNEntitiesToEachRoom) {
       "* *     A *\n"
       "* *****   *\n"
       "*     *AA *\n"
-      "***********\n",
-      maze.Text(TextMaze::kEntityLayer));
+      "***********\n";
+  EXPECT_THAT(maze.Text(TextMaze::kEntityLayer), AnyOf(Eq(kMaze0), Eq(kMaze1)));
 }
 
 }  // namespace

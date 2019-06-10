@@ -34,8 +34,10 @@ function tests.testShuffle()
   random:seed(2)
   asserts.tablesEQ(random:shuffle{}, {})
   asserts.tablesEQ(random:shuffle{1}, {1})
-  asserts.tablesEQ(random:shuffle{1, 2}, {2, 1})
-  asserts.tablesEQ(random:shuffle{1, 2, 3}, {3, 1, 2})
+  local shuffled = random:shuffle{1, 2, 3, 4, 5}
+  asserts.tablesNE(shuffled, {1, 2, 3, 4, 5})
+  table.sort(shuffled)
+  asserts.tablesEQ(shuffled, {1, 2, 3, 4, 5})
 end
 
 function tests.testShuffleInPlace()
@@ -46,12 +48,11 @@ function tests.testShuffleInPlace()
   seq = {1}
   random:shuffleInPlace(seq)
   asserts.tablesEQ(seq, {1})
-  seq = {1, 2}
+  seq = {1, 2, 3, 4, 5}
   random:shuffleInPlace(seq)
-  asserts.tablesEQ(seq, {2, 1})
-  seq = {1, 2, 3}
-  random:shuffleInPlace(seq)
-  asserts.tablesEQ(seq, {3, 1, 2})
+  asserts.tablesNE(seq, {1, 2, 3, 4, 5})
+  table.sort(seq)
+  asserts.tablesEQ(seq, {1, 2, 3, 4, 5})
 end
 
 function tests.SameSqueunce()
@@ -66,12 +67,14 @@ function tests.SameSqueunce()
 end
 
 function tests.testShuffleMap()
-  randomMap:seed(2)
+  randomMap:seed(1)
   random:seed(1)
-  asserts.tablesEQ(randomMap:shuffle{}, {})
-  asserts.tablesEQ(randomMap:shuffle{1}, {1})
-  asserts.tablesEQ(randomMap:shuffle{1, 2}, {2, 1})
-  asserts.tablesEQ(randomMap:shuffle{1, 2, 3}, {3, 1, 2})
+  asserts.tablesEQ(randomMap:shuffle{1, 2, 3, 4, 5},
+                   random:shuffle{1, 2, 3, 4, 5})
+  randomMap:seed(1)
+  random:seed(2)
+  asserts.tablesNE(randomMap:shuffle{1, 2, 3, 4, 5},
+                   random:shuffle{1, 2, 3, 4, 5})
 end
 
 function tests.testShuffleInPlaceN()
@@ -82,18 +85,22 @@ function tests.testShuffleInPlaceN()
   seq = {1}
   random:shuffleInPlace(seq, 1)
   asserts.tablesEQ(seq, {1})
-  seq = {1, 2}
+  seq = {1, 2, 3, 4, 5, 6}
   random:shuffleInPlace(seq, 1)
-  asserts.tablesEQ(seq, {2, 1})
-  seq = {1, 2, 3}
-  random:shuffleInPlace(seq, 1)
-  asserts.tablesEQ(seq, {3, 2, 1})
+  asserts.tablesNE(seq, {1, 2, 3, 4, 5, 6})
+  table.sort(seq)
+  asserts.tablesEQ(seq, {1, 2, 3, 4, 5, 6})
 end
 
 function tests.testNormal()
   random:seed(2)
-  asserts.EQ(math.floor(random:normalDistribution(0, 1000)), -592)
-  asserts.EQ(random:normalDistribution(3, 0), 3)
+  local norm = math.floor(random:normalDistribution(0, 1000))
+  -- When complied with libstdc++
+  local libstdcxxExpected = -592
+  -- When complied with libc++
+  local libcxxExpected = -402
+  assert(norm == libstdcxxExpected or norm == libcxxExpected,
+         'Norm actual ' .. norm)
 
   asserts.shouldFail(function () random:normalDistribution(3, 'cat') end)
   asserts.shouldFail(function () random:normalDistribution('cat', 3) end)
