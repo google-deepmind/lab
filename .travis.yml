@@ -7,8 +7,14 @@ sudo: true
 
 language: c++
 
+dist: xenial
+
 addons:
   apt:
+    sources:
+      - webupd8team-java
+      - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
+        key_url: 'https://bazel.build/bazel-release.pub.gpg'
     packages:
       - libffi-dev
       - gettext
@@ -20,10 +26,6 @@ addons:
       - python-pil
 
 before_install:
-  - curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-  - echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-  - sudo add-apt-repository -y ppa:webupd8team/java
-  - sudo apt-get update
   - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
   - echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
   - sudo apt-get install bazel
