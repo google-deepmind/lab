@@ -3,6 +3,8 @@
 
 licenses(["restricted"])  # GPLv2
 
+export_files = ["build_defs.bzl"]
+
 PY_VERSION = "PY2"
 
 py_binary(
