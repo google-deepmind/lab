@@ -24,6 +24,9 @@ addons:
       - python-dev
       - python-numpy
       - python-pil
+      - python3-dev
+      - python3-numpy
+      - python3-pil
 
 before_install:
   - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
@@ -31,4 +34,4 @@ before_install:
   - sudo apt-get install bazel
 
 script:
-  - bazel test -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --show_progress_rate_limit=300 //...
+  - bazel test -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --show_progress_rate_limit=300 --test_output=errors //...
