@@ -160,8 +160,8 @@ lab = deepmind_lab.Lab("tests/empty_room_test", ['RGB_INTERLEAVED'],
 lab.reset(seed=1)
 
 # Execute 100 walk-forward steps and sum the returned rewards from each step.
-print sum(
-    [lab.step(np.array([0,0,0,1,0,0,0], dtype=np.intc)) for i in range(0, 100)])
+print(sum(
+    [lab.step(np.array([0,0,0,1,0,0,0], dtype=np.intc)) for i in range(0, 100)]))
 ```
 
 Run `agent.py`:
