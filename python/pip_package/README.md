@@ -17,7 +17,7 @@ Here's the short version if you have already set up the dependencies.
 
 ```sh
 git clone https://github.com/deepmind/lab.git && cd lab
-bazel build -c opt python/pip_package:build_pip_package
+bazel build -c opt --python_version=PY2 //python/pip_package:build_pip_package
 ./bazel-bin/python/pip_package/build_pip_package /tmp/dmlab_pkg
 pip install /tmp/dmlab_pkg/DeepMind_Lab-1.0-py2-none-any.whl --force-reinstall
 ```
@@ -40,14 +40,23 @@ used to build the Python module itself. If necessary, change the `WORKSPACE` and
 [build documentation](../../docs/users/build.md#lua-and-python-dependencies) for
 details.
 
-#### Python3
+#### Python 2 vs Python 3
 
-If you would like to use Python3 rather than Python2, then you may need to
-install `python3-*` variants of the dependencies, as well as `pip3`. You will
-probably want to invoke Bazel with `--python_path=/usr/bin/python3` and
-virtualenv with `virtualenv --python=python3`. You may also want to set the
-Python binary path, e.g. via `export PYTHON_BIN_PATH="/usr/bin/python3"` (unless
-you are already in a hermetic Python3 virtualenv environment).
+To select the Python API against which the DeepMind Lab module is built, build
+the PIP packaging script with the
+[`--python_version`](https://docs.bazel.build/versions/master/command-line-reference.html#flag--python_version)
+Bazel flag:
+
+* For Python 2: `bazel build -c opt --python_version=PY2 //python/pip_package:build_pip_package`
+* For Python 3: `bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package`
+
+For Python 3, you will then probably want to invoke virtualenv with `virtualenv
+--python=python3`, and you will want to set the Python binary path (e.g. via
+`export PYTHON_BIN_PATH="/usr/bin/python3"`) when running the packaging script.
+The resulting `.whl` file should contain the string `-py2-` or `-py3-` for a
+Python 2 or Python 3 build, respectively.
+
+As of Bazel 0.27, the default Python version is `PY3`.
 
 #### Build assets/binaries
 
@@ -59,17 +68,16 @@ haven't already, clone DeepMind Lab.
 $ git clone https://github.com/deepmind/lab.git
 ```
 
-
 To build the prerequisite assets and binaries for the Python package, change to
 the `lab` directory and run the Bazel command to build the pip package script:
 
 ```sh
 $ cd lab
-$ bazel build -c opt python/pip_package:build_pip_package
+$ bazel build -c opt //python/pip_package:build_pip_package
 ```
 
 If the build command fails, make sure you've grabbed the latest version and
-double check that you've installed all of the dependencies for DeepMind Lab,
+double-check that you've installed all of the dependencies for DeepMind Lab,
 then [file a bug](https://github.com/deepmind/lab/issues/new).
 
 Keep in mind that for most changes you make to DeepMind Lab, including adding
