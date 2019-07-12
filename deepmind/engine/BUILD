@@ -192,6 +192,7 @@ cc_library(
         "//deepmind/model_generation:lua_model",
         "//deepmind/tensor:lua_tensor",
     ],
+    alwayslink = 1,  # provides symbols for a shared C and C++ header
 )
 
 cc_test(
@@ -201,7 +202,6 @@ cc_test(
     deps = [
         ":callbacks",
         "//deepmind/include:context_hdrs",
-        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "@com_google_googletest//:gtest_main",
     ],

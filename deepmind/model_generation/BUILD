@@ -78,7 +78,6 @@ cc_test(
         ":geometry_cylinder",
         ":geometry_sphere",
         ":geometry_util",
-        "//deepmind/support:logging",
         "@com_google_googletest//:gtest_main",
     ],
 )
