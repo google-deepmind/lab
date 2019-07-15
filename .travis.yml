@@ -1,21 +1,19 @@
 # Runs Bazel tests for DeepMind Lab
 
-env:
-  - BUILD_TYPE=osmesa
-
-sudo: true
-
 language: c++
 
 dist: xenial
 
+jdk:
+  - oraclejdk8
+
 addons:
   apt:
     sources:
-      - webupd8team-java
       - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
         key_url: 'https://bazel.build/bazel-release.pub.gpg'
     packages:
+      - bazel
       - libffi-dev
       - gettext
       - freeglut3-dev
@@ -27,11 +25,6 @@ addons:
       - python3-dev
       - python3-numpy
       - python3-pil
-
-before_install:
-  - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-  - echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-  - sudo apt-get install bazel
 
 script:
   - bazel test -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --show_progress_rate_limit=300 --test_output=errors //...
