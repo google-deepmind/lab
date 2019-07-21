@@ -245,7 +245,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
   if (config != NULL) {
     PyObject *pykey, *pyvalue;
     Py_ssize_t pos = 0;
-    char *key, *value;
+    const char *key, *value;
 
     while (PyDict_Next(config, &pos, &pykey, &pyvalue)) {
 #if PY_MAJOR_VERSION >= 3
@@ -273,7 +273,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
     return -1;
   }
 
-  char* observation_name;
+  const char* observation_name;
   int api_observation_count = self->env_c_api->observation_count(self->context);
   for (int i = 0; i < self->observation_count; ++i) {
 #if PY_MAJOR_VERSION >= 3
