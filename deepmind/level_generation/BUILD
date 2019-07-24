@@ -42,6 +42,7 @@ cc_test(
     srcs = ["compile_map_test.cc"],
     deps = [
         ":compile_map",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )
