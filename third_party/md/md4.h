@@ -38,11 +38,11 @@ typedef struct {
   unsigned char buffer[64];                         /* input buffer */
 } MD4_CTX;
 
-void MD4Init PROTO_LIST((MD4_CTX *));
+void MD4Init PROTO_LIST((MD4_CTX *)) asm("DeepMindMD_MD4Init");
 
-void MD4Update PROTO_LIST((MD4_CTX *, const unsigned char *, unsigned int));
+void MD4Update PROTO_LIST((MD4_CTX *, const unsigned char *, unsigned int)) asm("DeepMindMD_MD4Update");
 
-void MD4Final PROTO_LIST((unsigned char [16], MD4_CTX *));
+void MD4Final PROTO_LIST((unsigned char [16], MD4_CTX *)) asm("DeepMindMD_MD4Final");
 
 #ifdef __cplusplus
 }

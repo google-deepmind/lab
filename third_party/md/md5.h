@@ -38,11 +38,11 @@ typedef struct {
   unsigned char buffer[64];                         /* input buffer */
 } MD5_CTX;
 
-void MD5Init PROTO_LIST((MD5_CTX *));
+void MD5Init PROTO_LIST((MD5_CTX *)) asm("DeepMindMD_MD5Init");
 
-void MD5Update PROTO_LIST((MD5_CTX *, const unsigned char *, unsigned int));
+void MD5Update PROTO_LIST((MD5_CTX *, const unsigned char *, unsigned int)) asm("DeepMindMD_MD5Update");
 
-void MD5Final PROTO_LIST((unsigned char [16], MD5_CTX *));
+void MD5Final PROTO_LIST((unsigned char [16], MD5_CTX *)) asm("DeepMindMD_MD5Final");
 
 /* Compatibility shim for Aladdin Enterprises's libmd5-rfc. */
 typedef unsigned char md5_byte_t;
