@@ -2,7 +2,7 @@
 #define __eglplatform_h_
 
 /*
-** Copyright (c) 2007-2016 The Khronos Group Inc, 2017 Google Inc.
+** Copyright (c) 2007-2016 The Khronos Group Inc
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -104,7 +104,7 @@ typedef void*                           EGLNativeDisplayType;
 typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 typedef struct ANativeWindow*           EGLNativeWindowType;
 
-#elif defined(USE_OZONE) || defined(MESA_EGL_NO_X11_HEADERS)
+#elif defined(USE_OZONE)
 
 typedef intptr_t EGLNativeDisplayType;
 typedef intptr_t EGLNativePixmapType;

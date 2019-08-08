@@ -13,7 +13,7 @@ cc_library(
         "EGL/eglplatform.h",
         "KHR/khrplatform.h",
     ],
-    defines = ["MESA_EGL_NO_X11_HEADERS"],
+    defines = ["USE_OZONE"],
     includes = ["."],
     visibility = ["//visibility:public"],
 )
