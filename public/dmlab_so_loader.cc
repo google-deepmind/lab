@@ -240,7 +240,13 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
     std::cerr << "Failed to find function dmlab_connect in library!\n";
     return 1;
   }
-  connect(params, env_c_api, context);
+
+  int connect_status = connect(params, env_c_api, context);
+  if (connect_status != 0) {
+    std::cerr << "Failed to call function dmlab_connect, return value was: "
+              << connect_status << "\n";
+    return 1;
+  }
 
   // Monkey-patch release_context with a wrapper that also calls dlclose.
   void (*release_context)(void* context) = env_c_api->release_context;
