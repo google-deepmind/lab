@@ -17,6 +17,10 @@ It can also be invoked,
 For a complete example script, please see,
 [examples/game_main.py](../../examples/game_main.py).
 
+Depending on how the `deepmind_lab` module has been deployed, you may need to
+set the module's runfiles path using `deepmind_lab.set_runfiles_path`; e.g. see
+`game_main.py`'s main code near the end.
+
 Construct the environment, step once, and retrieve an observation,
 
 ```python

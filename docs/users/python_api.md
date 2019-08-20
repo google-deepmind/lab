@@ -8,11 +8,17 @@ usage, there is
 [python/random_agent.py](../../python/random_agent.py), and
 [python/random_agent_simple.py](../../python/random_agent_simple.py).
 
-**A note about Python 3:** By and large the Python API requires Python 2.7.
-However, there is experimental support for Python 3. Under Python 3, strings
-coming out of the environment (e.g. event names or string observations) have to
-be valid UTF-8. The `dmlab_module_test.py` demonstrates how to write code that
-works both in Python 2.7 and Python 3 (using the `six` package).
+### module function `deepmind_lab.version`()
+
+Prints the current version of *DeepMind Lab*. This information is not useful,
+since we never update it.
+
+### module functions `deepmind_lab.runfiles_path`(), `deepmind_lab.set_runfiles_path`(*path*)
+
+These functions manipulate the module's "runfiles path", which is the path where
+runtime dependencies of the module are located (such as the native code
+libraries). Depending on how the module is deployed, you may need to set this
+path before creating an environment.
 
 ### class `deepmind_lab.Lab`(*level*, *observations*, *config={}*, *renderer='software'*, *level_cache=None*)
 
@@ -28,12 +34,11 @@ following options are recognized:
 | `width`          | horizontal resolution of the observation frames                                                | `'320'` |
 | `height`         | vertical resolution of the observation frames                                                  | `'240'` |
 | `fps`            | frames per second                                                                              | `'60'`  |
-| `levelDirectory` | optional path to level directory (relative                                                     | `''`    |
-:                  : paths are relative to game_scripts/levels)                                                     :         :
+| `levelDirectory` | optional path to level directory (relative paths are relative to game_scripts/levels)          | `''`    |
 | `appendCommand`  | Commands for the internal Quake console\*                                                      | `''`    |
 | `mixerSeed`      | value combined with each of the seeds fed to the environment to define unique subsets of seeds | `'0'`   |
 
-\* See also [Lua map API](/docs/developers/reference/lua_api.md#commandlineold-commandline-string).
+\* See also [Lua map API](/docs/developers/reference/lua_api.md#commandlineold_commandline--string).
 
 Unrecognized options are passed down to the level's init function. In Lua,
 this is `kwargs.opts` in `api:init`.
