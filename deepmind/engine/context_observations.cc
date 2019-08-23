@@ -62,11 +62,11 @@ int ContextObservations::ReadSpec(lua::TableRef script_table_ref) {
     }
     std::string type = "Doubles";
     info.LookUp("type", &type);
-    if (type.compare("Bytes") == 0) {
+    if (type == "Bytes") {
       spec_info.type = EnvCApi_ObservationBytes;
-    } else if (type.compare("Doubles") == 0) {
+    } else if (type == "Doubles") {
       spec_info.type = EnvCApi_ObservationDoubles;
-    } else if (type.compare("String") == 0) {
+    } else if (type == "String") {
       spec_info.type = EnvCApi_ObservationString;
     } else {
       std::cerr << "[customObservationSpec] - Missing 'type = "
