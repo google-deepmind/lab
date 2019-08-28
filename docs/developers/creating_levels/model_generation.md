@@ -4,7 +4,7 @@ The 3D models used to represent reward objects in DeepMind Lab are specified via
 the `model` member in the table returned by the _createPickup_ method of the
 level API:
 
-```Lua
+```lua
 local api = {}
 
 function api:createPickup(classname)
@@ -54,7 +54,7 @@ together. These frames are expressed as homogeneous 3D transformation matrices
 In the example below, the level API defines a unit cube for a custom reward
 object, with a single locator pointing upwards from the centre of its top face:
 
-```Lua
+```lua
 local api = {}
 
 function api:createPickup(classname)
@@ -195,7 +195,7 @@ the parent table.
 
 The graph above can be generated through the following function:
 
-```Lua
+```lua
 local model = require 'dmlab.system.model'
 local transform = require 'common.transform'
 
@@ -273,7 +273,7 @@ The results are as follow:
 In order to produce a wider variety of models, random variables can be easily
 introduced in the function above:
 
-```Lua
+```lua
 function randomChairModel()
   local height = random.uniformReal(30.0, 45.0)
   local split = random.uniformReal(0.4, 0.7)
@@ -370,7 +370,7 @@ The `dmlab.systems.model` Lua library provides the following primitives:
 
 *   Cones / elliptical cones:
 
-```Lua
+```lua
     dmlab.systems.model:cone{
         radius = 5,
         height = 10,
@@ -387,7 +387,7 @@ The `dmlab.systems.model` Lua library provides the following primitives:
 
 *   Cubes / cuboids:
 
-```Lua
+```lua
     dmlab.systems.model:cube{
         size = 10,
         shaderName = 'textures/model/red_d'
@@ -403,7 +403,7 @@ The `dmlab.systems.model` Lua library provides the following primitives:
 
 *   Cylinders / epllictical cylinders:
 
-```Lua
+```lua
     dmlab.systems.model:cylinder{
         radius = 5,
         height = 10,
@@ -420,7 +420,7 @@ The `dmlab.systems.model` Lua library provides the following primitives:
 
 *   Spheres / ellipsoids:
 
-```Lua
+```lua
     dmlab.systems.model:sphere{
         radius = 5,
         shaderName = 'textures/model/yellow_d'
@@ -446,44 +446,44 @@ create common transformation matrices:
 
 *   Translation:
 
-```Lua
+```lua
     common.transform.translate{offsetX, offsetY, offsetZ}
 ```
 
 *   Rotation around an arbitrary axis:
 
-```Lua
+```lua
     common.transform.rotate(angleInDegrees, {axisX, axisY, axisZ})
 ```
 
 *   Rotation around the X axis:
 
-```Lua
+```lua
     common.transform.rotateX(angleInDegrees)
 ```
 
 *   Rotation around the Y axis:
 
-```Lua
+```lua
     common.transform.rotateY(angleInDegrees)
 ```
 
 *   Rotation around the Z axis:
 
-```Lua
+```lua
     common.transform.rotateZ(angleInDegrees)
 ```
 
 *   Scaling:
 
-```Lua
+```lua
     common.transform.scale{scaleFactorX, scaleFactorY, scaleFactorZ}
 ```
 
 Concatenating transformations is possible using the matrix multiplication
 operator for tensors:
 
-```Lua
+```lua
     common.transform.rotateX(180):mmul(common.transform.translate{0, 10, 0}),
 ```
 
@@ -493,13 +493,13 @@ The `dmlab.systems.model` Lua library provides the following layout nodes:
 
 *   Circular:
 
-```Lua
+```lua
     dmlab.systems.model:circularLayout(radius, numberOfSamples)
 ```
 
 *   Linear:
 
-```Lua
+```lua
     dmlab.systems.model:linearLayout(length, numberOfSamples)
 ```
 
@@ -508,7 +508,7 @@ The `dmlab.systems.model` Lua library provides the following layout nodes:
 Lua model data can be loaded from MD3 files using the
 `dmlab.system.model:loadMD3` function, e.g.:
 
-```Lua
+```lua
     dmlab.system.model:loadMD3('models/apple.md3')
 ```
 

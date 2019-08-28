@@ -92,7 +92,7 @@ remain blacks).
 
 Returns updated `img`.
 
-```Lua
+```lua
 local image = require 'dmlab.system.image'
 local tensor = require 'dmlab.system.tensor'
 
@@ -143,7 +143,7 @@ alpha channel is then set to 255.
 
 Returns the modified source image `img`.
 
-```Lua
+```lua
 local image = require
 'dmlab.system.image' local tensor = require 'dmlab.system.tensor'
 
@@ -164,7 +164,7 @@ local image = require
 
 It is functionally equivalent to:
 
-```Lua
+```lua
 function image.setMaskedPattern(src, pat, color1, color2)
   local hSrc, wSrc, cSrc = unpack(src:shape())
   local hPat, wPat, cPat = unpack(pat:shape())

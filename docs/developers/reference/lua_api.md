@@ -427,7 +427,7 @@ There is a helper table used to interact with the `loadOut`:
 If the function is defined `loadOut` must be returned, which can be modified
 with `inventory.View`. See [Inventory View](#inventory_view)
 
-```Lua
+```lua
 local inventory = require 'common.inventory'
 
 function api:spawnInventory(loadOut)
@@ -472,7 +472,7 @@ Valid Gadgets:
 
 Valid amount are in range `[0, 999)` or `inventory.UNLIMITED`
 
-```Lua
+```lua
 -- Returns/sets list of gadgets.
 function View:gadgets()
 function View:setGadgets(gadgets)
@@ -718,7 +718,7 @@ storage.
 
 ### `renderCustomView`(kwargs) &rarr; ByteTensor\[height x width x 3\]
 
-```Lua
+```lua
 {
     width = width,    -- Required, sets width of tensor returned.
     height = height,  -- Required, sets height of tensor returned.
@@ -787,7 +787,7 @@ entities that match one of the classnames provided are returned.
 
 Each entity in the list returned in a table:
 
-```Lua
+```lua
 entity = {
   entityId = 0,             -- Internal id.
   id = 0,                   -- Id provided via spawnVars.
@@ -801,7 +801,7 @@ entity = {
 
 Example usage:
 
-```Lua
+```lua
 local game_entities = require 'dmlab.system.game_entities'
 
 
@@ -826,7 +826,7 @@ observation may be one of string, ByteTensor or DoubleTensor.
 
 Example script:
 
-```Lua
+```lua
 local events = require 'dmlab.system.events'
 local tensor = require 'dmlab.system.tensor'
 
@@ -846,7 +846,7 @@ table containing the key 'classname'. They should match internal Quake III Arena
 
 Example:
 
-```Lua
+```lua
 local pickups_spawn = require 'dmlab.system.pickups_spawn'
 
 local function _respondToEvent()
