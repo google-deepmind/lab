@@ -139,6 +139,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
   LabObject* self = (LabObject*)pself;
   char* level;
   char* renderer = NULL;
+  char* temp_folder = NULL;
   PyObject *observations = NULL, *config = NULL, *level_cache = NULL;
 
   static char* kwlist[] = {
@@ -147,6 +148,7 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
     "config",
     "renderer",
     "level_cache",
+    "temp_folder",
     NULL
   };
 
@@ -155,11 +157,11 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
     return -1;
   }
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!sO", kwlist,
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO!|O!sOs", kwlist,
                                    &level,
                                    &PyList_Type, &observations,
                                    &PyDict_Type, &config,
-                                   &renderer, &level_cache)) {
+                                   &renderer, &level_cache, &temp_folder)) {
     return -1;
   }
 
@@ -203,6 +205,10 @@ static int Lab_init(PyObject* pself, PyObject* args, PyObject* kwds) {
           &fetch_level_from_cache;
       params.level_cache_params.write_level_to_cache = &write_level_to_cache;
       self->level_cache_context = level_cache;
+    }
+
+    if (temp_folder != NULL) {
+      params.optional_temp_folder = temp_folder;
     }
 
     if (dmlab_connect(&params, self->env_c_api, &self->context) != 0) {
