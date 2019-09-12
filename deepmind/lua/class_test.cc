@@ -18,6 +18,10 @@
 
 #include "deepmind/lua/class.h"
 
+#include <array>
+#include <string>
+#include <utility>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "deepmind/lua/bind.h"
@@ -34,6 +38,9 @@ namespace lua {
 namespace {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
+using ::deepmind::lab::lua::testing::StatusIs;
+using ::testing::AllOf;
+using ::testing::HasSubstr;
 
 // Simple demo class to test and demonstrate the functionality of Class.
 class Foo final : public Class<Foo> {
@@ -59,25 +66,25 @@ class Foo final : public Class<Foo> {
   }
 
   // Returns whatever was provided as the first argument, twice.
-  //
-  // [-1, +2, -]
   NResultsOr Duplicate(lua_State* L) {
     lua_pushvalue(L, -1);
     return 2;
   }
 
   // Returns the name of the object.
-  //
-  // [-0, +1, -]
   NResultsOr Name(lua_State* L) {
     Push(L, name_);
     return 1;
   }
 
+  // Returns an error message.
+  NResultsOr Error(lua_State* L) { return "Something went wrong!"; }
+
   static void Register(TableRef module, lua_State* L) {
     const Class::Reg methods[] = {
         {"duplicate", Member<&Foo::Duplicate>},  //
         {"name", Member<&Foo::Name>},            //
+        {"error", Member<&Foo::Error>},          //
     };
     Class::Register(L, methods);
     lua_CFunction f = Bind<Foo::CreateFoo>;
@@ -96,7 +103,7 @@ class Foo final : public Class<Foo> {
  protected:
   friend class Class;
 
-  static const char* ClassName() { return "deepmind.lab.Foo"; }
+  static const char* ClassName() { return "system.Foo"; }
 
  private:
   std::string name_;
@@ -155,8 +162,7 @@ return {
 
 TEST_F(ClassTest, TestRead2) {
   vm()->AddCModuleToSearchers("foo_module", Foo::Module);
-  ASSERT_THAT(PushScript(L, kScript2, sizeof(kScript2) - 1, "kScript2"),
-              IsOkAndHolds(1));
+  ASSERT_THAT(PushScript(L, kScript2, "kScript2"), IsOkAndHolds(1));
   ASSERT_THAT(Call(L, 0), IsOkAndHolds(1));
   std::array<Foo*, 2> results;
   ASSERT_TRUE(IsFound(Read(L, 1, &results)));
@@ -171,13 +177,40 @@ return foo_module.Foo('hello')
 
 TEST_F(ClassTest, TestModule) {
   vm()->AddCModuleToSearchers("foo_module", Foo::Module);
-  auto result = PushScript(L, kScript, sizeof(kScript) - 1, "kScript");
-  ASSERT_TRUE(result.ok()) << result.error();
-  result = Call(L, 0);
-  ASSERT_TRUE(result.ok()) << result.error();
-  Foo* foo = Foo::ReadObject(L, -1);
+  ASSERT_THAT(PushScript(L, kScript, "kScript"), IsOkAndHolds(1));
+  ASSERT_THAT(Call(L, 0), IsOkAndHolds(1));
+  Foo* foo = Foo::ReadObject(L, 1);
   ASSERT_TRUE(foo != nullptr);
   EXPECT_EQ("hello", foo->name());
+}
+
+constexpr char kScriptMethodError[] = R"(
+local foo_module = require 'foo_module'
+local foo = foo_module.Foo('Hello')
+return foo:error()
+)";
+
+TEST_F(ClassTest, MethodErrorMessage) {
+  vm()->AddCModuleToSearchers("foo_module", Foo::Module);
+  ASSERT_THAT(PushScript(L, kScriptMethodError, "kScriptMethodError"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(Call(L, 0), StatusIs(AllOf(HasSubstr("system.Foo.error"),
+                                         HasSubstr("Something went wrong!"))));
+}
+
+constexpr char kScriptCallError[] = R"(
+local foo_module = require 'foo_module'
+local foo = foo_module.Foo('Hello')
+-- Calling with '.'' instead of ':'
+return foo.duplicate('World')
+)";
+
+TEST_F(ClassTest, CallErrorMessage) {
+  vm()->AddCModuleToSearchers("foo_module", Foo::Module);
+  ASSERT_THAT(PushScript(L, kScriptCallError, "kScriptCallError"),
+              IsOkAndHolds(1));
+  ASSERT_THAT(Call(L, 0),
+              StatusIs(AllOf(HasSubstr("'system.Foo'"), HasSubstr("'World'"))));
 }
 
 }  // namespace

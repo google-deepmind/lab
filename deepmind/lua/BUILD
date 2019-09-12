@@ -220,6 +220,7 @@ cc_library(
         ":push",
         ":read",
         "//deepmind/support:logging",
+        "@com_google_absl//absl/strings",
     ],
 )
 

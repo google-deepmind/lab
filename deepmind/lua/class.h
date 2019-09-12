@@ -20,6 +20,7 @@
 #define DML_DEEPMIND_LUA_CLASS_H_
 
 #include "deepmind/support/logging.h"
+#include "absl/strings/str_cat.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
@@ -167,7 +168,9 @@ void Class<T>::Register(lua_State* L, const Regs& members) {
 
   for (const auto& member : members) {
     Push(L, member.first);
-    Push(L, member.second);
+    // Place method name in up-value to aid diagnostics.
+    lua_pushvalue(L, -1);
+    lua_pushcclosure(L, member.second, 1);
     lua_settable(L, -3);
   }
 
@@ -185,24 +188,23 @@ int Class<T>::Member(lua_State* L) {
       if (result_or.ok()) {
         return result_or.n_results();
       } else {
-        Push(L, result_or.error());
+        Push(L, absl::StrCat("[", T::ClassName(), ".",
+                             lua::ToString(L, lua_upvalueindex(1)), "] - ",
+                             result_or.error()));
       }
     } else if (ReadObject(L, 1) != nullptr) {
       // Fall back to LuaClass::ReadObject to check if there is an object of
       // type T on the stack at all. If yes, then the object failed to pass the
       // user-defined validation, and we can produce an appropriate diagnostic.
-      std::string msg = "Trying to access invalidated object of type: '";
-      msg += T::ClassName();
-      msg += "'.";
-      Push(L, msg);
+      Push(L, absl::StrCat("Trying to access invalidated object of type: '",
+                           T::ClassName(), "' with method '",
+                           lua::ToString(L, lua_upvalueindex(1)), "'."));
     } else {
-      std::string msg = "First argument must be an object of type: '";
-      msg += T::ClassName();
-      msg += "'\nDid you forget to use ':' when calling?\n";
-      msg += "Argument received: '";
-      msg += lua::ToString(L, 1);
-      msg += "'";
-      Push(L, msg);
+      Push(L, absl::StrCat("First argument must be an object of type: '",
+                           T::ClassName(),
+                           "'\nDid you forget to use ':' when calling '",
+                           lua::ToString(L, lua_upvalueindex(1)), "'?\n",
+                           "Argument received: '", lua::ToString(L, 1), "'"));
     }
   }
   // "lua_error" performs a longjmp, which is not allowed in C++ except in
