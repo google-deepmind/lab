@@ -37,7 +37,7 @@ namespace deepmind {
 namespace lab {
 namespace lua {
 
-std::ostream& operator<<(std::ostream& os, const NResultsOr& value) {
+inline std::ostream& operator<<(std::ostream& os, const NResultsOr& value) {
   if (value.ok()) {
     return os << "is OK and has value " << value.n_results();
   } else {
@@ -79,7 +79,7 @@ class IsOkAndHoldsImpl : public ::testing::MatcherInterface<const NResultsOr&> {
                                                   &listener);
     const std::string explanation = listener.str();
 
-    if (explanation != "") {
+    if (!explanation.empty()) {
       *result_listener << "which contains value "
                        << ::testing::PrintToString(actual_value.n_results())
                        << ", " << explanation;
@@ -123,7 +123,7 @@ class StatusIsImpl : public ::testing::MatcherInterface<const NResultsOr&> {
                                                   &listener);
     const std::string explanation = listener.str();
 
-    if (explanation != "") {
+    if (!explanation.empty()) {
       *result_listener << "which contains error value "
                        << actual_value.error() << ", " << explanation;
     }
