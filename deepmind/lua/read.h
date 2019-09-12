@@ -95,6 +95,14 @@ constexpr inline ReadResult ReadTypeMismatch() {
   return ReadResult(ReadResult::kTypeMismatch);
 }
 
+// Returns a string_view of the string at 'idx' in the Lua stack.
+// Prerequisite: `lua_type(L, idx) == LUA_TSTRING`.
+inline absl::string_view RawStringRead(lua_State* L, int idx) {
+  std::size_t length = 0;
+  const char* result_cstr = lua_tolstring(L, idx, &length);
+  return absl::string_view(result_cstr, length);
+}
+
 template <typename Type>
 Type* ReadUDT(lua_State* L, int idx, const char* tname) {
   if (!lua_isuserdata(L, idx)) {
@@ -120,12 +128,9 @@ Type* ReadUDT(lua_State* L, int idx, const char* tname) {
 // whether the read was valid. If the read fails, '*result' is unmodified.
 inline ReadResult Read(lua_State* L, int idx, std::string* result) {
   switch (lua_type(L, idx)) {
-    case LUA_TSTRING: {
-      std::size_t length = 0;
-      const char* result_cstr = lua_tolstring(L, idx, &length);
-      *result = std::string(result_cstr, length);
+    case LUA_TSTRING:
+      *result = std::string(RawStringRead(L, idx));
       return ReadFound();
-    }
     case LUA_TNIL:
     case LUA_TNONE:
       return ReadNotFound();
@@ -138,12 +143,9 @@ inline ReadResult Read(lua_State* L, int idx, std::string* result) {
 // collected after being removed from that stack.
 inline ReadResult Read(lua_State* L, int idx, absl::string_view* result) {
   switch (lua_type(L, idx)) {
-    case LUA_TSTRING: {
-      std::size_t length = 0;
-      const char* result_cstr = lua_tolstring(L, idx, &length);
-      *result = absl::string_view(result_cstr, length);
+    case LUA_TSTRING:
+      *result = RawStringRead(L, idx);
       return ReadFound();
-    }
     case LUA_TNIL:
     case LUA_TNONE:
       return ReadNotFound();
@@ -453,12 +455,9 @@ inline std::string ToString(lua_State* L, int idx) {
     case LUA_TNUMBER:
       ss << lua_tonumber(L, idx);
       break;
-    case LUA_TSTRING: {
-      absl::string_view result;
-      Read(L, idx, &result);
-      ss << result;
+    case LUA_TSTRING:
+      ss << RawStringRead(L, idx);
       break;
-    }
     case LUA_TTABLE:
       ss << "(table)";
       break;
@@ -468,10 +467,8 @@ inline std::string ToString(lua_State* L, int idx) {
     case LUA_TUSERDATA: {
       ss << "user pointer: [" << lua_touserdata(L, idx) << "]";
       int top = lua_gettop(L);
-      absl::string_view user_string;
-      if (luaL_callmeta(L, idx, "__tostring") &&
-          IsFound(Read(L, -1, &user_string))) {
-        ss << user_string;
+      if (luaL_callmeta(L, idx, "__tostring") && lua_isstring(L, -1)) {
+        ss << RawStringRead(L, -1);
       }
       lua_settop(L, top);
       break;

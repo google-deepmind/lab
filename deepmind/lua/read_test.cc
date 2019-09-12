@@ -61,6 +61,12 @@ TEST_F(ReadTest, ReadFunction) {
   EXPECT_TRUE(TestFunction == c_function);
 }
 
+TEST_F(ReadTest, RawStringRead) {
+  Push(L, kTestString);
+  absl::string_view result = RawStringRead(L, 1);
+  EXPECT_EQ(kTestString, result);
+}
+
 TEST_F(ReadTest, ReadString) {
   Push(L, kTestString);
   Push(L, false);
