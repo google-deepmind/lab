@@ -454,9 +454,9 @@ inline std::string ToString(lua_State* L, int idx) {
       ss << lua_tonumber(L, idx);
       break;
     case LUA_TSTRING: {
-      std::size_t length = 0;
-      const char* result_cstr = lua_tolstring(L, idx, &length);
-      ss << std::string(result_cstr, length);
+      absl::string_view result;
+      Read(L, idx, &result);
+      ss << result;
       break;
     }
     case LUA_TTABLE:
@@ -465,9 +465,17 @@ inline std::string ToString(lua_State* L, int idx) {
     case LUA_TFUNCTION:
       ss << "function [" << lua_tocfunction(L, idx) << "]";
       break;
-    case LUA_TUSERDATA:
-      ss << "user pointer [" << lua_touserdata(L, idx) << "]";
+    case LUA_TUSERDATA: {
+      ss << "user pointer: [" << lua_touserdata(L, idx) << "]";
+      int top = lua_gettop(L);
+      absl::string_view user_string;
+      if (luaL_callmeta(L, idx, "__tostring") &&
+          IsFound(Read(L, -1, &user_string))) {
+        ss << user_string;
+      }
+      lua_settop(L, top);
       break;
+    }
     default:
       ss << "(unknown)";
       break;

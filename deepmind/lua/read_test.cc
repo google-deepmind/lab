@@ -35,6 +35,8 @@ namespace lab {
 namespace lua {
 namespace {
 
+using ::testing::HasSubstr;
+
 constexpr char kTestString[] = "TestTest";
 constexpr double kTestValue = 32.0;
 constexpr double kTestRetValue = 32.0;
@@ -274,16 +276,16 @@ TEST_F(ReadTest, ToString) {
   lua_pop(L, 1);
 
   Push(L, TestFunction);
-  EXPECT_THAT(ToString(L, 1), ::testing::HasSubstr("function"));
+  EXPECT_THAT(ToString(L, 1), HasSubstr("function"));
   lua_pop(L, 1);
 
   int i = 10;
   Push(L, &i);
-  EXPECT_THAT(ToString(L, 1), ::testing::HasSubstr("pointer"));
+  EXPECT_THAT(ToString(L, 1), HasSubstr("pointer"));
   lua_pop(L, 1);
 
   Push(L, std::vector<int>());
-  EXPECT_THAT(ToString(L, 1), ::testing::HasSubstr("table"));
+  EXPECT_THAT(ToString(L, 1), HasSubstr("table"));
   lua_pop(L, 1);
 
   Push(L, true);
@@ -295,10 +297,39 @@ TEST_F(ReadTest, ToString) {
   lua_pop(L, 1);
 
   lua_pushnil(L);
-  EXPECT_THAT(ToString(L, 1), ::testing::HasSubstr("nil"));
+  EXPECT_THAT(ToString(L, 1), HasSubstr("nil"));
   lua_pop(L, 1);
 
-  EXPECT_THAT(ToString(L, 1), ::testing::HasSubstr("none"));
+  EXPECT_THAT(ToString(L, 1), HasSubstr("none"));
+
+  int* value = static_cast<int*>(lua_newuserdata(L, sizeof(int)));
+  *value = 0;
+  EXPECT_THAT(lua::ToString(L, 1), HasSubstr("user pointer"));
+  lua_pop(L, 1);
+}
+
+TEST_F(ReadTest, UserDataToString) {
+  int* value = static_cast<int*>(lua_newuserdata(L, sizeof(int)));
+  lua_createtable(L, 0, 1);
+  lua_pushstring(L, "__tostring");
+  lua_pushcclosure(
+      L,
+      +[](lua_State* L) {
+        int* val = static_cast<int*>(lua_touserdata(L, 1));
+        if (val != nullptr) {
+          lua::Push(L, absl::StrCat("MyClass - ", *val));
+        } else {
+          lua::Push(L, absl::StrCat("Invalid call to __tostring"));
+        }
+        return 1;
+      },
+      0);
+  lua_settable(L, 2);
+  lua_setmetatable(L, 1);
+  *value = 5;
+  EXPECT_THAT(lua::ToString(L, 1), HasSubstr("MyClass - 5"));
+  *value = 10;
+  EXPECT_THAT(lua::ToString(L, 1), HasSubstr("MyClass - 10"));
 }
 
 }  // namespace
