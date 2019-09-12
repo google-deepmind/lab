@@ -20,6 +20,7 @@
 #define DML_DEEPMIND_LUA_N_RESULTS_OR_H_
 
 #include <string>
+#include <utility>
 
 namespace deepmind {
 namespace lab {

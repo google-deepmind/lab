@@ -16,9 +16,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "deepmind/util/files.h"
+
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -26,7 +27,6 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "deepmind/util/files.h"
 
 namespace deepmind {
 namespace lab {

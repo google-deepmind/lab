@@ -19,6 +19,8 @@
 #include "deepmind/lua/push.h"
 
 #include <set>
+#include <string>
+#include <utility>
 
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"

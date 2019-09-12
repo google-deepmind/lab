@@ -74,6 +74,7 @@ std::size_t TableRef::ArraySize() const {
   lua_pop(lua_state_, 1);
   return count;
 }
+
 std::size_t TableRef::KeyCount() const {
   std::size_t result = 0;
   PushTable();

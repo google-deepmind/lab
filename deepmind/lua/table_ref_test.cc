@@ -19,6 +19,7 @@
 #include "deepmind/lua/table_ref.h"
 
 #include <algorithm>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"

@@ -19,8 +19,6 @@
 #include "deepmind/util/file_reader.h"
 
 #include <cstddef>
-#include <fstream>
-#include <string>
 
 #include "absl/strings/str_cat.h"
 #include "public/file_reader_types.h"

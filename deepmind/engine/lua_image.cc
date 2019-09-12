@@ -19,22 +19,27 @@
 #include "deepmind/engine/lua_image.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <iterator>
 #include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "deepmind/lua/bind.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "deepmind/tensor/tensor_view.h"
 #include "deepmind/util/file_reader.h"
 #include "public/file_reader_types.h"
 #include "png.h"

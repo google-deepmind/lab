@@ -20,8 +20,10 @@
 
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "deepmind/lua/call.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/n_results_or_test_util.h"
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/read.h"

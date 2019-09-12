@@ -20,6 +20,7 @@
 #define DML_DEEPMIND_LUA_PUSH_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <string>

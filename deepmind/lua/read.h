@@ -20,10 +20,12 @@
 #define DML_DEEPMIND_LUA_READ_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdlib>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"

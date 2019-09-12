@@ -18,8 +18,10 @@
 
 #include "deepmind/lua/call.h"
 
-#include "deepmind/support/logging.h"
+#include <string>
+#include <utility>
 
+#include "deepmind/support/logging.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 
