@@ -18,13 +18,14 @@
 
 #include "deepmind/engine/lua_random.h"
 
-#include <cerrno>
-#include <cstdlib>
+#include <cstdint>
 #include <limits>
 #include <random>
-#include <string>
 #include <vector>
 
+#include "absl/strings/numbers.h"
+#include "absl/strings/string_view.h"
+#include "deepmind/lua/class.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 
@@ -85,22 +86,13 @@ void LuaRandom::Register(lua_State* L) {
 }
 
 lua::NResultsOr LuaRandom::Seed(lua_State* L) {
-  std::string s;
+  absl::string_view s;
   RbgNumType k;
 
-  if (ReadLargeNumber(L, -1, &k)) {
+  if (ReadLargeNumber(L, -1, &k) ||
+      (lua::Read(L, -1, &s) && absl::SimpleAtoi(s, &k))) {
     prbg_->seed(k ^ mixer_seq_);
     return 0;
-  } else if (lua::Read(L, -1, &s)) {
-    auto& err = errno;  // cache TLS-lookup
-    char* ep;
-    err = 0;
-    unsigned long long int n = std::strtoull(s.data(), &ep, 0);
-    if (ep != s.data() && *ep == '\0' && err == 0 &&
-        n <= std::numeric_limits<RbgNumType>::max()) {
-      prbg_->seed(n ^ mixer_seq_);
-      return 0;
-    }
   }
 
   return "Argument is not a valid seed value.";

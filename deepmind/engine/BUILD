@@ -257,6 +257,7 @@ cc_library(
         "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
+        "@com_google_absl//absl/strings",
     ],
 )
 
