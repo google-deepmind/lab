@@ -338,7 +338,7 @@ class Layout {
 
   // Streams out shaped data using printer for each offset.
   void PrintToStream(
-      std::ostream* os,
+      std::size_t max_num_elements, std::ostream* os,
       std::function<void(std::ostream* os, std::size_t offset)> printer) const;
 
  private:
@@ -656,12 +656,18 @@ class TensorView : public Layout {
 
   // Enable streaming of Tensor View.
   friend std::ostream& operator<<(std::ostream& os, const TensorView& view) {
-    const T* storage = view.storage();
-    view.PrintToStream(&os, [storage](std::ostream* os, std::size_t offset) {
-      // The '+' expression promotes the value to make char's print as integers.
-      (*os) << +storage[offset];
-    });
+    view.PrintToStream(/*max_num_elements=*/1024, &os);
     return os;
+  }
+
+  void PrintToStream(std::size_t max_num_elements, std::ostream* os) const {
+    const T* data = storage();
+    Layout::PrintToStream(max_num_elements, os,
+                          [data](std::ostream* os, std::size_t offset) {
+                            // The '+' expression promotes the value to make
+                            // char's print as integers.
+                            (*os) << +data[offset];
+                          });
   }
 
   const T* storage() const { return storage_; }

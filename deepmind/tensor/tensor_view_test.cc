@@ -469,10 +469,10 @@ TEST(TensorViewTest, TestStream) {
   }
   {
     std::stringstream ss;
-    TensorView<float> view_empty(Layout({}), nullptr);
+    TensorView<float> view_empty(Layout({0}), nullptr);
     ss << view_empty;
     const auto& result_empty = ss.str();
-    EXPECT_THAT(result_empty, HasSubstr("Empty"));
+    EXPECT_THAT(result_empty, HasSubstr("0"));
   }
   {
     std::stringstream ss;
@@ -484,14 +484,14 @@ TEST(TensorViewTest, TestStream) {
   }
   {
     std::stringstream ss;
-    ShapeVector shape_large = {32, 32};
+    ShapeVector shape_large = {7, 7, 7, 7};
     std::vector<float> storage_large =
         MakeSequence<float>(Layout::num_elements(shape_large));
     TensorView<float> view_large(Layout(std::move(shape_large)),
                                  storage_large.data());
     ss << view_large;
     const auto& result_large = ss.str();
-    EXPECT_THAT(result_large, HasSubstr("Too many elements"));
+    EXPECT_THAT(result_large, HasSubstr("..."));
   }
 }
 

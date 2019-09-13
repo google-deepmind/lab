@@ -129,6 +129,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         {"__tostring", &Class::template Member<&LuaTensor<T>::ToString>},
         {"__call", &Class::template Member<&LuaTensor<T>::Index>},
         {"__eq", &Class::template Member<&LuaTensor<T>::Equal>},
+        {"tostring", &Class::template Member<&LuaTensor<T>::ToString>},
         {"size", &Class::template Member<&LuaTensor<T>::Size>},
         {"shape", &Class::template Member<&LuaTensor<T>::Shape>},
         {"reshape", &Class::template Member<&LuaTensor<T>::Reshape>},
@@ -211,7 +212,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
     shape->push_back(table_size);
     lua::TableRef next;
     if (table.LookUp(1, &next)) {
-      return ReadTableShape(std::move(next), shape);
+      return ReadTableShape(next, shape);
     }
     return true;
   }
@@ -465,7 +466,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       int index;
       if (!lua::Read(L, i, &index) || index < 1 ||
           !result.Select(0, index - 1)) {
-        return "[Tensor.Index] Invalid Index!";
+        return "Invalid Index!";
       }
     }
     LuaTensor::CreateObject(L, std::move(result), storage_validity_);
@@ -503,7 +504,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       T& val = tensor_view_.mutable_storage()[tensor_view_.start_offset()];
       if (lua_gettop(L) == 2) {
         if (!lua::Read(L, 2, &val)) {
-          return "[Tensor.Val] failed to assign value.";
+          return "Failed to assign value.";
         }
       }
       lua::Push(L, val);
@@ -512,21 +513,21 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       if (lua_gettop(L) == 2) {
         lua::TableRef table;
         if (!lua::Read(L, 2, &table)) {
-          return "[Tensor.Val] failed read table shape.";
+          return "Failed read table shape.";
         }
         ShapeVector table_shape;
         if (!ReadTableShape(table, &table_shape)) {
-          return "[Tensor.Val] failed read table shape.";
+          return "Failed read table shape.";
         }
         if (shape.size() != table_shape.size() ||
             !std::equal(table_shape.begin(), table_shape.end(),
                         shape.begin())) {
-          return "[Tensor.Val] shape must match tensor shape.";
+          return "Shape must match tensor shape.";
         }
         std::vector<T> values;
-        if (!ReadTable(std::move(table), table_shape.begin(), table_shape.end(),
+        if (!ReadTable(table, table_shape.begin(), table_shape.end(),
                        &values)) {
-          return "[Tensor.Val] failed to read values from tables";
+          return "Failed to read values from tables";
         }
         int i = 0;
         tensor_view_.ForEachMutable([&values, &i](T* value) {
@@ -548,9 +549,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return absl::StrCat(
-        "[Tensor.Select] Must contain 1 based dim, index, received: ",
-        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
+    return absl::StrCat("Must contain 1 based dim, index, received: ",
+                        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
   }
 
   lua::NResultsOr Narrow(lua_State* L) {
@@ -564,9 +564,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       return 1;
     }
     return absl::StrCat(
-        "[Tensor.Narrow] Must contain 1 based dim, index, size received: ",
-        lua::ToString(L, 2), ", ", lua::ToString(L, 3), ", ",
-        lua::ToString(L, 4));
+        "Must contain 1 based dim, index, size received: ", lua::ToString(L, 2),
+        ", ", lua::ToString(L, 3), ", ", lua::ToString(L, 4));
   }
 
   lua::NResultsOr Reverse(lua_State* L) {
@@ -576,9 +575,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return absl::StrCat(
-        "[Tensor.Reverse] Must contain 1 based dim received: ",
-        lua::ToString(L, 2));
+    return absl::StrCat("Must contain 1 based dim received: ",
+                        lua::ToString(L, 2));
   }
 
   lua::NResultsOr ApplyIndexed(lua_State* L) {
@@ -778,8 +776,9 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       }
     }
     return absl::StrCat(
-        "[Tensor.ScalerOp] Must call with number or an array that matches last "
-        "dimension received: ", lua::ToString(L, 2));
+        "Must call with number or an array that matches last "
+        "dimension received: ",
+        lua::ToString(L, 2));
   }
 
   // Returns self on to the stack, after the operation is applied in place.
@@ -791,9 +790,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
         return 1;
       }
     }
-    return absl::StrCat(
-        "[Tensor.ViewOp] Must call with same sized tensor, received: ",
-        lua::ToString(L, 2));
+    return absl::StrCat("Must call with same sized tensor, received: ",
+                        lua::ToString(L, 2));
   }
 
   // Returns transposed tensor.
@@ -806,9 +804,8 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       LuaTensor::CreateObject(L, std::move(result), storage_validity_);
       return 1;
     }
-    return absl::StrCat(
-        "[Tensor.Transpose] Must contain 1 based indexes, received: ",
-        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
+    return absl::StrCat("Must contain 1 based indexes, received: ",
+                        lua::ToString(L, 2), ", ", lua::ToString(L, 3));
   }
 
   // Retrieves a tensor operand 'rhs' from the top of the stack and computes
@@ -820,10 +817,10 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       const auto& lhs_shape = tensor_view().shape();
       const auto& rhs_shape = rhs->tensor_view().shape();
       if (lhs_shape.size() != 2) {
-        return "[Tensor.MMul] LHS is not a matrix";
+        return "LHS is not a matrix";
       }
       if (rhs_shape.size() != 2) {
-        return "[Tensor.MMul] RHS is not a matrix";
+        return "RHS is not a matrix";
       }
       ShapeVector shape = {lhs_shape[0], rhs_shape[1]};
       std::vector<T> storage(Layout::num_elements(shape));
@@ -831,13 +828,12 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
           LuaTensor::CreateObject(L, std::move(shape), std::move(storage));
       if (!prod->mutable_tensor_view()->MMul(tensor_view(),
                                              rhs->tensor_view())) {
-        return "[Tensor.MMul] incorrect matrix dimensions";
+        return "Incorrect matrix dimensions";
       }
       return 1;
     }
-    return absl::StrCat(
-        "[Tensor.MMul] Must contain 1 RHS tensor of type ",
-        ClassName(), ", received: ", lua::ToString(L, 2));
+    return absl::StrCat("Must contain 1 RHS tensor of type ", ClassName(),
+                        ", received: ", lua::ToString(L, 2));
   }
 
   // Retrieves a random bit generator (random) from the top of the stack and
@@ -853,13 +849,21 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
       return 1;
     }
     return absl::StrCat(
-        "[Tensor.Shuffle] Must call on a rank-1 Tensor with random number "
-        "generator, received: ", lua::ToString(L, 2));
+        "Must call on a rank-1 Tensor with random number generator, received: ",
+        lua::ToString(L, 2));
   }
 
   lua::NResultsOr ToString(lua_State* L) {
+    int max_elements = 1024;
+    if (IsTypeMismatch(lua::Read(L, 2, &max_elements))) {
+      return "Invalid number of elements passed to function.";
+    }
+    if (max_elements < 0) {
+      max_elements = tensor_view_.num_elements();
+    }
     std::ostringstream ss;
-    ss << "[" << ClassName() << "]\n" << tensor_view_;
+    ss << "[" << ClassName() << "]\n";
+    tensor_view_.PrintToStream(max_elements, &ss);
     lua::Push(L, ss.str());
     return 1;
   }

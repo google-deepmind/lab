@@ -26,18 +26,10 @@ namespace lab {
 namespace tensor {
 
 void Layout::PrintToStream(
-    std::ostream* os,
+    std::size_t max_num_elements, std::ostream* os,
     std::function<void(std::ostream* os, std::size_t offset)> printer) const {
   std::size_t num_elements = this->num_elements();
   *os << std::setfill(' ');
-  if (num_elements == 0) {
-    *os << "Empty Tensor\n";
-  } else if (num_elements == 1) {
-    printer(os, offset_);
-    *os << "\n";
-    return;
-  }
-
   const auto& s = shape();
   *os << "Shape: [";
   for (auto it = s.begin(); it != s.end(); ++it) {
@@ -46,10 +38,29 @@ void Layout::PrintToStream(
     }
     *os << *it;
   }
-  *os << "]\n";
-  if (num_elements > 64) {
-    *os << "Too many elements to display.\n";
+  *os << "]";
+  if (num_elements == 0) {
+    *os << " Empty\n";
     return;
+  } else if (num_elements == 1) {
+    printer(os, offset_);
+    *os << "\n";
+    return;
+  }
+  *os << "\n";
+
+  struct Skip {
+    std::size_t low = 0;
+    std::size_t high = 0;
+  };
+
+  std::vector<Skip> skips(shape().size());
+  if (num_elements > max_num_elements) {
+    for (int i = 0; i < skips.size(); ++i) {
+      if (shape()[i] < 7) continue;
+      skips[i].low = 3;
+      skips[i].high = shape()[i] - 3;
+    }
   }
 
   std::size_t max_width = 0;
@@ -60,11 +71,28 @@ void Layout::PrintToStream(
     return true;
   });
 
-  ForEachIndexedOffset([os, &s, &printer, max_width](
-      const ShapeVector& index, std::size_t offset) {
+  ForEachIndexedOffset([os, &s, &printer, max_width, &skips](
+                           const ShapeVector& index, std::size_t offset) {
     int open_brackets = std::distance(
         index.rbegin(), std::find_if(index.rbegin(), index.rend(),
                                      [](std::size_t val) { return val != 0; }));
+    for (int i = 0; i < index.size(); ++i) {
+      if (skips[i].low >= skips[i].high) {
+        continue;
+      }
+      if (skips[i].low <= index[i] && index[i] < skips[i].high) {
+        // If first skipped at top rank print '...'.
+        if (index[i] == skips[i].low && open_brackets + i + 1 >= index.size()) {
+          if (open_brackets != 0) {
+            *os << std::string((s.size() - open_brackets), ' ') << "...,"
+                << std::string(open_brackets, '\n');
+          } else {
+            *os << "..., ";
+          }
+        }
+        return true;
+      }
+    }
 
     if (open_brackets != 0) {
       *os << std::string((s.size() - open_brackets), ' ');
@@ -81,11 +109,10 @@ void Layout::PrintToStream(
            ++it, ++s_iter) {
         ++closing_brackets;
       }
-
-      if (closing_brackets != 0) {
-        *os << std::string(closing_brackets, ']');
+      *os << std::string(closing_brackets, ']');
+      if (closing_brackets < index.size()) {
+        *os << ',' << std::string(closing_brackets, '\n');
       }
-      *os << "\n";
     }
     return true;
   });

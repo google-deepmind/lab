@@ -58,7 +58,6 @@ class LuaTensorTest : public ::testing::Test {
                                   tensor::LuaTensorConstructors, {default_fs});
   }
   std::mt19937_64 prbg_;
-  uint32_t mixer_seed_;
   lua::Vm lua_vm_;
 };
 
@@ -578,7 +577,7 @@ TEST_F(LuaTensorTest, kMMulOpIncompatibleDims) {
               IsOkAndHolds(1));
   auto result = lua::Call(L, 0);
   EXPECT_FALSE(result.ok());
-  EXPECT_THAT(result.error(), HasSubstr("incorrect matrix dimensions"));
+  EXPECT_THAT(result.error(), HasSubstr("Incorrect matrix dimensions"));
 }
 
 constexpr char kMMulOpIncompatibleType[] = R"(
