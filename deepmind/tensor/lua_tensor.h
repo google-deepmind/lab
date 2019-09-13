@@ -757,7 +757,7 @@ class LuaTensor : public lua::Class<LuaTensor<T>> {
   // Returns self on to the stack, after the operation is applied in-place.
   template <void (View::*Op)(double)>
   lua::NResultsOr ScalarOp(lua_State* L) {
-    std::vector<T> values;
+    std::vector<double> values;
     double value;
     if (lua::Read(L, 2, &value)) {
       (tensor_view_.*Op)(value);

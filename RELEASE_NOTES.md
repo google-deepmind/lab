@@ -21,6 +21,8 @@
 2.  Fix top-down camera for language levels.
 3.  Correct typo in bot `Leonis`, skill level 1, based on OpenArena's bot code
     `gargoyle_c.c`.
+4.  Tensor scalar operations using arrays now work similar to the way they do
+    with single values.
 
 ## release-2019-02-04 February 2019 release
 
