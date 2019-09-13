@@ -110,6 +110,8 @@ void Bind(std::unique_ptr<T> env, EnvCApi* api, void** context) {
   api->event_count = DEEPMIND_RL_API_BIND(EventCount);
   api->event = DEEPMIND_RL_API_BIND(Event);
   api->act = DEEPMIND_RL_API_BIND(Act);
+  api->act_discrete = DEEPMIND_RL_API_BIND(ActDiscrete);
+  api->act_continuous = DEEPMIND_RL_API_BIND(ActContinuous);
   api->advance = DEEPMIND_RL_API_BIND(Advance);
   api->release_context = [](void* context) { delete static_cast<T*>(context); };
 }

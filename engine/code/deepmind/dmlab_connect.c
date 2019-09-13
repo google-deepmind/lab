@@ -1119,7 +1119,7 @@ static void dmlab_event(void* context, int event_idx, EnvCApi_Event* event) {
   return ctx->hooks.events.export_event(ctx->userdata, event_idx, event);
 }
 
-static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
+static void dmlab_act_discrete(void* context, const int act_d[]) {
   GameContext* gc = context;
   gc->is_connecting = false;
   if (gc->is_server) return;
@@ -1137,6 +1137,13 @@ static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
                          upmove, buttons);
   ctx->hooks.custom_action_discrete_apply(ctx->userdata,
                                           act_d + ARRAY_LEN(kActionNames));
+}
+
+static void dmlab_act_continuous(void* context, const double act_c[]) {}
+
+static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
+  dmlab_act_discrete(context, act_d);
+  dmlab_act_continuous(context, act_c);
 }
 
 static double get_engine_score(void) {
@@ -1415,6 +1422,8 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->event_count = dmlab_event_count;
   env_c_api->event = dmlab_event;
   env_c_api->act = dmlab_act;
+  env_c_api->act_discrete = dmlab_act_discrete;
+  env_c_api->act_continuous = dmlab_act_continuous;
   env_c_api->advance = dmlab_advance;
   env_c_api->release_context = dmlab_destroy_context;
 

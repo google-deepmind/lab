@@ -85,7 +85,7 @@
 // function call.
 //
 #define DEEPMIND_ENV_C_API_VERSION_MAJOR 1
-#define DEEPMIND_ENV_C_API_VERSION_MINOR 2
+#define DEEPMIND_ENV_C_API_VERSION_MINOR 3
 
 #include <stdbool.h>
 
@@ -317,16 +317,27 @@ struct EnvCApi_s {
   // 'event' is invalidated by any other API call.
   void (*event)(void* context, int event_idx, EnvCApi_Event* event);
 
-  // Sets the actions to use by future calls of 'advance'. Actions are "sticky",
-  // and the same action values will continue to be used by 'advance' until the
-  // actions are changed by this function.
+  // DEPRECATED: use act_discrete, act_continuous instead.
+  //
+  // Calling this function shall be equivalent to a call of
+  // 'act_discrete(context, actions discrete)' followed by a call of
+  // 'act_continuous(context, actions_continuous)'.
+  void (*act)(void* context,
+              const int actions_discrete[], const double actions_continuous[]);
+
+  // Sets the discrete actions to use by future calls of 'advance'.
+  // Actions are "sticky", and the same action values will continue to be used
+  // by 'advance' until the actions are changed by this function.
   //
   // 'actions_discrete' shall be an array of size 'action_discrete_count()'.
+  void (*act_discrete)(void* context, const int actions_discrete[]);
+
+  // Sets the continuous actions to use by future calls of 'advance'.
+  // Actions are "sticky", and the same action values will continue to be used
+  // by 'advance' until the actions are changed by this function.
+  //
   // 'actions_continuous' shall be an array of size 'action_continuous_count()'.
-  // Each action value shall satisfy the bounds given by the functions
-  // action_{discrete,continuous}_bounds above.
-  void (*act)(void* context, const int actions_discrete[],
-              const double actions_continuous[]);
+  void (*act_continuous)(void* context, const double actions_continuous[]);
 
   // Advances the environment by 'num_steps' steps, applying the currently
   // active set of actions. 'num_steps' shall be positive.

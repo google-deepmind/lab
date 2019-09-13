@@ -405,7 +405,7 @@ static PyObject* Lab_step(PyObject* pself, PyObject* args, PyObject* kwds) {
     return NULL;
   }
 
-  self->env_c_api->act(self->context, (int*)PyArray_DATA(discrete), NULL);
+  self->env_c_api->act_discrete(self->context, (int*)PyArray_DATA(discrete));
 
   self->status = self->env_c_api->advance(self->context, num_steps, &reward);
   self->num_steps += num_steps;

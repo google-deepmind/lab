@@ -158,7 +158,13 @@ class MyGame {
 
   void Event(int event_idx, EnvCApi_Event* event) {}
 
-  void Act(const int actions_discrete[], const double actions_continuous[]) {}
+  void Act(const int actions_discrete[], const double actions_continuous[]) {
+    ActDiscrete(actions_discrete);
+    ActContinuous(actions_continuous);
+  }
+
+  void ActDiscrete(const int actions_discrete[]) {}
+  void ActContinuous(const double actions_continuous[]) {}
 
   EnvCApi_EnvironmentStatus Advance(int num_steps, double* reward) {
     steps_ += num_steps;

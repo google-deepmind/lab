@@ -9,7 +9,11 @@
 ### EnvCApi Changes:
 
 1.  The meaning of major and minor versions and the resulting notions of
-    stability are clarified.
+    stability are clarified. The new API version is 1.3 (up from 1.2).
+2.  The EnvCApi `act` function is now deprecated in favour of two finer-grained
+    functions: A call to `act` should be replaced by a call `act_discrete` to
+    set discrete actions, followed by an optional call to `act_continuous` to
+    set continuous actions. (DeepMind Lab does not use continuous actions.)
 
 ### Bug Fixes:
 
