@@ -21,9 +21,9 @@ from __future__ import print_function
 
 import argparse
 import random
+import time
 import numpy as np
 import six
-import time
 
 import deepmind_lab
 
@@ -35,17 +35,15 @@ def _action(*entries):
 class DiscretizedRandomAgent(object):
   """Simple agent for DeepMind Lab."""
 
-  ACTIONS = {
-      'strafe_left': _action(0, 0, -1, 0, 0, 0, 0),
-      'strafe_right': _action(0, 0, 1, 0, 0, 0, 0),
-      'forward': _action(0, 0, 0, 1, 0, 0, 0),
-      'backward': _action(0, 0, 0, -1, 0, 0, 0),
-      'fire': _action(0, 0, 0, 0, 1, 0, 0),
-      'crouch': _action(0, 0, 0, 0, 0, 1, 0),
-      'jump': _action(0, 0, 0, 0, 0, 0, 1)
-  }
-
-  ACTION_LIST = ACTIONS.values()
+  ACTION_LIST = [
+      _action(0, 0, -1, 0, 0, 0, 0),  # strafe_left
+      _action(0, 0, 1, 0, 0, 0, 0),   # strafe_right
+      _action(0, 0, 0, 1, 0, 0, 0),   # forward
+      _action(0, 0, 0, -1, 0, 0, 0),  # backward
+      _action(0, 0, 0, 0, 1, 0, 0),   # fire
+      _action(0, 0, 0, 0, 0, 1, 0),   # crouch
+      _action(0, 0, 0, 0, 0, 0, 1),   # jump
+  ]
 
   def step(self, unused_reward, unused_image):
     """Gets an image state and a reward, returns an action."""
@@ -86,7 +84,7 @@ def run(length, width, height, fps, level, observation_spec):
         (width, height, observation_spec, length, duration, length / duration))
 
 
-if __name__ == '__main__':
+def main():
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument('--runfiles_path', type=str, default=None,
                       help='Set the runfiles path to find DeepMind Lab data')
@@ -105,3 +103,7 @@ if __name__ == '__main__':
     for width, height in [(84, 84), (160, 120), (320, 240)]:
       for observation_spec in ['RGB', 'RGBD']:
         run(length, width, height, fps, level_script, observation_spec)
+
+
+if __name__ == '__main__':
+  main()
