@@ -6,7 +6,12 @@
 
 1.  The `game` demo executable can now print observations at each step.
 
-### Bug Fixes
+### EnvCApi Changes:
+
+1.  The meaning of major and minor versions and the resulting notions of
+    stability are clarified.
+
+### Bug Fixes:
 
 1.  Observation 'DEBUG.CAMERA_INTERLEAVED.TOP_DOWN' is now correct for levels
     `dmlab30/explore_object_rewards_{few,many}`.

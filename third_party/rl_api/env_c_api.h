@@ -52,6 +52,38 @@
 #ifndef DEEPMIND_ENV_C_API_H_
 #define DEEPMIND_ENV_C_API_H_
 
+// The version MAJ.MIN relates to compatibility as follows. Assuming an
+// environment that implements the API and a client that calls into the API,
+// if both components are built separately, then the following restrictions
+// apply:
+//
+// * There is no ABI compatibility: both environment and client need to be
+//   compiled at the exact same version MAJ.MIN (e.g. even minor version
+//   changes can reorder or add struct members).
+//
+// * There is no API stability for environments: an environment written
+//   against API version MAJ1.MIN1 needs to be migrated when upgrading to
+//   greater API version MAJ2.MIN2 (e.g. to provide new functions; there
+//   are no "optional" functions).
+//
+// * There is API stability for clients within the minor version: A client
+//   written for version MAJ.MIN1 can be recompiled without modification
+//   against an upgraded API of version MAJ.MIN2, MIN2 >= MIN1, within the
+//   same major version. However, when changing major versions, migration
+//   may be required.
+//
+// In other words, evolution within one major version can add new features
+// and deprecate existing features (and provide replacements), but cannot
+// remove or change the meaning of an existing feature. Ideally, if a feature
+// is changed incompatibly in a major version change, the previous version
+// should provide a migration path so that clients and the API can be upgraded
+// separately and incrementally.
+//
+// Environments that implement this API should check whether versions
+// match, e.g. by making the user pass DEEPMIND_ENV_C_API_VERSION_MAJOR
+// and DEEPMIND_ENV_C_API_VERSION_MINOR through the initial creation
+// function call.
+//
 #define DEEPMIND_ENV_C_API_VERSION_MAJOR 1
 #define DEEPMIND_ENV_C_API_VERSION_MINOR 2
 
