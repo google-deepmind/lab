@@ -88,6 +88,7 @@
 #define DEEPMIND_ENV_C_API_VERSION_MINOR 3
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,6 +108,9 @@ typedef struct EnvCApi_Observation_s EnvCApi_Observation;
 // observations. (These observations are unrelated to the environment
 // observations.)
 typedef struct EnvCApi_Event_s EnvCApi_Event;
+
+// A text action. Contains a string and its length.
+typedef struct EnvCApi_TextAction_s EnvCApi_TextAction;
 
 // The status of an environment. This status changes as the environment evolves.
 // The meaning of the status values is as follows, but see also the "Run loop"
@@ -160,6 +164,12 @@ struct EnvCApi_Event_s {
   int id;
   int observation_count;
   const EnvCApi_Observation* observations;
+};
+
+// A text action consists of a string and its length.
+struct EnvCApi_TextAction_s {
+  const char* data;
+  uint64_t len;
 };
 
 ///////////////
@@ -239,12 +249,17 @@ struct EnvCApi_s {
   // The number of continuous actions.
   int (*action_continuous_count)(void* context);
 
+  // The number of text actions.
+  int (*action_text_count)(void* context);
+
   // Retrieves the name associated with a discrete or continuous action.
   //
   // 'discrete_idx' shall be in the range [0, action_discrete_count()).
   // 'continuous_idx' shall be in the range [0, action_continuous_count()).
+  // 'text_idx' shall be in the range [0, action_text_count()).
   const char* (*action_discrete_name)(void* context, int discrete_idx);
   const char* (*action_continuous_name)(void* context, int continuous_idx);
+  const char* (*action_text_name)(void* context, int text_idx);
 
   // The range of acceptable values for an action.
   //
@@ -338,6 +353,12 @@ struct EnvCApi_s {
   //
   // 'actions_continuous' shall be an array of size 'action_continuous_count()'.
   void (*act_continuous)(void* context, const double actions_continuous[]);
+
+  // Sets the text to use by future calls of 'advance'.
+  // Each text action must be a null-terminated string.
+  //
+  // 'actions_text' shall be an array of size 'action_text_count()'.
+  void (*act_text)(void* context, const EnvCApi_TextAction actions_text[]);
 
   // Advances the environment by 'num_steps' steps, applying the currently
   // active set of actions. 'num_steps' shall be positive.

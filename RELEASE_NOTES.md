@@ -14,6 +14,8 @@
     functions: A call to `act` should be replaced by a call `act_discrete` to
     set discrete actions, followed by an optional call to `act_continuous` to
     set continuous actions. (DeepMind Lab does not use continuous actions.)
+3.  New support for "text actions", which can be set with the new `act_text` API
+    function. (DeepMind Lab does not use text actions.)
 
 ### Bug Fixes:
 

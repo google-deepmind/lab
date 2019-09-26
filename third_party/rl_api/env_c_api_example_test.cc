@@ -26,6 +26,9 @@ constexpr int kDiscreteActions[] = {0, 0};
 constexpr int kContinuousActionsCount = 1;
 constexpr double kContinuousActions[] = {0};
 
+constexpr int kTextActionsCount = 1;
+constexpr char const* kTextActions[] = {"Hello World!"};
+
 TEST(EnvCApiExampleTest, HasDiscreteActions) {
   EnvCApi env_c_api;
   void* context;
@@ -51,6 +54,21 @@ TEST(EnvCApiExampleTest, HasContinuousActions) {
   EXPECT_EQ(kContinuousActionsCount, continuous_count);
   for (int i = 0; i < continuous_count; ++i) {
     EXPECT_STRNE("", env_c_api.action_continuous_name(context, i));
+  }
+
+  env_c_api.release_context(context);
+}
+
+TEST(EnvCApiExampleTest, HasTextActions) {
+  EnvCApi env_c_api;
+  void* context;
+
+  env_c_api_example_connect(&env_c_api, &context);
+  EXPECT_EQ(0, env_c_api.init(context));
+  int text_count = env_c_api.action_text_count(context);
+  EXPECT_EQ(kTextActionsCount, text_count);
+  for (int i = 0; i < text_count; ++i) {
+    EXPECT_STRNE("", env_c_api.action_text_name(context, i));
   }
 
   env_c_api.release_context(context);
@@ -156,6 +174,8 @@ TEST(EnvCApiExampleTest, ObservationDoubles) {
   }
   env_c_api.act_discrete(context, kDiscreteActions);
   env_c_api.act_continuous(context, kContinuousActions);
+  EnvCApi_TextAction textAction{ kTextActions[0], strlen(kTextActions[0])};
+  env_c_api.act_text(context, &textAction);
   double reward;
   EXPECT_EQ(EnvCApi_EnvironmentStatus_Running,
             env_c_api.advance(context, /*num_steps=*/5, &reward));

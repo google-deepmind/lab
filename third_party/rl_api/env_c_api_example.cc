@@ -31,6 +31,9 @@ const char* const kDiscreteActionNames[] = {"PADX", "PADY"};
 const int kContinuousActionCount = 1;
 const char* const kContinuousActionNames[] = {"TRIGGER"};
 
+const int kTextActionCount = 1;
+const char* const kTextActionNames[] = {"LANGUAGE"};
+
 const struct {
   int min_value;
   int max_value;
@@ -119,6 +122,15 @@ class MyGame {
     *max_value_out = kContinuousActionBounds[continuous_idx].max_value;
   }
 
+  // The number of text actions.
+  int ActionTextCount() const { return kTextActionCount; }
+
+  // Text action name. 'discrete_idx' < action_text_count().
+  const char* ActionTextName(int discrete_idx) const {
+    assert(discrete_idx < kTextActionCount);
+    return kTextActionNames[discrete_idx];
+  }
+
   int ObservationCount() const { return kObservationCount; }
   const char* ObservationName(int observation_idx) {
     assert(observation_idx < kObservationCount);
@@ -165,6 +177,7 @@ class MyGame {
 
   void ActDiscrete(const int actions_discrete[]) {}
   void ActContinuous(const double actions_continuous[]) {}
+  void ActText(const EnvCApi_TextAction actions_continuous[]) {}
 
   EnvCApi_EnvironmentStatus Advance(int num_steps, double* reward) {
     steps_ += num_steps;

@@ -887,6 +887,15 @@ static const char* dmlab_action_continuous_name(
   return NULL;
 }
 
+static int dmlab_action_text_count(void* context) {
+  return 0;
+}
+
+static const char* dmlab_action_text_name(
+    void* context, int continuous_idx) {
+  return NULL;
+}
+
 static void dmlab_action_continuous_bounds(
     void* context,
     int continuous_idx, double* min_value_out, double* max_value_out) {}
@@ -1140,6 +1149,7 @@ static void dmlab_act_discrete(void* context, const int act_d[]) {
 }
 
 static void dmlab_act_continuous(void* context, const double act_c[]) {}
+static void dmlab_act_text(void* context, const EnvCApi_TextAction act_c[]) {}
 
 static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
   dmlab_act_discrete(context, act_d);
@@ -1412,6 +1422,8 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->action_continuous_count = dmlab_action_continuous_count;
   env_c_api->action_continuous_name = dmlab_action_continuous_name;
   env_c_api->action_continuous_bounds = dmlab_action_continuous_bounds;
+  env_c_api->action_text_count = dmlab_action_text_count;
+  env_c_api->action_text_name = dmlab_action_text_name;
   env_c_api->observation_count = dmlab_observation_count;
   env_c_api->observation_name = dmlab_observation_name;
   env_c_api->observation_spec = dmlab_observation_spec;
@@ -1424,6 +1436,7 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->act = dmlab_act;
   env_c_api->act_discrete = dmlab_act_discrete;
   env_c_api->act_continuous = dmlab_act_continuous;
+  env_c_api->act_text = dmlab_act_text;
   env_c_api->advance = dmlab_advance;
   env_c_api->release_context = dmlab_destroy_context;
 
