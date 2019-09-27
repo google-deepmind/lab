@@ -16,7 +16,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 
 local game = require 'dmlab.system.game'
-local log = require 'common.log'
 local helpers = require 'common.helpers'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
@@ -24,24 +23,26 @@ local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
 local random = require 'common.random'
 local tensor = require 'dmlab.system.tensor'
+local psychlab_staircase = require 'levels.contributed.psychlab.factories.staircase'
+local log = require 'common.log'
 
 --[[ Each trial consists of a study and test phase separated by a brief delay
 interval. The agent must indicate whether or not the test array is the same
 as the study array.
 
 This protocol has been used extensively in the literature concerned with visual
-working memory. It is also often called 'change detection' in the literature.
+working memory. It is usually called 'change detection' in the literature. It
+could also be called 'sequential comparison'.
 
 See Luck and Vogel (1997) for an influential example of this kind of experiment.
 ]]
 
--- setup constant parameters of the task
-local GAME = 'psylab_sequential_comparison'
-
+-- setup default parameters of the task
 local TIME_TO_FIXATE_CROSS = 1 -- in frames
 local FAST_INTER_TRIAL_INTERVAL = 1 -- in frames
 local SCREEN_SIZE = {width = 256, height = 256}
 local BG_COLOR = {255, 255, 255}
+local EPISODE_LENGTH_SECONDS = 180
 local TRIALS_PER_EPISODE_CAP = 60
 
 local TARGET_SIZE = .75 -- fraction of screen to fill
@@ -51,45 +52,66 @@ local GRID = {size = 64, step = 8}
 local STUDY_TIME = 90 -- 120 -- in frames  (ignored in self paced mode)
 local DELAY_TIMES = {8, 16, 32, 64, 128, 256} -- in frames
 
-local SELF_PACED = true
+local SET_SIZES = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
+local CORRECT_REWARD_SEQUENCE = 1
 local ADVANCE_TRIAL_REWARD = 0
-local CORRECT_REWARD = 1
 local INCORRECT_REWARD = 0
 local FIXATION_SIZE = .1
 local FIXATION_COLOR = {255, 0, 0} -- RGB
 local CENTER = {.5, .5}
 local BUTTON_SIZE = 0.1
 local END_STUDY_BUTTON_SIZE = .09375
+local SELF_PACED = '1'
+local ALLOW_TRANSLATION = false
 
 -- These are RGB values, they have a fixed luminance in HSL space.
 local COLORS = {
-    {255, 0, 0},
-    {255, 191, 0},
-    {127, 255, 0},
-    {0, 255, 255},
-    {0, 63, 255},
-    {127, 0, 255},
-    {255, 0, 191}
+    {255, 0, 191}, -- magenta
+    {255, 0, 0}, -- red
+    {255, 191, 0}, -- sunflower yellow
+    {127, 255, 0}, -- lime green
+    {0, 255, 255}, -- light blue
+    {0, 63, 255}, -- dark blue
+    {127, 0, 255}, -- purple
 }
+
+-- Staircase parameters
+local FRACTION_TO_PROMOTE = 1.0
+local FRACTION_TO_DEMOTE = 0.75
+local PROBE_PROBABILITY = 0.1
+
+-- Frames before response buttons appear in test phase.
+local PRERESPONSE_TIME = 1
+
+-- If REQUIRE_AT_CENTER_PRERESPONSE set to true, then require agent to look to
+-- a circle in the center of the screen just before the target. This prevents
+-- immediately looking near the buttons at the start of the study phase.
+local REQUIRE_AT_CENTER_PRERESPONSE = false
+local PRERESPONSE_BUTTON_DIAMETER = 21
+local PRERESPONSE_BUTTON_COLOR = {0, 0, 0}
+
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
 
 local factory = {}
 
 function factory.createLevelApi(kwargs)
-  kwargs.game = kwargs.game or GAME
+  kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or
+      EPISODE_LENGTH_SECONDS
+  kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
+      TRIALS_PER_EPISODE_CAP
   kwargs.timeToFixateCross = kwargs.timeToFixateCross or TIME_TO_FIXATE_CROSS
   kwargs.fastInterTrialInterval = kwargs.fastInterTrialInterval or
-    FAST_INTER_TRIAL_INTERVAL
+      FAST_INTER_TRIAL_INTERVAL
   kwargs.screenSize = kwargs.screenSize or SCREEN_SIZE
   kwargs.bgColor = kwargs.bgColor or BG_COLOR
-  kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
-    TRIALS_PER_EPISODE_CAP
   kwargs.targetSize = kwargs.targetSize or TARGET_SIZE
   kwargs.grid = kwargs.grid or GRID
   kwargs.studyTime = kwargs.studyTime or STUDY_TIME
   kwargs.delayTimes = kwargs.delayTimes or DELAY_TIMES
+  kwargs.correctRewardSequence = kwargs.correctRewardSequence or
+      CORRECT_REWARD_SEQUENCE
   kwargs.advanceTrialReward = kwargs.advanceTrialReward or ADVANCE_TRIAL_REWARD
-  kwargs.correctReward = kwargs.correctReward or CORRECT_REWARD
   kwargs.incorrectReward = kwargs.incorrectReward or INCORRECT_REWARD
   kwargs.fixationSize = kwargs.fixationSize or FIXATION_SIZE
   kwargs.fixationColor = kwargs.fixationColor or FIXATION_COLOR
@@ -97,11 +119,23 @@ function factory.createLevelApi(kwargs)
   kwargs.buttonSize = kwargs.buttonSize or BUTTON_SIZE
   kwargs.endStudyButtonSize = kwargs.endStudyButtonSize or END_STUDY_BUTTON_SIZE
   kwargs.colors = kwargs.colors or COLORS
-
-  -- Handling for boolean in order to override default value of true.
-  if kwargs.selfPaced == nil then
-    kwargs.selfPaced = SELF_PACED
+  kwargs.setSizes = kwargs.setSizes or SET_SIZES
+  kwargs.selfPaced = kwargs.selfPaced or SELF_PACED
+  kwargs.allowTranslation = kwargs.allowTranslation or ALLOW_TRANSLATION
+  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
+  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
+  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
+  kwargs.fixedTestLength = kwargs.fixedTestLength or false
+  kwargs.initialDifficultyLevel = kwargs.initialDifficultyLevel or 1
+  kwargs.preresponseTime = kwargs.preresponseTime or PRERESPONSE_TIME
+  if kwargs.requireAtCenterPreresponse == nil then
+    kwargs.requireAtCenterPreresponse = REQUIRE_AT_CENTER_PRERESPONSE
   end
+  kwargs.preresponseButtonDiameter = kwargs.preresponseButtonDiameter or
+      PRERESPONSE_BUTTON_DIAMETER
+  kwargs.preresponseButtonColor = kwargs.preresponseButtonColor or
+      PRERESPONSE_BUTTON_COLOR
+  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or MAX_STEPS_OFF_SCREEN
 
   -- Types of objects to display
   local ALL_OPTO_TYPES = {'E', 'Square'}
@@ -173,73 +207,11 @@ function factory.createLevelApi(kwargs)
       end
   })
 
-
-  --[[ Function to define the adaptive staircase procedure (a 'class').
-  This procedure promotes from difficulty level K to level K + 1 when K
-  consecutive trials are correct. It demotes from level K to level K - 1 when
-  less than K/2 trials were correct. Otherwise it stays on level K.
-  ]]
-  local function initStaircase(opt)
-    local staircase = {
-        _difficultyLevel = 1,
-        _perfectSoFar = true,
-        _worseThanChance = false,
-        _index = 0,
-        _correctCount = 0,
-        _promoteLevel = opt.promoteFunction,
-        _repeatLevel = opt.repeatFunction,
-        _demoteLevel = opt.demoteFunction
-    }
-
-    function staircase.promoteLevel(self)
-      self._difficultyLevel = self._difficultyLevel + 1
-      self._promoteLevel()
-    end
-
-    function staircase.demoteLevel(self)
-      if self._difficultyLevel > 1 then
-        self._difficultyLevel = self._difficultyLevel - 1
-      end
-      self._demoteLevel()
-    end
-
-    function staircase.endLevel(self)
-      if self._perfectSoFar then
-        self:promoteLevel()
-      elseif self._worseThanChance then
-        self:demoteLevel()
-      end
-      self._perfectSoFar = true
-      self._worseThanChance = false
-    end
-
-    -- 'staircase.step' is called at the end of each trial.
-    function staircase.step(self, correct)
-      self._index = self._index + 1
-      -- Track whether all trials are correct.
-      if correct ~= 1 then
-        self._perfectSoFar = false
-      end
-      self._correctCount = self._correctCount + correct
-      -- Reset _index if necessary and call the endLevel function.
-      if self._index == self._difficultyLevel then
-        if self._correctCount <= math.floor(self._difficultyLevel / 2) then
-          self._worseThanChance = true
-        end
-        self._index = 0
-        self._correctCount = 0
-        self:endLevel()
-      end
-    end
-
-    return staircase
-  end
-
   -- init gets called at the start of each episode
   function env:_init(pac, opts)
     self.screenSize = opts.screenSize
     log.info('opts passed to _init:\n' .. helpers.tostring(opts))
-    log.info('arg passed to _init:\n' .. helpers.tostring(arg))
+    log.info('args passed to _init:\n' .. helpers.tostring(arg))
 
     -- apply command line arguments
     self.jitter = stringOrNilToBool(opts.jitter)
@@ -248,8 +220,8 @@ function factory.createLevelApi(kwargs)
       log.info('Jitter target location')
       self.jitteredCenter = {}
     end
-    self.allowTranslation = opts.allowTranslation or false
     self.domains = DOMAINS
+    kwargs.selfPaced = stringOrNilToBool(kwargs.selfPaced)
 
     -- setup images and grid parameters
     self:setupImages()
@@ -274,21 +246,20 @@ function factory.createLevelApi(kwargs)
 
     psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
 
-    -- initialize the adaptive staircase procedure
-    self.setSize = 1
-    self.staircase = initStaircase{
-        demoteFunction = function ()
-          if self.setSize > 1 then
-            self.setSize = self.setSize - 1
-          end
-        end,
-        promoteFunction = function ()
-          self.setSize = self.setSize + 1
-      end
+    -- setup the adaptive staircase procedure
+    self.staircase = psychlab_staircase.createStaircase1D{
+      sequence = kwargs.setSizes,
+      correctRewardSequence = kwargs.correctRewardSequence,
+      fractionToPromote = kwargs.fractionToPromote,
+      fractionToDemote = kwargs.fractionToDemote,
+      probeProbability = kwargs.probeProbability,
+      fixedTestLength = kwargs.fixedTestLength,
+      initialDifficultyLevel = kwargs.initialDifficultyLevel,
     }
 
     -- blockId groups together all rows written during the same episode
     self.blockId = random:uniformInt(1, 2 ^ 32)
+    self.trialId = 1
   end
 
   function env:setupGrid()
@@ -386,19 +357,21 @@ function factory.createLevelApi(kwargs)
       self.images.turquoiseImage:select(3, i):fill(TURQUOISE[i])
     end
 
+    self.images.preresponseButton = psychlab_helpers.makeFilledCircle(
+        kwargs.preresponseButtonDiameter,
+        kwargs.preresponseButtonColor,
+        kwargs.bgColor
+    )
   end
 
   function env:finishTrial(delay)
     self.currentTrial.blockId = self.blockId
-    self.currentTrial.setSize = self.setSize
     -- Times are recorded in microseconds.
     self.currentTrial.reactionTime =
       game:episodeTimeSeconds() - self._currentTrialStartTime
     self.currentTrial.responseTime =
       game:episodeTimeSeconds() - self._responseStartTime
-
-    -- It is necessary to record setSize before stepping the staircase.
-    self.staircase:step(self.currentTrial.correct)
+    self.staircase:step(self.currentTrial.correct == 1)
 
     self.currentTrial.stepCount = self.pac:elapsedSteps()
     psychlab_helpers.publishTrialData(self.currentTrial, kwargs.schema)
@@ -413,6 +386,9 @@ function factory.createLevelApi(kwargs)
 
       -- Fixation initiates the next trial
       self._rewardToDeliver = 0
+      self.currentTrial.reward = 0
+      self.currentTrial.trialId = self.trialId
+      self.trialId = self.trialId + 1
 
       -- Measure reaction time from trial initiation (in microseconds)
       self._currentTrialStartTime = game:episodeTimeSeconds()
@@ -424,7 +400,8 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:onHoverEnd(name, mousePos, hoverTime, userData)
-    self.pac:addReward(self._rewardToDeliver)
+    self.currentTrial.reward = self._rewardToDeliver
+    self.pac:addReward(self.currentTrial.reward)
     self:finishTrial(kwargs.fastInterTrialInterval)
   end
 
@@ -433,7 +410,7 @@ function factory.createLevelApi(kwargs)
     self.currentTrial.correct = 1
 
     self.pac:updateWidget(name, self.images.greenImage)
-    self._rewardToDeliver = kwargs.correctReward
+    self._rewardToDeliver = self.staircase:correctReward()
   end
 
   function env:incorrectResponseCallback(name, mousePos, hoverTime, userData)
@@ -456,7 +433,7 @@ function factory.createLevelApi(kwargs)
 
   -- Place the response buttons on the screen
   function env:addResponseButtons(isNew)
-    local buttonPosY = 0.5 - kwargs.buttonSize / 2
+    local buttonPosX = 0.5 - kwargs.buttonSize * 1.5
     local buttonSize = {kwargs.buttonSize, kwargs.buttonSize}
 
     local newCallback, oldCallback
@@ -468,10 +445,11 @@ function factory.createLevelApi(kwargs)
       oldCallback = self.correctResponseCallback
     end
 
+    -- "different" on left, "same" on right
     self.pac:addWidget{
         name = 'newButton',
         image = self.images.blackImage,
-        pos = {0, buttonPosY},
+        pos = {buttonPosX, 1 - kwargs.buttonSize},
         size = buttonSize,
         mouseHoverCallback = newCallback,
         mouseHoverEndCallback = self.onHoverEnd,
@@ -479,7 +457,7 @@ function factory.createLevelApi(kwargs)
     self.pac:addWidget{
         name = 'oldButton',
         image = self.images.blackImage,
-        pos = {1 - kwargs.buttonSize, buttonPosY},
+        pos = {1 - buttonPosX - kwargs.buttonSize, 1 - kwargs.buttonSize},
         size = buttonSize,
         mouseHoverCallback = oldCallback,
         mouseHoverEndCallback = self.onHoverEnd,
@@ -521,7 +499,8 @@ function factory.createLevelApi(kwargs)
           orientations = {fixedOrientation}
       }
     elseif domainType == 'E_ORIENTATION' then
-      local fixedColor, fixedColorId = psychlab_helpers.randomFrom(kwargs.colors)
+      local fixedColor, fixedColorId = psychlab_helpers.randomFrom(
+        kwargs.colors)
       return {
           optotypes = {'E'},
           colors = {fixedColor},
@@ -547,6 +526,8 @@ function factory.createLevelApi(kwargs)
 
   -- Return a table with the properties of each study object to draw.
   function env:getStudyArrayData()
+    self.currentTrial.difficultyLevel = self.staircase:getDifficultyLevel()
+    self.currentTrial.setSize = self.staircase:parameter()
     self.currentTrial.domainType = psychlab_helpers.randomFrom(self.domains)
     local domain = self:getDomain(self.currentTrial.domainType)
 
@@ -560,7 +541,7 @@ function factory.createLevelApi(kwargs)
 
     -- iterate over objects in the study array
     self._currentStudyLocationsSet = {}
-    for i = 1, self.setSize do
+    for i = 1, self.currentTrial.setSize do
       -- generate random location, color, optotype, and orientation
       local location = getRandomCoordinates(self._gridLimit, self._gridStep)
       local color, index = psychlab_helpers.randomFrom(domain.colors)
@@ -601,7 +582,7 @@ function factory.createLevelApi(kwargs)
         legalTransforms = {'OPTOTYPE', 'COLOR'}
       end
     end
-    if self.allowTranslation then
+    if kwargs.allowTranslation then
       table.insert(legalTransforms, 'TRANSLATION')
     end
     return legalTransforms
@@ -811,18 +792,44 @@ function factory.createLevelApi(kwargs)
     self.pac:addTimer{
         name = 'delay_timer',
         timeout = self.currentTrial.delayTime,
-        callback = function(...) return self.testPhase(self) end
+        callback = function(...) return self.preresponsePhase(self) end
     }
+  end
+
+  function env:preresponsePhase()
+    if kwargs.requireAtCenterPreresponse then
+      self.pac:addWidget{
+          name = 'preresponse_button',
+          image = self.images.preresponseButton,
+          posAbs = psychlab_helpers.getUpperLeftFromCenter(
+              {self.screenSize.width / 2, self.screenSize.height / 2},
+              kwargs.preresponseButtonDiameter
+          ),
+          sizeAbs = {kwargs.preresponseButtonDiameter,
+                     kwargs.preresponseButtonDiameter},
+          mouseHoverCallback = function(...) return self.testPhase(self) end,
+        }
+    else
+      self:testPhase()
+    end
   end
 
   -- Display the test array and wait for the subject to respond
   function env:testPhase()
+    if kwargs.requireAtCenterPreresponse then
+      self.pac:removeWidget('preresponse_button')
+    end
     self.currentTrial.testArrayData, self.currentTrial.isNew =
       self:getTestArrayData(self.currentTrial.studyArrayData)
     psychlab_helpers.addTargetImage(self,
                            self:renderArray(self.currentTrial.testArrayData),
                            kwargs.targetSize)
-    self:addResponseButtons(self.currentTrial.isNew)
+    self.pac:addTimer{
+        name = 'preresponse_timer',
+        timeout = kwargs.preresponseTime,
+        callback = function(...) return
+            self.addResponseButtons(self, self.currentTrial.isNew) end
+    }
 
     -- Measure time till response in microseconds
     self._responseStartTime = game:episodeTimeSeconds()
@@ -847,7 +854,9 @@ function factory.createLevelApi(kwargs)
 
   return psychlab_factory.createLevelApi{
       env = point_and_click,
-      envOpts = {environment = env, screenSize = kwargs.screenSize}
+      envOpts = {environment = env, screenSize = kwargs.screenSize,
+                 maxStepsOffScreen = kwargs.maxStepsOffScreen},
+      episodeLengthSeconds = kwargs.episodeLengthSeconds
   }
 end
 

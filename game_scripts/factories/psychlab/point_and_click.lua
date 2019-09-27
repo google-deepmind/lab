@@ -49,9 +49,12 @@ function pac:_init(opts)
   self._reward = 0
   self._pcontinue = 0
   self._stepCount = 0
+  self._captures = {}
   self._widgets = {}
+  self._layers = {}
   self._timers = {}
   self._backgroundColor = {0, 0, 0}
+  self.maxStepsOffScreen = opts.maxStepsOffScreen or -1
   self._env = opts.environment(self, opts)
 end
 
@@ -141,12 +144,54 @@ function pac:addWidget(opts)
   widget.bounds = {xMin = xMin, yMin = yMin, xMax = xMax, yMax = yMax}
   widget.image = opts.image
   widget.mouseClickCallback = opts.mouseClickCallback
+  widget.mouseClickUpCallback = opts.mouseClickUpCallback
   widget.mouseHoverCallback = opts.mouseHoverCallback
   widget.mouseHoverEndCallback = opts.mouseHoverEndCallback
+  widget.mouseClickUpCallback = opts.mouseClickUpCallback
   widget.userData = opts.userData
   widget.hoverTime = 0
   widget.imageLayer = opts.imageLayer or 1
   self._widgets[name] = widget
+end
+
+function pac:captureMouse(name)
+  self._captures[name] = true
+end
+
+
+function pac:releaseMouse(name)
+  self._captures[name] = nil
+end
+
+
+--[[ Set a widget's absolute position.
+
+Arguments:
+
+*   `name` Name of the widget.
+*   `posAbs` = {xPos, yPos} Widget position in pixels (BL origin 0,0).
+]]
+function pac:setWidgetAbsPos(name, absPos)
+  assert(self._widgets[name] ~= nil, 'Widget ' .. name .. ' does not exist!')
+  local bounds = self._widgets[name].bounds
+  local xMin, yMin = unpack(absPos)
+  if xMin == bounds.xMin and yMin == bounds.yMin then
+    return
+  end
+  local xMax = bounds.xMax + xMin - bounds.xMin
+  local yMax = bounds.yMax + yMin - bounds.yMin
+  local ySize, xSize = unpack(self._surface:shape())
+  if xMax <= 0 or yMax <= 0 or xMin >= xSize or yMin >= ySize then
+    error('Widget ' .. name .. ' Invalid bounds!' ..
+          '\nxMin: ' .. xMin .. ' xMax: ' .. xMax ..
+          '\nyMin: ' .. yMin .. ' yMax: ' .. yMax ..
+          '\nsizeX: ' .. xSize .. ' sizeY: ' .. ySize)
+  end
+  bounds.xMin = xMin
+  bounds.yMin = yMin
+  bounds.xMax = xMax
+  bounds.yMax = yMax
+  self._surfaceDirty = true
 end
 
 --[[ Remove a widget.
@@ -162,7 +207,10 @@ end
 -- Removes all widgets.
 function pac:clearWidgets()
   self._surfaceDirty = true
+  self._layersDirty = true
   self._widgets = {}
+  self._captures = {}
+  self._layers = {}
 end
 
 --[[ Update a widget's image.
@@ -179,6 +227,21 @@ function pac:updateWidget(name, image, imageLayer)
   if imageLayer ~= widget.imageLayer or image ~= widget.image then
     self._surfaceDirty = true
     widget.image = image
+    widget.imageLayer = imageLayer
+  end
+end
+
+--[[ Update a widget's image.
+Arguments:
+
+*   `name` Name of the widget.
+*   `imageLayer` Images are drawn in order of their imageLayer
+]]
+function pac:setWidgetLayer(name, imageLayer)
+  local widget = self._widgets[name]
+  assert(widget, 'Widget ' .. name .. ' does not exist!')
+  if imageLayer ~= widget.imageLayer then
+    self._surfaceDirty = true
     widget.imageLayer = imageLayer
   end
 end
@@ -207,16 +270,18 @@ function pac:clearTimers()
 end
 
 -- Calculate if co-ordinates are within the widget.
-local function _containsPoint(widget, mouseX, mouseY)
-  return widget.bounds.xMin <= mouseX and mouseX <= widget.bounds.xMax and
-    widget.bounds.yMin <= mouseY and mouseY <= widget.bounds.yMax
+function pac:_containsPoint(name, widget, mouseX, mouseY)
+  return self._captures[name] or
+      (widget.bounds.xMin <= mouseX and mouseX <= widget.bounds.xMax and
+       widget.bounds.yMin <= mouseY and mouseY <= widget.bounds.yMax)
 end
 
 -- Calculate normalised co-ordinates with respect to the widget.
 local function _normaliseCoord(widget, mouseX, mouseY)
   return {
     (mouseX - widget.bounds.xMin) / (widget.bounds.xMax - widget.bounds.xMin),
-    (mouseY - widget.bounds.yMin) / (widget.bounds.yMax - widget.bounds.yMin)
+    (mouseY - widget.bounds.yMin) / (widget.bounds.yMax - widget.bounds.yMin),
+    mouseX, mouseY
   }
 end
 
@@ -226,7 +291,7 @@ function pac:onMouseOver(mouseX, mouseY)
   for name, widget in pairs(self._widgets) do
     if widget.mouseHoverCallback ~= nil or
         widget.mouseHoverEndCallback ~= nil then
-      if _containsPoint(widget, mouseX, mouseY) then
+      if self:_containsPoint(name, widget, mouseX, mouseY) then
         local hoverTime = widget.hoverTime + 1
         widget.hoverTime = hoverTime
         if widget.mouseHoverCallback then
@@ -262,11 +327,36 @@ end
 
 -- Calculates which widgets the mouse click is on and invokes any callbacks.
 function pac:onMouseClick(mouseX, mouseY)
-  for name, widget in pairs(self._widgets) do
-    if widget.mouseClickCallback ~= nil then
-      if _containsPoint(widget, mouseX, mouseY) then
-        widget.mouseClickCallback(self._env,
-          name, _normaliseCoord(widget, mouseX, mouseY), widget.userData)
+  for i = #self._layerOrder, 1, -1 do
+    local layer = self._layers[self._layerOrder[i]]
+    for j = #layer, 1, -1 do
+      local name, widget = unpack(layer[j])
+      if widget.mouseClickCallback ~= nil then
+        if self:_containsPoint(name, widget, mouseX, mouseY) then
+          if widget.mouseClickCallback(self._env, name,
+              _normaliseCoord(widget, mouseX, mouseY), widget.userData) then
+            return
+          end
+        end
+      end
+    end
+  end
+end
+
+
+-- Calculates which widgets the mouse click is on and invokes any callbacks.
+function pac:onMouseClickUp(mouseX, mouseY)
+  for i = #self._layerOrder, 1, -1 do
+    local layer = self._layers[self._layerOrder[i]]
+    for j = #layer, 1, -1 do
+      local name, widget = unpack(layer[j])
+      if widget.mouseClickUpCallback ~= nil then
+        if self:_containsPoint(name, widget, mouseX, mouseY) then
+          if widget.mouseClickUpCallback(self._env, name,
+              _normaliseCoord(widget, mouseX, mouseY), widget.userData) then
+            return
+          end
+        end
       end
     end
   end
@@ -278,62 +368,65 @@ function pac:_drawBackgroundColor()
   end
 end
 
+function pac:_updateLayers()
+  self._layers = {}
+  self._layerOrder = {}
+  for name, widget in pairs(self._widgets) do
+    if not self._layers[widget.imageLayer] then
+      self._layerOrder[#self._layerOrder + 1] = widget.imageLayer
+      self._layers[widget.imageLayer] = {}
+    end
+    table.insert(self._layers[widget.imageLayer], {name, widget})
+  end
+  table.sort(self._layerOrder)
+end
+
 --[[ Draws all widgets that contain images into the screen tensor, which needs
 to have format {height, width, depth} and a depth of at least 3.
 ]]
 function pac:_drawWidgets()
-  local imageLayers = {{}}
-  local numLayers = 1
-  for name, widget in pairs(self._widgets) do
-    if widget.image ~= nil then
-      if not imageLayers[widget.imageLayer] then
-        imageLayers[widget.imageLayer] = {}
-        numLayers = numLayers + 1
-      end
-      imageLayers[widget.imageLayer][name] = widget
-    end
-  end
-
-  assert(numLayers == #imageLayers,
-         'Layers must start from 1 and be consecutive')
-
+  self:_updateLayers()
   self:_drawBackgroundColor()
   local maxy, maxx = unpack(self._surface:shape())
-  for i, layer in ipairs(imageLayers) do
-    for name, widget in pairs(layer) do
-      local offsetx = widget.bounds.xMin
-      local offsety = widget.bounds.yMin
-      local sizey, sizex = unpack(widget.image:shape())
-      local image = widget.image
-      -- Clip Right
-      if sizex + offsetx > maxx then
-        sizex = maxx - offsetx
-        image = image:narrow(2, 1, sizex)
-      end
-      -- Clip Top
-      if sizey + offsety > maxy then
-        sizey = maxy - offsety
-        image = image:narrow(1, 1, sizey)
-      end
+  for _, i in ipairs(self._layerOrder) do
+    local layer = self._layers[i]
+    for _, nameWidget in pairs(layer) do
+      local name, widget = unpack(nameWidget)
+      if widget.image then
+        local offsetx = widget.bounds.xMin
+        local offsety = widget.bounds.yMin
+        local sizey, sizex = unpack(widget.image:shape())
+        local image = widget.image
+        -- Clip Right
+        if sizex + offsetx > maxx then
+          sizex = maxx - offsetx
+          image = image:narrow(2, 1, sizex)
+        end
+        -- Clip Top
+        if sizey + offsety > maxy then
+          sizey = maxy - offsety
+          image = image:narrow(1, 1, sizey)
+        end
 
-      -- Clip Left
-      if offsetx < 0 then
-        sizex = sizex + offsetx
-        image = image:narrow(2, -offsetx + 1, sizex)
-        offsetx = 0
+        -- Clip Left
+        if offsetx < 0 then
+          sizex = sizex + offsetx
+          image = image:narrow(2, -offsetx + 1, sizex)
+          offsetx = 0
+        end
+        -- Clip Bottom
+         if offsety < 0 then
+          sizey = sizey + offsety
+          image = image:narrow(1, -offsety + 1, sizey)
+          offsety = 0
+        end
+        -- Narrow the screen to the region for the image and do the copy.
+        self._surface:
+            narrow(1, offsety + 1, sizey):
+            narrow(2, offsetx + 1, sizex):
+            narrow(3, 1, 3):
+            copy(image)
       end
-      -- Clip Bottom
-       if offsety < 0 then
-        sizey = sizey + offsety
-        image = image:narrow(1, -offsety + 1, sizey)
-        offsety = 0
-      end
-      -- Narrow the screen to the region for the image and do the copy.
-      self._surface:
-          narrow(1, offsety + 1, sizey):
-          narrow(2, offsetx + 1, sizex):
-          narrow(3, 1, 3):
-          copy(image)
     end
   end
   self._surfaceDirty = false
@@ -366,7 +459,7 @@ end
 function pac:actionSpec()
   return {
       scheme = "Mixed",
-      discrete_actions = {{0, 1}},
+      discrete_actions = {{0, 1}, {0, 1}},
       contiguous_actions = {{0, 1}, {0, 1}},
   }
 end
@@ -396,22 +489,39 @@ function pac:step(action)
   end
 
   -- Process the action.
-  local isClick = action[1] == 1
+  local click = action[1][1] == 1
+  local clickUp = action[1][2] == 1
   local pos = action[2]
   local sizeY, sizeX = unpack(self._surface:shape())
   local mouseXAbs, mouseYAbs = pos[1] * sizeX, pos[2] * sizeY
-  if isClick then
+  local lookingAtScreen = pos[1] ~= -1 and pos[2] ~= -1
+  if click and lookingAtScreen then
     self:onMouseClick(mouseXAbs, mouseYAbs)
+  elseif clickUp then
+    self:onMouseClickUp(mouseXAbs, mouseYAbs)
+    self:onMouseOver(mouseXAbs, mouseYAbs) -- Kept for legacy behaviour
   else
     self:onMouseOver(mouseXAbs, mouseYAbs)
   end
 
   -- Step the environment.
   if self._env.step then
-    local lookingAtScreen = pos[1] ~= -1 and pos[2] ~= -1
     self._env:step(lookingAtScreen)
   end
   self._stepCount = self._stepCount + 1
+
+  -- If too long looking away from the screen then end episode. This
+  -- should speed up the early stages of training.
+  if not lookingAtScreen and self.maxStepsOffScreen > 0 then
+    self._stepsNotLookingAtScreen = self._stepsNotLookingAtScreen + 1
+    if self._stepsNotLookingAtScreen > self.maxStepsOffScreen then
+      log.info('End episode due to looking away from the screen.')
+      self:endEpisode()
+    end
+  else
+    self._stepsNotLookingAtScreen = 0
+  end
+
   return self:_observations()
 end
 

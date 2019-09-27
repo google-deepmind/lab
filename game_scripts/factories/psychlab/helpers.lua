@@ -102,10 +102,13 @@ function helpers.scaleImage(source, sizex, sizey)
 end
 
 --[[ Returns the upper left pixel of an image of size `size` from its center.
-Uses [0, 1] range for image coordinates.
+'size' may be table or number, if number then it assumes equal height and width.
 ]]
 function helpers.getUpperLeftFromCenter(center, size)
-  return {center[1] - size / 2, center[2] - size / 2}
+  if type(size) == 'number' then
+    size = {size, size}
+  end
+  return {center[1] - size[1] / 2, center[2] - size[2] / 2}
 end
 
 --[[ Set the maximum number of trials per episode. An episode will
@@ -212,6 +215,49 @@ function helpers.getFixationImage(screenSize, bgColor, fixationColor,
     yBand:select(3, i):fill(fixationColor[i])
   end
   return fixation
+end
+
+--[[ Returns a byte tensor with a solid cirlce.
+
+Arguments:
+
+*   'size' Height and width of returned image. Image will have #fgColor chanels.
+*   'fgColor' Color of circle.
+*   'bgColor' Color of Background.
+
+--
+Example:
+```
+> print(helpers.makeFilledCircle(8, {1}, {0}):reshape(8,8))
+[deepmind.lab.tensor.ByteTensor]
+Shape: [8, 8]
+ [0, 0, 1, 1, 1, 1, 0, 0]
+ [0, 1, 1, 1, 1, 1, 1, 0]
+ [1, 1, 1, 1, 1, 1, 1, 1]
+ [1, 1, 1, 1, 1, 1, 1, 1]
+ [1, 1, 1, 1, 1, 1, 1, 1]
+ [1, 1, 1, 1, 1, 1, 1, 1]
+ [0, 1, 1, 1, 1, 1, 1, 0]
+ [0, 0, 1, 1, 1, 1, 0, 0]
+```
+]]
+function helpers.makeFilledCircle(size, fgColor, bgColor)
+  assert(#fgColor == #bgColor)
+  local circle = tensor.ByteTensor(size, size, #fgColor):fill(fgColor)
+  local bg = tensor.ByteTensor(bgColor)
+  local radius = size / 2
+  local radiusSquared = radius ^ 2
+  for row = 1, size do
+    local circleRow = circle(row)
+    for col = 1, size do
+      local x = col - radius - 0.5
+      local y = row - radius - 0.5
+      if x * x + y * y >= radiusSquared then
+        circleRow(col):copy(bg)
+      end
+    end
+  end
+  return circle
 end
 
 --[[ Converts size as a fraction of the screen to pixels using the full size of

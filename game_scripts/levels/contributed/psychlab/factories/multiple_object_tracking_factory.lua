@@ -26,6 +26,7 @@ local helpers = require 'common.helpers'
 local point_and_click = require 'factories.psychlab.point_and_click'
 local psychlab_helpers = require 'factories.psychlab.helpers'
 local psychlab_factory = require 'factories.psychlab.factory'
+local psychlab_motion = require 'levels.contributed.psychlab.factories.motion'
 local psychlab_staircase = require 'levels.contributed.psychlab.factories.staircase'
 local random = require 'common.random'
 local tensor = require 'dmlab.system.tensor'
@@ -36,7 +37,9 @@ local TIME_TO_FIXATE_CROSS = 1 -- in frames
 local FAST_INTERTRIAL_INTERVAL = 1 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local ANIMATION_SIZE_AS_FRACTION_OF_SCREEN = {0.75, 0.75}
-local BG_COLOR = 255
+local BG_COLOR = {255, 255, 255}
+local EPISODE_LENGTH_SECONDS = 180
+local RESPONSE_TIME_CAP_FRAMES = 300 -- end trial after this many frames
 
 local FIXATION_SIZE = 0.1
 local FIXATION_COLOR = {255, 0, 0} -- RGB
@@ -44,10 +47,8 @@ local CENTER = {.5, .5}
 local BUTTON_SIZE = 0.1
 
 local FIXATION_REWARD = 0
-local CORRECT_REWARD = 1
+local CORRECT_REWARD_SEQUENCE = 1
 local INCORRECT_REWARD = 0
-
-local MAX_IDLE_STEPS = 400
 
 local STUDY_INTERVAL = 60
 
@@ -70,13 +71,19 @@ local PROBE_PROBABILITY = 0.1
 local FRACTION_TO_PROMOTE = 1.0
 local FRACTION_TO_DEMOTE = 0.5
 
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
+
 local factory = {}
 
 function factory.createLevelApi(kwargs)
+  kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or
+      EPISODE_LENGTH_SECONDS
   kwargs.timeToFixateCross = kwargs.timeToFixateCross or TIME_TO_FIXATE_CROSS
   kwargs.fastIntertrialInterval = kwargs.fastIntertrialInterval or
     FAST_INTERTRIAL_INTERVAL
   kwargs.screenSize = kwargs.screenSize or SCREEN_SIZE
+  kwargs.responseTimeCapFrames = kwargs.responseTimeCapFrames or
+    RESPONSE_TIME_CAP_FRAMES
   kwargs.animationSizeAsFractionOfScreen =
     kwargs.animationSizeAsFractionOfScreen or
     ANIMATION_SIZE_AS_FRACTION_OF_SCREEN
@@ -86,9 +93,9 @@ function factory.createLevelApi(kwargs)
   kwargs.center = kwargs.center or CENTER
   kwargs.buttonSize = kwargs.buttonSize or BUTTON_SIZE
   kwargs.fixationReward = kwargs.fixationReward or FIXATION_REWARD
-  kwargs.correctReward = kwargs.correctReward or CORRECT_REWARD
+  kwargs.correctRewardSequence = kwargs.correctRewardSequence or
+      CORRECT_REWARD_SEQUENCE
   kwargs.incorrectReward = kwargs.incorrectReward or INCORRECT_REWARD
-  kwargs.maxIdleSteps = kwargs.maxIdleSteps or MAX_IDLE_STEPS
   kwargs.studyInterval = kwargs.studyInterval or STUDY_INTERVAL
   kwargs.interframeInterval = kwargs.interframeInterval or INTERFRAME_INTERVAL
   kwargs.videoLength = kwargs.videoLength or VIDEO_LENGTH
@@ -106,6 +113,12 @@ function factory.createLevelApi(kwargs)
   kwargs.ballResponseColor = kwargs.ballResponseColor or BALL_RESPONSE_COLOR
   kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
     TRIALS_PER_EPISODE_CAP
+  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or MAX_STEPS_OFF_SCREEN
+  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
+  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
+  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
+  kwargs.fixedTestLength = kwargs.fixedTestLength or false
+  kwargs.initialDifficultyLevel = kwargs.initialDifficultyLevel or 1
 
   -- Class definition for multiobject_tracking psychlab environment.
   local env = {}
@@ -129,17 +142,26 @@ function factory.createLevelApi(kwargs)
 
     -- setup images
     self:setupImages()
-    self._timeoutIfIdle = true
-    self._stepsSinceInteraction = 0
 
     -- handle to the point and click api
     self.pac = pac
 
     self.staircase = psychlab_staircase.createStaircase1D{
         sequence = kwargs.numToTrackSequence,
-        fractionToPromote = FRACTION_TO_PROMOTE,
-        fractionToDemote = FRACTION_TO_DEMOTE,
-        probeProbability = PROBE_PROBABILITY,
+        correctRewardSequence = kwargs.correctRewardSequence,
+        fractionToPromote = kwargs.fractionToPromote,
+        fractionToDemote = kwargs.fractionToDemote,
+        probeProbability = kwargs.probeProbability,
+        fixedTestLength = kwargs.fixedTestLength,
+        initialDifficultyLevel = kwargs.initialDifficultyLevel,
+    }
+
+    -- initialize the motion generation procedure
+    self._motion = psychlab_motion.createRandomBallMotion{
+        screenSize = self.screenSize,
+        allowableDistanceToWall = kwargs.allowableDistanceToWall,
+        minDistanceBetweenBallsSq = kwargs.minDistanceBetweenBallsSq,
+        sizeAsFractionOfScreen = kwargs.animationSizeAsFractionOfScreen
     }
   end
 
@@ -149,32 +171,17 @@ function factory.createLevelApi(kwargs)
   function env:reset(episodeId, seed)
     random:seed(seed)
 
-    self.pac:setBackgroundColor{kwargs.bgColor, kwargs.bgColor, kwargs.bgColor}
+    self.pac:setBackgroundColor(kwargs.bgColor)
     self.pac:clearWidgets()
     psychlab_helpers.addFixation(self, kwargs.fixationSize)
 
-    self:initAnimation(kwargs.animationSizeAsFractionOfScreen)
     self.currentTrial = {}
 
     psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
 
     -- blockId groups together all rows written during the same episode
     self.blockId = random:uniformInt(0, MAX_INT)
-  end
-
-  function env:drawCircle(size, ballColor)
-    local radius = math.floor(size / 2)
-    local radiusSquared = radius ^ 2
-    local ballTensor = tensor.ByteTensor(size, size, 3):fill(kwargs.bgColor)
-    local ballColor = tensor.ByteTensor(ballColor)
-    for x = -radius, radius do
-      for y = -radius, radius do
-        if x * x + y * y < radiusSquared then
-          ballTensor(y + radius + 1, x + radius + 1):copy(ballColor)
-        end
-      end
-    end
-    return ballTensor
+    self.trialId = 1
   end
 
   -- Creates image tensors for buttons, objects-to-track and the fixation cross.
@@ -190,26 +197,24 @@ function factory.createLevelApi(kwargs)
     self.images.redImage = tensor.ByteTensor(h, w, 3):fill{255, 100, 100}
     self.images.blackImage = tensor.ByteTensor(h, w, 3)
 
-    self.images.testCircle = self:drawCircle(kwargs.ballDiameter,
-                                             kwargs.ballTestColor)
-    self.images.studyCircle = self:drawCircle(kwargs.ballDiameter,
-                                              kwargs.ballStudyColor)
-    self.images.responseCircle = self:drawCircle(kwargs.ballDiameter,
-                                                 kwargs.ballResponseColor)
-  end
-
-  function env:initAnimation(sizeAsFractionOfScreen)
-    local imageHeight = sizeAsFractionOfScreen[1] * self.screenSize.height
-    local imageWidth = sizeAsFractionOfScreen[2] * self.screenSize.width
-    self.animation = {
-        currentFrame = tensor.ByteTensor(imageHeight, imageWidth, 3):fill(0),
-        nextFrame = tensor.ByteTensor(imageHeight, imageWidth, 3):fill(0),
-        imageSize = imageHeight,  -- Assume height and width are the same
-    }
+    self.images.testCircle = psychlab_helpers.makeFilledCircle(
+        kwargs.ballDiameter,
+        kwargs.ballTestColor,
+        kwargs.bgColor
+    )
+    self.images.studyCircle = psychlab_helpers.makeFilledCircle(
+        kwargs.ballDiameter,
+        kwargs.ballStudyColor,
+        kwargs.bgColor
+    )
+    self.images.responseCircle = psychlab_helpers.makeFilledCircle(
+        kwargs.ballDiameter,
+        kwargs.ballResponseColor,
+        kwargs.bgColor
+    )
   end
 
   function env:finishTrial(delay)
-    self._stepsSinceInteraction = 0
     self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
         game:episodeTimeSeconds() - self._currentTrialStartTime
@@ -222,7 +227,6 @@ function factory.createLevelApi(kwargs)
 
   function env:fixationCallback(name, mousePos, hoverTime, userData)
     if hoverTime == kwargs.timeToFixateCross then
-      self._stepsSinceInteraction = 0
       self.pac:addReward(kwargs.fixationReward)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
@@ -230,6 +234,8 @@ function factory.createLevelApi(kwargs)
       -- Measure reaction time from trial initiation
       self._currentTrialStartTime = game:episodeTimeSeconds()
       self.currentTrial.stepCount = 0
+      self.currentTrial.trialId = self.trialId
+      self.trialId = self.trialId + 1
 
       -- go to the study phase
       self:studyPhase()
@@ -240,7 +246,8 @@ function factory.createLevelApi(kwargs)
     -- Reward if this is the first "hoverEnd" event for this trial.
     self.currentTrial.response = name
     self.currentTrial.correct = 1
-    self.pac:addReward(kwargs.correctReward)
+    self.currentTrial.reward = self.staircase:correctReward()
+    self.pac:addReward(self.currentTrial.reward)
     self:finishTrial(kwargs.fastIntertrialInterval)
   end
 
@@ -248,7 +255,8 @@ function factory.createLevelApi(kwargs)
     -- Reward if this is the first "hoverEnd" event for this trial.
     self.currentTrial.response = name
     self.currentTrial.correct = 0
-    self.pac:addReward(kwargs.incorrectReward)
+    self.currentTrial.reward = kwargs.incorrectReward
+    self.pac:addReward(self.currentTrial.reward)
     self:finishTrial(kwargs.fastIntertrialInterval)
   end
 
@@ -302,8 +310,8 @@ function factory.createLevelApi(kwargs)
     -- coords is a tensor of size [numObjects, 2] describing the coordinates of
     -- each object in the next frame to be displayed after the current frame.
     local indicesToColor = indicesToColor or {}
-    local frame = tensor.ByteTensor(unpack(self.animation.nextFrame:shape())):
-        fill(kwargs.bgColor)
+    local frame = tensor.ByteTensor(
+      unpack(self._motion.animation.nextFrame:shape())):fill(kwargs.bgColor)
 
     for i = 1, coords:shape()[1] do
       local circle = indicesToColor[i] and specialCircle or
@@ -321,7 +329,7 @@ function factory.createLevelApi(kwargs)
     if index < videoCoords:shape()[1] then
       index = index + 1
       -- show the current frame
-      self.pac:updateWidget('main_image', self.animation.currentFrame)
+      self.pac:updateWidget('main_image', self._motion.animation.currentFrame)
       -- recursively call this function after the interframe interval
       self.pac:addTimer{
           name = 'interframe_interval',
@@ -331,9 +339,9 @@ function factory.createLevelApi(kwargs)
                                                             index) end
       }
       -- render the next frame
-      self.animation.nextFrame = self:renderFrame(videoCoords(index))
+      self._motion.animation.nextFrame = self:renderFrame(videoCoords(index))
       -- update the reference called currentFrame to point to the next tensor
-      self.animation.currentFrame = self.animation.nextFrame
+      self._motion.animation.currentFrame = self._motion.animation.nextFrame
     end
   end
 
@@ -345,152 +353,12 @@ function factory.createLevelApi(kwargs)
     self:displayFrame(videoCoords, index)
   end
 
-  function env:ballNearEdge(tentativePosition)
-    local maxDist = self.animation.imageSize - kwargs.allowableDistanceToWall
-    for ii = 1, tentativePosition:shape()[1] do
-      local val = tentativePosition(ii):val()
-      if val <= kwargs.allowableDistanceToWall or val >= maxDist then
-        return true
-      end
-    end
-    return false
-  end
-
-  local function ballNearBall(ballA, ballB)
-    local distanceSq = 0
-    local temp = ballA:clone():csub(ballB)
-    temp:cmul(temp)
-    temp:apply(function (v) distanceSq = distanceSq + v end)
-    return distanceSq < kwargs.minDistanceBetweenBallsSq
-  end
-
-  function env:illegal(tentativePosition, nextPositions)
-    local ballsTooClose = {}
-    if self:ballNearEdge(tentativePosition) then
-      return true
-    end
-    for i = 1, nextPositions:shape()[1] do
-      if ballNearBall(tentativePosition, nextPositions(i)) then
-        table.insert(ballsTooClose, i)
-      end
-    end
-    return #ballsTooClose > 0 and ballsTooClose or false
-  end
-
-  local function generateRandomPosition(positionTensor, rangeFactor)
-      positionTensor(1):val(random:uniformReal(0, 1))
-      positionTensor(2):val(random:uniformReal(0, 1))
-      positionTensor:mul(rangeFactor):add(kwargs.allowableDistanceToWall):
-        round()
-      return positionTensor
-  end
-
-  function env:generateInitialConditions(numBalls)
-    -- Frame, ball, position
-    local positions = tensor.DoubleTensor(kwargs.videoLength, numBalls, 2)
-    -- Directions are angles in [-pi, pi].
-    -- Balls begin moving in different directions from one another.
-    local deltaDir = 2 * math.pi / numBalls
-    local directions = tensor.DoubleTensor{
-        range = {deltaDir, 2 * math.pi, deltaDir}}
-    assert(directions:shape()[1] == numBalls)
-
-    -- Tensor big enough to hold directions per ball per frame.  Initialize
-    -- first frame directions only.  generateVideoData sets remaining values.
-    local allDirections = tensor.DoubleTensor(kwargs.videoLength,
-                                              numBalls)
-    allDirections:select(1, 1):copy(directions)
-
-    local rangeFactor = self.animation.imageSize -
-                        2 * kwargs.allowableDistanceToWall
-    local tentativePosition = tensor.DoubleTensor(2)
-    for i = 1, numBalls do
-      generateRandomPosition(tentativePosition, rangeFactor)
-      if i > 1 then
-        -- Ensure that no positions are too close to one another
-        while self:illegal(tentativePosition, positions(1):
-            narrow(1, 1, i - 1)) do
-          generateRandomPosition(tentativePosition, rangeFactor)
-        end
-      end
-      positions(1, i):copy(tentativePosition)
-    end
-    return positions, allDirections
-  end
-
-  function env:nextFrameFromPrevious(positions, directions, motionSpeed)
-    local oldPositions = positions:clone()
-    local function getNewPosition(position, direction)
-      direction = direction:val()
-      local displacement = tensor.DoubleTensor{
-          motionSpeed * math.cos(direction),
-          motionSpeed * math.sin(direction)
-      }
-      return position:clone():cadd(displacement)
-    end
-    -- Compute the next position of each ball by following its current
-    -- direction.
-    local nextPositions = positions:clone()
-    for i = 1, positions:shape()[1] do
-      -- only need to check not near edge for first ball
-      local tentativePosition = getNewPosition(positions(i), directions(i))
-      while self:ballNearEdge(tentativePosition) do
-        directions(i):val(random:uniformReal(0, 1) * 2 * math.pi - math.pi)
-        tentativePosition = getNewPosition(positions(i), directions(i))
-      end
-      -- for all balls after first, must check not near edge or other balls.
-      if i > 1 then
-        local safeguardCounter = 1
-        local illegal = self:illegal(tentativePosition,
-                                     nextPositions:narrow(1, 1, i - 1))
-        while illegal do
-          --directions[i] = torch.rand(1) * 2 * math.pi - math.pi
-          directions(i):val(random:uniformReal(0, 1) * 2 * math.pi - math.pi)
-          tentativePosition = getNewPosition(positions(i), directions(i))
-          safeguardCounter = safeguardCounter + 1
-          if safeguardCounter == 500 then
-            tentativePosition = oldPositions(i)
-            if type(illegal) == 'table' then
-              for _, ii in ipairs(illegal) do
-                -- stop all balls in collision and give each a new direction to
-                -- try to move in on the next frame
-                nextPositions(ii):copy(oldPositions(ii))
-                directions(ii):val(random:uniformReal(0, 1) * 2 * math.pi -
-                                   math.pi)
-              end
-            end
-            break
-          end
-        end
-      end
-      nextPositions(i):copy(tentativePosition)
-    end
-    return nextPositions, directions
-  end
-
-  function env:generateVideoData(numBalls, motionSpeed)
-    local positions, directions = self:generateInitialConditions(numBalls)
-    for i = 2, kwargs.videoLength do
-      local nextPositions, nextDirections = self:nextFrameFromPrevious(
-          positions(i - 1),
-          directions(i - 1),
-          motionSpeed
-      )
-      positions(i):copy(nextPositions)
-      directions(i):copy(nextDirections)
-    end
-    return positions, directions
-  end
-
-
   -- Permutes the sequence p, p + 1, ..., q.
   local function permute(p, q)
     return tensor.Int64Tensor{range = {p, q}}:shuffle(random:generator())
   end
 
-
   function env:studyPhase()
-    self._stepsSinceInteraction = 0
     self.currentTrial.numToTrack = self.staircase:parameter()
     self.currentTrial.numBalls = self.currentTrial.numToTrack * 2
     self.currentTrial.motionSpeed = psychlab_helpers.randomFrom(
@@ -509,31 +377,35 @@ function factory.createLevelApi(kwargs)
       table.insert(self.currentTrial.indicesNotToTrack, j)
     end
     self.currentTrial.queryIsTarget = psychlab_helpers.randomFrom{true, false}
-    local positions, _ = self:generateVideoData(self.currentTrial.numBalls,
-                                                self.currentTrial.motionSpeed)
+    -- videoCoords is size [videoLength,numBalls,2] where 2 is x,y coordinates.
+    local videoCoords, _ = self._motion:generateVideoData(
+        kwargs.videoLength,
+        self.currentTrial.numBalls,
+        self.currentTrial.motionSpeed
+    )
     -- create the widget and display the first frame
     local upperLeftPosition = psychlab_helpers.getUpperLeftFromCenter(
         kwargs.center,
         kwargs.animationSizeAsFractionOfScreen[1]
     )
     -- Display the first frame for the duration of the study interval
-    self.animation.currentFrame = self:renderFrame(
-        positions(1),
+    self._motion.animation.currentFrame = self:renderFrame(
+        videoCoords(1),
         indicesToTrack,
         self.images.studyCircle
     )
     self.pac:addWidget{
         name = 'main_image',
-        image = self.animation.currentFrame,
+        image = self._motion.animation.currentFrame,
         pos = upperLeftPosition,
         size = kwargs.animationSizeAsFractionOfScreen,
     }
-    self.pac:updateWidget('main_image', self.animation.currentFrame)
+    self.pac:updateWidget('main_image', self._motion.animation.currentFrame)
     self.pac:addTimer{
         name = 'study_interval',
         timeout = kwargs.studyInterval,
         callback = function(...) return self.trackingPhase(self,
-                                                           positions) end
+                                                           videoCoords) end
     }
   end
 
@@ -548,7 +420,6 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:responsePhase(positions)
-    self._stepsSinceInteraction = 0
     -- Display the last frame of the animation for the entire response phase.
     local queryIndex = {}
     if self.currentTrial.queryIsTarget then
@@ -558,13 +429,26 @@ function factory.createLevelApi(kwargs)
     else
       queryIndex[self.currentTrial.indicesNotToTrack[1]] = true
     end
-    self.animation.currentFrame = self:renderFrame(
+    self._motion.animation.currentFrame = self:renderFrame(
         positions(positions:shape()[1]),
         queryIndex,
         self.images.responseCircle
     )
-    self.pac:updateWidget('main_image', self.animation.currentFrame)
+    self.pac:updateWidget('main_image', self._motion.animation.currentFrame)
     self:addResponseButtons(self.currentTrial.queryIsTarget)
+
+    self.pac:addTimer{
+        name = 'trial_timeout',
+        timeout = kwargs.responseTimeCapFrames,
+        callback = function(...) return self:trialTimeoutCallback() end
+      }
+  end
+
+  function env:trialTimeoutCallback()
+    self.currentTrial.correct = 0
+    self.currentTrial.reward = kwargs.incorrectReward
+    self.pac:addReward(self.currentTrial.reward)
+    self:finishTrial(kwargs.fastIntertrialInterval)
   end
 
   -- Remove the test array
@@ -579,26 +463,16 @@ function factory.createLevelApi(kwargs)
   -- Increment counter to allow measurement of reaction times in steps
   -- This function is automatically called at each tick.
   function env:step(lookingAtScreen)
-    if self.currentTrial.stepCount == nil then self:fixationCallback() end
-
     if self.currentTrial.stepCount ~= nil then
       self.currentTrial.stepCount = self.currentTrial.stepCount + 1
-    end
-
-    -- If too long since interaction with any buttons, then end episode. This
-    -- should speed up the early stages of training, since it causes less time
-    -- to be spent looking away from the screen.
-    self._stepsSinceInteraction = self._stepsSinceInteraction + 1
-    if self._timeoutIfIdle and
-        self._stepsSinceInteraction > kwargs.maxIdleSteps then
-      self.pac:endEpisode()
     end
   end
 
   return psychlab_factory.createLevelApi{
       env = point_and_click,
-      envOpts = {environment = env, screenSize = kwargs.screenSize},
-      episodeLengthSeconds = 180
+      envOpts = {environment = env, screenSize = kwargs.screenSize,
+                 maxStepsOffScreen = kwargs.maxStepsOffScreen},
+      episodeLengthSeconds = kwargs.episodeLengthSeconds
   }
 end
 

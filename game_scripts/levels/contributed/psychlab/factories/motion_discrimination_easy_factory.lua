@@ -51,8 +51,6 @@ local FIXATION_REWARD = 0
 local CORRECT_REWARD = 1
 local INCORRECT_REWARD = 0
 
-local MAX_IDLE_STEPS = 5000
-
 local INTERFRAME_INTERVAL = 4 -- in REAL (Labyrinth) frames
 
 local PRERESPONSE_DELAY = 1
@@ -65,6 +63,8 @@ local SPEED = 50
 local CANVAS_SIZE = 2048
 local PRE_RENDER_MASK_SIZE = 1224
 local GAUSSIAN_MASK_SIGMA = 0.16  -- nice big size
+
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
 
 -- Setup response button arrows
 local ARROWS_DIR = game:runFiles() ..
@@ -114,8 +114,6 @@ function factory.createLevelApi(kwargs)
     self.screenSize = opts.screenSize
     log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
-    self._stepsSinceInteraction = 0
-
     self:setupImages()
     self:setupCoordinateBounds(CANVAS_SIZE, PRE_RENDER_MASK_SIZE)
     self.motionDirections = {}
@@ -143,6 +141,7 @@ function factory.createLevelApi(kwargs)
 
     -- blockId groups together all rows written during the same episode
     self.blockId = seed
+    self.trialId = 1
   end
 
   function env:fillCircle(dest)
@@ -242,7 +241,6 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:finishTrial(delay)
-    self._stepsSinceInteraction = 0
     self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
         game:episodeTimeSeconds() - self._currentTrialStartTime
@@ -256,7 +254,6 @@ function factory.createLevelApi(kwargs)
 
   function env:fixationCallback(name, mousePos, hoverTime, userData)
     if hoverTime == TIME_TO_FIXATE_CROSS then
-      self._stepsSinceInteraction = 0
       self.pac:addReward(FIXATION_REWARD)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
@@ -272,6 +269,9 @@ function factory.createLevelApi(kwargs)
           callback = function(...)
             return self.addArrows(self, self.currentTrial.correctArrow) end
       }
+
+      self.currentTrial.trialId = self.trialId
+      self.trialId = self.trialId + 1
 
       self:displayDotMotion()
     end
@@ -439,21 +439,12 @@ function factory.createLevelApi(kwargs)
     if self.currentTrial.stepCount ~= nil then
       self.currentTrial.stepCount = self.currentTrial.stepCount + 1
     end
-
-    -- If too long since interaction with any buttons, then end episode. This
-    -- should speed up the early stages of training, since it causes less time
-    -- to be spent looking away from the screen.
-    self._stepsSinceInteraction = self._stepsSinceInteraction + 1
-    if self._stepsSinceInteraction > MAX_IDLE_STEPS then
-      self.pac:endEpisode()
-    end
   end
 
   return psychlab_factory.createLevelApi{
     env = point_and_click,
-    envOpts = {
-        environment = env, screenSize = SCREEN_SIZE
-    },
+    envOpts = {environment = env, screenSize = SCREEN_SIZE,
+               maxStepsOffScreen = MAX_STEPS_OFF_SCREEN},
     episodeLengthSeconds = 150
   }
 end

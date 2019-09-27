@@ -31,6 +31,7 @@ local psychlab_staircase = require 'levels.contributed.psychlab.factories.stairc
 local random = require 'common.random'
 local set = require 'common.set'
 local tensor = require 'dmlab.system.tensor'
+local log = require 'common.log'
 
 -- setup constant parameters of the task
 local TIME_TO_FIXATE_CROSS = 1 -- in frames
@@ -39,6 +40,8 @@ local INTER_TRIAL_INTERVAL = 1 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local ANIMATION_SIZE_AS_FRACTION_OF_SCREEN = {0.8, 0.8}
 local BG_COLOR = 0
+local EPISODE_LENGTH_SECONDS = 150
+local TRIALS_PER_EPISODE_CAP = math.huge
 
 local FIXATION_SIZE = 0.1
 local FIXATION_COLOR = {255, 0, 0} -- RGB
@@ -46,10 +49,8 @@ local CENTER = {.5, .5}
 local BUTTON_SIZE = 0.1
 
 local FIXATION_REWARD = 0
-local CORRECT_REWARD = 1
 local INCORRECT_REWARD = 0
-
-local MAX_IDLE_STEPS = 500
+local CORRECT_REWARD_SEQUENCE = 1
 
 local INTERFRAME_INTERVAL = 4 -- in REAL (Labyrinth) frames
 
@@ -64,6 +65,7 @@ local SPEED = 28
 local CANVAS_SIZE = 2048
 local PRE_RENDER_MASK_SIZE = 1224
 local COHERENCES = {1.0, 0.9, 0.75, 0.5, 0.35, 0.2, 0.1, 0.05}
+-- TODO(jzl): Consider adding an option not to use the Gaussian mask.
 local GAUSSIAN_MASK_SIGMA = 0.10  -- nice big size
 
 -- Staircase parameters
@@ -77,11 +79,24 @@ local ARROWS_DIR = game:runFiles() ..
 local ARROW_SIZE = .075
 local RADIUS = .4
 
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
+
 local factory = {}
 
 function factory.createLevelApi(kwargs)
-  -- Currently there are no configurable parameters for this environment,
-  -- so kwargs are ignored.
+  kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or
+      EPISODE_LENGTH_SECONDS
+  kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
+      TRIALS_PER_EPISODE_CAP
+  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
+  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
+  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
+  kwargs.fixedTestLength = kwargs.fixedTestLength or false
+  kwargs.initialDifficultyLevel = kwargs.initialDifficultyLevel or 1
+  kwargs.correctRewardSequence = kwargs.correctRewardSequence or
+      CORRECT_REWARD_SEQUENCE
+  kwargs.coherenceValues = kwargs.coherenceValues or COHERENCES
+  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or MAX_STEPS_OFF_SCREEN
 
   local function xLoc(angle)
     return CENTER[1] + (RADIUS * math.cos(angle)) - (ARROW_SIZE / 2)
@@ -119,8 +134,6 @@ function factory.createLevelApi(kwargs)
     self.screenSize = opts.screenSize
     log.info('opts passed to _init:\n' .. helpers.tostring(opts))
 
-    self._stepsSinceInteraction = 0
-
     self:setupImages()
     self:setupCoordinateBounds(CANVAS_SIZE, PRE_RENDER_MASK_SIZE)
     self.motionDirections = {}
@@ -146,16 +159,22 @@ function factory.createLevelApi(kwargs)
 
     self.currentTrial = {}
 
+    psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
+
     -- setup the adaptive staircase procedure
     self.staircase = psychlab_staircase.createStaircase1D{
-      sequence = COHERENCES,
-      fractionToPromote = FRACTION_TO_PROMOTE,
-      fractionToDemote = FRACTION_TO_DEMOTE,
-      probeProbability = PROBE_PROBABILITY,
+        sequence = kwargs.coherenceValues,
+        correctRewardSequence = kwargs.correctRewardSequence,
+        fractionToPromote = kwargs.fractionToPromote,
+        fractionToDemote = kwargs.fractionToDemote,
+        probeProbability = kwargs.probeProbability,
+        fixedTestLength = kwargs.fixedTestLength,
+        initialDifficultyLevel = kwargs.initialDifficultyLevel,
     }
 
     -- blockId groups together all rows written during the same episode
     self.blockId = seed
+    self.trialId = 1
   end
 
   function env:fillCircle(dest)
@@ -255,7 +274,6 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:finishTrial(delay)
-    self._stepsSinceInteraction = 0
     self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
         game:episodeTimeSeconds() - self._currentTrialStartTime
@@ -270,17 +288,18 @@ function factory.createLevelApi(kwargs)
 
   function env:fixationCallback(name, mousePos, hoverTime, userData)
     if hoverTime == TIME_TO_FIXATE_CROSS then
-      self._stepsSinceInteraction = 0
       self.pac:addReward(FIXATION_REWARD)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
 
       -- Sample all trial-unique data
+      self.currentTrial.difficultyLevel = self.staircase:getDifficultyLevel()
       self.currentTrial.coherence = self.staircase:parameter()
       local angleId
       self.currentTrial.motionDirection, angleId = psychlab_helpers.randomFrom(
         self.motionDirections)
       self.currentTrial.correctArrow = self.mapAngleIdsToArrows[angleId]
+      self.currentTrial.reward = 0
 
       self.pac:addTimer{
           name = 'preresponse_delay',
@@ -288,6 +307,9 @@ function factory.createLevelApi(kwargs)
           callback = function(...)
             return self.addArrows(self, self.currentTrial.correctArrow) end
       }
+
+      self.currentTrial.trialId = self.trialId
+      self.trialId = self.trialId + 1
 
       self:displayDotMotion()
     end
@@ -297,7 +319,8 @@ function factory.createLevelApi(kwargs)
     if hoverTime == TIME_TO_FIXATE_TARGET then
       self.currentTrial.response = name
       self.currentTrial.correct = 1
-      self.pac:addReward(CORRECT_REWARD)
+      self.currentTrial.reward = self.staircase:correctReward()
+      self.pac:addReward(self.currentTrial.reward)
       self:finishTrial(INTER_TRIAL_INTERVAL)
     end
   end
@@ -306,7 +329,8 @@ function factory.createLevelApi(kwargs)
     if hoverTime == TIME_TO_FIXATE_TARGET then
       self.currentTrial.response = name
       self.currentTrial.correct = 0
-      self.pac:addReward(INCORRECT_REWARD)
+      self.currentTrial.reward = INCORRECT_REWARD
+      self.pac:addReward(self.currentTrial.reward)
       self:finishTrial(INTER_TRIAL_INTERVAL)
     end
   end
@@ -462,22 +486,13 @@ function factory.createLevelApi(kwargs)
     if self.currentTrial.stepCount ~= nil then
       self.currentTrial.stepCount = self.currentTrial.stepCount + 1
     end
-
-    -- If too long since interaction with any buttons, then end episode. This
-    -- should speed up the early stages of training, since it causes less time
-    -- to be spent looking away from the screen.
-    self._stepsSinceInteraction = self._stepsSinceInteraction + 1
-    if self._stepsSinceInteraction > MAX_IDLE_STEPS then
-      self.pac:endEpisode()
-    end
   end
 
   return psychlab_factory.createLevelApi{
     env = point_and_click,
-    envOpts = {
-        environment = env, screenSize = SCREEN_SIZE
-    },
-    episodeLengthSeconds = 150
+    envOpts = {environment = env, screenSize = SCREEN_SIZE,
+               maxStepsOffScreen = kwargs.maxStepsOffScreen},
+    episodeLengthSeconds = kwargs.episodeLengthSeconds
   }
 end
 

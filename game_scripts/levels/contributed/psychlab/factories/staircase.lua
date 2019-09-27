@@ -30,6 +30,12 @@ Arguments:
 
 `sequence`: an array of difficulty parameter values, ordered by difficulty
 
+`correctRewardSequence`: (number or array). If a number always return that
+number when staircase:reward() is called. If an array, then calling
+staircase:correctReward() will return
+correctRewardSequence[currentDifficultyLevel]. If correctRewardSequence is a
+table then it must have the same number of elements as `sequence`.
+
 `fractionToPromote`: proportion of K trials in level K that must have been
 correct in order to advance to the next level.
 
@@ -40,16 +46,27 @@ this value, demote difficulty back to the previous level.
 with difficulty randomly selected between 1 and the current level.
 ]]
 function staircase.createStaircase1D(opt)
+  if type(opt.correctRewardSequence) == 'table' then
+    assert(#opt.correctRewardSequence == #opt.sequence)
+  end
   local staircase1D = {
       _fractionToPromote = opt.fractionToPromote,
       _fractionToDemote = opt.fractionToDemote,
       _probeProbability = opt.probeProbability,
       _sequence = opt.sequence,
-      _difficultyLevel = 1,
+      _correctRewardSequence = opt.correctRewardSequence,
+      _difficultyLevel = opt.initialDifficultyLevel or 1,
       _trialCount = 0,
       _correctCount = 0,
       _probeTrial = false,
+      -- set to number of trials to enable fixed test length.
+      _fixedTestLength = opt.fixedTestLength or false,
   }
+  if staircase1D._fixedTestLength then
+    staircase1D._testLength = staircase1D._fixedTestLength
+  else
+    staircase1D._testLength = staircase1D._difficultyLevel
+  end
 
   -- 'staircase1D.step' is called at the end of each trial.
   function staircase1D:step(isCorrect)
@@ -57,7 +74,7 @@ function staircase.createStaircase1D(opt)
     if not self._probeTrial then
       self._trialCount = self._trialCount + 1
       self._correctCount = self._correctCount + (isCorrect and 1 or 0)
-      if self._trialCount == self._difficultyLevel then
+      if self._trialCount == self._testLength then
         local fractionCorrect = self._correctCount / self._trialCount
         if fractionCorrect >= self._fractionToPromote then
           if self._difficultyLevel < #self._sequence then
@@ -70,6 +87,9 @@ function staircase.createStaircase1D(opt)
         end
         self._trialCount = 0
         self._correctCount = 0
+        if not self._fixedTestLength then
+          self._testLength = self._difficultyLevel
+        end
       end
     end
   end
@@ -81,6 +101,18 @@ function staircase.createStaircase1D(opt)
     else
       self._probeTrial = false
       return self._sequence[self._difficultyLevel]
+    end
+  end
+
+  function staircase1D:getDifficultyLevel()
+    return self._difficultyLevel
+  end
+
+  function staircase1D:correctReward()
+    if type(self._correctRewardSequence) == 'number' then
+      return self._correctRewardSequence
+    elseif type(self._correctRewardSequence) == 'table' then
+      return self._correctRewardSequence[self._difficultyLevel]
     end
   end
 

@@ -1,4 +1,4 @@
---[[ Copyright (C) 2018 Google Inc.
+--[[ Copyright (C) 2019 Google LLC
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@ local game = require 'dmlab.system.game'
 local log = require 'common.log'
 local psychlab_factory = require 'factories.psychlab.factory'
 local psychlab_helpers = require 'factories.psychlab.helpers'
-local psychlab_staircase = require 'levels.contributed.psychlab.factories.staircase'
 local helpers = require 'common.helpers'
 local image = require 'dmlab.system.image'
 local point_and_click = require 'factories.psychlab.point_and_click'
 local random = require 'common.random'
 local tensor = require 'dmlab.system.tensor'
+local defaults = require 'levels.contributed.psychlab.visuospatial_suite.factories.defaults'
 
 --[[ This task is a variant on visual search in which the subject must find
 the odd one out among an array of objects.
@@ -73,46 +73,11 @@ local SHAPES = {
     },
 }
 
-local COLORS = {
-    {255, 0, 0},    -- Red
-    {255, 255, 0},  -- Yellow
-    {0, 255, 0},    -- Green
-    {0, 255, 255},  -- Cyan
-    {0, 0, 255},    -- Blue
-    {255, 0, 255},  -- Magenta
-}
-
-local TIME_TO_FIXATE_CROSS = 1 -- in frames
-local FAST_INTER_TRIAL_INTERVAL = 1 -- in frames
-local TRIAL_TIMEOUT = 300 -- in frames
-local SCREEN_HEIGHT, SCREEN_WIDTH = 512, 512
-
-local EPISODE_LENGTH_SECONDS = 150
-local TRIALS_PER_EPISODE_CAP = 125
-
 -- How often to update the animation
 local INTERFRAME_INTERVAL = 4
 
-local BG_COLOR = {0, 0, 0}
-local WHITE_BUTTON_COLOR = {255, 255, 255}
-local GREEN_BUTTON_COLOR = {100, 255, 100}
-local RED_BUTTON_COLOR = {255, 100, 100}
 local TRIAL_TYPES = {'color', 'shape', 'orientation', 'motion'}
 local SET_SIZES = {3, 5, 7, 9, 11, 13, 15}
-
-local FIXATION_SIZE = 0.1
-local FIXATION_COLOR = {255, 0, 0} -- RGB
-
-local FIXATION_REWARD = 0
-local INCORRECT_REWARD = 0
-local CORRECT_REWARD_SEQUENCE = 1
-
--- Staircase parameters
-local PROBE_PROBABILITY = 0.1
-local FRACTION_TO_PROMOTE = 1.0
-local FRACTION_TO_DEMOTE = 0.5
-
-local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
 
 -- When choiceMode is 'binary', we use invisible widgets in front of the
 -- shape widgets
@@ -123,24 +88,19 @@ local factory = {}
 
 function factory.createLevelApi(kwargs)
   kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or
-      EPISODE_LENGTH_SECONDS
+      defaults.EPISODE_LENGTH_SECONDS
   kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
-      TRIALS_PER_EPISODE_CAP
-  kwargs.bgColor = kwargs.bgColor or BG_COLOR
-  kwargs.fixationColor = kwargs.fixationColor or FIXATION_COLOR
-  kwargs.colors = kwargs.colors or COLORS
+      defaults.TRIALS_PER_EPISODE_CAP
+  kwargs.bgColor = kwargs.bgColor or defaults.BG_COLOR
+  kwargs.fixationColor = kwargs.fixationColor or defaults.FIXATION_COLOR
+  kwargs.colors = kwargs.colors or defaults.COLORS
   kwargs.setSizes = kwargs.setSizes or SET_SIZES
   kwargs.shapeSize = kwargs.shapeSize or nil
   kwargs.trialTypes = kwargs.trialTypes or TRIAL_TYPES
-  kwargs.incorrectReward = kwargs.incorrectReward or INCORRECT_REWARD
-  kwargs.correctRewardSequence = kwargs.correctRewardSequence or
-      CORRECT_REWARD_SEQUENCE
-  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
-  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
-  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
-  kwargs.fixedTestLength = kwargs.fixedTestLength or false
-  kwargs.initialDifficultyLevel = kwargs.initialDifficultyLevel or 1
-  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or MAX_STEPS_OFF_SCREEN
+  kwargs.incorrectReward = kwargs.incorrectReward or defaults.INCORRECT_REWARD
+  kwargs.correctReward = kwargs.correctReward or defaults.CORRECT_REWARD
+  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or
+      defaults.MAX_STEPS_OFF_SCREEN
   -- When twin is false, the screen shows a single array of objects.
   -- When twin is true, there are separate arrays on the left and right
   -- sides of the screen, with only one containing an odd one out.
@@ -184,22 +144,11 @@ function factory.createLevelApi(kwargs)
     self.pac:setBackgroundColor(kwargs.bgColor)
     self.pac:clearWidgets()
     self.pac:clearTimers()
-    psychlab_helpers.addFixation(self, FIXATION_SIZE)
+    psychlab_helpers.addFixation(self, defaults.FIXATION_SIZE)
 
     self.currentTrial = {}
 
     psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
-
-    -- initialize the adaptive staircase procedure
-    self.staircase = psychlab_staircase.createStaircase1D{
-        sequence = kwargs.setSizes,
-        correctRewardSequence = kwargs.correctRewardSequence,
-        fractionToPromote = kwargs.fractionToPromote,
-        fractionToDemote = kwargs.fractionToDemote,
-        probeProbability = kwargs.probeProbability,
-        fixedTestLength = kwargs.fixedTestLength,
-        initialDifficultyLevel = kwargs.initialDifficultyLevel,
-    }
 
     -- blockId groups together all rows written during the same episode
     self.blockId = random:uniformInt(1, 2 ^ 32)
@@ -212,7 +161,7 @@ function factory.createLevelApi(kwargs)
 
     self.images.fixation = psychlab_helpers.getFixationImage(
       self.screenSize, kwargs.bgColor, kwargs.fixationColor,
-      FIXATION_SIZE)
+      defaults.FIXATION_SIZE)
 
     if kwargs.twin and
         (kwargs.choiceMode == 'button' or kwargs.choiceMode == 'sidebar') then
@@ -225,11 +174,11 @@ function factory.createLevelApi(kwargs)
         w = 0.05 * self.screenSize.width
       end
       self.images.whiteButton = tensor.ByteTensor(h, w, 3):fill(
-          WHITE_BUTTON_COLOR)
+          defaults.WHITE_BUTTON_COLOR)
       self.images.greenButton = tensor.ByteTensor(h, w, 3):fill(
-          GREEN_BUTTON_COLOR)
+          defaults.GREEN_BUTTON_COLOR)
       self.images.redButton = tensor.ByteTensor(h, w, 3):fill(
-          RED_BUTTON_COLOR)
+          defaults.RED_BUTTON_COLOR)
     end
   end
 
@@ -237,24 +186,22 @@ function factory.createLevelApi(kwargs)
     self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
       game:episodeTimeSeconds() - self._currentTrialStartTime
-    self.staircase:step(self.currentTrial.correct == 1)
-
     self.currentTrial.stepCount = self.pac:elapsedSteps()
     psychlab_helpers.publishTrialData(self.currentTrial, kwargs.schema)
     self.pac:clearTimers()
-    psychlab_helpers.finishTrialCommon(self, delay, FIXATION_SIZE)
+    psychlab_helpers.finishTrialCommon(self, delay, defaults.FIXATION_SIZE)
   end
 
   function env:fixationCallback(name, mousePos, hoverTime, userData)
-    if hoverTime == TIME_TO_FIXATE_CROSS then
-      self.pac:addReward(FIXATION_REWARD)
+    if hoverTime == defaults.TIME_TO_FIXATE_CROSS then
+      self.pac:addReward(defaults.FIXATION_REWARD)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
       self.currentTrial.reward = 0
       self:addArray()
       self.pac:addTimer{
         name = 'trial_timeout',
-        timeout = TRIAL_TIMEOUT,
+        timeout = defaults.TRIAL_TIMEOUT,
         callback = function(...) return self:trialTimeoutCallback() end
       }
 
@@ -271,9 +218,9 @@ function factory.createLevelApi(kwargs)
     -- Reward if this is the first "hoverEnd" event for this trial.
     self.currentTrial.response = name
     self.currentTrial.correct = 1
-    self.currentTrial.reward = self.staircase:correctReward()
+    self.currentTrial.reward = kwargs.correctReward
     self.pac:addReward(self.currentTrial.reward)
-    self:finishTrial(FAST_INTER_TRIAL_INTERVAL)
+    self:finishTrial(defaults.FAST_INTER_TRIAL_INTERVAL)
   end
 
   function env:onHoverEndIncorrect(name, mousePos, hoverTime, userData)
@@ -282,7 +229,7 @@ function factory.createLevelApi(kwargs)
     self.currentTrial.correct = 0
     self.currentTrial.reward = kwargs.incorrectReward
     self.pac:addReward(self.currentTrial.reward)
-    self:finishTrial(FAST_INTER_TRIAL_INTERVAL)
+    self:finishTrial(defaults.FAST_INTER_TRIAL_INTERVAL)
   end
 
   function env:correctResponseCallback(name, mousePos, hoverTime, userData)
@@ -298,7 +245,7 @@ function factory.createLevelApi(kwargs)
     self.currentTrial.correct = 0
     self.currentTrial.reward = kwargs.incorrectReward
     self.pac:addReward(self.currentTrial.reward)
-    self:finishTrial(FAST_INTER_TRIAL_INTERVAL)
+    self:finishTrial(defaults.FAST_INTER_TRIAL_INTERVAL)
   end
 
   function env:displayMotion()
@@ -314,19 +261,19 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:addArray()
-    local setSize = self.staircase:parameter()
+    local setSize = psychlab_helpers.randomFrom(kwargs.setSizes)
     local gridHeight, gridWidth = setSize, setSize
     local cellHeight, cellWidth
     if kwargs.shapeSize then
-      cellHeight = math.floor(SCREEN_HEIGHT / kwargs.shapeSize)
-      cellWidth = math.floor(SCREEN_WIDTH / kwargs.shapeSize)
+      cellHeight = math.floor(defaults.SCREEN_SIZE.height / kwargs.shapeSize)
+      cellWidth = math.floor(defaults.SCREEN_SIZE.width / kwargs.shapeSize)
     elseif kwargs.twin and
         (kwargs.choiceMode == 'button' or kwargs.choiceMode == 'sidebar') then
-      cellHeight = math.floor(0.9 * SCREEN_HEIGHT / gridHeight)
-      cellWidth = math.floor(0.9 * SCREEN_WIDTH / gridWidth)
+      cellHeight = math.floor(0.9 * defaults.SCREEN_SIZE.height / gridHeight)
+      cellWidth = math.floor(0.9 * defaults.SCREEN_SIZE.width / gridWidth)
     else
-      cellHeight = math.floor(SCREEN_HEIGHT / gridHeight)
-      cellWidth = math.floor(SCREEN_WIDTH / gridWidth)
+      cellHeight = math.floor(defaults.SCREEN_SIZE.height / gridHeight)
+      cellWidth = math.floor(defaults.SCREEN_SIZE.width / gridWidth)
     end
     local vPad, hPad = math.floor(cellHeight / 4), math.floor(cellWidth / 4)
     local objectHeight, objectWidth = cellHeight - vPad, cellWidth - hPad
@@ -339,15 +286,15 @@ function factory.createLevelApi(kwargs)
     local trialType = psychlab_helpers.randomFrom(kwargs.trialTypes)
     self.currentTrial.trialType = trialType
     self.currentTrial.setSize = setSize
-    self.currentTrial.difficultyLevel = self.staircase:getDifficultyLevel()
 
-    local size = {objectWidth / SCREEN_WIDTH, objectHeight / SCREEN_HEIGHT}
+    local size = {objectWidth / defaults.SCREEN_SIZE.width,
+                  objectHeight / defaults.SCREEN_SIZE.height}
     -- Point and click works in fractional coordinates, but the images we pass
     -- in have definite integer dimensions. Because our grids are not
     -- powers of two, we occasionally get fatal rounding errors.
     -- The following two lines are part of a workaround for this.
-    size[1] = size[1] + 1 / (4 * SCREEN_WIDTH)
-    size[2] = size[2] + 1 / (4 * SCREEN_HEIGHT)
+    size[1] = size[1] + 1 / (4 * defaults.SCREEN_SIZE.width)
+    size[2] = size[2] + 1 / (4 * defaults.SCREEN_SIZE.height)
     local iCenter = math.ceil(gridHeight / 2)
     local jCenter = math.ceil(gridWidth / 2)
     -- Choose which cell is the odd one out
@@ -393,10 +340,10 @@ function factory.createLevelApi(kwargs)
         if not (kwargs.twin and j == middle) then
           local pos = {
               (hOffset + (j - 1) * cellWidth + random:uniformInt(1, hPad - 1)) /
-                  SCREEN_WIDTH,
+                  defaults.SCREEN_SIZE.width,
               (vOffset + (i - 1) * cellHeight +
                random:uniformInt(1, vPad - 1)) /
-                  SCREEN_HEIGHT
+                  defaults.SCREEN_SIZE.height
           }
           if kwargs.twin then
             if kwargs.choiceMode == 'button' then
@@ -408,8 +355,8 @@ function factory.createLevelApi(kwargs)
           end
           -- The following two lines are the rest of the workaround
           -- for rounding errors. See comment above.
-          pos[1] = pos[1] - 1 / (4 * SCREEN_WIDTH)
-          pos[2] = pos[2] - 1 / (4 * SCREEN_HEIGHT)
+          pos[1] = pos[1] - 1 / (4 * defaults.SCREEN_SIZE.width)
+          pos[2] = pos[2] - 1 / (4 * defaults.SCREEN_SIZE.height)
 
           local image, callback = mainImage, nil
           if i == iCorrect and j == jCorrect then
@@ -563,10 +510,9 @@ function factory.createLevelApi(kwargs)
     return scaled
   end
 
-  local screenSize = {width = SCREEN_WIDTH, height = SCREEN_HEIGHT}
   return psychlab_factory.createLevelApi{
       env = point_and_click,
-      envOpts = {environment = env, screenSize = screenSize,
+      envOpts = {environment = env, screenSize = defaults.SCREEN_SIZE,
                  maxStepsOffScreen = kwargs.maxStepsOffScreen},
       episodeLengthSeconds = kwargs.episodeLengthSeconds
   }

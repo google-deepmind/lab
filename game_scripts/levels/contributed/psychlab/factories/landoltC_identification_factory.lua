@@ -45,9 +45,6 @@ local SLOW_INTERTRIAL_INTERVAL = 1 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local BG_COLOR = 0
 
--- Reset the epiode if the agent does not interact with buttons for this long.
-local MAX_IDLE_STEPS = 300
-
 -- Set the maximum stimulus size in [0, 1] coordinates and its fractions to test
 local MAX_SIZE = .47
 
@@ -69,6 +66,8 @@ local RADIUS = .4
 local PROBE_PROBABILITY = 0.1
 local FRACTION_TO_ADVANCE = 0.75
 local FRACTION_TO_REMAIN = 0.5
+
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
 
 -- for target jittering experiments, this is the max x,y perturbation
 local MAX_JITTER = .015
@@ -291,7 +290,6 @@ function factory.createLevelApi(kwargs)
     psychlab_helpers.addFixation(self, FIXATION_SIZE)
 
     self.reward = 0
-    self._stepsSinceInteraction = 0
 
     self.currentTrial = {}
 
@@ -336,7 +334,6 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:finishTrial(delay)
-    self._stepsSinceInteraction = 0
     self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
         game:episodeTimeSeconds() - self._currentTrialStartTime
@@ -348,7 +345,6 @@ function factory.createLevelApi(kwargs)
 
   function env:fixationCallback(name, mousePos, hoverTime, userData)
     if hoverTime == TIME_TO_FIXATE_CROSS then
-      self._stepsSinceInteraction = 0
       self.pac:addReward(FIXATION_REWARD)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
@@ -475,21 +471,12 @@ function factory.createLevelApi(kwargs)
     if self.currentTrial.stepCount ~= nil then
       self.currentTrial.stepCount = self.currentTrial.stepCount + 1
     end
-
-    -- If too long since interaction with any buttons, then end episode. This
-    -- should speed up the early stages of training, since it causes less time
-    -- to be spent looking away from the screen.
-    self._stepsSinceInteraction = self._stepsSinceInteraction + 1
-    if self._stepsSinceInteraction > MAX_IDLE_STEPS then
-      self.pac:endEpisode()
-    end
   end
 
   return psychlab_factory.createLevelApi{
     env = point_and_click,
-    envOpts = {
-        environment = env, screenSize = SCREEN_SIZE
-    },
+    envOpts = {environment = env, screenSize = SCREEN_SIZE,
+               maxStepsOffScreen = MAX_STEPS_OFF_SCREEN},
     episodeLengthSeconds = 150
   }
 end

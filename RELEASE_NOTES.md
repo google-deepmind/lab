@@ -2,6 +2,33 @@
 
 ## Next Release
 
+### New Levels:
+
+1.  Psychlab.
+
+     1. contributed/psychlab/cued_temporal_production
+     2. contributed/psychlab/memory_suite_01/arbitrary_visuomotor_mapping_train
+     3. contributed/psychlab/memory_suite_01/arbitrary_visuomotor_mapping_holdout_interpolate
+     4. contributed/psychlab/memory_suite_01/arbitrary_visuomotor_mapping_holdout_extrapolate
+     5. contributed/psychlab/memory_suite_01/change_detection_train
+     6. contributed/psychlab/memory_suite_01/change_detection_holdout_interpolate
+     7. contributed/psychlab/memory_suite_01/change_detection_holdout_extrapolate
+     8. contributed/psychlab/memory_suite_01/continuous_recognition_train
+     9. contributed/psychlab/memory_suite_01/continuous_recognition_holdout_interpolate
+    10. contributed/psychlab/memory_suite_01/continuous_recognition_holdout_extrapolate
+    11. contributed/psychlab/memory_suite_01/what_then_where_train
+    12. contributed/psychlab/memory_suite_01/what_then_where_holdout_interpolate
+    13. contributed/psychlab/ready_set_go
+    14. contributed/psychlab/temporal_bisection
+    15. contributed/psychlab/temporal_discrimination
+    16. contributed/psychlab/visuospatial_suite/memory_guided_saccade
+    17. contributed/psychlab/visuospatial_suite/odd_one_out
+    18. contributed/psychlab/visuospatial_suite/pathfinder
+    19. contributed/psychlab/visuospatial_suite/pursuit
+    20. contributed/psychlab/visuospatial_suite/visual_match
+    21. contributed/psychlab/visuospatial_suite/visually_guided_antisaccade
+    22. contributed/psychlab/visuospatial_suite/visually_guided_prosaccade
+
 ### Minor Improvements:
 
 1.  The `game` demo executable can now print observations at each step.

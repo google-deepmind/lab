@@ -63,9 +63,11 @@ function factory.createLevelApi(kwargs)
 
   function api:modifyControl(actions)
     local click = false
+    local clickUp = false
     local mouseDown = actions.buttonsDown
     if self._mouseDown ~= mouseDown then
       click = mouseDown ~= 0
+      clickUp = not click
       self._mouseDown = mouseDown
     end
     actions.buttonsDown = 0
@@ -74,8 +76,8 @@ function factory.createLevelApi(kwargs)
     actions.strafeLeftRight = 0
 
     local action = {
-        click and 1 or 0,
-        self._pos and {self._pos[1], 1.0 - self._pos[3]} or {-1, -1}
+        {(click and 1 or 0), (clickUp and 1 or 0)},
+        self._pos and {self._pos[1], 1.0 - self._pos[3]} or {-1, -1},
     }
     local screen, reward, screenDirty
     screen, reward, self._pcontinue, screenDirty = self._env:step(action)

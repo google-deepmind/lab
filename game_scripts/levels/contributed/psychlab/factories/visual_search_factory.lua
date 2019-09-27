@@ -108,10 +108,13 @@ local COLORS = {
     {127, 0, 255},  -- purple
 }
 
+local DEFAULT_SEARCH_MODE = 'interleaved'
+
 local TIME_TO_FIXATE_CROSS = 1 -- in frames
 local FAST_INTER_TRIAL_INTERVAL = 1 -- in frames
 local SCREEN_SIZE = {width = 512, height = 512}
 local BG_COLOR = {255, 255, 255}
+local EPISODE_LENGTH_SECONDS = 150
 local TRIALS_PER_EPISODE_CAP = math.huge
 
 local GRID_CELL_SIZE = 32  -- size of one grid cell, in pixels
@@ -123,13 +126,15 @@ local FIXATION_SIZE = 0.1
 local FIXATION_COLOR = {255, 0, 0} -- RGB
 
 local FIXATION_REWARD = 0
-local CORRECT_REWARD = 1
 local INCORRECT_REWARD = 0
+local CORRECT_REWARD_SEQUENCE = 1
 
 -- Staircase parameters
 local FRACTION_TO_PROMOTE = 1.0
 local FRACTION_TO_DEMOTE = 0.75
 local PROBE_PROBABILITY = 0.1
+
+local MAX_STEPS_OFF_SCREEN = 300  -- 5 seconds
 
 local ARG = {}
 
@@ -137,6 +142,44 @@ local function parseArgs(arg)
   if arg == nil then
     return arg
   end
+  return arg
+end
+
+local factory = {}
+
+function factory.createLevelApi(kwargs)
+  kwargs.episodeLengthSeconds = kwargs.episodeLengthSeconds or
+      EPISODE_LENGTH_SECONDS
+  kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
+      TRIALS_PER_EPISODE_CAP
+  kwargs.shapes = kwargs.shapes or SHAPES
+  kwargs.colors = kwargs.colors or COLORS
+  kwargs.timeToFixateCross = kwargs.timeToFixateCross or TIME_TO_FIXATE_CROSS
+  kwargs.fastInterTrialInterval = kwargs.fastInterTrialInterval or
+      FAST_INTER_TRIAL_INTERVAL
+  kwargs.screenSize = kwargs.screenSize or SCREEN_SIZE
+  kwargs.bgColor = kwargs.bgColor or BG_COLOR
+  kwargs.gridCellSize = kwargs.gridCellSize or GRID_CELL_SIZE
+  kwargs.buttonSize = kwargs.buttonSize or BUTTON_SIZE
+  kwargs.gridHeight = math.floor(
+      kwargs.screenSize.height * (1 - 2 * kwargs.buttonSize))
+  kwargs.gridWidth = math.floor(
+      kwargs.screenSize.width * (1 - 2 * kwargs.buttonSize))
+  kwargs.setSizes = kwargs.setSizes or SET_SIZES
+  kwargs.correctRewardSequence = kwargs.correctRewardSequence or
+      CORRECT_REWARD_SEQUENCE
+  kwargs.targetSize = kwargs.targetSize or TARGET_SIZE
+  kwargs.fixationSize = kwargs.fixationSize or FIXATION_SIZE
+  kwargs.fixationColor = kwargs.fixationColor or FIXATION_COLOR
+  kwargs.fixationReward = kwargs.fixationReward or FIXATION_REWARD
+  kwargs.incorrectReward = kwargs.incorrectReward or INCORRECT_REWARD
+  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
+  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
+  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
+  kwargs.fixedTestLength = kwargs.fixedTestLength or false
+  kwargs.initialDifficultyLevel = kwargs.initialDifficultyLevel or 1
+  kwargs.maxStepsOffScreen = kwargs.maxStepsOffScreen or MAX_STEPS_OFF_SCREEN
+  kwargs.searchMode = kwargs.searchMode or DEFAULT_SEARCH_MODE
 
   local validSearchModes = {
       shape = true,
@@ -144,40 +187,9 @@ local function parseArgs(arg)
       conjunction = true,
       interleaved = true
   }
-  assert(validSearchModes[arg.searchMode],
+  assert(validSearchModes[kwargs.searchMode],
          'searchMode should be shape, color, conjunction, or interleaved'
   )
-  return arg
-end
-
-local factory = {}
-
-function factory.createLevelApi(kwargs)
-  kwargs.shapes = kwargs.shapes or SHAPES
-  kwargs.colors = kwargs.colors or COLORS
-  kwargs.timeToFixateCross = kwargs.timeToFixateCross or TIME_TO_FIXATE_CROSS
-  kwargs.fastInterTrialInterval = kwargs.fastInterTrialInterval or
-    FAST_INTER_TRIAL_INTERVAL
-  kwargs.screenSize = kwargs.screenSize or SCREEN_SIZE
-  kwargs.bgColor = kwargs.bgColor or BG_COLOR
-  kwargs.trialsPerEpisodeCap = kwargs.trialsPerEpisodeCap or
-    TRIALS_PER_EPISODE_CAP
-  kwargs.gridCellSize = kwargs.gridCellSize or GRID_CELL_SIZE
-  kwargs.buttonSize = kwargs.buttonSize or BUTTON_SIZE
-  kwargs.gridHeight = math.floor(kwargs.screenSize.height *
-    (1 - 2 * kwargs.buttonSize))
-  kwargs.gridWidth = math.floor(kwargs.screenSize.width *
-    (1 - 2 * kwargs.buttonSize))
-  kwargs.setSizes = kwargs.setSizes or SET_SIZES
-  kwargs.targetSize = kwargs.targetSize or TARGET_SIZE
-  kwargs.fixationSize = kwargs.fixationSize or FIXATION_SIZE
-  kwargs.fixationColor = kwargs.fixationColor or FIXATION_COLOR
-  kwargs.fixationReward = kwargs.fixationReward or FIXATION_REWARD
-  kwargs.correctReward = kwargs.correctReward or CORRECT_REWARD
-  kwargs.incorrectReward = kwargs.incorrectReward or INCORRECT_REWARD
-  kwargs.fractionToPromote = kwargs.fractionToPromote or FRACTION_TO_PROMOTE
-  kwargs.fractionToDemote = kwargs.fractionToDemote or FRACTION_TO_DEMOTE
-  kwargs.probeProbability = kwargs.probeProbability or PROBE_PROBABILITY
 
   -- Class definition for visual_search psychlab environment.
   local env = {}
@@ -194,8 +206,6 @@ function factory.createLevelApi(kwargs)
   -- 'init' gets called at the start of each episode.
   function env:_init(pac, opts)
     log.info('opts passed to _init:\n' .. helpers.tostring(opts))
-
-    ARG.searchMode = opts.searchMode or 'interleaved'
     ARG.jitter = opts.jitter or false
 
     log.info('ARGs in _init:\n' .. helpers.tostring(ARG))
@@ -241,11 +251,18 @@ function factory.createLevelApi(kwargs)
 
     -- setup the adaptive staircase procedure
     self.staircase = psychlab_staircase.createStaircase1D{
-      sequence = kwargs.setSizes,
-      fractionToPromote = kwargs.fractionToPromote,
-      fractionToDemote = kwargs.fractionToDemote,
-      probeProbability = kwargs.probeProbability,
+        sequence = kwargs.setSizes,
+        correctRewardSequence = kwargs.correctRewardSequence,
+        fractionToPromote = kwargs.fractionToPromote,
+        fractionToDemote = kwargs.fractionToDemote,
+        probeProbability = kwargs.probeProbability,
+        fixedTestLength = kwargs.fixedTestLength,
+        initialDifficultyLevel = kwargs.initialDifficultyLevel,
     }
+
+    -- blockId groups together all rows written during the same episode
+    self.blockId = random:uniformInt(1, 2 ^ 32)
+    self.trialId = 1
   end
 
   -- Creates image Tensors for red/green/white/black buttons and fixation.
@@ -281,6 +298,7 @@ function factory.createLevelApi(kwargs)
   end
 
   function env:finishTrial(delay)
+    self.currentTrial.blockId = self.blockId
     self.currentTrial.reactionTime =
       game:episodeTimeSeconds() - self._currentTrialStartTime
     self.staircase:step(self.currentTrial.correct == 1)
@@ -295,6 +313,9 @@ function factory.createLevelApi(kwargs)
       self.pac:addReward(kwargs.fixationReward)
       self.pac:removeWidget('fixation')
       self.pac:removeWidget('center_of_fixation')
+      self.currentTrial.reward = 0
+      self.currentTrial.trialId = self.trialId
+      self.trialId = self.trialId + 1
       self:addArray()
 
       -- Measure reaction time since the trial started.
@@ -307,7 +328,8 @@ function factory.createLevelApi(kwargs)
     -- Reward if this is the first "hoverEnd" event for this trial.
     self.currentTrial.response = name
     self.currentTrial.correct = 1
-    self.pac:addReward(kwargs.correctReward)
+    self.currentTrial.reward = self.staircase:correctReward()
+    self.pac:addReward(self.currentTrial.reward)
     self:finishTrial(kwargs.fastInterTrialInterval)
   end
 
@@ -315,7 +337,8 @@ function factory.createLevelApi(kwargs)
     -- Reward if this is the first "hoverEnd" event for this trial.
     self.currentTrial.response = name
     self.currentTrial.correct = 0
-    self.pac:addReward(kwargs.incorrectReward)
+    self.currentTrial.reward = kwargs.incorrectReward
+    self.pac:addReward(self.currentTrial.reward)
     self:finishTrial(kwargs.fastInterTrialInterval)
   end
 
@@ -483,13 +506,14 @@ function factory.createLevelApi(kwargs)
   function env:addArray()
     self.currentTrial.targetPresent = psychlab_helpers.randomFrom{true, false}
 
-    if ARG.searchMode == 'interleaved' then
+    if kwargs.searchMode == 'interleaved' then
       self.currentTrial.searchMode =
         psychlab_helpers.randomFrom{'shape', 'color', 'conjunction'}
     else
-      self.currentTrial.searchMode = ARG.searchMode
+      self.currentTrial.searchMode = kwargs.searchMode
     end
 
+    self.currentTrial.difficultyLevel = self.staircase:getDifficultyLevel()
     self.currentTrial.setSize = self.staircase:parameter()
     self.currentTrial.targetSize = kwargs.targetSize
 
@@ -516,8 +540,9 @@ function factory.createLevelApi(kwargs)
 
   return psychlab_factory.createLevelApi{
       env = point_and_click,
-      envOpts = {environment = env, screenSize = kwargs.screenSize},
-      episodeLengthSeconds = kwargs.episodeLengthSeconds or 150
+      envOpts = {environment = env, screenSize = kwargs.screenSize,
+                 maxStepsOffScreen = kwargs.maxStepsOffScreen},
+      episodeLengthSeconds = kwargs.episodeLengthSeconds
   }
 end
 
