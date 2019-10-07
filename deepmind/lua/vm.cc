@@ -77,7 +77,7 @@ static int PackageLoader(lua_State* L) {
         }
       } else {
         // Allow other searchers to deal with this.
-        lua_pushstring(L, "Not found internaly!");
+        lua_pushstring(L, "Not found internally!");
         return 1;
       }
     }
