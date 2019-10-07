@@ -1,6 +1,6 @@
 # DeepMind Lab Release Notes
 
-## Next Release
+## release-2019-10-07 October 2019 release
 
 ### New Levels:
 
@@ -76,8 +76,8 @@
     Python, NumPy).
 2.  Add 'allowHoldOutLevels' setting to allow running of levels that should not
     be trained on, but held out for evaluation.
-3.  Add logging library 'common.log', which provides the ability to control which
-    log messages are emitted via the setting 'logLevel'.
+3.  Add logging library 'common.log', which provides the ability to control
+    which log messages are emitted via the setting 'logLevel'.
 4.  Update the ioq3 upstream code to the [latest
     state](https://github.com/ioquake/ioq3/tree/29db64070aa0bae49953bddbedbed5e317af48ba).
 5.  Lua 5.1 is now downloaded and built from source, and is thus no longer a
