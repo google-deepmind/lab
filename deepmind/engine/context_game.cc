@@ -467,9 +467,8 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
   if (before.timestamp_msec > 0 && delta_time_msec > 0) {
     double dt = delta_time_msec * (1.0 / 1000.0);
     double inv_delta_time = 1.0 / dt;
-    Eigen::Vector3d vel =
-        (player_view_.eyePos - before.eyePos) * inv_delta_time;
-    velocity_smoother_.set_target(vel);
+    velocity_smoother_.set_target(
+        (player_view_.eyePos - before.eyePos) * inv_delta_time);
     velocity_smoother_.Update(dt);
 
     for (int i : {0, 1, 2}) {

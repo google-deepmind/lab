@@ -40,10 +40,10 @@ NResultsOr PushScript(lua_State* L, const char* buffer, std::size_t buffer_size,
 }
 
 NResultsOr PushScriptFile(lua_State* L, const char* filename) {
-  int error = luaL_loadfile(L, filename);
-  if (error == LUA_ERRFILE) {
+  int ret = luaL_loadfile(L, filename);
+  if (ret == LUA_ERRFILE) {
     return absl::StrCat("Failed to open file '", filename, "'");
-  } else if (error != 0) {
+  } else if (ret != 0) {
     std::string error;
     if (!IsFound(Read(L, -1, &error)))
       error = "Failed to retrieve error!";

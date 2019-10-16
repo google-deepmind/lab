@@ -304,16 +304,15 @@ Iter2 averagingMinify(         //
       acc[c] = low_wgt * source[k + c];
     }
     for (std::size_t j = low_idx_i + 1; j < top_idx_i; j++) {
-      std::size_t k = j * num_channels;
       for (std::size_t c = 0; c < num_channels; ++c) {
-        acc[c] += source[k + c];
+        acc[c] += source[j * num_channels + c];
       }
     }
     if (top_idx_f > top_idx_i) {
-      double top_wgt = top_idx_f - top_idx_i;
-      std::size_t k = std::min(top_idx_i, source_len - 1) * num_channels;
       for (std::size_t c = 0; c < num_channels; ++c) {
-        acc[c] += top_wgt * source[k + c];
+        acc[c] +=
+            (top_idx_f - top_idx_i) *
+            source[std::min(top_idx_i, source_len - 1) * num_channels + c];
       }
     }
     for (std::size_t c = 0; c < num_channels; ++c) {

@@ -42,10 +42,10 @@ using StackResetterTest = testing::TestWithVm;
 TEST_F(StackResetterTest, Reset) {
   ASSERT_EQ(lua_gettop(L), 0);
   {
-    StackResetter stack_resetter(L);
+    StackResetter stack_resetter1(L);
     Push(L, 10);
     {
-      StackResetter stack_resetter(L);
+      StackResetter stack_resetter2(L);
       Push(L, 20);
       EXPECT_EQ(lua_gettop(L), 2);
     }

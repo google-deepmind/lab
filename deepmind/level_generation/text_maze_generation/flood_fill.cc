@@ -89,11 +89,11 @@ std::vector<Pos> FloodFill::ShortestPathFrom(Pos pos,
   result.reserve(distance + 1);
   result.push_back(pos);
   while (distance--) {
-    const auto& pos = result.back();
+    const auto& next_pos = result.back();
     result.emplace_back();
     int choice = 0;
     area_.VisitNeighbours(
-        pos, [&result, rng, &choice, distance, this](int i, int j) {
+        next_pos, [&result, rng, &choice, distance, this](int i, int j) {
           if (distances_[internal::DistanceIndex(area_, i, j)] == distance) {
             ++choice;
             if (choice == 1 ||

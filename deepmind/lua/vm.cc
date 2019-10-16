@@ -66,9 +66,9 @@ static int PackageLoader(lua_State* L) {
       lua_pushcclosure(L, it->second.function, it->second.up_values.size());
       return 1;
     } else {
-      auto it = embedded_lua_modules->find(name);
-      if (it != embedded_lua_modules->end()) {
-        if (luaL_loadbuffer(L, it->second.buff, it->second.size,
+      auto kt = embedded_lua_modules->find(name);
+      if (kt != embedded_lua_modules->end()) {
+        if (luaL_loadbuffer(L, kt->second.buff, kt->second.size,
                             name.c_str())) {
           // Error message is on stack. Let caller deal with it.
           break;
