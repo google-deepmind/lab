@@ -54,3 +54,25 @@ sh_test(
         ":md5driver",
     ],
 )
+
+# The fuzzers require Clang, see https://llvm.org/docs/LibFuzzer.html.
+
+FUZZOPTS = "-fsanitize=fuzzer,address"
+
+cc_binary(
+    name = "md4_fuzzer",
+    srcs = ["md4_fuzzer.c"],
+    copts = [FUZZOPTS],
+    linkopts = [FUZZOPTS],
+    tags = ["manual"],
+    deps = [":md4"],
+)
+
+cc_binary(
+    name = "md5_fuzzer",
+    srcs = ["md5_fuzzer.c"],
+    copts = [FUZZOPTS],
+    linkopts = [FUZZOPTS],
+    tags = ["manual"],
+    deps = [":md5"],
+)
