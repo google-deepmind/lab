@@ -40,7 +40,7 @@ typedef struct {
 
 void MD4Init PROTO_LIST((MD4_CTX *));
 
-void MD4Update PROTO_LIST((MD4_CTX *, unsigned char *, unsigned int));
+void MD4Update PROTO_LIST((MD4_CTX *, const unsigned char *, unsigned int));
 
 void MD4Final PROTO_LIST((unsigned char [16], MD4_CTX *));
 
