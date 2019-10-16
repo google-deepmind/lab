@@ -37,7 +37,7 @@ TableRef::TableRef() : TableRef(nullptr, 0) {}
 TableRef::TableRef(lua_State* L, int table_reference)
     : lua_state_(L), table_reference_(table_reference) {}
 
-TableRef::TableRef(TableRef&& other)
+TableRef::TableRef(TableRef&& other) noexcept
     : lua_state_(other.lua_state_), table_reference_(other.table_reference_) {
   other.lua_state_ = nullptr;
   other.table_reference_ = 0;

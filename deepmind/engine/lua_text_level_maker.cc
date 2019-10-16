@@ -314,13 +314,13 @@ bool NoOp(std::size_t, std::size_t, char,
 }  // namespace
 
 LuaTextLevelMaker::LuaTextLevelMaker(
-    const std::string& self, const std::string& output_folder,
-    bool use_local_level_cache, bool use_global_level_cache,
-    DeepMindLabLevelCacheParams level_cache_params, std::uint32_t mixer_seed)
+    std::string self, std::string output_folder, bool use_local_level_cache,
+    bool use_global_level_cache, DeepMindLabLevelCacheParams level_cache_params,
+    std::uint32_t mixer_seed)
     : prng_(0),
       mixer_seed_(mixer_seed),
-      rundir_(self),
-      output_folder_(output_folder) {
+      rundir_(std::move(self)),
+      output_folder_(std::move(output_folder)) {
   settings_.use_local_level_cache = use_local_level_cache;
   settings_.use_global_level_cache = use_global_level_cache;
   settings_.level_cache_params = level_cache_params;

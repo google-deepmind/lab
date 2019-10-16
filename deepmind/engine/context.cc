@@ -115,13 +115,14 @@ static const char* next_map(void* userdata) {
   return static_cast<Context*>(userdata)->NextMap();
 }
 
-void update_inventory(void* userdata, bool is_spawning, bool is_bot,
-                      int player_id, int gadget_count, int gadget_inventory[],
-                      int persistent_count, int persistents[], int stat_count,
-                      int stat_inventory[], int powerup_count,
-                      int powerup_time[], int gadget_held, float height,
-                      float position[3], float velocity[3],
-                      float view_angles[3]) {
+static void update_inventory(void* userdata, bool is_spawning, bool is_bot,
+                             int player_id, int gadget_count,
+                             int gadget_inventory[], int persistent_count,
+                             int persistents[], int stat_count,
+                             int stat_inventory[], int powerup_count,
+                             int powerup_time[], int gadget_held, float height,
+                             float position[3], float velocity[3],
+                             float view_angles[3]) {
   static_cast<Context*>(userdata)->UpdateInventory(
       is_spawning, is_bot, player_id, gadget_count, gadget_inventory,
       persistent_count, persistents, stat_count, stat_inventory, powerup_count,

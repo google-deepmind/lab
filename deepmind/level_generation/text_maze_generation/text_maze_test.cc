@@ -163,7 +163,7 @@ constexpr char kAlpha4x3[] =
     "GHI\n"
     "JKL\n";
 
-static void InitAlphabet(TextMaze* maze) {
+void InitAlphabet(TextMaze* maze) {
   char loc = 'A';
   maze->VisitMutable(TextMaze::kEntityLayer,
                     [&loc](int, int, char* c) { *c = loc++; });
@@ -324,7 +324,7 @@ TEST(TextMazeTest, RotateByMinus3) {
 }
 
 
-static void TestFillRect(const Rectangle& rect, const char* expectedResult) {
+void TestFillRect(const Rectangle& rect, const char* expectedResult) {
   TextMaze maze({4, 3});
   InitAlphabet(&maze);
 

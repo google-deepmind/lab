@@ -53,7 +53,7 @@ class TableRef final {
   TableRef();
 
   // Transfers the reference held by other; other is left in an unbound state.
-  TableRef(TableRef&& other);
+  TableRef(TableRef&& other) noexcept;
 
   // Creates a reference to the table referenced by other, if any.
   TableRef(const TableRef& other);

@@ -43,8 +43,8 @@ class LuaTextLevelMaker : public lua::Class<LuaTextLevelMaker> {
   // And the `output_folder` contains the name of an existing, writable
   // directory into which files can be stored. This directory will also contain
   // the final .pk3 file.
-  explicit LuaTextLevelMaker(const std::string& self,
-                             const std::string& output_folder,
+  explicit LuaTextLevelMaker(std::string self,
+                             std::string output_folder,
                              bool use_local_level_cache,
                              bool use_global_level_cache,
                              DeepMindLabLevelCacheParams level_cache_params,
