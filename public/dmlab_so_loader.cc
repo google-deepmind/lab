@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Google Inc.
+// Copyright (C) 2016-2019 Google Inc.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,11 +17,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Non-portable dynamic library loader for DeepMind Lab.
-// Requires the macro DMLAB_SO_LOCATION to be defined as the path to the
-// shared object file.
-
-#include "absl/container/flat_hash_map.h"
-#include "public/dmlab.h"
 
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -47,6 +42,11 @@
 #include <sanitizer/lsan_interface.h>
 #endif
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "public/dmlab.h"
+
 namespace {
 
 std::mutex connect_mutex;
@@ -59,20 +59,6 @@ struct InternalContext {
 absl::flat_hash_map<void*, InternalContext>* context_map() {
   static absl::flat_hash_map<void*, InternalContext> internal_context;
   return &internal_context;
-}
-
-// The first call to this returns an empty string.
-// Subsequent calls return a unique name that can be used for generating new
-// files.
-std::string make_unique_path() {
-  static int global_counter;
-  int current = global_counter++;
-  if (current == 0) {
-    return std::string();
-  } else {
-    static const std::string temp_name = std::tmpnam(nullptr);
-    return temp_name + "_dmlab.so." + std::to_string(current);
-  }
 }
 
 void close_handle(void* context) {
@@ -148,6 +134,63 @@ ssize_t copy_complete_file(int in_fd, int out_fd) {
 #endif  // defined(__APPLE__)
 }
 
+// The first call to this function opens the original DSO, as specified by
+// `so_path`. Subsequent calls create uniquely-named copies of the DSO and
+// open the copy. This is because dlopen identiefies DSOs by file name and
+// loads a distinct copy if and only if the file name is distinct.
+//
+// Returns the DSO handle on success, or null on error. Errors may be due
+// either to dlopen or to file operations; in each case the error is logged.
+void* open_unique_dso(const std::string& so_path) {
+  static int global_counter;
+  int current = global_counter++;
+  void* dlhandle;
+
+  if (current == 0) {
+    dlhandle = dlopen(so_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+  } else {
+    int source_fd = open(so_path.c_str(), O_RDONLY, 0);
+    if (source_fd < 0) {
+      std::cerr << "Failed to open library: \"" << so_path << "\"\n"
+                << errno << " - " << std::strerror(errno) << "\n";
+      return nullptr;
+    }
+
+    absl::string_view suffix = "_dmlab.so";
+    std::string temp_path = absl::StrCat(P_tmpdir "/unique_dso_filename_",
+                                         current, "_XXXXXX", suffix);
+    int dest_fd = mkstemps(&temp_path.front(), suffix.size());
+
+    if (dest_fd < 0) {
+      std::cerr << "Failed to make library: \"" << temp_path << "\"\n"
+                << errno << " - " << std::strerror(errno) << "\n";
+      close(source_fd);
+      return nullptr;
+    }
+
+    if (copy_complete_file(source_fd, dest_fd) < 0) {
+      std::cerr << "Failed to copy file to destination \"" << temp_path
+                << "\"\n" << errno << " - " << std::strerror(errno) << "\n";
+      std::remove(temp_path.c_str());
+      close(dest_fd);
+      close(source_fd);
+      return nullptr;
+    }
+
+    dlhandle = dlopen(temp_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    std::remove(temp_path.c_str());
+    close(dest_fd);
+    close(source_fd);
+  }
+
+  if (dlhandle == nullptr) {
+    std::cerr << "Failed to open library! - " << so_path << "\n"
+              << dlerror() << "\n";
+  }
+
+  return dlhandle;
+}
+
 }  // namespace
 
 int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
@@ -177,50 +220,9 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
     return 1;
   }
 
-  std::string so_path_original = so_path;
-  std::string temp_path = make_unique_path();
-
-  // If a temp_path was generated we need to copy with that name to convince
-  // dlopen to create a new handle to the library.
-  if (!temp_path.empty()) {
-    int source = open(so_path.c_str(), O_RDONLY, 0);
-    if (source < 0) {
-      std::cerr << "Failed to open library: \"" << so_path << "\"\n"
-                << errno << " - " << std::strerror(errno) << "\n";
-      return 1;
-    }
-    int dest = open(temp_path.c_str(), O_WRONLY | O_CREAT, 0744);
-    if (dest < 0) {
-      close(source);
-      std::cerr << "Failed to make library: \"" << temp_path << "\"\n"
-                << errno << " - " << std::strerror(errno) << "\n";
-      return 1;
-    }
-
-    if (copy_complete_file(source, dest) < 0) {
-      std::cerr << "Failed to copy file to destination \"" << temp_path
-                << "\"\n" << errno << " - " << std::strerror(errno) << "\n";
-      close(source);
-      close(dest);
-      std::remove(temp_path.c_str());
-      return 1;
-    }
-
-    close(source);
-    close(dest);
-    so_path = temp_path;
-  }
-
-  void* dlhandle = dlopen(so_path.c_str(), RTLD_NOW | RTLD_LOCAL);
-
-  // If a new file was created, unlink it immediately.
-  if (!temp_path.empty()) {
-    std::remove(temp_path.c_str());
-  }
+  void* dlhandle = open_unique_dso(so_path);
 
   if (dlhandle == nullptr) {
-    std::cerr << "Failed to open library! - " << so_path_original << "\n"
-              << dlerror() << "\n";
     return 1;
   }
 
