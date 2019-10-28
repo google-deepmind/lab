@@ -23,6 +23,7 @@
 #include "deepmind/support/stringprintf.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "Eigen/Geometry"
@@ -63,19 +64,19 @@ bool ParseSingleBrush(absl::string_view brush_str, Brush* brush) {
 }  // namespace
 
 std::string Texture::ToString() const {
-  return StringPrintf("%.256s %d %d %g %g %g %d 0 0", path.c_str(), offset.x(),
-                      offset.y(), rot_angle, scale.x(), scale.y(),
-                      static_cast<int>(flags));
+  return absl::StrFormat("%.256s %d %d %g %g %g %d 0 0", path, offset.x(),
+                         offset.y(), rot_angle, scale.x(), scale.y(),
+                         static_cast<int>(flags));
 }
 
 std::string Plane::ToString() const {
   // Convert world units to game units.
-  return StringPrintf("( %g %g %g ) ( %g %g %g ) ( %g %g %g ) %s",
-                      a.x() * kWorldToGameUnits, a.y() * kWorldToGameUnits,
-                      a.z() * kWorldToGameUnits, b.x() * kWorldToGameUnits,
-                      b.y() * kWorldToGameUnits, b.z() * kWorldToGameUnits,
-                      c.x() * kWorldToGameUnits, c.y() * kWorldToGameUnits,
-                      c.z() * kWorldToGameUnits, texture.ToString().c_str());
+  return absl::StrFormat("( %g %g %g ) ( %g %g %g ) ( %g %g %g ) %s",
+                         a.x() * kWorldToGameUnits, a.y() * kWorldToGameUnits,
+                         a.z() * kWorldToGameUnits, b.x() * kWorldToGameUnits,
+                         b.y() * kWorldToGameUnits, b.z() * kWorldToGameUnits,
+                         c.x() * kWorldToGameUnits, c.y() * kWorldToGameUnits,
+                         c.z() * kWorldToGameUnits, texture.ToString());
 }
 
 std::string Brush::ToString() const {
@@ -88,9 +89,9 @@ std::string Brush::ToString() const {
 }
 
 std::string PatchPoint::ToString() const {
-  return StringPrintf("( %g %g %g %g %g )", pos.x() * kWorldToGameUnits,
-                      pos.y() * kWorldToGameUnits, pos.z() * kWorldToGameUnits,
-                      uv.x(), uv.y());
+  return absl::StrFormat("( %g %g %g %g %g )", pos.x() * kWorldToGameUnits,
+                         pos.y() * kWorldToGameUnits,
+                         pos.z() * kWorldToGameUnits, uv.x(), uv.y());
 }
 
 std::string Patch::ToString() const {
