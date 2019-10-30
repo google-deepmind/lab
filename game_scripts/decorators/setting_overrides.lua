@@ -15,6 +15,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ]]
 
+local game = require 'dmlab.system.game'
 local log = require 'common.log'
 local helpers = require 'common.helpers'
 local timeout = require 'decorators.timeout'
@@ -155,6 +156,11 @@ function setting_overrides.decorate(kwargs)
     property_decorator.decorate(api)
 
     property_decorator.addReadWrite('params', apiParams)
+    property_decorator.addReadOnly('console',
+      function(command)
+        game:console(command)
+        return property_decorator.RESULT.SUCCESS
+      end)
 
     -- Call version of `init` that existed before decoration.
     if apiInit then

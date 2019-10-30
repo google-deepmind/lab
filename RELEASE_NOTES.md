@@ -8,6 +8,10 @@
     of environment state. Level scripts can register and consume custom
     properties.
 
+### Minor Improvements:
+
+1.  Quake console commands can now be issued via a write-only property.
+
 ### EnvCApi Changes:
 
 1.  "Properties" have been added to the EnvCApi. Properties may be queried, set,
