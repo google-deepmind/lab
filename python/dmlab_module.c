@@ -500,11 +500,6 @@ static PyObject* Lab_observation_spec(PyObject* pself, PyObject* no_arg) {
   return result;
 }
 
-static PyObject* Lab_fps(PyObject* self, PyObject* no_arg) {
-  return PyInt_FromLong(
-      ((LabObject*)self)->env_c_api->fps(((LabObject*)self)->context));
-}
-
 static PyObject* Lab_action_spec(PyObject* pself, PyObject* no_arg) {
   LabObject* self = (LabObject*)pself;
   PyObject* discrete;
@@ -801,10 +796,6 @@ static PyMethodDef LabObject_methods[] = {
      "Advance the environment a number of steps"},
     {"observation_spec", Lab_observation_spec, METH_NOARGS,
      "The shape of the observations"},
-    {"fps", Lab_fps, METH_NOARGS,
-     "An advisory metric that correlates discrete environment steps "
-     "(\"frames\") with real (wallclock) time: the number of frames per (real) "
-     "second."},
     {"action_spec", Lab_action_spec, METH_NOARGS, "The shape of the actions"},
     {"observations", Lab_observations, METH_NOARGS, "Get the observations"},
     {"events", Lab_events, METH_NOARGS, "Get the events"},

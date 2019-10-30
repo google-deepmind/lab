@@ -1,4 +1,4 @@
-// Copyright 2016-2019 Google Inc.
+// Copyright 2016-2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,8 +84,8 @@
 // and DEEPMIND_ENV_C_API_VERSION_MINOR through the initial creation
 // function call.
 //
-#define DEEPMIND_ENV_C_API_VERSION_MAJOR 1
-#define DEEPMIND_ENV_C_API_VERSION_MINOR 4
+#define DEEPMIND_ENV_C_API_VERSION_MAJOR 2
+#define DEEPMIND_ENV_C_API_VERSION_MINOR 0
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -391,12 +391,6 @@ struct EnvCApi_s {
   // 'event_type_idx' shall be in range [0, event_type_count()).
   const char* (*event_type_name)(void* context, int event_type_idx);
 
-  // DEPRECATED: use properties to communicate this information.
-  //
-  // An advisory metric that correlates discrete environment steps ("steps")
-  // with real (wallclock) time: the number of steps per (real) second.
-  int (*fps)(void* context);
-
   // Run loop
   ///////////
   //
@@ -420,14 +414,6 @@ struct EnvCApi_s {
   // 'event_idx' shall be in range [0, event_count()).
   // 'event' is invalidated by any other API call.
   void (*event)(void* context, int event_idx, EnvCApi_Event* event);
-
-  // DEPRECATED: use act_discrete, act_continuous instead.
-  //
-  // Calling this function shall be equivalent to a call of
-  // 'act_discrete(context, actions discrete)' followed by a call of
-  // 'act_continuous(context, actions_continuous)'.
-  void (*act)(void* context,
-              const int actions_discrete[], const double actions_continuous[]);
 
   // Sets the discrete actions to use by future calls of 'advance'.
   // Actions are "sticky", and the same action values will continue to be used

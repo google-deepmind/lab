@@ -159,8 +159,6 @@ class MyGame {
   int EventTypeCount() const { return 0; }
   const char* EventTypeName(int event_type_idx) const { std::abort(); }
 
-  int Fps() { return 60; }
-
   void Observation(int observation_idx, EnvCApi_Observation* observation) {
     ObservationSpec(observation_idx, &observation->spec);
     switch (observation_idx) {
@@ -181,11 +179,6 @@ class MyGame {
   int EventCount() { return 0; }
 
   void Event(int event_idx, EnvCApi_Event* event) {}
-
-  void Act(const int actions_discrete[], const double actions_continuous[]) {
-    ActDiscrete(actions_discrete);
-    ActContinuous(actions_continuous);
-  }
 
   void ActDiscrete(const int actions_discrete[]) {}
   void ActContinuous(const double actions_continuous[]) {}

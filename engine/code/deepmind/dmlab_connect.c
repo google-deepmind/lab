@@ -1153,11 +1153,6 @@ static void dmlab_act_discrete(void* context, const int act_d[]) {
 static void dmlab_act_continuous(void* context, const double act_c[]) {}
 static void dmlab_act_text(void* context, const EnvCApi_TextAction act_c[]) {}
 
-static void dmlab_act(void* context, const int act_d[], const double act_c[]) {
-  dmlab_act_discrete(context, act_d);
-  dmlab_act_continuous(context, act_c);
-}
-
 static double get_engine_score(void) {
   return cl.snap.ps.persistant[PERS_SCORE];
 }
@@ -1507,11 +1502,9 @@ int dmlab_connect(const DeepMindLabLaunchParams* params, EnvCApi* env_c_api,
   env_c_api->observation_spec = dmlab_observation_spec;
   env_c_api->event_type_count = dmlab_event_type_count;
   env_c_api->event_type_name = dmlab_event_type_name;
-  env_c_api->fps = dmlab_fps;
   env_c_api->observation = dmlab_observation;
   env_c_api->event_count = dmlab_event_count;
   env_c_api->event = dmlab_event;
-  env_c_api->act = dmlab_act;
   env_c_api->act_discrete = dmlab_act_discrete;
   env_c_api->act_continuous = dmlab_act_continuous;
   env_c_api->act_text = dmlab_act_text;

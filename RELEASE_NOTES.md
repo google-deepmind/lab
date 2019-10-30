@@ -1,5 +1,13 @@
 # DeepMind Lab Release Notes
 
+## Next Release
+
+### EnvCApi Changes:
+
+1.  The new API version is 2.0 (up from 1.4).
+2.  The EnvCApi functions `fps` and `act` have been removed. See previous
+    release notes for migration details.
+
 ## release-2020-12-07 December 2020 release
 
 ### New Levels:

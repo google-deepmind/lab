@@ -321,9 +321,9 @@ TEST(EnvCApiExampleTest, ObservationDoubles) {
       EXPECT_EQ(127.0, v);
     }
   }
+  EnvCApi_TextAction textAction{ kTextActions[0], strlen(kTextActions[0])};
   env_c_api.act_discrete(context, kDiscreteActions);
   env_c_api.act_continuous(context, kContinuousActions);
-  EnvCApi_TextAction textAction{ kTextActions[0], strlen(kTextActions[0])};
   env_c_api.act_text(context, &textAction);
   double reward;
   EXPECT_EQ(EnvCApi_EnvironmentStatus_Running,
@@ -384,7 +384,8 @@ TEST(EnvCApiExampleTest, ObservationBytes) {
       EXPECT_EQ(127, v);
     }
   }
-  env_c_api.act(context, kDiscreteActions, kContinuousActions);
+  env_c_api.act_discrete(context, kDiscreteActions);
+  env_c_api.act_continuous(context, kContinuousActions);
   double reward;
   EXPECT_EQ(EnvCApi_EnvironmentStatus_Running,
             env_c_api.advance(context, /*num_steps=*/5, &reward));

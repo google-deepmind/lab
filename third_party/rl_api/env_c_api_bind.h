@@ -110,11 +110,9 @@ void Bind(std::unique_ptr<T> env, EnvCApi* api, void** context) {
   api->observation_spec = DEEPMIND_RL_API_BIND(ObservationSpec);
   api->event_type_count = DEEPMIND_RL_API_BIND(EventTypeCount);
   api->event_type_name = DEEPMIND_RL_API_BIND(EventTypeName);
-  api->fps = DEEPMIND_RL_API_BIND(Fps);
   api->observation = DEEPMIND_RL_API_BIND(Observation);
   api->event_count = DEEPMIND_RL_API_BIND(EventCount);
   api->event = DEEPMIND_RL_API_BIND(Event);
-  api->act = DEEPMIND_RL_API_BIND(Act);
   api->act_discrete = DEEPMIND_RL_API_BIND(ActDiscrete);
   api->act_continuous = DEEPMIND_RL_API_BIND(ActContinuous);
   api->act_text = DEEPMIND_RL_API_BIND(ActText);

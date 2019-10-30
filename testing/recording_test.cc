@@ -289,7 +289,7 @@ TEST_F(RecordingTest, TotalScorePreserved) {
   // Record one second of frames. Repeat twice to advance through two maps.
   double recording_reward_1;
   const int move_forward[] = {0, 0, 0, 1, 0, 0, 0};
-  env_c_api.act(context, move_forward, nullptr);
+  env_c_api.act_discrete(context, move_forward);
   env_c_api.advance(context, kFramesPerSecond, &recording_reward_1);
   double recording_reward_2;
   env_c_api.advance(context, kFramesPerSecond, &recording_reward_2);
