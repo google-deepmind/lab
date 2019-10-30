@@ -75,6 +75,14 @@ py2and3_test(
 )
 
 py2and3_test(
+    name = "properties_test",
+    srcs = ["properties_test.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    deps = ["@six_archive//:six"],
+)
+
+py2and3_test(
     name = "extra_entities_test",
     srcs = ["extra_entities_test.py"],
     data = ["//:deepmind_lab.so"],

@@ -20,6 +20,7 @@ local helpers = require 'common.helpers'
 local timeout = require 'decorators.timeout'
 local debug_observations = require 'decorators.debug_observations'
 local gadget_selection = require 'decorators.gadget_selection'
+local property_decorator = require 'decorators.property_decorator'
 
 -- These parameters may or may not be specified in the init `params`, depending
 -- on the execution environment. We should ignore them without raising an
@@ -151,6 +152,9 @@ function setting_overrides.decorate(kwargs)
     end
 
     gadget_selection(api, apiParams)
+    property_decorator.decorate(api)
+
+    property_decorator.addReadWrite('params', apiParams)
 
     -- Call version of `init` that existed before decoration.
     if apiInit then
