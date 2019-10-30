@@ -20,9 +20,31 @@ local property_helpers = require 'common.property_helpers'
 
 --[[ Property decorator
 
-Use to decorate expose an api's settings as properties.
-Writing to properties that are not read from after initialisation will not
-affect the output.
+Provides a mechanism for exposing properties to the EnvCApi.
+
+```
+local property_decorator = require 'decorators.property_decorator'
+local api = {
+    _myParams = {
+        param0 = 0,
+        param1 = '1',
+    }
+}
+
+function api:init(...)
+  property_decorator.addReadWrite('myParams', self._myParams)
+end
+
+-- Not necessary if using settings_override decorator.
+property_decorator.decorate(api)
+
+return api
+```
+
+This will expose properties:
+
+*   'myParams.param0' = '0'
+*   'myParams.param1' = '1'
 ]]
 
 local RESULT = property_helpers.RESULT
