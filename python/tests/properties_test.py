@@ -143,6 +143,64 @@ class Properties(unittest.TestCase):
     env = deepmind_lab.Lab(
         'contributed/dmlab30/explore_obstructed_goals_small', [], config={})
     self.assertEqual(env.read_property('params.episodeLengthSeconds'), '90')
+    env.reset(seed=4)
+    entity = ('***********\n'
+              '*** I  P***\n'
+              '***H* PG***\n'
+              '*PPGIP  ***\n'
+              '*GPP* PG***\n'
+              '*PGG*GGPI *\n'
+              '*H*H*H*H*H*\n'
+              '* *GPGIPPG*\n'
+              '* *GGP*PGP*\n'
+              '* IPPP*GPG*\n'
+              '***********\n')
+    variations = ('...........\n'
+                  '.....AAA...\n'
+                  '.....AAA...\n'
+                  '.AAA.AAA...\n'
+                  '.AAA.AAA...\n'
+                  '.AAA.AAA...\n'
+                  '...........\n'
+                  '...AAA.AAA.\n'
+                  '...AAA.AAA.\n'
+                  '...AAA.AAA.\n'
+                  '...........\n')
+    self.assertNotEqual(env.read_property('params.currentEntityLayer'), entity)
+    self.assertNotEqual(
+        env.read_property('params.currentVariationsLayer'), variations)
+
+    # Enable override:
+    env.write_property('params.overrideEntityLayer', entity)
+    env.write_property('params.overrideVariationsLayer', variations)
+    env.reset(seed=1)
+    self.assertEqual(env.read_property('params.currentEntityLayer'), entity)
+    self.assertEqual(
+        env.read_property('params.currentVariationsLayer'), variations)
+    env.reset(seed=2)
+
+    # Make sure override holds:
+    self.assertEqual(env.read_property('params.currentEntityLayer'), entity)
+    self.assertEqual(
+        env.read_property('params.currentVariationsLayer'), variations)
+
+    # Disable override
+    env.write_property('params.overrideEntityLayer', '')
+    env.write_property('params.overrideVariationsLayer', '')
+
+    env.reset(seed=3)
+    self.assertNotEqual(env.read_property('params.currentEntityLayer'), entity)
+    self.assertNotEqual(
+        env.read_property('params.currentVariationsLayer'), variations)
+
+    entity200 = env.read_property('func.entityLayer.200')
+    variations200 = env.read_property('func.variationsLayer.200')
+
+    entity400 = env.read_property('func.entityLayer.400')
+    variations400 = env.read_property('func.variationsLayer.400')
+
+    self.assertNotEqual(entity200, entity400)
+    self.assertNotEqual(variations200, variations400)
 
 
 if __name__ == '__main__':

@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local custom_decals = require 'decorators.custom_decals_decoration'
 local custom_observations = require 'decorators.custom_observations'
+local property_decorator = require 'decorators.property_decorator'
 local log = require 'common.log'
 local helpers = require 'common.helpers'
 local make_map = require 'common.make_map'
@@ -77,6 +78,9 @@ function factory.createLevelApi(kwargs)
   kwargs.opts.decalFrequency = kwargs.opts.decalFrequency or 0.1
   kwargs.opts.decalScale = kwargs.opts.decalScale or 1.0
   kwargs.opts.wallDecoration = kwargs.opts.wallDecoration or ''
+  kwargs.opts.overrideEntityLayer = kwargs.opts.overrideEntityLayer or ''
+  kwargs.opts.overrideVariationsLayer = kwargs.opts.overrideVariationsLayer or
+                                        ''
 
   local api = {}
 
@@ -97,11 +101,8 @@ function factory.createLevelApi(kwargs)
     end
   end
 
-  function api:start(episode, seed)
-    local mapName = 'explore_maze'
-    random:seed(seed)
-    randomMap:seed(seed)
-    api._maze = maze_generation.randomMazeGeneration{
+  local function mazeGen(seed)
+    local maze = maze_generation.randomMazeGeneration{
         seed = seed,
         width = kwargs.opts.mazeWidth,
         height = kwargs.opts.mazeHeight,
@@ -116,6 +117,39 @@ function factory.createLevelApi(kwargs)
         roomMaxSize = kwargs.opts.roomMaxSize,
         extraConnectionProbability = kwargs.opts.extraConnectionProbability,
     }
+    return maze
+  end
+
+  local function entityLayer(stringSeed)
+    local seed = tonumber(stringSeed)
+    return seed and mazeGen(seed):entityLayer()
+  end
+
+  local function variationsLayer(stringSeed)
+    local seed = tonumber(stringSeed)
+    return seed and mazeGen(seed):variationsLayer()
+  end
+
+  property_decorator.addReadOnly('func.entityLayer', entityLayer)
+  property_decorator.addReadOnly('func.variationsLayer', variationsLayer)
+
+  function api:start(episode, seed)
+    local mapName = 'explore_maze'
+    random:seed(seed)
+    randomMap:seed(seed)
+    local maze = mazeGen(seed)
+    kwargs.opts.generatedSeed = seed
+    kwargs.opts.generatedEntityLayer = maze:entityLayer()
+    kwargs.opts.generatedVariationsLayer = maze:variationsLayer()
+    local override = kwargs.opts.overrideEntityLayer ~= ''
+    if override then
+      maze = maze_generation.mazeGeneration{
+          entity = kwargs.opts.overrideEntityLayer,
+          variations = kwargs.opts.overrideVariationsLayer
+      }
+    end
+    kwargs.opts.currentEntityLayer = maze:entityLayer()
+    kwargs.opts.currentVariationsLayer = maze:variationsLayer()
 
     if kwargs.opts.decalScale and kwargs.opts.decalScale ~= 1 then
       custom_decals.scale(kwargs.opts.decalScale)
@@ -125,20 +159,25 @@ function factory.createLevelApi(kwargs)
       custom_decals.decorate(self)
     end
 
-    log.info('Maze Generated (seed ' .. seed .. '):\n' ..
-             api._maze:entityLayer())
+    if override then
+      log.info('Maze overriden via property:\n' ..
+               kwargs.opts.currentEntityLayer)
+    else
+      log.info('Maze Generated (seed ' .. seed .. '):\n' ..
+               kwargs.opts.currentEntityLayer)
+    end
     api._map = make_map.makeMap{
         mapName = mapName,
-        mapEntityLayer = api._maze:entityLayer(),
-        mapVariationsLayer = api._maze:variationsLayer(),
+        mapEntityLayer = maze:entityLayer(),
+        mapVariationsLayer = maze:variationsLayer(),
         useSkybox = kwargs.opts.useSkybox,
         decalFrequency = kwargs.opts.decalFrequency,
     }
-
+    api._maze = maze
     if kwargs.level.start then
-      kwargs.level:start(api._maze, episode, seed)
+      kwargs.level:start(maze, episode, seed)
     end
-    debug_observations.setMaze(api._maze)
+    debug_observations.setMaze(maze)
   end
 
   function api:updateSpawnVars(spawnVars)
