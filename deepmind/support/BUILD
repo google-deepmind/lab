@@ -11,12 +11,6 @@ cc_library(
 )
 
 cc_library(
-    name = "stringprintf",
-    srcs = ["stringprintf.cc"],
-    hdrs = ["stringprintf.h"],
-)
-
-cc_library(
     name = "test_srcdir",
     testonly = True,
     srcs = ["test_srcdir.cc"],

@@ -17,7 +17,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//deepmind/support:stringprintf",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@eigen_archive//:eigen",
