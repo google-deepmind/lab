@@ -65,6 +65,7 @@ end
 local framesRemainingTensor = tensor.DoubleTensor(1)
 local function framesRemainingAt60()
   framesRemainingTensor:val(timeout.timeRemainingSeconds() * 60)
+  return framesRemainingTensor
 end
 
 --[[ Decorate the api to support custom observations:
