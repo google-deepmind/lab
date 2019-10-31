@@ -1,7 +1,7 @@
 # Description:
 #   DeepMind reinforcement learning APIs.
 
-licenses(["notice"])  # Apache 2.0 (Google-authored)
+licenses(["notice"])
 
 exports_files(["LICENSE"])
 
