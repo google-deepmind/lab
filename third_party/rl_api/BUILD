@@ -12,6 +12,20 @@ cc_library(
 )
 
 cc_library(
+    name = "env_c_api_test_suite",
+    testonly = 1,
+    srcs = ["env_c_api_test_suite.cc"],
+    hdrs = ["env_c_api_test_suite.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":env_c_api",
+        "//deepmind/support:logging",
+        "@com_google_googletest//:gtest",
+    ],
+    alwayslink = 1,  # contains test definitions
+)
+
+cc_library(
     name = "env_c_api_bind",
     hdrs = ["env_c_api_bind.h"],
     visibility = ["//visibility:public"],

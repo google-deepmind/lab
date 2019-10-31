@@ -7,6 +7,8 @@
 1.  The new API version is 2.0 (up from 1.4).
 2.  The EnvCApi functions `fps` and `act` have been removed. See previous
     release notes for migration details.
+3.  A conformance test suite has been added to EnvCApi which exercises the
+    specified interface functions and detects some basic errors.
 
 ## release-2020-12-07 December 2020 release
 
