@@ -982,6 +982,18 @@ cc_binary(
     ],
 )
 
+py_library(
+    name = "dmenv_module",
+    srcs = ["python/dmenv_module.py"],
+    data = ["//:deepmind_lab.so"],
+    imports = ["python"],
+    visibility = ["//python/tests:__subpackages__"],
+    deps = [
+        "@dm_env_archive//:dm_env",
+        "@six_archive//:six",
+    ],
+)
+
 py_binary(
     name = "python_random_agent",
     srcs = ["python/random_agent.py"],

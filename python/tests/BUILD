@@ -219,3 +219,12 @@ py2and3_test(
     imports = ["python"],
     deps = ["@six_archive//:six"],
 )
+
+py2and3_test(
+    name = "dmenv_module_test",
+    srcs = ["dmenv_module_test.py"],
+    deps = [
+        "//:dmenv_module",
+        "@dm_env_archive//:test_utils",
+    ],
+)

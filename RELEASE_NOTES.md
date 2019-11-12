@@ -7,6 +7,8 @@
 1.  A property system has been added that allows dynamic querying and modifying
     of environment state. Level scripts can register and consume custom
     properties.
+2.  A new Python module, `dmenv_module`, is provided that exposes the DeepMind
+    [`dm_env` API](https://github.com/deepmind/dm_env).
 
 ### Minor Improvements:
 
