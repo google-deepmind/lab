@@ -21,3 +21,9 @@ cc_library(
     ),
     visibility = ["//visibility:public"],
 )
+
+alias(
+    name = "python_headers",
+    actual = ":python",
+    visibility = ["//visibility:public"],
+)

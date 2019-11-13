@@ -15,9 +15,40 @@ http_archive(
 )
 
 http_archive(
+    name = "bazel_skylib",
+    strip_prefix = "bazel-skylib-master",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/master.zip"],
+)
+
+http_archive(
     name = "com_google_absl",
     strip_prefix = "abseil-cpp-master",
     urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
+)
+
+http_archive(
+    name = "com_google_absl_py",
+    strip_prefix = "abseil-py-master",
+    urls = ["https://github.com/abseil/abseil-py/archive/master.zip"],
+)
+
+http_archive(
+    name = "enum34_archive",
+    build_file = "@com_google_absl_py//third_party:enum34.BUILD",
+    sha256 = "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1",
+    urls = [
+        "https://mirror.bazel.build/pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+        "https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "funcsigs_archive",
+    build_file = "@//:funcsigs.BUILD",
+    strip_prefix = "funcsigs-1.0.2",
+    urls = [
+        "https://pypi.python.org/packages/94/4a/db842e7a0545de1cdb0439bb80e6e42dfe82aaeaadd4072f2263a4fbed23/funcsigs-1.0.2.tar.gz",
+    ],
 )
 
 http_archive(
@@ -103,6 +134,30 @@ http_archive(
         "https://mirror.bazel.build/www.lua.org/ftp/lua-5.1.5.tar.gz",
         "https://www.lua.org/ftp/lua-5.1.5.tar.gz",
     ],
+)
+
+http_archive(
+    name = "dm_env_archive",
+    build_file = "@//:dm_env.BUILD",
+    strip_prefix = "dm_env-master",
+    urls = ["https://github.com/deepmind/dm_env/archive/master.zip"],
+)
+
+http_archive(
+    name = "tree_archive",
+    repo_mapping = {
+        "@abseil-cpp": "@com_google_absl",
+        "@python_headers": "@python_system",
+    },
+    strip_prefix = "tree-master",
+    urls = ["https://github.com/deepmind/tree/archive/master.zip"],
+)
+
+http_archive(
+    name = "pybind11_archive",
+    build_file = "@tree_archive//external:pybind11.BUILD",
+    strip_prefix = "pybind11-master",
+    urls = ["https://github.com/pybind/pybind11/archive/master.zip"],
 )
 
 # TODO: Replace with hermetic build
