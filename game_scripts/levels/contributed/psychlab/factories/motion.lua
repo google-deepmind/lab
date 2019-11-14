@@ -62,8 +62,11 @@ function motion.createRandomBallMotion(opt)
   end
 
   local function ballNearBall(ballA, ballB)
-    return ballA:clone():csub(ballB):lengthSquared() <
-        motionData._minDistanceBetweenBallsSq
+    local distanceSq = 0
+    local temp = ballA:clone():csub(ballB)
+    temp:cmul(temp)
+    temp:apply(function (v) distanceSq = distanceSq + v end)
+    return distanceSq < motionData._minDistanceBetweenBallsSq
   end
 
   function motionData:illegal(tentativePosition, nextPositions)
