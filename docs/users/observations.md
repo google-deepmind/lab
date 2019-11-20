@@ -64,8 +64,8 @@ visible.
 | `DEBUG.CAMERA.TOP_DOWN`               | Bytes (3, altHeight, altWidth) | topDownCamera
 | `DEBUG.CAMERA.PLAYER_VIEW`            | Bytes (3, altHeight, altWidth) | Player's view - no heads up display (with reticle).
 | `DEBUG.CAMERA.PLAYER_VIEW_NO_RETICLE` | Bytes (3, altHeight, altWidth) | Player's view - no heads up display.
-| `DEBUG.POS.TRANS`                     | Doubles(3) | Player's world position in game units.
-| `DEBUG.POS.ROT`                       | Doubles(3) | Player's world orientation in degrees.
+| `DEBUG.POS.TRANS`                     | Doubles(3) | Player's world position in game units (x, y, z).
+| `DEBUG.POS.ROT`                       | Doubles(3) | Player's world orientation in degrees (pitch, yaw, roll).
 | `DEBUG.PLAYER_ID`                     | Doubles(1) | Current player's id.    |
 
 ## Debug observations (Server only)
