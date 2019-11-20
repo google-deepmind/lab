@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Google Inc.
+# Copyright (C) 2016-2019 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
 ################################################################################
 
 {
-  global:
-    dmlab_connect;
-    google_find_phdr;
-
-  local:
-    *;
+  global: dmlab_connect;
+  local:  *;
 };
