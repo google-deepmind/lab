@@ -93,8 +93,8 @@ arguments. Run `bazel run :random_agent -- --help` to see those.
 *DeepMind Lab* does not include every dependency hermetically. In particular,
 Python is not included, but instead it must already be installed on your system.
 This means that depending on the details of where that library is installed, you
-may need to adjust the Bazel build rules in [`python.BUILD`](../../python.BUILD)
-to locate it correctly.
+may need to adjust the Bazel build rules in
+[`python.BUILD`](../../bazel/python.BUILD) to locate it correctly.
 
 Bazel can build Python code using either Python 2 or Python 3. The default is
 Python 3, but each individual `py_binary` and `py_test` target can specify the
