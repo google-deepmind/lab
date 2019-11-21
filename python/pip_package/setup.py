@@ -8,9 +8,9 @@ REQUIRED_PACKAGES = [
 ]
 
 setuptools.setup(
-    name='DeepMind Lab',
+    name='deepmind-lab',
     version='1.0',
-    description='DeepMind Lab',
+    description='DeepMind Lab: A 3D learning environment',
     long_description='',
     url='https://github.com/deepmind/lab',
     author='DeepMind',
