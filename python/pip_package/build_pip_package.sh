@@ -35,9 +35,10 @@ function main() {
         "${TMPDIR}/deepmind_lab"
   fi
 
-  cp -- python/pip_package/README.md "${TMPDIR}"
-  cp -- python/pip_package/setup.py "${TMPDIR}"
-  cp -- python/pip_package/__init__.py "${TMPDIR}/deepmind_lab/__init__.py"
+  cp -- "python/pip_package/README.md" "${TMPDIR}"
+  cp -- "python/pip_package/setup.py" "${TMPDIR}"
+  cp -- "python/pip_package/__init__.py" "${TMPDIR}/deepmind_lab/__init__.py"
+  cp -- "python/dmenv_module.py" "${TMPDIR}/deepmind_lab/dmenv_module.py"
 
   MANIFEST_IN="${TMPDIR}/MANIFEST.in"
   echo "include README.md" >> "${MANIFEST_IN}"

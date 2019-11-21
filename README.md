@@ -95,8 +95,12 @@ this agent interact with DeepMind Lab for training, run
 lab$ bazel run :python_random_agent
 ```
 
-The [Python API](/docs/users/python_api.md)
-is used for agent-environment interactions.
+The [Python API](/docs/users/python_api.md) is
+used for agent-environment interactions. We also provide bindings to DeepMind's
+"[dm_env](https://github.com/deepmind/dm_env)" general API for reinforcement
+learning, as well as a way to build a self-contained PIP package; see the
+[separate documentation](python/pip_package/README.md)
+for details.
 
 *DeepMind Lab* ships with [different
 levels](/docs/levels.md) implementing different
@@ -162,9 +166,9 @@ software libraries, which we ship in several different ways:
      use can use either hardware-accelerated rendering via EGL or GLX or
      software rendering via OSMesa, depending on the `--define headless=...`
      build setting.
-   * Python 2.7 (other versions might work, too) with NumPy, PIL. (A few tests
-     require a NumPy version of at least 1.8.) Python 3 (at least 3.5) is
-     supported experimentally.
+   * Python 2.7 (other versions might work, too) with NumPy, PIL (a few tests
+     require a NumPy version of at least 1.8), or Python 3 (at least 3.5) with
+     NumPy and Pillow.
 
 The build rules are using a few compiler settings that are specific to GCC. If
 some flags are not recognized by your compiler (typically those would be

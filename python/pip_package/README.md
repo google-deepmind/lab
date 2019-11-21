@@ -19,7 +19,7 @@ Here's the short version if you have already set up the dependencies.
 git clone https://github.com/deepmind/lab.git && cd lab
 bazel build -c opt --python_version=PY2 //python/pip_package:build_pip_package
 ./bazel-bin/python/pip_package/build_pip_package /tmp/dmlab_pkg
-pip install /tmp/dmlab_pkg/DeepMind_Lab-1.0-py2-none-any.whl --force-reinstall
+pip install /tmp/dmlab_pkg/deepmind_lab-1.0-py2-none-any.whl --force-reinstall
 ```
 
 #### Dependencies
@@ -133,7 +133,7 @@ The package generation step will have created a `.whl` file in `/tmp/dmlab_pkg`.
 This is the binary distribution file for DeepMind Lab. Install it using:
 
 ```sh
-(agentenv)$ pip install /tmp/dmlab_pkg/DeepMind_Lab-1.0-py2-none-any.whl
+(agentenv)$ pip install /tmp/dmlab_pkg/deepmind_lab-1.0-py2-none-any.whl
 ```
 
 After a successful install you're now ready to start using DeepMind Lab as a
@@ -195,3 +195,24 @@ will need to run this command once for each.
 You can use the same API for the standalone Python module as you do when
 building with the Bazel project. See:
 [DeepMind Lab environment documentation: Python](../../docs/users/python_api.md).
+
+## Bindings for the DeepMind "dm_env" API
+
+DeepMind has released a general API for reinforcement learning, called "dmenv":
+https://github.com/deepmind/dm_env
+
+We provide an adapter module, [`dmenv_module.py`](../dmenv_module.py),
+that exposes DeepMind Lab through that API. The adaptor module is also included
+in the above PIP package; if installed that way, the module can be imported with
+`from deepmind_lab import dmenv_module`. The additional dependencies for that
+module can be installed by requesting the PIP extra called `dmenv_module`, for
+example:
+
+```sh
+pip install /tmp/dmlab_pkg/deepmind_lab-1.0-py2-none-any.whl[dmenv_module]
+```
+
+Note that not all DeepMind Lab features may be exposed through the dm_env API.
+For example, at the time of writing, observation specs in dm_env do not allow
+dynamic shapes, whereas DeepMind Lab's native API (the
+[EnvCApi](../../third_party/rl_api/env_c_api.h)) does.
