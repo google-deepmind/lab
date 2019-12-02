@@ -2,7 +2,7 @@
 
 language: c++
 
-dist: xenial
+dist: bionic
 
 jdk:
   - oraclejdk8
@@ -28,4 +28,4 @@ addons:
 
 script:
   - bazel test -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --dynamic_mode=off --show_progress_rate_limit=300 --test_output=errors //...
-  - bazel run -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --dynamic_mode=off //:python_random_agent --define headless=osmesa
+  - bazel run  -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --dynamic_mode=off --show_progress_rate_limit=300 --define headless=osmesa //:python_random_agent
