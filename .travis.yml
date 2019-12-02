@@ -27,5 +27,5 @@ addons:
       - python3-pil
 
 script:
-  - bazel test -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --dynamic_mode=off --show_progress_rate_limit=300 --test_output=errors //...
-  - bazel run  -c opt --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --dynamic_mode=off --show_progress_rate_limit=300 --define headless=osmesa //:python_random_agent
+  - bazel --bazelrc=.travis.bazelrc test --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //...
+  - bazel --bazelrc=.travis.bazelrc run  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --define headless=osmesa //:python_random_agent
