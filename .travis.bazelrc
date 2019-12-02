@@ -4,3 +4,4 @@ build --compilation_mode=opt
 build --dynamic_mode=off
 
 test --test_output=errors
+test --trim_test_configuration
