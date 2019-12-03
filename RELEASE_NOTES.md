@@ -2,6 +2,19 @@
 
 ## Next Release
 
+### New Levels:
+
+1.  Psychlab.
+
+    1. contributed/psychlab/memory_suite_01/explore_goal_locations_extrapolate
+    2. contributed/psychlab/memory_suite_01/explore_goal_locations_holdout_extrapolate
+    3. contributed/psychlab/memory_suite_01/explore_goal_locations_holdout_interpolate
+    4. contributed/psychlab/memory_suite_01/explore_goal_locations_holdout_large
+    5. contributed/psychlab/memory_suite_01/explore_goal_locations_holdout_small
+    6. contributed/psychlab/memory_suite_01/explore_goal_locations_interpolate
+    7. contributed/psychlab/memory_suite_01/explore_goal_locations_train_large
+    8. contributed/psychlab/memory_suite_01/explore_goal_locations_train_small
+
 ### New Features:
 
 1.  A property system has been added that allows dynamic querying and modifying
