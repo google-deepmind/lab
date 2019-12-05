@@ -21,16 +21,26 @@
 // step. This implements the equivalent of "realpath -e" on Linux.
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static char path_storage[PATH_MAX + 1];
 
 int main(int argc, char* argv[]) {
   int num_errors = 0;
   errno = 0;
 
   for (int i = 1; i < argc; ++i) {
-    char* p = realpath(argv[i], NULL);
+    char* p = realpath(argv[i], path_storage);
+
+    // NOTE(tkoeppe): The portability of both the dependency on PATH_MAX and of
+    // null-termination of the output are not clear to me. The present code
+    // seems to work on a variety of platforms of interest, but please report
+    // problems and suggest improvements to the portability of this code.
+    path_storage[PATH_MAX] = '\0';
+
     if (p == NULL) {
       fprintf(stderr, "Error resolving path '%s', error was: '%s'\n",
               argv[i], strerror(errno));
@@ -38,7 +48,6 @@ int main(int argc, char* argv[]) {
       ++num_errors;
     } else {
       fprintf(stdout, "%s\n", p);
-      free(p);
     }
   }
 
