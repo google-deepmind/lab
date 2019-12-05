@@ -201,7 +201,7 @@ class DeepMindLabTest(unittest.TestCase):
     look_sideways_action = np.array([512, 0, 0, 0, 0, 0, 0], dtype=np.intc)
 
     env = deepmind_lab.Lab(
-        'seekavoid_arena_01', ['VEL.TRANS', 'VEL.ROT'],
+        'seekavoid_arena_01', ['VEL.TRANS', 'VEL.ROT', 'RGBD_INTERLEAVED'],
         config={'height': str(height), 'width': str(width), 'fps': '60'})
 
     env.reset(seed=1)

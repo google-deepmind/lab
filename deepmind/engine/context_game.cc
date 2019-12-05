@@ -446,6 +446,11 @@ void ContextGame::SetPlayerState(const float pos[3], const float vel[3],
                                  int team_score, int other_team_score,
                                  int player_id, bool teleporter_flip,
                                  int timestamp_msec) {
+  if (player_view_.timestamp_msec > 0 &&
+      timestamp_msec == player_view_.timestamp_msec) {
+    // Player state has already been set.
+    return;
+  }
   PlayerView before = player_view_;
   std::copy_n(pos, 3, player_view_.pos.data());
   std::copy_n(vel, 3, player_view_.vel.data());

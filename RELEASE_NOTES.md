@@ -37,6 +37,12 @@
 3.  The EnvCApi function `fps` is now deprecated; environments should instead
     use the new property system to communicate this information.
 
+### Bug Fixes:
+
+1.  Fix observation 'VEL.ROT' to allow non-zero values when combined with pixel
+    observations. Previously, the presence of pixel observations caused the
+    angular velocity information to be lost due to a logic error.
+
 ## release-2019-10-07 October 2019 release
 
 ### New Levels:
