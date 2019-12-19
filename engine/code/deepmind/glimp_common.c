@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "glimp_common.h"
 #include "../renderercommon/tr_common.h"
 #include "../sys/sys_local.h"
 
