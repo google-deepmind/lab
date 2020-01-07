@@ -155,7 +155,7 @@ import deepmind_lab
 import numpy as np
 
 # Create a new environment object.
-lab = deepmind_lab.Lab("tests/empty_room_test", ['RGB_INTERLEAVED'],
+lab = deepmind_lab.Lab("demos/extra_entities", ['RGB_INTERLEAVED'],
                        {'fps': '30', 'width': '80', 'height': '60'})
 lab.reset(seed=1)
 
@@ -171,8 +171,8 @@ Run `agent.py`:
 ```
 
 DeepMind Lab prints debugging/diagnostic info to the console, but at the end it
-should print out a number showing the reward. For the seed provided, the reward
-should be 11.0.
+should print out a number showing the reward. For the map in the example, the
+reward should be 4.0 (since there are four apples in front of the spawn).
 
 #### Uninstall
 
