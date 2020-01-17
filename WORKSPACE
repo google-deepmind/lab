@@ -146,7 +146,6 @@ http_archive(
 http_archive(
     name = "tree_archive",
     repo_mapping = {
-        "@abseil-cpp": "@com_google_absl",
         "@python_headers": "@python_system",
     },
     strip_prefix = "tree-master",
