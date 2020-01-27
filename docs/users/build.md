@@ -36,6 +36,11 @@ are documented in a [separate section](#python-dependencies) below.
            python3-numpy python3-pil
      ```
 
+     To build a [PIP package](../../python/pip_package/README.md), also install
+     `python3-setuptools python-setuptools python3-wheel python-wheel`. To use
+     it, install `python3-pip python-pip`, and also `python3-virtualenv
+     python-virtualenv` to use virtualenv.
+
    * On Red Hat Enterprise Linux Server:
 
      Tested on release 7.6 (Maipo). This should also work on Centos 7, and with
