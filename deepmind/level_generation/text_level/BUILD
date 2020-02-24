@@ -92,6 +92,23 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "translate_text_level_test",
+    size = "small",
+    srcs = ["translate_text_level_test.cc"],
+    data = [
+        "translate_text_level_test_libc++.golden_output",
+        "translate_text_level_test_libstdc++.golden_output",
+    ],
+    deps = [
+        ":translate_text_level",
+        "//deepmind/support:logging",
+        "//deepmind/support:test_srcdir",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "lua_bindings",
     srcs = ["lua_bindings.cc"],

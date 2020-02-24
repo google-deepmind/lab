@@ -22,7 +22,6 @@
 #include <iterator>
 #include <string>
 
-#include "deepmind/support/commandlineflags.h"
 #include "deepmind/support/logging.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -31,7 +30,7 @@
 #include "deepmind/support/test_srcdir.h"
 
 ABSL_FLAG(
-    string, map_outfile, "",
+    std::string, map_outfile, "",
     "If this argument is provided, write the .map output of the test map to "
     "the specified file. Useful for testing other parts of the pipeline.");
 
@@ -77,7 +76,7 @@ TEST(TranslateTextLevel, Simple) {
   ASSERT_THAT(actual, testing::HasSubstr("\"classname\" \"func_door\""));
   ASSERT_THAT(actual, testing::HasSubstr("\"classname\" \"trigger_multiple\""));
 
-  if (base::SpecifiedOnCommandLine("map_outfile")) {
+  if (FLAGS_map_outfile.IsSpecifiedOnCommandLine()) {
     std::string filename = absl::GetFlag(FLAGS_map_outfile);
     if (std::ofstream(filename) << actual) {
       LOG(INFO) << "Test map written to '" << filename << "'.";
