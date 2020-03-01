@@ -101,35 +101,3 @@ char *basepath( char *fname )
 
 	return dp;
 }
-
-/* memmove is defined here because some vendors don't provide it at
-   all and others do a terrible job (like calling malloc) */
-// -- ouch, that hurts -- ln
-/* always use the system memmove() on Mac OS X. --ryan. */
-#if !defined(__APPLE__) && !defined(_MSC_VER)
-#ifdef memmove
-#undef memmove
-#endif
-void *
-memmove(void *dp, const void *sp, size_t n)
-{
-	unsigned char *cdp, *csp;
-
-	if (n<=0)
-		return dp;
-	cdp = dp;
-	csp = (unsigned char *)sp;
-	if (cdp < csp) {
-		do {
-			*cdp++ = *csp++;
-		} while (--n);
-	} else {
-		cdp += n;
-		csp += n;
-		do {
-			*--cdp = *--csp;
-		} while (--n);
-	}
-	return dp;
-}
-#endif
