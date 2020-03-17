@@ -5,12 +5,10 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["restricted"])  # GPLv2
 
-LUA_VERSION = "@lua_archive//:lua"
-
 cc_library(
     name = "lua",
     hdrs = ["lua.h"],
-    deps = [LUA_VERSION],
+    deps = ["@lua_archive//:lua"],
 )
 
 cc_library(
