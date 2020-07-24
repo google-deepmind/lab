@@ -884,6 +884,27 @@ cc_binary(
     deps = [":game_lib_sdl"],
 )
 
+# Run this Python example on a level in game_scripts/levels
+# with a command such as:
+#
+#     bazel run -c opt //:python_game_py3 -- \
+#         -l lt_chasm -s width=640 -s height=480
+#
+# Versions for Python 2 and Python 3 are provided.
+#
+[py_binary(
+    name = "python_game_" + py.lower(),
+    srcs = ["examples/game_main.py"],
+    data = ["//:deepmind_lab.so"],
+    main = "examples/game_main.py",
+    python_version = py,
+    srcs_version = py,
+    deps = ["@six_archive//:six"],
+) for py in [
+    "PY2",
+    "PY3",
+]]
+
 config_setting(
     name = "dmlab_graphics_sdl",
     define_values = {"graphics": "sdl"},

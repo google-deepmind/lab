@@ -69,7 +69,7 @@ if __name__ == '__main__':
                       help='The level that is to be played. Levels'
                       'are Lua scripts, and a script called \"name\" means that'
                       'a file \"assets/game_scripts/name.lua is loaded.')
-  parser.add_argument('-s', '--level_settings', type=str, default=None,
+  parser.add_argument('-s', '--level_settings', type=str, default=[],
                       action='append',
                       help='Applies an opaque key-value setting. The setting is'
                       'available to the level script. This flag may be provided'
@@ -86,7 +86,10 @@ if __name__ == '__main__':
 
   # Convert list of level setting strings (of the form "key=value") into a
   # `config` key/value dictionary.
-  config = {k:v for k, v in [s.split('=') for s in args.level_settings]}
+  config = {
+      k: v
+      for k, v in [six.ensure_str(s).split('=') for s in args.level_settings]
+  }
 
   if args.runfiles_path:
     deepmind_lab.set_runfiles_path(args.runfiles_path)
