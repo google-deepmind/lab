@@ -117,11 +117,11 @@ http_archive(
 http_archive(
     name = "six_archive",
     build_file = "@//bazel:six.BUILD",
-    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
-    strip_prefix = "six-1.10.0",
+    sha256 = "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259",
+    strip_prefix = "six-1.15.0",
     urls = [
-        "https://mirror.bazel.build/pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz",
-        "https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz",
+        "https://mirror.bazel.build/pypi.python.org/packages/source/s/six/six-1.15.0.tar.gz",
+        "https://pypi.python.org/packages/source/s/six/six-1.15.0.tar.gz",
     ],
 )
 
