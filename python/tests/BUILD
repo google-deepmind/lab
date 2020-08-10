@@ -2,8 +2,14 @@
 #   Integration tests via Python.
 
 load("//python/tests:build_defs.bzl", "py2and3_test")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 licenses(["restricted"])  # GPLv2
+
+bzl_library(
+    name = "build_defs_bzl",
+    srcs = ["build_defs.bzl"],
+)
 
 py_binary(
     name = "python_benchmark",
