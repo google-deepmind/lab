@@ -2,7 +2,7 @@
 #   EGL Utility function required to correctly create and initialize an EGL
 #   display on multi-GPU machines.
 
-licenses(["notice"])  # Apache 2.0 (Google-authored)
+licenses(["notice"])
 
 cc_library(
     name = "egl_util",
