@@ -22,6 +22,25 @@ There's some convenient boilerplate to write for
 `game_scripts/factories/simple_demo_factory.lua`:
 
 ```lua
+local custom_observations = require 'decorators.custom_observations'
+local game = require 'dmlab.system.game'
+
+local factory = {}
+
+function factory.createLevelApi(kwargs)
+  assert(kwargs.episodeLengthSeconds)
+  local api = {}
+
+  custom_observations.decorate(api)
+  return api
+end
+
+return factory
+```
+
+`kwargs` here (short for 'keyword arguments') are the default settings specified
+in your `simple_demo.lua` script.
+
 
 This creates a factory, but the level will fail to run, because you can't start
 an episode without a map. The map should be set in `api:nextMap()`, but we'll
