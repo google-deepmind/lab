@@ -1826,7 +1826,7 @@ void SV_UserVoip(client_t *cl, msg_t *msg, qboolean ignoreData)
 	MSG_ReadData(msg, encoded, packetsize);
 
 	if (ignoreData || SV_ShouldIgnoreVoipSender(cl))
-		return;   // blocklisted, disabled, etc.
+		return;   // Blocklisted, disabled, etc.
 
 	// !!! FIXME: see if we read past end of msg...
 
