@@ -1297,17 +1297,17 @@ Changes or adds a key/value pair
 */
 void Info_SetValueForKey( char *s, const char *key, const char *value ) {
 	char	newi[MAX_INFO_STRING];
-	const char* blacklist = "\\;\"";
+	const char* blocklist = "\\;\"";
 
 	if ( strlen( s ) >= MAX_INFO_STRING ) {
 		Com_Error( ERR_DROP, "Info_SetValueForKey: oversize infostring" );
 	}
 
-	for(; *blacklist; ++blacklist)
+	for(; *blocklist; ++blocklist)
 	{
-		if (strchr (key, *blacklist) || strchr (value, *blacklist))
+		if (strchr (key, *blocklist) || strchr (value, *blocklist))
 		{
-			Com_Printf (S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
+			Com_Printf (S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blocklist, key, value);
 			return;
 		}
 	}
@@ -1338,17 +1338,17 @@ Includes and retains zero-length values
 */
 void Info_SetValueForKey_Big( char *s, const char *key, const char *value ) {
 	char	newi[BIG_INFO_STRING];
-	const char* blacklist = "\\;\"";
+	const char* blocklist = "\\;\"";
 
 	if ( strlen( s ) >= BIG_INFO_STRING ) {
 		Com_Error( ERR_DROP, "Info_SetValueForKey: oversize infostring" );
 	}
 
-	for(; *blacklist; ++blacklist)
+	for(; *blocklist; ++blocklist)
 	{
-		if (strchr (key, *blacklist) || strchr (value, *blacklist))
+		if (strchr (key, *blocklist) || strchr (value, *blocklist))
 		{
-			Com_Printf (S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
+			Com_Printf (S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blocklist, key, value);
 			return;
 		}
 	}

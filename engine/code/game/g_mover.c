@@ -549,10 +549,10 @@ in the same amount of time
 ================
 */
 void MatchTeam( gentity_t *teamLeader, int moverState, int time ) {
-	gentity_t		*slave;
+	gentity_t		*member;
 
-	for ( slave = teamLeader ; slave ; slave = slave->teamchain ) {
-		SetMoverState( slave, moverState, time );
+	for ( member = teamLeader ; member ; member = member->teamchain ) {
+		SetMoverState( member, moverState, time );
 	}
 }
 

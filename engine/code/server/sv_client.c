@@ -1784,7 +1784,7 @@ static qboolean SV_ShouldIgnoreVoipSender(const client_t *cl)
 	else if (!cl->hasVoip)  // client doesn't have VoIP support?!
 		return qtrue;
     
-	// !!! FIXME: implement player blacklist.
+	// !!! FIXME: implement player blocklist.
 
 	return qfalse;  // don't ignore.
 }
@@ -1826,7 +1826,7 @@ void SV_UserVoip(client_t *cl, msg_t *msg, qboolean ignoreData)
 	MSG_ReadData(msg, encoded, packetsize);
 
 	if (ignoreData || SV_ShouldIgnoreVoipSender(cl))
-		return;   // Blacklisted, disabled, etc.
+		return;   // blocklisted, disabled, etc.
 
 	// !!! FIXME: see if we read past end of msg...
 
