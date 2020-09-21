@@ -27,6 +27,7 @@ py2and3_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     main = "dmlab_module_test.py",
+    tags = ["noprecommit"],
     deps = ["@six_archive//:six"],
 )
 
@@ -229,6 +230,7 @@ py2and3_test(
 py2and3_test(
     name = "dmenv_module_test",
     srcs = ["dmenv_module_test.py"],
+    tags = ["noprecommit"],
     deps = [
         "//:dmenv_module",
         "@dm_env_archive//:test_utils",

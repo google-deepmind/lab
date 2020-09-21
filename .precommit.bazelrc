@@ -6,5 +6,4 @@ build --dynamic_mode=off
 build --cxxopt=-std=c++11
 
 test --test_output=errors
-test --test_tag_filters=-notravis
-test --trim_test_configuration
+test --test_tag_filters=-noprecommit

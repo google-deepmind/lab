@@ -1,0 +1,36 @@
+# A workflow to run Bazel builds and tests.
+
+name: precommit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+      - 'beta'
+      - 'gamma'
+      - 'macos'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: install infrastructure
+        run: |
+          find /usr -name Python.h
+          sudo apt-get install libffi-dev gettext freeglut3-dev libsdl2-dev zip libosmesa6-dev python-dev python-numpy python-pil python-enum34 python3-dev python3-numpy python3-pil
+      - name: build
+        run: |
+          bazel --bazelrc=.precommit.bazelrc build --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //...
+      - name: run-tests
+        timeout-minutes: 45
+        run: |
+          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //...
+          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:python_module_test.py2 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:python_module_test.py3 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py2 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py3 --test_tag_filters="" --test_arg=--verbose
+      - name: run-agent
+        run: |
+          bazel --bazelrc=.precommit.bazelrc run   --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --define headless=osmesa //:python_random_agent

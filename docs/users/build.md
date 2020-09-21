@@ -32,8 +32,8 @@ are documented in a [separate section](#python-dependencies) below.
 
      ```shell
      $ sudo apt-get install libffi-dev gettext freeglut3-dev libsdl2-dev \
-           zip libosmesa6-dev python-dev python-numpy python-pil python3-dev \
-           python3-numpy python3-pil
+           zip libosmesa6-dev python-dev python-numpy python-pil python-enum34 \
+          python3-dev python3-numpy python3-pil
      ```
 
      To build a [PIP package](../../python/pip_package/README.md), also install
