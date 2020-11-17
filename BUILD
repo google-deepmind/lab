@@ -528,6 +528,7 @@ cc_binary(
     copts = [
         "-I" + CODE_DIR,
         "-w",
+        "-fno-common",
         ARCH_VAR,
         STANDALONE_VAR,
         "-DBSPC",
@@ -634,6 +635,7 @@ IOQ3_COMMON_DEPS = [
 
 IOQ3_COMMON_COPTS = [
     "-std=c99",
+    "-fno-common",
     "-fno-strict-aliasing",
     ARCH_VAR,
     STANDALONE_VAR,

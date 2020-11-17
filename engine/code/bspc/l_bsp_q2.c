@@ -830,14 +830,14 @@ void Q2_SwapBSPFile (qboolean todisk)
 } //end of the function Q2_SwapBSPFile
 
 
-dheader_t	*header;
+dheader_t	*q2_header;
 
 int Q2_CopyLump (int lump, void *dest, int size, int maxsize)
 {
 	int		length, ofs;
 
-	length = header->lumps[lump].filelen;
-	ofs = header->lumps[lump].fileofs;
+	length = q2_header->lumps[lump].filelen;
+	ofs = q2_header->lumps[lump].fileofs;
 	
 	if (length % size)
 		Error ("LoadBSPFile: odd lump size");
@@ -845,7 +845,7 @@ int Q2_CopyLump (int lump, void *dest, int size, int maxsize)
    if ((length/size) > maxsize)
       Error ("Q2_LoadBSPFile: exceeded max size for lump %d size %d > maxsize %d\n", lump, (length/size), maxsize);
 
-	memcpy (dest, (byte *)header + ofs, length);
+	memcpy (dest, (byte *)q2_header + ofs, length);
 
 	return length / size;
 } //end of the function Q2_CopyLump
@@ -862,16 +862,16 @@ void Q2_LoadBSPFile(char *filename, int offset, int length)
 //
 // load the file header
 //
-	LoadFile (filename, (void **)&header, offset, length);
+	LoadFile (filename, (void **)&q2_header, offset, length);
 
 // swap the header
 	for (i=0 ; i< sizeof(dheader_t)/4 ; i++)
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+		((int *)q2_header)[i] = LittleLong ( ((int *)q2_header)[i]);
 
-	if (header->ident != IDBSPHEADER)
+	if (q2_header->ident != IDBSPHEADER)
 		Error ("%s is not a IBSP file", filename);
-	if (header->version != BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, BSPVERSION);
+	if (q2_header->version != BSPVERSION)
+		Error ("%s is version %i, not %i", filename, q2_header->version, BSPVERSION);
 
 	nummodels = Q2_CopyLump (LUMP_MODELS, dmodels, sizeof(dmodel_t), MAX_MAP_MODELS);
 	numvertexes = Q2_CopyLump (LUMP_VERTEXES, dvertexes, sizeof(dvertex_t), MAX_MAP_VERTS);
@@ -895,7 +895,7 @@ void Q2_LoadBSPFile(char *filename, int offset, int length)
 
 	Q2_CopyLump (LUMP_POP, dpop, 1, MAX_MAP_DPOP);
 
-	FreeMemory(header);		// everything has been copied out
+	FreeMemory(q2_header);		// everything has been copied out
 		
 //
 // swap everything
@@ -919,23 +919,23 @@ void	Q2_LoadBSPFileTexinfo (char *filename)
 	FILE		*f;
 	int		length, ofs;
 
-	header = GetMemory(sizeof(dheader_t));
+	q2_header = GetMemory(sizeof(dheader_t));
 
 	f = fopen (filename, "rb");
-	fread (header, sizeof(dheader_t), 1, f);
+	fread (q2_header, sizeof(dheader_t), 1, f);
 
 // swap the header
 	for (i=0 ; i< sizeof(dheader_t)/4 ; i++)
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+		((int *)q2_header)[i] = LittleLong ( ((int *)q2_header)[i]);
 
-	if (header->ident != IDBSPHEADER)
+	if (q2_header->ident != IDBSPHEADER)
 		Error ("%s is not a IBSP file", filename);
-	if (header->version != BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, BSPVERSION);
+	if (q2_header->version != BSPVERSION)
+		Error ("%s is version %i, not %i", filename, q2_header->version, BSPVERSION);
 
 
-	length = header->lumps[LUMP_TEXINFO].filelen;
-	ofs = header->lumps[LUMP_TEXINFO].fileofs;
+	length = q2_header->lumps[LUMP_TEXINFO].filelen;
+	ofs = q2_header->lumps[LUMP_TEXINFO].fileofs;
 
 	fseek (f, ofs, SEEK_SET);
 	fread (texinfo, length, 1, f);
@@ -943,7 +943,7 @@ void	Q2_LoadBSPFileTexinfo (char *filename)
 
 	numtexinfo = length / sizeof(texinfo_t);
 
-	FreeMemory(header);		// everything has been copied out
+	FreeMemory(q2_header);		// everything has been copied out
 		
 	Q2_SwapBSPFile (false);
 } //end of the function Q2_LoadBSPFileTexinfo
@@ -951,18 +951,18 @@ void	Q2_LoadBSPFileTexinfo (char *filename)
 
 //============================================================================
 
-FILE		*wadfile;
-dheader_t	outheader;
+FILE		*q2_wadfile;
+dheader_t	q2_outheader;
 
 void Q2_AddLump (int lumpnum, void *data, int len)
 {
 	lump_t *lump;
 
-	lump = &header->lumps[lumpnum];
+	lump = &q2_header->lumps[lumpnum];
 	
-	lump->fileofs = LittleLong( ftell(wadfile) );
+	lump->fileofs = LittleLong( ftell(q2_wadfile) );
 	lump->filelen = LittleLong(len);
-	SafeWrite (wadfile, data, (len+3)&~3);
+	SafeWrite (q2_wadfile, data, (len+3)&~3);
 } //end of the function Q2_AddLump
 
 /*
@@ -974,16 +974,16 @@ Swaps the bsp file in place, so it should not be referenced again
 */
 void	Q2_WriteBSPFile (char *filename)
 {		
-	header = &outheader;
-	memset (header, 0, sizeof(dheader_t));
+	q2_header = &q2_outheader;
+	memset (q2_header, 0, sizeof(dheader_t));
 	
 	Q2_SwapBSPFile (true);
 
-	header->ident = LittleLong (IDBSPHEADER);
-	header->version = LittleLong (BSPVERSION);
+	q2_header->ident = LittleLong (IDBSPHEADER);
+	q2_header->version = LittleLong (BSPVERSION);
 	
-	wadfile = SafeOpenWrite (filename);
-	SafeWrite (wadfile, header, sizeof(dheader_t));	// overwritten later
+	q2_wadfile = SafeOpenWrite (filename);
+	SafeWrite (q2_wadfile, q2_header, sizeof(dheader_t));	// overwritten later
 
 	Q2_AddLump (LUMP_PLANES, dplanes, numplanes*sizeof(dplane_t));
 	Q2_AddLump (LUMP_LEAFS, dleafs, numleafs*sizeof(dleaf_t));
@@ -1006,9 +1006,9 @@ void	Q2_WriteBSPFile (char *filename)
 	Q2_AddLump (LUMP_ENTITIES, dentdata, entdatasize);
 	Q2_AddLump (LUMP_POP, dpop, sizeof(dpop));
 	
-	fseek (wadfile, 0, SEEK_SET);
-	SafeWrite (wadfile, header, sizeof(dheader_t));
-	fclose (wadfile);	
+	fseek (q2_wadfile, 0, SEEK_SET);
+	SafeWrite (q2_wadfile, q2_header, sizeof(dheader_t));
+	fclose (q2_wadfile);
 } //end of the function Q2_WriteBSPFile
 
 //============================================================================

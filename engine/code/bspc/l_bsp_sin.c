@@ -786,14 +786,14 @@ void Sin_SwapBSPFile (qboolean todisk)
 } //end of the function Sin_SwapBSPFile
 
 
-sin_dheader_t	*header;
+sin_dheader_t	*sin_header;
 #ifdef SIN
 int Sin_CopyLump (int lump, void *dest, int size, int maxsize)
 {
 	int		length, ofs;
 
-	length = header->lumps[lump].filelen;
-	ofs = header->lumps[lump].fileofs;
+	length = sin_header->lumps[lump].filelen;
+	ofs = sin_header->lumps[lump].fileofs;
 	
 	if (length % size)
 		Error ("Sin_LoadBSPFile: odd lump size");
@@ -801,7 +801,7 @@ int Sin_CopyLump (int lump, void *dest, int size, int maxsize)
    if ((length/size) > maxsize)
       Error ("Sin_LoadBSPFile: exceeded max size for lump %d size %d > maxsize %d\n", lump, (length/size), maxsize );
 	
-	memcpy (dest, (byte *)header + ofs, length);
+	memcpy (dest, (byte *)sin_header + ofs, length);
 
 	return length / size;
 }
@@ -810,13 +810,13 @@ int Sin_CopyLump (int lump, void *dest, int size)
 {
 	int		length, ofs;
 
-	length = header->lumps[lump].filelen;
-	ofs = header->lumps[lump].fileofs;
+	length = sin_header->lumps[lump].filelen;
+	ofs = sin_header->lumps[lump].fileofs;
 	
 	if (length % size)
 		Error ("Sin_LoadBSPFile: odd lump size");
 	
-	memcpy (dest, (byte *)header + ofs, length);
+	memcpy (dest, (byte *)sin_header + ofs, length);
 
 	return length / size;
 }
@@ -834,16 +834,16 @@ void	Sin_LoadBSPFile(char *filename, int offset, int length)
 //
 // load the file header
 //
-	LoadFile (filename, (void **)&header, offset, length);
+	LoadFile (filename, (void **)&sin_header, offset, length);
 
 // swap the header
 	for (i=0 ; i< sizeof(sin_dheader_t)/4 ; i++)
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+		((int *)sin_header)[i] = LittleLong ( ((int *)sin_header)[i]);
 
-	if (header->ident != SIN_BSPHEADER && header->ident != SINGAME_BSPHEADER)
+	if (sin_header->ident != SIN_BSPHEADER && sin_header->ident != SINGAME_BSPHEADER)
 		Error ("%s is not a IBSP file", filename);
-	if (header->version != SIN_BSPVERSION && header->version != SINGAME_BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, SIN_BSPVERSION);
+	if (sin_header->version != SIN_BSPVERSION && sin_header->version != SINGAME_BSPVERSION)
+		Error ("%s is version %i, not %i", filename, sin_header->version, SIN_BSPVERSION);
 
 #ifdef SIN
 	sin_nummodels = Sin_CopyLump (SIN_LUMP_MODELS, sin_dmodels, sizeof(sin_dmodel_t), SIN_MAX_MAP_MODELS);
@@ -892,7 +892,7 @@ void	Sin_LoadBSPFile(char *filename, int offset, int length)
 	Sin_CopyLump (SIN_LUMP_POP, sin_dpop, 1);
 #endif
 
-	FreeMemory(header);		// everything has been copied out
+	FreeMemory(sin_header);		// everything has been copied out
 		
 //
 // swap everything
@@ -913,23 +913,23 @@ void	Sin_LoadBSPFileTexinfo (char *filename)
 	FILE		*f;
 	int		length, ofs;
 
-	header = GetMemory(sizeof(sin_dheader_t));
+	sin_header = GetMemory(sizeof(sin_dheader_t));
 
 	f = fopen (filename, "rb");
-	fread (header, sizeof(sin_dheader_t), 1, f);
+	fread (sin_header, sizeof(sin_dheader_t), 1, f);
 
 // swap the header
 	for (i=0 ; i< sizeof(sin_dheader_t)/4 ; i++)
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+		((int *)sin_header)[i] = LittleLong ( ((int *)sin_header)[i]);
 
-	if (header->ident != SIN_BSPHEADER && header->ident != SINGAME_BSPHEADER)
+	if (sin_header->ident != SIN_BSPHEADER && sin_header->ident != SINGAME_BSPHEADER)
 		Error ("%s is not a IBSP file", filename);
-	if (header->version != SIN_BSPVERSION && header->version != SINGAME_BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, SIN_BSPVERSION);
+	if (sin_header->version != SIN_BSPVERSION && sin_header->version != SINGAME_BSPVERSION)
+		Error ("%s is version %i, not %i", filename, sin_header->version, SIN_BSPVERSION);
 
 
-	length = header->lumps[SIN_LUMP_TEXINFO].filelen;
-	ofs = header->lumps[SIN_LUMP_TEXINFO].fileofs;
+	length = sin_header->lumps[SIN_LUMP_TEXINFO].filelen;
+	ofs = sin_header->lumps[SIN_LUMP_TEXINFO].fileofs;
 
 	fseek (f, ofs, SEEK_SET);
 	fread (sin_texinfo, length, 1, f);
@@ -937,7 +937,7 @@ void	Sin_LoadBSPFileTexinfo (char *filename)
 
 	sin_numtexinfo = length / sizeof(sin_texinfo_t);
 
-	FreeMemory(header);		// everything has been copied out
+	FreeMemory(sin_header);		// everything has been copied out
 		
 	Sin_SwapBSPFile (false);
 } //end of the function Sin_LoadBSPFilesTexinfo
@@ -945,8 +945,8 @@ void	Sin_LoadBSPFileTexinfo (char *filename)
 
 //============================================================================
 
-FILE		*wadfile;
-sin_dheader_t	outheader;
+FILE		*sin_wadfile;
+sin_dheader_t	sin_outheader;
 
 #ifdef SIN
 void Sin_AddLump (int lumpnum, void *data, int len, int size, int maxsize)
@@ -959,22 +959,22 @@ void Sin_AddLump (int lumpnum, void *data, int len, int size, int maxsize)
 	if (len > maxsize)
 		Error ("Sin_WriteBSPFile: exceeded max size for lump %d size %d > maxsize %d\n", lumpnum, len, maxsize );
 
-	lump = &header->lumps[lumpnum];
+	lump = &sin_header->lumps[lumpnum];
 	
-	lump->fileofs = LittleLong( ftell(wadfile) );
+	lump->fileofs = LittleLong( ftell(sin_wadfile) );
 	lump->filelen = LittleLong(totallength);
-	SafeWrite (wadfile, data, (totallength+3)&~3);
+	SafeWrite (sin_wadfile, data, (totallength+3)&~3);
 }
 #else
 void Sin_AddLump (int lumpnum, void *data, int len)
 {
 	sin_lump_t *lump;
 
-	lump = &header->lumps[lumpnum];
+	lump = &sin_header->lumps[lumpnum];
 	
-	lump->fileofs = LittleLong( ftell(wadfile) );
+	lump->fileofs = LittleLong( ftell(sin_wadfile) );
 	lump->filelen = LittleLong(len);
-	SafeWrite (wadfile, data, (len+3)&~3);
+	SafeWrite (sin_wadfile, data, (len+3)&~3);
 }
 #endif
 /*
@@ -986,16 +986,16 @@ Swaps the bsp file in place, so it should not be referenced again
 */
 void	Sin_WriteBSPFile (char *filename)
 {		
-	header = &outheader;
-	memset (header, 0, sizeof(sin_dheader_t));
+	sin_header = &sin_outheader;
+	memset (sin_header, 0, sizeof(sin_dheader_t));
 	
 	Sin_SwapBSPFile (true);
 
-	header->ident = LittleLong (SIN_BSPHEADER);
-	header->version = LittleLong (SIN_BSPVERSION);
+	sin_header->ident = LittleLong (SIN_BSPHEADER);
+	sin_header->version = LittleLong (SIN_BSPVERSION);
 	
-	wadfile = SafeOpenWrite (filename);
-	SafeWrite (wadfile, header, sizeof(sin_dheader_t));	// overwritten later
+	sin_wadfile = SafeOpenWrite (filename);
+	SafeWrite (sin_wadfile, sin_header, sizeof(sin_dheader_t));	// overwritten later
 
 #ifdef SIN
 	Sin_AddLump (SIN_LUMP_PLANES, sin_dplanes, sin_numplanes, sizeof(sin_dplane_t), SIN_MAX_MAP_PLANES);
@@ -1042,9 +1042,9 @@ void	Sin_WriteBSPFile (char *filename)
 	Sin_AddLump (SIN_LUMP_POP, sin_dpop, sizeof(sin_dpop));
 #endif
 	
-	fseek (wadfile, 0, SEEK_SET);
-	SafeWrite (wadfile, header, sizeof(sin_dheader_t));
-	fclose (wadfile);	
+	fseek (sin_wadfile, 0, SEEK_SET);
+	SafeWrite (sin_wadfile, sin_header, sizeof(sin_dheader_t));
+	fclose (sin_wadfile);
 }
 
 //============================================================================
