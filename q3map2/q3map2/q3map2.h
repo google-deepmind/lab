@@ -974,12 +974,11 @@ typedef enum
 }
 surfaceType_t;
 
-char            *surfaceTypes[ NUM_SURFACE_TYPES ]
 #ifndef MAIN_C
-;
+extern char *surfaceTypes[ NUM_SURFACE_TYPES ];
 #else
-	=
-	{
+char *surfaceTypes[ NUM_SURFACE_TYPES ]	=
+{
 	"SURFACE_BAD",
 	"SURFACE_FACE",
 	"SURFACE_PATCH",
@@ -991,7 +990,7 @@ char            *surfaceTypes[ NUM_SURFACE_TYPES ]
 	"SURFACE_FOGHULL",
 	"SURFACE_DECAL",
 	"SURFACE_SHADER"
-	};
+};
 #endif
 
 
@@ -1948,7 +1947,7 @@ Q_EXTERN float jitters[ MAX_JITTERS ];
 
 
 /* commandline arguments */
-Q_EXTERN qboolean verbose;
+Q_EXTERN qboolean verbose Q_ASSIGN( qfalse );
 Q_EXTERN qboolean verboseEntities Q_ASSIGN( qfalse );
 Q_EXTERN qboolean force Q_ASSIGN( qfalse );
 Q_EXTERN qboolean infoMode Q_ASSIGN( qfalse );

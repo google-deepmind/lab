@@ -58,8 +58,6 @@ UINT wm_BroadcastCommand = -1;
 socket_t *brdcst_socket;
 netmessage_t msg;
 
-qboolean verbose = qfalse;
-
 // our main document
 // is streamed through the network to Radiant
 // possibly written to disk at the end of the run
