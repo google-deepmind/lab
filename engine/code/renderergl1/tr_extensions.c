@@ -18,7 +18,7 @@
 
 #include "tr_local.h"
 
-#define GLE(ret, name, ...) name##proc *qgl##name;
+#define GLE(ret, name, ...) name##proc *qgl##name = NULL;
 QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 #undef GLE
