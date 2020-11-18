@@ -514,7 +514,7 @@ class HslToRgb {
   // 'hue' Must be an angle in degrees.
   explicit HslToRgb(double hue) {
     hue_prime_ = hue / 60.0;
-    if (!(0 >= hue_prime_ && hue_prime_ < 6.0)) {
+    if (!(0 <= hue_prime_ && hue_prime_ < 6.0)) {
       hue_prime_ -= 6.0 * std::floor(hue_prime_ / 6.0);
     }
     double hue_mod_2 = hue_prime_ - 2.0 * (std::floor(hue_prime_ / 2.0));
