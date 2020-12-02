@@ -15,6 +15,11 @@
     7. contributed/psychlab/memory_suite_01/explore_goal_locations_train_large
     8. contributed/psychlab/memory_suite_01/explore_goal_locations_train_small
 
+2.  Language binding tasks.
+
+    1. contributed/fast_mapping/fast_mapping
+    2. contributed/fast_mapping/slow_mapping
+
 ### New Features:
 
 1.  A property system has been added that allows dynamic querying and modifying
