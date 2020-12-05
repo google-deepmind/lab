@@ -61,11 +61,11 @@ function factory.createLevelApi(kwargs)
   env.__index = env
 
   setmetatable(env, {
-    __call = function (cls, ...)
-      local self = setmetatable({}, cls)
-      self:_init(...)
-      return self
-    end
+      __call = function (cls, ...)
+        local self = setmetatable({}, cls)
+        self:_init(...)
+        return self
+      end
   })
 
   -- 'init' gets called at the start of each episode.
@@ -136,9 +136,9 @@ function factory.createLevelApi(kwargs)
       self.trialId = self.trialId + 1
       self:addArray()
       self.pac:addTimer{
-        name = 'trial_timeout',
-        timeout = defaults.TRIAL_TIMEOUT,
-        callback = function(...) return self:trialTimeoutCallback() end
+          name = 'trial_timeout',
+          timeout = defaults.TRIAL_TIMEOUT,
+          callback = function(...) return self:trialTimeoutCallback() end
       }
       -- Measure reaction time since the trial started.
       self._currentTrialStartTime = game:episodeTimeSeconds()
@@ -220,10 +220,10 @@ function factory.createLevelApi(kwargs)
       local image = self:createImage(
           shape, color, objectHeight, objectWidth)
       self.pac:addWidget{
-        name = 'image_' .. i,
-        pos = pos,
-        size = size,
-        image = image,
+          name = 'image_' .. i,
+          pos = pos,
+          size = size,
+          image = image,
       }
     end
 
@@ -245,12 +245,12 @@ function factory.createLevelApi(kwargs)
         hoverEndCallback = self.onHoverEndIncorrect
       end
       self.pac:addWidget{
-        name = 'button_' .. tostring(i),
-        image = buttonImage,
-        pos = {buttonPosX, 1 - defaults.BUTTON_SIZE},
-        size = {defaults.BUTTON_SIZE, defaults.BUTTON_SIZE},
-        mouseHoverCallback = responseCallback,
-        mouseHoverEndCallback = hoverEndCallback,
+          name = 'button_' .. tostring(i),
+          image = buttonImage,
+          pos = {buttonPosX, 1 - defaults.BUTTON_SIZE},
+          size = {defaults.BUTTON_SIZE, defaults.BUTTON_SIZE},
+          mouseHoverCallback = responseCallback,
+          mouseHoverEndCallback = hoverEndCallback,
       }
     end
   end

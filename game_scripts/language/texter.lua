@@ -24,11 +24,11 @@ See also `format` method for a higher level interface.
 Example:
 
     data = {
-      count = 2,
-      pets = {
-        { name = {first = 'Ajax', last = 'The Cat' } },
-        { name = {first = 'Fido', last = 'The Dog' } }
-      }
+        count = 2,
+        pets = {
+            { name = {first = 'Ajax', last = 'The Cat' } },
+            { name = {first = 'Fido', last = 'The Dog' } }
+        }
     }
 
     assert(decode('count', data) == 2)
@@ -53,11 +53,11 @@ end
 Example:
 
     data = {
-      count = 2,
-      pets = {
-        { name = {first = 'Ajax', last = 'The Cat' } },
-        { name = {first = 'Fido', last = 'The Dog' } }
-      }
+        count = 2,
+        pets = {
+            { name = {first = 'Ajax', last = 'The Cat' } },
+            { name = {first = 'Fido', last = 'The Dog' } }
+        }
     }
 
     assert(format('[count] pets', data) == '2 pets')

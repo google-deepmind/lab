@@ -362,8 +362,8 @@ function factory.createLevelApi(kwargs)
 
   function env:transformToFrameCoords(coords)
     self._frameCoords:val({
-      math.floor((coords(1):val() / CANVAS_SIZE) * self._frameSize[1] + 0.5),
-      math.floor((coords(2):val() / CANVAS_SIZE) * self._frameSize[2] + 0.5)
+        math.floor((coords(1):val() / CANVAS_SIZE) * self._frameSize[1] + 0.5),
+        math.floor((coords(2):val() / CANVAS_SIZE) * self._frameSize[2] + 0.5)
     })
     return self._frameCoords
   end
@@ -489,10 +489,10 @@ function factory.createLevelApi(kwargs)
   end
 
   return psychlab_factory.createLevelApi{
-    env = point_and_click,
-    envOpts = {environment = env, screenSize = SCREEN_SIZE,
-               maxStepsOffScreen = kwargs.maxStepsOffScreen},
-    episodeLengthSeconds = kwargs.episodeLengthSeconds
+      env = point_and_click,
+      envOpts = {environment = env, screenSize = SCREEN_SIZE,
+                 maxStepsOffScreen = kwargs.maxStepsOffScreen},
+      episodeLengthSeconds = kwargs.episodeLengthSeconds
   }
 end
 

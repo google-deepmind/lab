@@ -39,55 +39,55 @@ pickups.moveType = {
 }
 
 pickups.defaults = {
-  apple_reward = {
-      name = 'Apple',
-      classname = 'apple_reward',
-      model = 'models/apple.md3',
-      quantity = 1,
-      type = pickups.type.REWARD
-  },
-  lemon_reward = {
-      name = 'Lemon',
-      classname = 'lemon_reward',
-      model = 'models/lemon.md3',
-      quantity = -1,
-      type = pickups.type.REWARD
-  },
-  strawberry_reward = {
-      name = 'Strawberry',
-      classname = 'strawberry_reward',
-      model = 'models/strawberry.md3',
-      quantity = 2,
-      type = pickups.type.REWARD
-  },
-  fungi_reward = {
-      name = 'Fungi',
-      classname = 'fungi_reward',
-      model = 'models/toadstool.md3',
-      quantity = -10,
-      type = pickups.type.REWARD
-  },
-  watermelon_goal = {
-      name = 'Watermelon',
-      classname = 'watermelon_goal',
-      model = 'models/watermelon.md3',
-      quantity = 20,
-      type = pickups.type.GOAL
-  },
-  goal = {
-      name = 'Goal',
-      classname = 'goal',
-      model = 'models/goal_object_02.md3',
-      quantity = 10,
-      type = pickups.type.GOAL
-  },
-  mango_goal = {
-      name = 'Mango',
-      classname = 'mango_goal',
-      model = 'models/mango.md3',
-      quantity = 100,
-      type = pickups.type.GOAL
-  }
+    apple_reward = {
+        name = 'Apple',
+        classname = 'apple_reward',
+        model = 'models/apple.md3',
+        quantity = 1,
+        type = pickups.type.REWARD
+    },
+    lemon_reward = {
+        name = 'Lemon',
+        classname = 'lemon_reward',
+        model = 'models/lemon.md3',
+        quantity = -1,
+        type = pickups.type.REWARD
+    },
+    strawberry_reward = {
+        name = 'Strawberry',
+        classname = 'strawberry_reward',
+        model = 'models/strawberry.md3',
+        quantity = 2,
+        type = pickups.type.REWARD
+    },
+    fungi_reward = {
+        name = 'Fungi',
+        classname = 'fungi_reward',
+        model = 'models/toadstool.md3',
+        quantity = -10,
+        type = pickups.type.REWARD
+    },
+    watermelon_goal = {
+        name = 'Watermelon',
+        classname = 'watermelon_goal',
+        model = 'models/watermelon.md3',
+        quantity = 20,
+        type = pickups.type.GOAL
+    },
+    goal = {
+        name = 'Goal',
+        classname = 'goal',
+        model = 'models/goal_object_02.md3',
+        quantity = 10,
+        type = pickups.type.GOAL
+    },
+    mango_goal = {
+        name = 'Mango',
+        classname = 'mango_goal',
+        model = 'models/mango.md3',
+        quantity = 100,
+        type = pickups.type.GOAL
+    }
 }
 
 return pickups

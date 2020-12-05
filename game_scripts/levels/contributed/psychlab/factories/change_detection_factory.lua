@@ -248,13 +248,13 @@ function factory.createLevelApi(kwargs)
 
     -- setup the adaptive staircase procedure
     self.staircase = psychlab_staircase.createStaircase1D{
-      sequence = kwargs.setSizes,
-      correctRewardSequence = kwargs.correctRewardSequence,
-      fractionToPromote = kwargs.fractionToPromote,
-      fractionToDemote = kwargs.fractionToDemote,
-      probeProbability = kwargs.probeProbability,
-      fixedTestLength = kwargs.fixedTestLength,
-      initialDifficultyLevel = kwargs.initialDifficultyLevel,
+        sequence = kwargs.setSizes,
+        correctRewardSequence = kwargs.correctRewardSequence,
+        fractionToPromote = kwargs.fractionToPromote,
+        fractionToDemote = kwargs.fractionToDemote,
+        probeProbability = kwargs.probeProbability,
+        fixedTestLength = kwargs.fixedTestLength,
+        initialDifficultyLevel = kwargs.initialDifficultyLevel,
     }
 
     -- blockId groups together all rows written during the same episode

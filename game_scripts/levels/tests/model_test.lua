@@ -23,25 +23,25 @@ local api = {}
 function api:createModel(modelName)
   local models = {
       cone = model:cone{
-        phiSegments = 4,
-        radiusSegments = 4,
-        heightSegments = 4,
-        shaderName = 'textures/model/beam'
+          phiSegments = 4,
+          radiusSegments = 4,
+          heightSegments = 4,
+          shaderName = 'textures/model/beam'
       },
       cube = model:cube{
-        segments = 4,
-        shaderName = 'textures/model/beam'
+          segments = 4,
+          shaderName = 'textures/model/beam'
       },
       cylinder = model:cylinder{
-        phiSegments = 4,
-        radiusSegments = 4,
-        heightSegments = 4,
-        shaderName = 'textures/model/beam'
+          phiSegments = 4,
+          radiusSegments = 4,
+          heightSegments = 4,
+          shaderName = 'textures/model/beam'
       },
       sphere = model:sphere{
-        phiSegments = 4,
-        thetaSegments = 4,
-        shaderName = 'textures/model/beam'
+          phiSegments = 4,
+          thetaSegments = 4,
+          shaderName = 'textures/model/beam'
       },
       hierarchy = model:hierarchy{
           transform = transform.rotateX(180),

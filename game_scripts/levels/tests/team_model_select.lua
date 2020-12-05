@@ -32,8 +32,8 @@ local MAP = [[
 ]]
 
 local api = factory.createLevelApi{
-  episodeLengthSeconds = 60 * 5,
-  botCount = 6,
+    episodeLengthSeconds = 60 * 5,
+    botCount = 6,
 }
 
 local spawnCount = 1

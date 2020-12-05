@@ -38,7 +38,7 @@ end
 
 function api:customObservationSpec()
   return {
-    {name = 'LOOK_AT', type = 'Doubles', shape = lookAt:shape()},
+      {name = 'LOOK_AT', type = 'Doubles', shape = lookAt:shape()},
   }
 end
 

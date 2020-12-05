@@ -155,11 +155,11 @@ function factory.createLevelApi(kwargs)
   env.__index = env
 
   setmetatable(env, {
-    __call = function (cls, ...)
-      local self = setmetatable({}, cls)
-      self:_init(...)
-      return self
-    end
+      __call = function (cls, ...)
+        local self = setmetatable({}, cls)
+        self:_init(...)
+        return self
+      end
   })
 
   -- 'init' gets called at the start of each episode.
@@ -253,9 +253,9 @@ function factory.createLevelApi(kwargs)
       self.currentTrial.reward = 0
       self:addArray()
       self.pac:addTimer{
-        name = 'trial_timeout',
-        timeout = TRIAL_TIMEOUT,
-        callback = function(...) return self:trialTimeoutCallback() end
+          name = 'trial_timeout',
+          timeout = TRIAL_TIMEOUT,
+          callback = function(...) return self:trialTimeoutCallback() end
       }
 
       self.currentTrial.trialId = self.trialId
@@ -422,12 +422,12 @@ function factory.createLevelApi(kwargs)
             callback = nil
           end
           self.pac:addWidget{
-            name = 'image_' .. i .. '_' .. j,
-            pos = pos,
-            size = size,
-            image = image,
-            imageLayer = BACK_LAYER,
-            mouseHoverCallback = callback,
+              name = 'image_' .. i .. '_' .. j,
+              pos = pos,
+              size = size,
+              image = image,
+              imageLayer = BACK_LAYER,
+              mouseHoverCallback = callback,
           }
         end
       end
@@ -483,19 +483,19 @@ function factory.createLevelApi(kwargs)
     end
     if leftSide then
       self.pac:addWidget{
-        name = 'respond_left',
-        pos = {0.0, 0.0},
-        size = {0.4, 1.0},
-        imageLayer = FRONT_LAYER,
-        mouseHoverCallback = callback,
+          name = 'respond_left',
+          pos = {0.0, 0.0},
+          size = {0.4, 1.0},
+          imageLayer = FRONT_LAYER,
+          mouseHoverCallback = callback,
       }
     else
       self.pac:addWidget{
-        name = 'respond_right',
-        pos = {0.6, 0.0},
-        size = {0.4, 1.0},
-        imageLayer = FRONT_LAYER,
-        mouseHoverCallback = callback,
+          name = 'respond_right',
+          pos = {0.6, 0.0},
+          size = {0.4, 1.0},
+          imageLayer = FRONT_LAYER,
+          mouseHoverCallback = callback,
       }
     end
   end
@@ -528,22 +528,22 @@ function factory.createLevelApi(kwargs)
       size = {0.05, 1.0}
     end
     self.pac:addWidget{
-      name = 'respond_left',
-      pos = leftPos,
-      size = size,
-      image = self.images.whiteButton,
-      imageLayer = FRONT_LAYER,
-      mouseHoverCallback = leftResponseCallback,
-      mouseHoverEndCallback = hoverEndLeft,
+        name = 'respond_left',
+        pos = leftPos,
+        size = size,
+        image = self.images.whiteButton,
+        imageLayer = FRONT_LAYER,
+        mouseHoverCallback = leftResponseCallback,
+        mouseHoverEndCallback = hoverEndLeft,
     }
     self.pac:addWidget{
-      name = 'respond_right',
-      pos = rightPos,
-      size = size,
-      image = self.images.whiteButton,
-      imageLayer = FRONT_LAYER,
-      mouseHoverCallback = rightResponseCallback,
-      mouseHoverEndCallback = hoverEndRight,
+        name = 'respond_right',
+        pos = rightPos,
+        size = size,
+        image = self.images.whiteButton,
+        imageLayer = FRONT_LAYER,
+        mouseHoverCallback = rightResponseCallback,
+        mouseHoverEndCallback = hoverEndRight,
     }
   end
 

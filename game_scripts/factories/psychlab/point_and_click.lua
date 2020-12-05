@@ -279,9 +279,9 @@ end
 -- Calculate normalised co-ordinates with respect to the widget.
 local function _normaliseCoord(widget, mouseX, mouseY)
   return {
-    (mouseX - widget.bounds.xMin) / (widget.bounds.xMax - widget.bounds.xMin),
-    (mouseY - widget.bounds.yMin) / (widget.bounds.yMax - widget.bounds.yMin),
-    mouseX, mouseY
+      (mouseX - widget.bounds.xMin) / (widget.bounds.xMax - widget.bounds.xMin),
+      (mouseY - widget.bounds.yMin) / (widget.bounds.yMax - widget.bounds.yMin),
+      mouseX, mouseY
   }
 end
 

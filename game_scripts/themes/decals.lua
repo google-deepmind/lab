@@ -30,6 +30,6 @@ for i = 1, NUMBER_OF_STYLES do
 end
 
 return {
-  decals = DEFAULT_WALL_DECALS,
-  images = DEFAULT_WALL_IMAGES,
+    decals = DEFAULT_WALL_DECALS,
+    images = DEFAULT_WALL_IMAGES,
 }

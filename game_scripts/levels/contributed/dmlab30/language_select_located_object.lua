@@ -188,8 +188,8 @@ local GOAL_REWARD = 10
 local COLORS = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
 local objectContext = object_generator.createContext{
     attributes = {
-      color = COLORS,
-      pattern = {'solid'},
+        color = COLORS,
+        pattern = {'solid'},
     },
     attributeDefaults = {
         size = 'medium',

@@ -37,20 +37,20 @@ local timeout = require 'decorators.timeout'
 local factory = {}
 
 local ITEMS = {
-  key = {
-      name = 'Key',
-      classname = 'key',
-      model = 'models/hr_key_lrg.md3',
-      quantity = 1,
-      type = pickups.type.REWARD,
-  },
-  goal = {
-      name = 'Goal',
-      classname = 'goal',
-      model = 'models/hr_ice_lolly_lrg.md3',
-      quantity = 50,
-      type = pickups.type.REWARD
-  },
+    key = {
+        name = 'Key',
+        classname = 'key',
+        model = 'models/hr_key_lrg.md3',
+        quantity = 1,
+        type = pickups.type.REWARD,
+    },
+    goal = {
+        name = 'Goal',
+        classname = 'goal',
+        model = 'models/hr_ice_lolly_lrg.md3',
+        quantity = 50,
+        type = pickups.type.REWARD
+    },
 }
 
 local POSSIBLE_COLORS = {

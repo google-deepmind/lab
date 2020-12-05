@@ -165,12 +165,12 @@ local function decorate(api)
 end
 
 return {
-  RESULT = RESULT,
-  decorate = decorate,
-  addReadWrite = addReadWrite,
-  addReadOnly = addReadOnly,
-  addWriteOnly = addWriteOnly,
-  removeReadWrite = removeReadWrite,
-  removeReadOnly = removeReadOnly,
-  removeWriteOnly = removeWriteOnly,
+    RESULT = RESULT,
+    decorate = decorate,
+    addReadWrite = addReadWrite,
+    addReadOnly = addReadOnly,
+    addWriteOnly = addWriteOnly,
+    removeReadWrite = removeReadWrite,
+    removeReadOnly = removeReadOnly,
+    removeWriteOnly = removeWriteOnly,
 }

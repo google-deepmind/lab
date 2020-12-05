@@ -168,10 +168,10 @@ local function playersHoldingFlag()
 end
 
 local FLAG_STATE = {
-  NONE = 0,
-  HOME = 1,
-  CARRIED = 2,
-  DROPPED = 3,
+    NONE = 0,
+    HOME = 1,
+    CARRIED = 2,
+    DROPPED = 3,
 }
 
 local function redFlag()
@@ -212,9 +212,9 @@ local function blueFlag()
 end
 
 local HOME_FLAG_STATE = {
-  NONE = 0,
-  HOME = 1,
-  AWAY = 2,
+    NONE = 0,
+    HOME = 1,
+    AWAY = 2,
 }
 
 local function redFlagHome()

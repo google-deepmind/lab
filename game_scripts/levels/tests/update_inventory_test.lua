@@ -51,8 +51,8 @@ end
 
 function api:customObservationSpec()
   return {
-    {name = 'DEBUG.AMOUNT', type = 'Doubles', shape = {1}},
-    {name = 'DEBUG.GADGET', type = 'Doubles', shape = {1}},
+      {name = 'DEBUG.AMOUNT', type = 'Doubles', shape = {1}},
+      {name = 'DEBUG.GADGET', type = 'Doubles', shape = {1}},
   }
 end
 

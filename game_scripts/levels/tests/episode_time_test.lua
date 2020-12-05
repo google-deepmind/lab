@@ -22,7 +22,7 @@ local api = {}
 
 function api:customObservationSpec()
   return {
-    {name = 'EPISODE_TIME_SECONDS', type = 'Doubles', shape = {1}},
+      {name = 'EPISODE_TIME_SECONDS', type = 'Doubles', shape = {1}},
   }
 end
 

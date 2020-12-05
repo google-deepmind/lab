@@ -296,11 +296,11 @@ function factory.createLevelApi(kwargs)
   env.__index = env
 
   setmetatable(env, {
-    __call = function (cls, ...)
-      local self = setmetatable({}, cls)
-      self:_init(...)
-      return self
-    end
+      __call = function (cls, ...)
+        local self = setmetatable({}, cls)
+        self:_init(...)
+        return self
+      end
   })
 
   --[[ Function to define a one-dimensional adaptive staircase procedure

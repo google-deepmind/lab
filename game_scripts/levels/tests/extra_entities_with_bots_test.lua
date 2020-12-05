@@ -52,7 +52,7 @@ end
 
 function api:addBots()
   local bots = {
-    {name = 'Cygni', skill = 5.0}
+      {name = 'Cygni', skill = 5.0}
   }
   return bots
 end

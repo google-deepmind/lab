@@ -354,16 +354,16 @@ function fastmapping.createLevelApi(kwargs)
     kwargs, objectCount, distractorObjectCount)
 
   return factory.createLevelApi{
-    episodeLengthSeconds = kwargs.episodeLengthSeconds,
-    instructor = fastmapping.defaultInstructor,
-    levelMapSelector = selectors.createIdentity(fastMap),
-    objectContext = object_generator.createContext{
-        attributes = {
-            shape = kwargs.goalShapes,
-            pattern = {'solid'}
-        }
-    },
-    taskSelector = selectors.createIdentity(task),
+      episodeLengthSeconds = kwargs.episodeLengthSeconds,
+      instructor = fastmapping.defaultInstructor,
+      levelMapSelector = selectors.createIdentity(fastMap),
+      objectContext = object_generator.createContext{
+          attributes = {
+              shape = kwargs.goalShapes,
+              pattern = {'solid'}
+          }
+      },
+      taskSelector = selectors.createIdentity(task),
   }
 end
 

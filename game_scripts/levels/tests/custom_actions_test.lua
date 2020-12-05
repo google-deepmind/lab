@@ -30,8 +30,8 @@ end
 
 function api:customDiscreteActionSpec()
   return {
-    {name = 'SWITCH_GADGET', min = -1, max = 1},
-    {name = 'SELECT_GADGET', min = 0, max = 10},
+      {name = 'SWITCH_GADGET', min = -1, max = 1},
+      {name = 'SELECT_GADGET', min = 0, max = 10},
   }
 end
 

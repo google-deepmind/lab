@@ -68,10 +68,10 @@ the message will actually be printed.
 ]]
 
 local log = {
-  INFO = 0,
-  WARN = -1,
-  ERROR = -2,
-  NEVER = -3,
+    INFO = 0,
+    WARN = -1,
+    ERROR = -2,
+    NEVER = -3,
 }
 
 local ESCAPE = string.char(27)

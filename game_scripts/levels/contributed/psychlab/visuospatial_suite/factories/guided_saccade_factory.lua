@@ -388,8 +388,8 @@ function factory.createLevelApi(kwargs)
     for i = 1, NUM_LOCATIONS do
       local radians = 2 * math.pi * i / NUM_LOCATIONS
       local pos = {
-        0.5 * (1 + kwargs.locationRadius * math.sin(radians)),
-        0.5 * (1 + kwargs.locationRadius * math.cos(radians))
+          0.5 * (1 + kwargs.locationRadius * math.sin(radians)),
+          0.5 * (1 + kwargs.locationRadius * math.cos(radians))
       }
       locations[i] = pos
       local guideName = 'guide_' .. tostring(i)

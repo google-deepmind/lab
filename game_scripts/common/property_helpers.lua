@@ -267,10 +267,10 @@ local function removeProperty(properties, keyList)
 end
 
 return {
-  RESULT = RESULT,
-  addProperty = addProperty,
-  removeProperty = removeProperty,
-  writeProperty = writeProperty,
-  readProperty = readProperty,
-  headTailSplit = headTailSplit,
+    RESULT = RESULT,
+    addProperty = addProperty,
+    removeProperty = removeProperty,
+    writeProperty = writeProperty,
+    readProperty = readProperty,
+    headTailSplit = headTailSplit,
 }

@@ -127,10 +127,10 @@ function factory.createLevelApi(kwargs)
               c = ''
               for n = 1, kwargs.goalHeight do
                  c = c .. '\n\n' .. maker:makeEntity{
-                    i = i,
-                    j = j,
-                    height = height + (n - 1) * PICKUP_HEIGHT,
-                    classname = 'goal',
+                     i = i,
+                     j = j,
+                     height = height + (n - 1) * PICKUP_HEIGHT,
+                     classname = 'goal',
                  }
               end
               return c

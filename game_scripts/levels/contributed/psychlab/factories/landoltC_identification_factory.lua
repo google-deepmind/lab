@@ -474,10 +474,10 @@ function factory.createLevelApi(kwargs)
   end
 
   return psychlab_factory.createLevelApi{
-    env = point_and_click,
-    envOpts = {environment = env, screenSize = SCREEN_SIZE,
-               maxStepsOffScreen = MAX_STEPS_OFF_SCREEN},
-    episodeLengthSeconds = 150
+      env = point_and_click,
+      envOpts = {environment = env, screenSize = SCREEN_SIZE,
+                 maxStepsOffScreen = MAX_STEPS_OFF_SCREEN},
+      episodeLengthSeconds = 150
   }
 end
 
