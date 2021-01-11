@@ -6,6 +6,16 @@ licenses(["restricted"])
 
 exports_files(["LICENSE"])
 
+config_setting(
+    name = "is_linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+config_setting(
+    name = "is_macos",
+    constraint_values = ["@platforms//os:macos"],
+)
+
 CODE_DIR = "engine/code"
 
 ARCH_VAR = "-DARCH_STRING=\\\"x86_64\\\""

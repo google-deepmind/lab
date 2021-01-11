@@ -3,16 +3,6 @@
 #   This rule works for Debian and Ubuntu, and for MacOS. Other platforms might
 #   keep the headers in different places.
 
-config_setting(
-    name = "is_linux",
-    constraint_values = ["@platforms//os:linux"],
-)
-
-config_setting(
-    name = "is_macos",
-    constraint_values = ["@platforms//os:macos"],
-)
-
 cc_library(
     name = "python_headers_linux",
     hdrs = select(
@@ -53,8 +43,8 @@ alias(
     name = "python_headers",
     actual = select(
         {
-            ":is_linux": ":python_headers_linux",
-            ":is_macos": ":python_headers_macos",
+            "@//:is_linux": ":python_headers_linux",
+            "@//:is_macos": ":python_headers_macos",
         },
         no_match_error = "Unsupported platform; only Linux and MacOS are supported.",
     ),
