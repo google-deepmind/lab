@@ -7,3 +7,8 @@ build --cxxopt=-std=c++11
 
 test --test_output=errors
 test --test_tag_filters=-noprecommit
+
+build:libc++ --repo_env=CXXFLAGS=-stdlib=libc++
+build:libc++ --repo_env=LDFLAGS=-stdlib=libc++:-fuse-ld=lld
+build:libc++ --repo_env=BAZEL_CXXOPTS=-stdlib=libc++
+build:libc++ --repo_env=BAZEL_LINKOPTS=-lc++:-lm:-fuse-ld=lld
