@@ -13,25 +13,42 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-20.04
+    name: Build and test ${{matrix.cfg.name}} ${{matrix.os.name}}
+
+    runs-on: ${{matrix.os.id}}
+
+    strategy:
+      matrix:
+        os:
+          - { name: 'Linux', id: 'ubuntu-20.04' }
+        cfg:
+          - { name: 'GCC', cc: gcc-10, cxx: g++-10, config: --copt=-Wno-maybe-uninitialized }
+          - { name: 'LLVM+libstdc++', cc: clang, cxx: clang++, config: --copt=-Wno-uninitialized }
+          - { name: 'LLVM+libc++', cc: clang, cxx: clang++, config: --config=libc++ --copt=-Wno-uninitialized }
+
+    env:
+      CC:  ${{matrix.cfg.cc}}
+      CXX: ${{matrix.cfg.cxx}}
+
     steps:
       - uses: actions/checkout@v2
       - name: install infrastructure
         run: |
           sudo apt-get update
           sudo apt-get install gettext python2-dev python3-dev libsdl2-dev libosmesa6-dev python-numpy-dev python3-numpy-dev python-pil python3-pil python-enum34
-          sudo find /usr -type f -name Python.h -o -name arrayobject.h
+          sudo find /usr -type f -name Python.h -o -name arrayobject.h -o -name functional -o -name -filesystem
+          sudo ln -s /usr/lib/llvm-10/include/c++/v1 /usr/include/c++/v1
       - name: build
         run: |
-          bazel --bazelrc=.precommit.bazelrc build --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //...
+          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
       - name: run-tests
         timeout-minutes: 45
         run: |
-          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //...
-          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:python_module_test.py2 --test_tag_filters="" --test_arg=--verbose
-          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:python_module_test.py3 --test_tag_filters="" --test_arg=--verbose
-          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py2 --test_tag_filters="" --test_arg=--verbose
-          bazel --bazelrc=.precommit.bazelrc test  --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py3 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py2 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py3 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py2 --test_tag_filters="" --test_arg=--verbose
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:dmenv_module_test.py3 --test_tag_filters="" --test_arg=--verbose
       - name: run-agent
         run: |
-          bazel --bazelrc=.precommit.bazelrc run   --copt=-Wno-maybe-uninitialized --copt=-Wno-sign-compare --define headless=osmesa //:python_random_agent
+          bazel --bazelrc=.precommit.bazelrc run   ${{matrix.cfg.config}} --copt=-Wno-sign-compare --define headless=osmesa //:python_random_agent
