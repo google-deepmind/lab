@@ -154,6 +154,12 @@ http_archive(
 
 # TODO: Replace with hermetic build
 new_local_repository(
+    name = "glib_local_archive",
+    build_file = "@//bazel:glib.BUILD",
+    path ="/usr/local/Cellar/glib/2.68.3",
+)
+
+new_local_repository(
     name = "sdl_system",
     build_file = "@//bazel:sdl.BUILD",
     path = "/usr",

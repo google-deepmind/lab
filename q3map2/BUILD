@@ -91,9 +91,11 @@ cc_binary(
         ":picomodel",
         "//third_party/md:md4",
         "//third_party/md:md5",
-        "@glib_archive//:glib",
         "@jpeg_archive//:jpeg",
         "@libxml_archive//:libxml",
         "@png_archive//:png",
-    ],
+    ] + select({
+        "//:is_linux": ["@glib_archive//:glib"],
+        "//:is_macos": ["@glib_local_archive//:glib_local"],
+    }),
 )
