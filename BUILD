@@ -814,10 +814,15 @@ cc_library(
     hdrs = ["public/dmlab.h"],
     copts = IOQ3_COMMON_COPTS,
     defines = IOQ3_COMMON_DEFINES,
-    linkopts = [
-        "-lGL",
-        "-lrt",
-    ],
+    linkopts = select({
+        ":is_linux": [
+            "-lGL",
+            "-lrt",
+        ],
+        ":is_macos": [
+            "-framework OpenGL",
+        ],
+    }),
     deps = IOQ3_COMMON_DEPS,
     alwayslink = 1,
 )
@@ -950,7 +955,10 @@ config_setting(
 
 cc_binary(
     name = "libdmlab_headless_hw.so",
-    linkopts = ["-Wl,--version-script,$(location :dmlab.lds)"],
+    linkopts = select({
+        ":is_linux": ["-Wl,--version-script,$(location :dmlab.lds)"],
+        ":is_macos": [],
+    }),
     linkshared = 1,
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
@@ -963,7 +971,10 @@ cc_binary(
 
 cc_binary(
     name = "libdmlab_headless_sw.so",
-    linkopts = ["-Wl,--version-script,$(location :dmlab.lds)"],
+    linkopts = select({
+        ":is_linux": ["-Wl,--version-script,$(location :dmlab.lds)"],
+        ":is_macos": [],
+    }),
     linkshared = 1,
     linkstatic = 1,
     visibility = ["//testing:__subpackages__"],
@@ -977,10 +988,16 @@ cc_library(
     name = "dmlab_so_loader",
     srcs = ["public/dmlab_so_loader.cc"],
     hdrs = ["public/dmlab.h"],
-    data = [
-        ":libdmlab_headless_hw.so",
-        ":libdmlab_headless_sw.so",
-    ],
+    data = select({
+        ":is_linux": [
+            ":libdmlab_headless_hw.so",
+            ":libdmlab_headless_sw.so",
+        ],
+        ":is_macos": [
+            # On MacOS we don't have any software rendering.
+            ":libdmlab_headless_hw.so",
+        ],
+    }),
     linkopts = ["-ldl"],
     visibility = ["//testing:__subpackages__"],
     deps = [
@@ -1006,6 +1023,7 @@ cc_library(
         "dmlab_graphics_sdl": [":game_lib_sdl"],
         "//conditions:default": [":dmlab_so_loader"],
     }),
+    alwayslink = 1,
 )
 
 cc_binary(

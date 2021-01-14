@@ -36,7 +36,10 @@ cc_binary(
     name = "libenv_c_api_example.so",
     testonly = 1,
     srcs = ["env_c_api_example.cc"],
-    linkopts = ["-Wl,--version-script=$(location :env_c_api_example.lds)"],
+    linkopts = select({
+        "@//:is_linux": ["-Wl,--version-script=$(location :env_c_api_example.lds)"],
+        "@//:is_macos": [],
+    }),
     linkshared = 1,
     linkstatic = 1,
     deps = [
