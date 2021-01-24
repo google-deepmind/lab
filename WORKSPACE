@@ -95,11 +95,11 @@ http_archive(
 http_archive(
     name = "png_archive",
     build_file = "@//bazel:png.BUILD",
-    sha256 = "7ffa5eb8f9f3ed23cf107042e5fec28699718916668bbce48b968600475208d3",
-    strip_prefix = "libpng-1.6.34",
+    sha256 = "c2c50c13a727af73ecd3fc0167d78592cf5e0bca9611058ca414b6493339c784",
+    strip_prefix = "libpng-1.6.37",
     urls = [
-        "https://mirror.bazel.build/github.com/glennrp/libpng/archive/v1.6.34.zip",
-        "https://github.com/glennrp/libpng/archive/v1.6.34.zip",
+        "https://mirror.bazel.build/github.com/glennrp/libpng/archive/v1.6.37.zip",
+        "https://github.com/glennrp/libpng/archive/v1.6.37.zip",
     ],
 )
 
