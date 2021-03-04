@@ -227,7 +227,7 @@ py2and3_test(
     deps = ["@six_archive//:six"],
 )
 
-py2and3_test(
+py_test(
     name = "dmenv_module_test",
     srcs = ["dmenv_module_test.py"],
     tags = ["noprecommit"],
