@@ -837,7 +837,10 @@ cc_library(
     hdrs = ["public/dmlab.h"],
     copts = IOQ3_COMMON_COPTS,
     defines = IOQ3_COMMON_DEFINES,
-    linkopts = ["-lOSMesa"],
+    linkopts = [
+        "-lOSMesa",
+        "-lrt",
+    ],
     deps = IOQ3_COMMON_DEPS,
     alwayslink = 1,
 )
@@ -886,6 +889,19 @@ cc_library(
     ],
     deps = IOQ3_COMMON_DEPS + ["//third_party/GL/util:egl_util"],
     alwayslink = 1,
+)
+
+cc_test(
+    name = "dmlab_connect_osmesa_test",
+    srcs = ["public/dmlab_connect_test.cc"],
+    data = GAME_ASSETS,
+    deps = [
+        ":game_lib_headless_osmesa",
+        "//deepmind/support:test_srcdir",
+        "//third_party/rl_api:env_c_api",
+        "//third_party/rl_api:env_c_api_test_suite",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 cc_binary(
