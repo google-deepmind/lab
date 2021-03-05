@@ -18,6 +18,7 @@
 
 #include "deepmind/tensor/tensor_view.h"
 
+#include <cstddef>
 #include <iomanip>
 #include <sstream>
 
@@ -56,7 +57,7 @@ void Layout::PrintToStream(
 
   std::vector<Skip> skips(shape().size());
   if (num_elements > max_num_elements) {
-    for (int i = 0; i < skips.size(); ++i) {
+    for (std::size_t i = 0; i < skips.size(); ++i) {
       if (shape()[i] < 7) continue;
       skips[i].low = 3;
       skips[i].high = shape()[i] - 3;
@@ -76,7 +77,7 @@ void Layout::PrintToStream(
     int open_brackets = std::distance(
         index.rbegin(), std::find_if(index.rbegin(), index.rend(),
                                      [](std::size_t val) { return val != 0; }));
-    for (int i = 0; i < index.size(); ++i) {
+    for (std::size_t i = 0; i < index.size(); ++i) {
       if (skips[i].low >= skips[i].high) {
         continue;
       }
@@ -104,7 +105,7 @@ void Layout::PrintToStream(
       *os << ", ";
     } else {
       auto s_iter = s.rbegin();
-      int closing_brackets = 0;
+      std::size_t closing_brackets = 0;
       for (auto it = index.rbegin(); it != index.rend() && (*it) + 1 == *s_iter;
            ++it, ++s_iter) {
         ++closing_brackets;
