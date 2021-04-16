@@ -16,8 +16,8 @@ http_archive(
 
 http_archive(
     name = "bazel_skylib",
-    strip_prefix = "bazel-skylib-master",
-    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/master.zip"],
+    strip_prefix = "bazel-skylib-main",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/main.zip"],
 )
 
 http_archive(
