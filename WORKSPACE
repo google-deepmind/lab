@@ -148,8 +148,8 @@ http_archive(
     repo_mapping = {
         "@python_headers": "@python_system",
     },
-    strip_prefix = "tree-master",
-    urls = ["https://github.com/deepmind/tree/archive/master.zip"],
+    strip_prefix = "tree-0.1.6",
+    urls = ["https://github.com/deepmind/tree/archive/0.1.6.zip"],
 )
 
 http_archive(
