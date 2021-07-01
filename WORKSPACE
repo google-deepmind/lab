@@ -9,12 +9,6 @@ http_archive(
 )
 
 http_archive(
-    name = "rules_cc",
-    strip_prefix = "rules_cc-master",
-    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
-)
-
-http_archive(
     name = "bazel_skylib",
     strip_prefix = "bazel-skylib-main",
     urls = ["https://github.com/bazelbuild/bazel-skylib/archive/main.zip"],
