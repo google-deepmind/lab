@@ -1027,7 +1027,7 @@ cc_binary(
     ],
     deps = [
         ":dmlablib",
-        "@python_system//:python",
+        "@python_system//:python_headers",
     ],
 )
 

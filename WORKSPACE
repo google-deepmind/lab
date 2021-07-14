@@ -1,6 +1,7 @@
 workspace(name = "org_deepmind_lab")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@//:python_system.bzl", "python_repo")
 
 http_archive(
     name = "com_google_googletest",
@@ -158,8 +159,7 @@ new_local_repository(
     path = "/usr",
 )
 
-new_local_repository(
+python_repo(
     name = "python_system",
-    build_file = "@//bazel:python.BUILD",
-    path = "/",
+    py_version = "PY3",
 )

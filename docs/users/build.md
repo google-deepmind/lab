@@ -68,10 +68,7 @@ If Python 3 support is not required, omit the packages that mention `python3`.
 
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
 
-4. If necessary, edit `python.BUILD` according to the [Python
-   instructions](#python-dependencies) below.
-
-5. Build *DeepMind Lab* and run a random agent. (Use the `-c opt` flag to enable
+4. Build *DeepMind Lab* and run a random agent. (Use the `-c opt` flag to enable
    optimizations.)
 
    ```shell
@@ -97,9 +94,9 @@ arguments. Run `bazel run :random_agent -- --help` to see those.
 
 *DeepMind Lab* does not include every dependency hermetically. In particular,
 Python is not included, but instead it must already be installed on your system.
-This means that depending on the details of where that library is installed, you
-may need to adjust the Bazel build rules in
-[`python.BUILD`](../../bazel/python.BUILD) to locate it correctly.
+Our Bazel workspace includes a mechanism to discover the location of the
+system's Python paths automatically by running the `python2` and `python3`
+interpreters. Additionally, NumPy must be available on your system, too.
 
 Bazel can build Python code using either Python 2 or Python 3. The default is
 Python 3, but each individual `py_binary` and `py_test` target can specify the
@@ -108,57 +105,10 @@ desired version using the
 argument. The build rules need to make the local installation path of correct
 version of Python available.
 
-If you only intend to use one of the two versions (e.g. on an older system where
-Python 3 with NumPy is not available), you only need to provide paths for that
-version; however, the codebase includes tests that run under both Python 2 and
-Python 3.
-
 The default build rules should work for Debian and Ubuntu. They use Bazel's
 [configurable attributes](https://docs.bazel.build/versions/master/be/common-definitions.html#configurable-attributes)
 to provide paths for Python 2 and Python 3, respectively, based on which version
-is required during a particular build. Note that paths in the build rules are
-relative to the root path specified in the [`WORKSPACE`](../../WORKSPACE) file
-(which is `"/usr"` by default).
-
-Python requires two separate dependencies: The CPython extension API, and NumPy.
-If, say, NumPy is installed in a custom location, like it is on SUSE Linux and
-RedHat Linux, you need to add the files from that location and set an include
-search path accordingly. For example:
-
-```python
-cc_library(
-    name = "python",
-    hdrs = select(
-        {
-            "@bazel_tools//tools/python:PY2": glob([
-                "include/python2.7/*.h",
-                "lib64/python2.7/site-packages/numpy/core/include/**/*.h",
-            ]),
-            "@bazel_tools//tools/python:PY3": glob([
-                "include/python3.6m/*.h",
-                "lib64/python3.6/site-packages/numpy/core/include/**/*.h",
-            ]),
-        },
-        no_match_error = "Internal error, Python version should be one of PY2 or PY3",
-    ),
-    includes = select(
-        {
-            "@bazel_tools//tools/python:PY2": [
-                "include/python2.7",
-                "lib64/python2.7/site-packages/numpy/core/include",
-            ],
-            "@bazel_tools//tools/python:PY3": [
-                "include/python3.6m",
-                "lib64/python3.6/site-packages/numpy/core/include",
-            ],
-        },
-        no_match_error = "Internal error, Python version should be one of PY2 or PY3",
-    ),
-    visibility = ["//visibility:public"],
-)
-```
-The outputs of `rpm -ql python` and `rpm -ql python-numpy-devel` might be
-helpful to find the right include directories on Red-Hat-like systems.
+is required during a particular build.
 
 If you have installed NumPy locally via PIP and would like to use the *DeepMind
 Lab* PIP module, then you should build the module against the version of NumPy
