@@ -27,6 +27,6 @@ py_library(
     deps = [
         ":dm_env",
         "@com_google_absl_py//absl/testing:absltest",
-        "@tree_archive//tree",
+        "@tree_archive//:tree",
     ],
 )

@@ -139,16 +139,14 @@ http_archive(
 
 http_archive(
     name = "tree_archive",
-    repo_mapping = {
-        "@python_headers": "@python_system",
-    },
-    strip_prefix = "tree-0.1.6",
-    urls = ["https://github.com/deepmind/tree/archive/0.1.6.zip"],
+    build_file = "@//bazel:tree.BUILD",
+    strip_prefix = "tree-master",
+    urls = ["https://github.com/deepmind/tree/archive/master.zip"],
 )
 
 http_archive(
     name = "pybind11_archive",
-    build_file = "@tree_archive//external:pybind11.BUILD",
+    build_file = "@//bazel:pybind11.BUILD",
     strip_prefix = "pybind11-master",
     urls = ["https://github.com/pybind/pybind11/archive/master.zip"],
 )
