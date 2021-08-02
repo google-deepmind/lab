@@ -17,12 +17,12 @@
 """Conformance test for the dm_env API bindings."""
 
 import os
-import unittest
+from absl.testing import absltest
 from dm_env import test_utils
 import dmenv_module
 
 
-class DmenvTest(test_utils.EnvironmentTestMixin, unittest.TestCase):
+class DmenvTest(test_utils.EnvironmentTestMixin, absltest.TestCase):
 
   def make_object_under_test(self):
     if 'TEST_SRCDIR' in os.environ:
@@ -41,4 +41,4 @@ class DmenvTest(test_utils.EnvironmentTestMixin, unittest.TestCase):
 
 
 if __name__ == '__main__':
-  unittest.main()
+  absltest.main()

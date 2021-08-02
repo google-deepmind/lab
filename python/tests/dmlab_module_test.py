@@ -20,14 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
 import deepmind_lab
 
 
-class DeepMindLabTest(unittest.TestCase):
+class DeepMindLabTest(absltest.TestCase):
 
   def testInitArgs(self):
     with six.assertRaisesRegex(self, TypeError, 'must be dict, not list'):
@@ -151,7 +151,7 @@ class DeepMindLabTest(unittest.TestCase):
         config={'height': '32', 'width': '32'})
     env.reset(episode=1, seed=7)
     events = env.events()
-    self.assertEqual(len(events), 4)
+    self.assertLen(events, 4)
 
     name, obs = events[0]
     self.assertEqual(name, 'TEXT')
@@ -173,14 +173,14 @@ class DeepMindLabTest(unittest.TestCase):
 
     action = np.zeros((7,), dtype=np.intc)
     env.step(action, num_steps=1)
-    self.assertEqual(len(env.events()), 0)
+    self.assertEmpty(env.events())
     env.step(action, num_steps=58)
-    self.assertEqual(len(env.events()), 0)
+    self.assertEmpty(env.events())
     env.step(action, num_steps=1)
     self.assertFalse(env.is_running())
 
     events = env.events()
-    self.assertEqual(len(events), 1)
+    self.assertLen(events, 1)
     name, obs = events[0]
     self.assertEqual(name, 'LOG')
     self.assertEqual(obs[0], 'Episode ended')
@@ -188,7 +188,7 @@ class DeepMindLabTest(unittest.TestCase):
     env.reset(episode=2, seed=8)
 
     events = env.events()
-    self.assertEqual(len(events), 4)
+    self.assertLen(events, 4)
 
     name, obs = events[0]
     self.assertEqual(name, 'TEXT')
@@ -262,4 +262,4 @@ if __name__ == '__main__':
   if os.environ.get('TEST_SRCDIR'):
     deepmind_lab.set_runfiles_path(os.path.join(
         os.environ['TEST_SRCDIR'], 'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

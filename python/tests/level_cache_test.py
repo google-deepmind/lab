@@ -23,14 +23,14 @@ import os
 import shutil
 import six
 import tempfile
-import unittest
+from absl.testing import absltest
 
 import numpy as np
 
 import deepmind_lab
 
 
-class LevelCacheTest(unittest.TestCase):
+class LevelCacheTest(absltest.TestCase):
 
   def setUp(self):
     self._test_dir = tempfile.mkdtemp()
@@ -154,4 +154,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

@@ -20,7 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
@@ -32,7 +32,7 @@ from python.tests.utils import test_environment_decorator
 _TEST_TRIALS = 5
 
 
-class GameControllerTest(unittest.TestCase):
+class GameControllerTest(absltest.TestCase):
 
   def setUp(self):
     self._env = test_environment_decorator.TestEnvironmentDecorator(
@@ -99,4 +99,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

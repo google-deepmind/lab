@@ -1,9 +1,9 @@
 # Description:
 #   Utility libraries for DM Lab tests.
 
-package(default_visibility = ["//python/tests:__subpackages__"])
-
 load("//python/tests:build_defs.bzl", "py2and3_test")
+
+package(default_visibility = ["//python/tests:__subpackages__"])
 
 licenses(["restricted"])  # GPLv2
 
@@ -20,7 +20,10 @@ py2and3_test(
     srcs = ["math_utils_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = [":math_utils"],
+    deps = [
+        ":math_utils",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
 )
 
 py_library(
@@ -29,6 +32,7 @@ py_library(
     srcs = ["test_environment_decorator.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@com_google_absl_py//absl/testing:absltest"],
 )
 
 py2and3_test(
@@ -38,6 +42,7 @@ py2and3_test(
     imports = ["python"],
     deps = [
         ":test_environment_decorator",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )
@@ -50,6 +55,7 @@ py_library(
     imports = ["python"],
     deps = [
         ":math_utils",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )
@@ -63,6 +69,7 @@ py2and3_test(
         ":game_controller",
         ":math_utils",
         ":test_environment_decorator",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )
@@ -84,6 +91,7 @@ py2and3_test(
     deps = [
         ":maze_game_controller",
         ":test_environment_decorator",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )

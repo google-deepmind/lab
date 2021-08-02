@@ -21,7 +21,7 @@ from __future__ import print_function
 
 import os
 import tempfile
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 from PIL import Image
@@ -90,7 +90,7 @@ class EnvironmentStub(object):
     return self._frame_index
 
 
-class TestEnvironmentDecoratorTest(unittest.TestCase):
+class TestEnvironmentDecoratorTest(absltest.TestCase):
 
   def setUp(self):
     self._env = EnvironmentStub()
@@ -186,4 +186,4 @@ class TestEnvironmentDecoratorTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-  unittest.main()
+  absltest.main()

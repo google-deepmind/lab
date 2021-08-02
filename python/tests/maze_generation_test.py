@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
@@ -28,7 +28,7 @@ MAZE_LAYOUT_OBSERVATION = 'DEBUG.MAZE.LAYOUT'
 MAZE_LAYOUT_TRIALS = 50
 
 
-class MazeGenerationTest(unittest.TestCase):
+class MazeGenerationTest(absltest.TestCase):
 
   def test_maze_layout_spread(self):
     layouts = set()
@@ -49,7 +49,7 @@ class MazeGenerationTest(unittest.TestCase):
           })
       env.reset(seed=i+1)
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
-    self.assertEqual(len(layouts), num_layouts)
+    self.assertLen(layouts, num_layouts)
     for i in six.moves.range(MAZE_LAYOUT_TRIALS):
       print('phase 3: trial {} out of {}'.format(i+1, MAZE_LAYOUT_TRIALS))
       env = deepmind_lab.Lab(
@@ -59,11 +59,11 @@ class MazeGenerationTest(unittest.TestCase):
           })
       env.reset(seed=i+1)
       layouts.add(env.observations()[MAZE_LAYOUT_OBSERVATION])
-    self.assertEqual(len(layouts) - num_layouts, MAZE_LAYOUT_TRIALS)
+    self.assertLen(layouts - num_layouts, MAZE_LAYOUT_TRIALS)
 
 if __name__ == '__main__':
   if 'TEST_SRCDIR' in os.environ:
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

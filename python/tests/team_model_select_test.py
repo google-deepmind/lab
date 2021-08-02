@@ -18,14 +18,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
 import deepmind_lab
 
 
-class TeamModelSelectTest(unittest.TestCase):
+class TeamModelSelectTest(absltest.TestCase):
 
   def test_with_six_bots(self):
     player_count = 7
@@ -36,15 +36,15 @@ class TeamModelSelectTest(unittest.TestCase):
     action_spec = env.action_spec()
     action = np.zeros([len(action_spec)], dtype=np.intc)
     event_names = sorted([name for name, _ in env.events()])
-    self.assertEqual(len(event_names), player_count * 2)
+    self.assertLen(event_names, player_count * 2)
     for i in six.moves.range(player_count):
       self.assertEqual(event_names[i], 'newClientInfo' + str(i + 1))
       self.assertEqual(event_names[i + player_count],
                        'skinModified' + str(i + 1))
     env.step(action, 1)
-    self.assertEqual(len(env.events()), 0)
+    self.assertEmpty(env.events())
     env.reset()
-    self.assertEqual(len(env.events()), player_count * 2)
+    self.assertLen(env.events(), player_count * 2)
 
   def test_without_bot(self):
     env = deepmind_lab.Lab(
@@ -54,13 +54,13 @@ class TeamModelSelectTest(unittest.TestCase):
     action_spec = env.action_spec()
     action = np.zeros([len(action_spec)], dtype=np.intc)
     event_names = sorted([name for name, _ in env.events()])
-    self.assertEqual(len(event_names), 2)
+    self.assertLen(event_names, 2)
     self.assertEqual(event_names[0], 'newClientInfo1')
     self.assertEqual(event_names[1], 'skinModified1')
     env.step(action, 1)
-    self.assertEqual(len(env.events()), 0)
+    self.assertEmpty(env.events())
     env.reset()
-    self.assertEqual(len(env.events()), 2)
+    self.assertLen(env.events(), 2)
 
 
 if __name__ == '__main__':
@@ -68,4 +68,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

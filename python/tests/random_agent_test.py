@@ -20,14 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from absl.testing import absltest
 import six
-import unittest
 
-from python import random_agent
 import deepmind_lab
+from python import random_agent
 
 
-class RandomAgentsTest(unittest.TestCase):
+class RandomAgentsTest(absltest.TestCase):
 
   def test_spring_agent_run(self, length=100):
     env = deepmind_lab.Lab(
@@ -103,4 +103,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

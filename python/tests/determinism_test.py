@@ -21,7 +21,7 @@ from __future__ import print_function
 
 import os
 import pprint
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
@@ -47,7 +47,7 @@ def make_dmlab_environment(args=None, observations=None):
   return env
 
 
-class DeterminismTest(unittest.TestCase):
+class DeterminismTest(absltest.TestCase):
 
   # Tests that performing the same action N times produces the same player
   # position in each environment.
@@ -135,4 +135,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
@@ -26,7 +26,7 @@ import deepmind_lab
 from python.tests.utils import math_utils
 
 
-class PlayerInfo(unittest.TestCase):
+class PlayerInfo(absltest.TestCase):
 
   def test_movement(self):
     fps = 60
@@ -149,4 +149,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

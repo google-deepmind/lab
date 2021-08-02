@@ -20,14 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import unittest
+from absl.testing import absltest
 import numpy as np
 import six
 
 import deepmind_lab
 
 
-class FinalRewardTest(unittest.TestCase):
+class FinalRewardTest(absltest.TestCase):
 
   def test_final_reward(self):
     env = deepmind_lab.Lab(
@@ -74,4 +74,4 @@ if __name__ == '__main__':
     deepmind_lab.set_runfiles_path(
         os.path.join(os.environ['TEST_SRCDIR'],
                      'org_deepmind_lab'))
-  unittest.main()
+  absltest.main()

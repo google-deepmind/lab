@@ -19,11 +19,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import unittest
+from absl.testing import absltest
 from python.tests.utils import math_utils
 
 
-class MathUtilsTest(unittest.TestCase):
+class MathUtilsTest(absltest.TestCase):
 
   def testDeltaAngleDegrees(self):
     self.assertAlmostEqual(math_utils.delta_angle_degrees(10., 20.), 10.)
@@ -57,4 +57,4 @@ class MathUtilsTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-  unittest.main()
+  absltest.main()

@@ -17,7 +17,10 @@ py_binary(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     main = "benchmark.py",
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -28,7 +31,10 @@ py2and3_test(
     imports = ["python"],
     main = "dmlab_module_test.py",
     tags = ["noprecommit"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -40,6 +46,7 @@ py2and3_test(
     main = "random_agent_test.py",
     deps = [
         "//:python_random_agent_lib",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )
@@ -50,7 +57,10 @@ py2and3_test(
     srcs = ["raycast_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -59,7 +69,10 @@ py2and3_test(
     srcs = ["in_fov_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -67,7 +80,10 @@ py2and3_test(
     srcs = ["lookat_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -77,6 +93,7 @@ py2and3_test(
     imports = ["python"],
     deps = [
         "//python/tests/utils:math_utils",
+        "@com_google_absl_py//absl/testing:absltest",
         "@six_archive//:six",
     ],
 )
@@ -86,7 +103,10 @@ py2and3_test(
     srcs = ["properties_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -94,7 +114,10 @@ py2and3_test(
     srcs = ["extra_entities_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -102,7 +125,10 @@ py2and3_test(
     srcs = ["extra_entities_with_bots_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -110,7 +136,10 @@ py2and3_test(
     srcs = ["episode_time_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -118,7 +147,10 @@ py2and3_test(
     srcs = ["determinism_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -126,7 +158,10 @@ py2and3_test(
     srcs = ["spawn_inventory_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -134,7 +169,10 @@ py2and3_test(
     srcs = ["update_inventory_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -142,7 +180,10 @@ py2and3_test(
     srcs = ["entity_info_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -150,7 +191,10 @@ py2and3_test(
     srcs = ["debug_observation_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -158,7 +202,10 @@ py2and3_test(
     srcs = ["custom_view_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["//python/tests/utils:math_utils"],
+    deps = [
+        "//python/tests/utils:math_utils",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
 )
 
 py2and3_test(
@@ -166,7 +213,10 @@ py2and3_test(
     srcs = ["teleporter_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -175,6 +225,7 @@ py2and3_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     tags = ["manual"],
+    deps = ["@com_google_absl_py//absl/testing:absltest"],
 )
 
 py2and3_test(
@@ -184,7 +235,10 @@ py2and3_test(
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
     tags = ["manual"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -201,6 +255,7 @@ py2and3_test(
     srcs = ["custom_actions_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
+    deps = ["@com_google_absl_py//absl/testing:absltest"],
 )
 
 py2and3_test(
@@ -208,7 +263,10 @@ py2and3_test(
     srcs = ["game_command_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -216,7 +274,10 @@ py2and3_test(
     srcs = ["final_reward_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py2and3_test(
@@ -224,7 +285,10 @@ py2and3_test(
     srcs = ["level_cache_test.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "@com_google_absl_py//absl/testing:absltest",
+        "@six_archive//:six",
+    ],
 )
 
 py_test(
@@ -233,6 +297,7 @@ py_test(
     tags = ["noprecommit"],
     deps = [
         "//:dmenv_module",
+        "@com_google_absl_py//absl/testing:absltest",
         "@dm_env_archive//:test_utils",
     ],
 )
