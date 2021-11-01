@@ -46,13 +46,15 @@ sys.stdout.write("{}\\n{}\\n".format(get_python_inc(), get_include()))
 _GET_PYTHON_SOABI = """
 from packaging import tags
 tag = next(iter(tags.sys_tags()))
-print(f'PY_TAGS = struct(interpreter = "{tag.interpreter}", abi = "{tag.abi}", platform = "{tag.platform}")')
+print(f'struct(interpreter = "{tag.interpreter}", abi = "{tag.abi}", platform = "{tag.platform}")')
 """.strip()
 
 def _python_repo_impl(repository_ctx):
     """Creates external/<reponame>/BUILD, a python3 symlink, and other files."""
 
     repository_ctx.file("BUILD", _BUILD_FILE)
+    py2_tags_def = """struct(interpreter = "py2", abi = "none", platform = "any")"""
+    py3_tags_def = """struct(interpreter = "py3", abi = "none", platform = "any")"""
 
     if repository_ctx.attr.py_version in ["PY2", "PY2AND3"]:
         result = repository_ctx.execute(["python2", "-c", _GET_PYTHON_INCLUDE_DIR])
@@ -61,11 +63,6 @@ def _python_repo_impl(repository_ctx):
         pypath, nppath = result.stdout.splitlines()
         repository_ctx.symlink(pypath, "python2")
         repository_ctx.symlink(nppath, "numpy2")
-
-        result = repository_ctx.execute(["python2", "-c", _GET_PYTHON_SOABI])
-        if result.return_code:
-            fail("Failed to run local Python2 interpreter: %s" % result.stderr)
-        repository_ctx.file("defs.bzl", result.stdout)
 
     if repository_ctx.attr.py_version in ["PY3", "PY2AND3"]:
         result = repository_ctx.execute(["python3", "-c", _GET_PYTHON_INCLUDE_DIR])
@@ -78,7 +75,18 @@ def _python_repo_impl(repository_ctx):
         result = repository_ctx.execute(["python3", "-c", _GET_PYTHON_SOABI])
         if result.return_code:
             fail("Failed to run local Python3 interpreter: %s" % result.stderr)
-        repository_ctx.file("defs.bzl", result.stdout)
+        py3_tags_def = result.stdout.strip()
+
+    tags_def = """
+def py_tags(py_ver):
+    if py_ver == "py2":
+        return {}
+    elif py_ver == "py3":
+        return {}
+    else:
+        fail("Argument must be either 'py2' or 'py3', was: '{{}}'.".format(py_ver))
+""".format(py2_tags_def, py3_tags_def)
+    repository_ctx.file("defs.bzl", tags_def.strip())
 
 python_repo = repository_rule(
     implementation = _python_repo_impl,
