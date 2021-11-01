@@ -1054,7 +1054,10 @@ py_library(
     srcs = ["python/dmenv_module.py"],
     data = ["//:deepmind_lab.so"],
     imports = ["python"],
-    visibility = ["//python/tests:__subpackages__"],
+    visibility = [
+        "//python/pip_package:__pkg__",
+        "//python/tests:__subpackages__",
+    ],
     deps = [
         "@dm_env_archive//:dm_env",
         "@six_archive//:six",

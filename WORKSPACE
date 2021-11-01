@@ -16,6 +16,11 @@ http_archive(
 )
 
 http_archive(
+    name = "rules_python",
+    strip_prefix = "rules_python-main",
+    url = "https://github.com/bazelbuild/rules_python/archive/main.zip",
+)
+http_archive(
     name = "com_google_absl",
     strip_prefix = "abseil-cpp-master",
     urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
@@ -167,5 +172,5 @@ new_local_repository(
 
 python_repo(
     name = "python_system",
-    py_version = "PY3",
+    py_version = "PY2AND3",
 )

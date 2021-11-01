@@ -43,6 +43,12 @@ from numpy import get_include
 sys.stdout.write("{}\\n{}\\n".format(get_python_inc(), get_include()))
 """.strip()
 
+_GET_PYTHON_SOABI = """
+from packaging import tags
+tag = next(iter(tags.sys_tags()))
+print(f'PY_TAGS = struct(interpreter = "{tag.interpreter}", abi = "{tag.abi}", platform = "{tag.platform}")')
+""".strip()
+
 def _python_repo_impl(repository_ctx):
     """Creates external/<reponame>/BUILD, a python3 symlink, and other files."""
 
@@ -56,6 +62,11 @@ def _python_repo_impl(repository_ctx):
         repository_ctx.symlink(pypath, "python2")
         repository_ctx.symlink(nppath, "numpy2")
 
+        result = repository_ctx.execute(["python2", "-c", _GET_PYTHON_SOABI])
+        if result.return_code:
+            fail("Failed to run local Python2 interpreter: %s" % result.stderr)
+        repository_ctx.file("defs.bzl", result.stdout)
+
     if repository_ctx.attr.py_version in ["PY3", "PY2AND3"]:
         result = repository_ctx.execute(["python3", "-c", _GET_PYTHON_INCLUDE_DIR])
         if result.return_code:
@@ -63,6 +74,11 @@ def _python_repo_impl(repository_ctx):
         pypath, nppath = result.stdout.splitlines()
         repository_ctx.symlink(pypath, "python3")
         repository_ctx.symlink(nppath, "numpy3")
+
+        result = repository_ctx.execute(["python3", "-c", _GET_PYTHON_SOABI])
+        if result.return_code:
+            fail("Failed to run local Python3 interpreter: %s" % result.stderr)
+        repository_ctx.file("defs.bzl", result.stdout)
 
 python_repo = repository_rule(
     implementation = _python_repo_impl,
