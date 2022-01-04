@@ -31,6 +31,7 @@
 
 #include "deepmind/support/logging.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
@@ -1783,13 +1784,13 @@ lua::NResultsOr PropertyListCallBackFunction(lua_State* L) {
   }
 
   int flags = 0;
-  if (mode.find('w') != std::string::npos) {
+  if (absl::StrContains(mode, 'w')) {
     flags |= EnvCApi_PropertyAttributes_Writable;
   }
-  if (mode.find('r') != std::string::npos) {
+  if (absl::StrContains(mode, 'r')) {
     flags |= EnvCApi_PropertyAttributes_Readable;
   }
-  if (mode.find('l') != std::string::npos) {
+  if (absl::StrContains(mode, 'l')) {
     flags |= EnvCApi_PropertyAttributes_Listable;
   }
   if (flags != 0) {
