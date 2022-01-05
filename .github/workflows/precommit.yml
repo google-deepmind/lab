@@ -46,8 +46,7 @@ jobs:
         timeout-minutes: 45
         run: |
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
-          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py2 --test_tag_filters=""
-          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test.py3 --test_tag_filters=""
+          bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:python_module_test --test_tag_filters=""
           bazel --bazelrc=.precommit.bazelrc test  ${{matrix.cfg.config}} --copt=-Wno-sign-compare //python/tests:dmenv_module_test --test_tag_filters=""
       - name: run-agent
         run: |
