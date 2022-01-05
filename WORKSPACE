@@ -5,8 +5,8 @@ load("@//:python_system.bzl", "python_repo")
 
 http_archive(
     name = "com_google_googletest",
-    strip_prefix = "googletest-master",
-    urls = ["https://github.com/google/googletest/archive/master.zip"],
+    strip_prefix = "googletest-main",
+    urls = ["https://github.com/google/googletest/archive/main.zip"],
 )
 
 http_archive(
@@ -23,8 +23,8 @@ http_archive(
 
 http_archive(
     name = "com_google_absl_py",
-    strip_prefix = "abseil-py-master",
-    urls = ["https://github.com/abseil/abseil-py/archive/master.zip"],
+    strip_prefix = "abseil-py-main",
+    urls = ["https://github.com/abseil/abseil-py/archive/main.zip"],
 )
 
 http_archive(
@@ -71,7 +71,7 @@ http_archive(
 http_archive(
     name = "jpeg_archive",
     build_file = "@//bazel:jpeg.BUILD",
-    sha256 = "1e9793e1c6ba66e7e0b6e5fe7fd0f9e935cc697854d5737adec54d93e5b3f730",
+    sha256 = "682aee469c3ca857c4c38c37a6edadbfca4b04d42e56613b11590ec6aa4a278d",
     strip_prefix = "jpeg-9c",
     urls = ["http://www.ijg.org/files/jpegsrc.v9c.tar.gz"],
 )
