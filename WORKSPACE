@@ -71,9 +71,9 @@ http_archive(
 http_archive(
     name = "jpeg_archive",
     build_file = "@//bazel:jpeg.BUILD",
-    sha256 = "682aee469c3ca857c4c38c37a6edadbfca4b04d42e56613b11590ec6aa4a278d",
-    strip_prefix = "jpeg-9c",
-    urls = ["http://www.ijg.org/files/jpegsrc.v9c.tar.gz"],
+    sha256 = "2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a",
+    strip_prefix = "jpeg-9d",
+    urls = ["http://www.ijg.org/files/jpegsrc.v9d.tar.gz"],
 )
 
 http_archive(
