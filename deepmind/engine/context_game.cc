@@ -389,15 +389,19 @@ ContextGame::ContextGame(
     DeepmindFileReaderType* file_reader_override,
     const DeepMindReadOnlyFileSystem* read_only_file_system,
     std::string temp_folder)
-      : deepmind_calls_(deepmind_calls),
-        map_finished_(false),
-        player_view_{},
-        velocity_smoother_(
-            /*smooth_time=*/util::ConvertExpAt60FpsToSmoothTime(0.1),
-            /*start=*/{0.0, 0.0, 0.0}),
-        executable_runfiles_(executable_runfiles),
-        file_reader_override_(file_reader_override),
-        temp_folder_(std::move(temp_folder)) {
+    : deepmind_calls_(deepmind_calls),
+      map_finished_(false),
+      player_view_{/*.pos = */Eigen::Vector3d::Zero(),
+                   /*.eyePos = */Eigen::Vector3d::Zero(),
+                   /*.vel = */Eigen::Vector3d::Zero(),
+                   /*.angles = */Eigen::Vector3d::Zero(),
+                   /*.anglesVel = */Eigen::Vector3d::Zero()},
+      velocity_smoother_(
+          /*smooth_time=*/util::ConvertExpAt60FpsToSmoothTime(0.1),
+          /*start=*/{0.0, 0.0, 0.0}),
+      executable_runfiles_(executable_runfiles),
+      file_reader_override_(file_reader_override),
+      temp_folder_(std::move(temp_folder)) {
   if (read_only_file_system == nullptr ||
       read_only_file_system->open == nullptr ||
       read_only_file_system->get_size == nullptr ||
