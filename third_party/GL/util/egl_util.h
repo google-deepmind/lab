@@ -39,6 +39,9 @@ EGLDisplay CreateInitializedEGLDisplay(void);
 // CreateInitializedEGLDisplay() have been terminated. This is necessary because
 // calling eglTerminate will invalidate *all* contexts associated with a given
 // display within the same address space.
+//
+// Note that it might be necessary to also call eglReleaseThread() to ensure
+// thread-specific resources are freed.
 EGLBoolean TerminateInitializedEGLDisplay(EGLDisplay display);
 
 // Helper function that unloads any remaining resources used for internal
