@@ -10,7 +10,7 @@ cc_library(
     hdrs = ["char_grid.h"],
     visibility = ["//deepmind:__subpackages__"],
     deps = [
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -102,9 +102,11 @@ cc_test(
     ],
     deps = [
         ":translate_text_level",
-        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -123,8 +125,8 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log",
     ],
 )
 

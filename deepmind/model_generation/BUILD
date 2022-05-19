@@ -9,8 +9,8 @@ cc_library(
     hdrs = ["geometry_util.h"],
     deps = [
         ":transform",
-        "//deepmind/support:logging",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
         "@eigen_archive//:eigen",
     ],
@@ -24,7 +24,7 @@ cc_library(
         ":geometry_util",
         ":model",
         ":transform",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log:check",
         "@eigen_archive//:eigen",
     ],
 )
@@ -37,7 +37,7 @@ cc_library(
         ":geometry_util",
         ":model",
         ":transform",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log:check",
         "@eigen_archive//:eigen",
     ],
 )
@@ -50,7 +50,7 @@ cc_library(
         ":geometry_util",
         ":model",
         ":transform",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log:check",
         "@eigen_archive//:eigen",
     ],
 )
@@ -63,7 +63,7 @@ cc_library(
         ":geometry_util",
         ":model",
         ":transform",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log:check",
         "@eigen_archive//:eigen",
     ],
 )
@@ -99,13 +99,15 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":model",
+        ":transform",
         ":transform_lua",
         "//deepmind/lua",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
+        "//deepmind/tensor:tensor_view",
+        "@com_google_absl//absl/log",
     ],
 )
 
@@ -134,8 +136,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":model",
+        ":transform",
         "//deepmind/include:context_hdrs",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
     ],
 )
 
@@ -145,8 +149,11 @@ cc_library(
     hdrs = ["model_setters.h"],
     deps = [
         ":model",
+        ":transform",
         "//deepmind/include:context_hdrs",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
     ],
 )
 
@@ -174,9 +181,10 @@ cc_library(
         ":transform",
         "//deepmind/lua",
         "//deepmind/lua:read",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
     ],
 )
 
@@ -209,18 +217,22 @@ cc_library(
         ":geometry_cylinder",
         ":geometry_sphere",
         ":geometry_util",
+        ":model",
         ":model_getters",
         ":model_lua",
         ":model_setters",
         ":model_util",
+        ":transform",
         ":transform_lua",
         "//deepmind/include:context_hdrs",
         "//deepmind/lua",
         "//deepmind/lua:class",
+        "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/meta:type_traits",
         "@com_google_absl//absl/strings",
     ],
 )

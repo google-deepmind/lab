@@ -18,17 +18,18 @@
 
 #include "deepmind/engine/context_actions.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <iostream>
 #include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "deepmind/lua/call.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/stack_resetter.h"
+#include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
 
 namespace deepmind {

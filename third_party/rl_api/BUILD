@@ -19,7 +19,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":env_c_api",
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log",
         "@com_google_googletest//:gtest",
     ],
     alwayslink = 1,  # contains test definitions

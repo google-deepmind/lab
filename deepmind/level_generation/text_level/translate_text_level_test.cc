@@ -20,14 +20,19 @@
 
 #include <fstream>
 #include <iterator>
+#include <random>
 #include <string>
+#include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/flags/flag.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/strings/string_view.h"
 #include "deepmind/level_generation/text_level/text_level_settings.h"
 #include "deepmind/support/test_srcdir.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 ABSL_FLAG(
     std::string, map_outfile, "",

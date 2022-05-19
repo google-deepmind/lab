@@ -86,9 +86,10 @@ cc_library(
     deps = [
         ":env_observation",
         "//:dmlablib",
-        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "//deepmind/util:files",
+        "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/log:check",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -110,9 +111,10 @@ cc_library(
     visibility = ["//:__pkg__"],
     deps = [
         "//:dmlablib",
-        "//deepmind/support:logging",
         "//deepmind/support:test_srcdir",
         "//deepmind/util:files",
+        "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/log:check",
         "@com_google_googletest//:gtest",
     ],
 )

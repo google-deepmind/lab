@@ -22,8 +22,7 @@
 #include <random>
 #include <string>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "absl/log/log.h"
 #include "deepmind/engine/lua_random.h"
 #include "deepmind/lua/bind.h"
 #include "deepmind/lua/call.h"
@@ -31,6 +30,8 @@
 #include "deepmind/lua/push_script.h"
 #include "deepmind/lua/table_ref.h"
 #include "deepmind/lua/vm_test_util.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace deepmind {
 namespace lab {

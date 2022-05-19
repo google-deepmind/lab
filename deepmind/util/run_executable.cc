@@ -18,17 +18,17 @@
 
 #include "deepmind/util/run_executable.h"
 
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <stddef.h>
 
 #include <array>
 #include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <memory>
 #include <string>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
 
 namespace {

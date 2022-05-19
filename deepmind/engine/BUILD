@@ -39,12 +39,14 @@ cc_library(
         "//deepmind/model_generation:model",
         "//deepmind/model_generation:model_getters",
         "//deepmind/model_generation:model_lua",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -57,11 +59,13 @@ cc_library(
         "//deepmind/lua:class",
         "//deepmind/lua:n_results_or",
         "//deepmind/lua:read",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
         "@com_google_absl//absl/container:node_hash_map",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/meta:type_traits",
     ],
 )
 
@@ -132,10 +136,11 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
         "//deepmind/tensor:tensor_view",
         "//third_party/rl_api:env_c_api",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
     ],
 )
 
@@ -146,12 +151,14 @@ cc_library(
     deps = [
         "//deepmind/lua",
         "//deepmind/lua:call",
+        "//deepmind/lua:n_results_or",
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:stack_resetter",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
         "//deepmind/tensor:lua_tensor",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -167,8 +174,8 @@ cc_library(
         "//deepmind/lua:push",
         "//deepmind/lua:read",
         "//deepmind/lua:table_ref",
-        "//deepmind/support:logging",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
     ],
 )
 
@@ -242,6 +249,7 @@ cc_test(
         "//deepmind/lua:push_script",
         "//deepmind/lua:table_ref",
         "//deepmind/lua:vm_test_util",
+        "@com_google_absl//absl/log",
         "@com_google_googletest//:gtest_main",
     ],
 )

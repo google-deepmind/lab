@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/log.h"
 #include "gmock/gmock.h"
 
 namespace rl_api {

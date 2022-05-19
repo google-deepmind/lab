@@ -18,14 +18,22 @@
 
 #include "deepmind/engine/context_events.h"
 
+#include <cstdint>
+#include <string>
 #include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/container/node_hash_map.h"
+#include "absl/meta/type_traits.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
+#include "third_party/rl_api/env_c_api.h"
 
 namespace deepmind {
 namespace lab {

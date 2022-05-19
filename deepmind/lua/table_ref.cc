@@ -18,8 +18,9 @@
 
 #include "deepmind/lua/table_ref.h"
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
 #include "deepmind/lua/lua.h"
+#include "deepmind/lua/read.h"
 
 namespace deepmind {
 namespace lab {

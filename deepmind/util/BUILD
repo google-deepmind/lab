@@ -10,7 +10,8 @@ cc_library(
     hdrs = ["run_executable.h"],
     visibility = ["//deepmind:__subpackages__"],
     deps = [
-        "//deepmind/support:logging",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -73,7 +74,8 @@ cc_test(
         ":default_read_only_file_system",
         ":file_reader",
         ":files",
-        "//deepmind/support:logging",
+        "//:file_reader_types",
+        "@com_google_absl//absl/log:check",
         "@com_google_googletest//:gtest_main",
     ],
 )

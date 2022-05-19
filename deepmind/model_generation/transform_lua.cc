@@ -18,7 +18,13 @@
 
 #include "deepmind/model_generation/transform_lua.h"
 
-#include "deepmind/support/logging.h"
+#include <memory>
+#include <vector>
+
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "deepmind/lua/read.h"
+#include "deepmind/model_generation/transform.h"
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
 

@@ -23,8 +23,9 @@
 #include <utility>
 #include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/log.h"
 #include "absl/container/flat_hash_map.h"
+#include "deepmind/level_generation/text_level/translate_text_level.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
@@ -75,8 +76,6 @@ bool LuaCustomEntityCallback(
     LOG(FATAL) << "User callback invocation failed ('" + res.error() + "')";
   } else if ((res.n_results() == 0) ||
              (res.n_results() == 1 && lua_isnil(L, -1))) {
-    VLOG(1) << "User callback(" << i << ", " << j << ", '" << ent
-            << "') returned nil or nothing";
     lua_pop(L, res.n_results());
     return false;
   } else if ((res.n_results() > 1) ||
@@ -85,9 +84,6 @@ bool LuaCustomEntityCallback(
   } else {
     auto is_empty = [](const std::string& s) { return s.empty(); };
     data.erase(std::remove_if(data.begin(), data.end(), is_empty), data.end());
-
-    VLOG(1) << "User callback(" << i << ", " << j << ", '" << ent
-            << "') returned " << data.size() << " non-empty string(s)";
     out->swap(data);
 
     lua_pop(L, res.n_results());

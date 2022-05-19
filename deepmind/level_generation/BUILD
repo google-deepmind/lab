@@ -29,10 +29,11 @@ cc_library(
     visibility = ["//deepmind:__subpackages__"],
     deps = [
         "//:level_cache_types",
-        "//deepmind/support:logging",
         "//deepmind/util:files",
         "//deepmind/util:run_executable",
         "//third_party/md:md5",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
     ],
 )

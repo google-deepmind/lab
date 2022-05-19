@@ -18,9 +18,15 @@
 
 #include "deepmind/model_generation/geometry_cylinder.h"
 
-#include "deepmind/support/logging.h"
+#include <array>
+#include <cmath>
+#include <string>
+#include <vector>
+
 #include "Eigen/Geometry"
+#include "absl/log/check.h"
 #include "deepmind/model_generation/geometry_util.h"
+#include "deepmind/model_generation/model.h"
 #include "deepmind/model_generation/transform.h"
 
 namespace deepmind {

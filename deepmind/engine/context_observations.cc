@@ -19,17 +19,21 @@
 #include "deepmind/engine/context_observations.h"
 
 #include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <iostream>
+#include <string>
 #include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "deepmind/lua/call.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
+#include "deepmind/lua/table_ref.h"
 #include "deepmind/tensor/lua_tensor.h"
 #include "deepmind/tensor/tensor_view.h"
+#include "third_party/rl_api/env_c_api.h"
 
 namespace deepmind {
 namespace lab {

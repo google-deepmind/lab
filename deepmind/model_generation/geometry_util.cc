@@ -18,9 +18,15 @@
 
 #include "deepmind/model_generation/geometry_util.h"
 
-#include "deepmind/support/logging.h"
+#include <array>
+#include <functional>
+#include <string>
+#include <vector>
+
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
+#include "deepmind/model_generation/transform.h"
 
 namespace deepmind {
 namespace lab {

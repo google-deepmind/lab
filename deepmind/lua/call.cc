@@ -21,7 +21,8 @@
 #include <string>
 #include <utility>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 

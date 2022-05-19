@@ -31,9 +31,9 @@
 #ifndef DML_DEEPMIND_LUA_VM_TEST_UTIL_H_
 #define DML_DEEPMIND_LUA_VM_TEST_UTIL_H_
 
-#include "deepmind/support/logging.h"
-#include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "deepmind/lua/vm.h"
+#include "gtest/gtest.h"
 
 namespace deepmind {
 namespace lab {

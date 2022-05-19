@@ -19,9 +19,11 @@
 #include "deepmind/level_generation/text_level/char_grid.h"
 
 #include <algorithm>
-#include <functional>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 

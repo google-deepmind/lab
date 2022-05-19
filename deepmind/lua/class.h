@@ -19,7 +19,10 @@
 #ifndef DML_DEEPMIND_LUA_CLASS_H_
 #define DML_DEEPMIND_LUA_CLASS_H_
 
-#include "deepmind/support/logging.h"
+#include <new>
+#include <utility>
+
+#include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "deepmind/lua/lua.h"
 #include "deepmind/lua/n_results_or.h"

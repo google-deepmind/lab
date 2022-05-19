@@ -18,9 +18,15 @@
 
 #include "deepmind/model_generation/model_setters.h"
 
-#include <cstddef>
+#include <string>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "deepmind/include/deepmind_model_setters.h"
+#include "deepmind/model_generation/model.h"
+#include "deepmind/model_generation/transform.h"
 
 namespace deepmind {
 namespace lab {

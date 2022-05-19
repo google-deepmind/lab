@@ -6,11 +6,6 @@ package(default_visibility = ["//visibility:public"])
 licenses(["restricted"])
 
 cc_library(
-    name = "logging",
-    hdrs = ["logging.h"],
-)
-
-cc_library(
     name = "test_srcdir",
     testonly = True,
     srcs = ["test_srcdir.cc"],

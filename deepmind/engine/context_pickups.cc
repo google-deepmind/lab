@@ -19,14 +19,19 @@
 #include "deepmind/engine/context_pickups.h"
 
 #include <algorithm>
+#include <iterator>
 #include <string>
-#include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "deepmind/lua/call.h"
 #include "deepmind/lua/class.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
+#include "deepmind/lua/table_ref.h"
 
 namespace deepmind {
 namespace lab {

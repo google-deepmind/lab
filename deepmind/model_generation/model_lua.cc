@@ -18,14 +18,21 @@
 
 #include "deepmind/model_generation/model_lua.h"
 
+#include <algorithm>
+#include <limits>
+#include <string>
+#include <utility>
 #include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/log.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
+#include "deepmind/model_generation/model.h"
+#include "deepmind/model_generation/transform.h"
 #include "deepmind/model_generation/transform_lua.h"
 #include "deepmind/tensor/lua_tensor.h"
+#include "deepmind/tensor/tensor_view.h"
 
 namespace deepmind {
 namespace lab {

@@ -19,14 +19,16 @@
 #include "deepmind/util/file_reader.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <string>
 
-#include "deepmind/support/logging.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "deepmind/util/default_read_only_file_system.h"
 #include "deepmind/util/files.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "public/file_reader_types.h"
 
 namespace deepmind {
 namespace lab {

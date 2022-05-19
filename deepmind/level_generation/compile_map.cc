@@ -19,6 +19,7 @@
 #include "deepmind/level_generation/compile_map.h"
 
 #include <libgen.h>
+
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -26,11 +27,12 @@
 #include <string>
 #include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "deepmind/util/files.h"
 #include "deepmind/util/run_executable.h"
+#include "public/level_cache_types.h"
 #include "third_party/md/md5.h"
 
 namespace deepmind {

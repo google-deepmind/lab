@@ -19,13 +19,20 @@
 #include "deepmind/model_generation/lua_model.h"
 
 #include <cmath>
+#include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
-#include "deepmind/support/logging.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/meta/type_traits.h"
 #include "absl/strings/str_cat.h"
+#include "deepmind/include/deepmind_calls.h"
 #include "deepmind/include/deepmind_model_getters.h"
 #include "deepmind/include/deepmind_model_setters.h"
+#include "deepmind/lua/class.h"
 #include "deepmind/lua/lua.h"
+#include "deepmind/lua/n_results_or.h"
 #include "deepmind/lua/push.h"
 #include "deepmind/lua/read.h"
 #include "deepmind/lua/table_ref.h"
@@ -34,10 +41,12 @@
 #include "deepmind/model_generation/geometry_cylinder.h"
 #include "deepmind/model_generation/geometry_sphere.h"
 #include "deepmind/model_generation/geometry_util.h"
+#include "deepmind/model_generation/model.h"
 #include "deepmind/model_generation/model_getters.h"
 #include "deepmind/model_generation/model_lua.h"
 #include "deepmind/model_generation/model_setters.h"
 #include "deepmind/model_generation/model_util.h"
+#include "deepmind/model_generation/transform.h"
 #include "deepmind/model_generation/transform_lua.h"
 
 namespace deepmind {

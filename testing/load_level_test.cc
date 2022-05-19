@@ -1,15 +1,13 @@
-#include <glob.h>
-
-#include <array>
 #include <string>
 
-#include "deepmind/support/logging.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "deepmind/support/test_srcdir.h"
 #include "deepmind/util/files.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "public/dmlab.h"
 #include "testing/env_observation.h"
+#include "third_party/rl_api/env_c_api.h"
 
 namespace deepmind {
 namespace lab {

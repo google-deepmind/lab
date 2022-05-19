@@ -18,8 +18,13 @@
 
 #include "deepmind/model_generation/geometry_cube.h"
 
-#include "deepmind/support/logging.h"
+#include <array>
+#include <string>
+#include <vector>
+
+#include "absl/log/check.h"
 #include "deepmind/model_generation/geometry_util.h"
+#include "deepmind/model_generation/model.h"
 #include "deepmind/model_generation/transform.h"
 
 namespace deepmind {
