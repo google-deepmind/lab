@@ -1,7 +1,7 @@
 # Description:
 #   General utilities.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 # Library for running external executables.
 cc_library(

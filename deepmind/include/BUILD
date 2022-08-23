@@ -1,7 +1,7 @@
 # Description:
 #   Internal C API for hooks and callbacks.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "context_hdrs",

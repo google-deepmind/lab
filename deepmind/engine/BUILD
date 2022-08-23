@@ -1,7 +1,7 @@
 # Description:
 #   Hooks and callbacks to enable gameplay modification.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "context",

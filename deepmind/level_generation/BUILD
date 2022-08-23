@@ -1,7 +1,7 @@
 # Description:
 #   Libraries for dynamic level generation.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 sh_binary(
     name = "compile_map_sh",

@@ -1,7 +1,7 @@
 # Description:
 #   Tools for generation of text levels that can be used by the text level converter.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "text_maze",

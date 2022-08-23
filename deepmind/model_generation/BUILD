@@ -1,7 +1,7 @@
 # Description:
 #   Procedural modelling library.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "geometry_util",

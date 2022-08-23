@@ -3,7 +3,7 @@
 
 package(default_visibility = ["//python/tests:__subpackages__"])
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 py_library(
     name = "math_utils",

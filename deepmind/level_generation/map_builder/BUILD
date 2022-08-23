@@ -1,7 +1,7 @@
 # Description:
 #   Data structures and tools for building .map files.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "map_builder",

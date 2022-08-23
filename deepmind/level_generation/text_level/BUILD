@@ -2,7 +2,7 @@
 #   Translation from text levels into .map format.
 #   See deepmind/docs/developers/creating_levels/text_level.md.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "char_grid",

@@ -1,7 +1,7 @@
 # Description:
 #   Integration tests via Python.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 py_binary(
     name = "python_benchmark",

@@ -1,7 +1,7 @@
 # Description:
 #   Unit tests for DeepMind Lab.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 TEST_SCRIPTS = [
     test_script[:-len(".lua")]

@@ -3,7 +3,7 @@
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_library(
     name = "logging",

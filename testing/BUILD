@@ -1,7 +1,7 @@
 # Description:
 #   End-to-end tests for DeepMind Lab.
 
-licenses(["restricted"])  # GPLv2
+licenses(["restricted"])
 
 cc_test(
     name = "recording_test",
