@@ -218,11 +218,11 @@ class GameController(object):
   def _observations(self):
     try:
       return self._env.observations()
-    except RuntimeError:
+    except RuntimeError as e:
       if self._env.is_running():
         raise
       else:
-        raise EpisodeFinishedError()
+        raise EpisodeFinishedError from e
 
   def _get_empty_actions(self):
     return np.zeros([len(self._action_index)], dtype=np.intc)
