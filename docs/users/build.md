@@ -10,8 +10,8 @@ build rules should work out of the box on Debian (Jessie or newer) and Ubuntu
 *DeepMind Lab* also builds on other Linux systems, but some changes to the build
 files might be required, see below.
 
-*DeepMind Lab* is written in C99 and C++11, and you will need a sufficiently
-modern compiler. GCC 4.8 should suffice.
+*DeepMind Lab* is written in C99 and C++17, and you will need a sufficiently
+modern compiler.
 
 Instructions for installing Bazel can be found in the [Bazel install
 guide](https://docs.bazel.build/versions/master/install.html).
@@ -20,6 +20,11 @@ You may need to deal with some details concerning Python dependencies. Those
 are documented in a [separate section](#python-dependencies) below.
 
 ## Step-by-step instructions for building and running
+
+These instructions were checked for the initial release of *DeepMind Lab*, which
+only required C++11. Since 2022 it requires C++17, and more recent versions of
+the platforms shown below are needed. However, the general set of dependencies
+should continue to remain largely accurate.
 
 1. Install Bazel (see above).
 
@@ -63,8 +68,6 @@ are documented in a [separate section](#python-dependencies) below.
          java-1_8_0-openjdk-devel libOSMesa-devel freeglut-devel libSDL-devel \
          python-devel python-numpy-devel python-imaging
      ```
-
-If Python 3 support is not required, omit the packages that mention `python3`.
 
 3. [Clone or download *DeepMind Lab*](https://github.com/deepmind/lab).
 

@@ -240,7 +240,7 @@ TEST_F(PushTest, PushVariantMonostate) {
 
 TEST_F(PushTest, PushVariantArray) {
   std::vector<absl::variant<absl::string_view, double>> values;
-  values.emplace_back(10);
+  values.emplace_back(10.5);
   values.emplace_back("Hello");
   Push(L, values);
   ASSERT_EQ(LUA_TTABLE, lua_type(L, 1));
@@ -249,7 +249,7 @@ TEST_F(PushTest, PushVariantArray) {
 
   lua_rawgeti(L, 1, 1);
   ASSERT_EQ(LUA_TNUMBER, lua_type(L, 2));
-  EXPECT_EQ(lua_tonumber(L, 2), 10);
+  EXPECT_EQ(lua_tonumber(L, 2), 10.5);
 
   lua_rawgeti(L, 1, 2);
   ASSERT_EQ(LUA_TSTRING, lua_type(L, 3));
