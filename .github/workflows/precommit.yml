@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         os:
-          - { name: 'Linux', id: 'ubuntu-20.04' }
+          - { name: 'Linux', id: 'ubuntu-22.04' }
         cfg:
-          - { name: 'GCC', cc: gcc-10, cxx: g++-10, config: --copt=-Wno-maybe-uninitialized }
+          - { name: 'GCC', cc: gcc-12, cxx: g++-12, config: --copt=-Wno-maybe-uninitialized }
           - { name: 'LLVM+libstdc++', cc: clang, cxx: clang++, config: --copt=-Wno-uninitialized }
           - { name: 'LLVM+libc++', cc: clang, cxx: clang++, config: --config=libc++ --copt=-Wno-uninitialized }
 
