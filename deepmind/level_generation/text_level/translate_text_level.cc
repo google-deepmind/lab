@@ -430,15 +430,8 @@ std::string TranslateTextLevel(std::string level_text,
   });
 
   // The exporter string is already newline-terminated, so only add 1 newline
-  std::string acc = absl::StrCat(exporter.ToString(), "\n");
-
-  return std::accumulate(
-      lines.begin(), lines.end(), acc,
-      [](std::string& acc, const std::string& val) -> std::string {
-        acc.append(val);
-        acc.append(2, '\n');
-        return std::move(acc);
-      });
+  return absl::StrCat(exporter.ToString(), "\n", absl::StrJoin(lines, "\n\n"),
+                      "\n\n");
 }
 
 }  // namespace lab
