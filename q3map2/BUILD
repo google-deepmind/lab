@@ -54,7 +54,7 @@ cc_library(
 cc_binary(
     name = "q3map2",
     srcs = glob(
-        [
+        include = [
             "common/*.c",
             "common/*.h",
             "q3map2/*.c",
