@@ -927,6 +927,7 @@ cc_binary(
     main = "examples/game_main.py",
     python_version = py,
     srcs_version = py,
+    tags = ["manual"],
     deps = ["@six_archive//:six"],
 ) for py in [
     "PY2",

@@ -35,13 +35,12 @@ jobs:
       - name: install infrastructure
         run: |
           sudo apt-get update
-          sudo apt-get install gettext python2-dev python3-dev libsdl2-dev libosmesa6-dev python-numpy-dev python3-numpy-dev python-pil python3-pil python-enum34
+          sudo apt-get install gettext python3-dev libsdl2-dev libosmesa6-dev python3-numpy-dev python3-pil
           sudo find /usr -type f -name Python.h -o -name arrayobject.h -o -name functional -o -name -filesystem
           sudo ln -s /usr/lib/llvm-10/include/c++/v1 /usr/include/c++/v1
-          sed -i -e 's/py_version = "PY3"/py_version = "PY2AND3"/' WORKSPACE
       - name: build
         run: |
-          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare //...
+          bazel --bazelrc=.precommit.bazelrc build ${{matrix.cfg.config}} --copt=-Wno-sign-compare //... //:python_game_py3
       - name: run-tests
         timeout-minutes: 45
         run: |
