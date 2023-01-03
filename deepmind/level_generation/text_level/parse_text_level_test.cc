@@ -118,22 +118,22 @@ TEST(ParseTextLevel, Openings) {
   // openings => edges).
 
   const char* kRoomVal[] = {
-    u8"\u25A0",   // no opening
-    u8"\u2575",   //  1 = North
-    u8"\u2577",   //  2 = South
-    u8"\u2502",   //  3 = North, South
-    u8"\u2576",   //  4 = East
-    u8"\u2514",   //  5 = North, East
-    u8"\u250C",   //  6 = South, East
-    u8"\u251C",   //  7 = North, South, East
-    u8"\u2574",   //  8 = West
-    u8"\u2518",   //  9 = North, West
-    u8"\u2510",   // 10 = South, West
-    u8"\u2524",   // 11 = North, South, West
-    u8"\u2500",   // 12 = East, West
-    u8"\u2534",   // 13 = North, East, West
-    u8"\u252C",   // 14 = South, East, West
-    u8"\u253C",   // 15 = North, South, East, West
+      "\u25A0",  // no opening
+      "\u2575",  //  1 = North
+      "\u2577",  //  2 = South
+      "\u2502",  //  3 = North, South
+      "\u2576",  //  4 = East
+      "\u2514",  //  5 = North, East
+      "\u250C",  //  6 = South, East
+      "\u251C",  //  7 = North, South, East
+      "\u2574",  //  8 = West
+      "\u2518",  //  9 = North, West
+      "\u2510",  // 10 = South, West
+      "\u2524",  // 11 = North, South, West
+      "\u2500",  // 12 = East, West
+      "\u2534",  // 13 = North, East, West
+      "\u252C",  // 14 = South, East, West
+      "\u253C",  // 15 = North, South, East, West
   };
 
   maze.Visit([&](std::size_t i, std::size_t j, const GridMaze::Cell& cell) {
