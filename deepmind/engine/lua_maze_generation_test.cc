@@ -38,7 +38,6 @@ namespace lab {
 namespace {
 
 using ::deepmind::lab::lua::testing::IsOkAndHolds;
-using ::testing::AnyOf;
 using ::testing::Eq;
 
 class LuaMazeGenerationTest : public lua::testing::TestWithVm {
