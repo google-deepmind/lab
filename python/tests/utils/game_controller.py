@@ -192,11 +192,11 @@ class GameController(object):
   def _step(self, actions, steps):
     try:
       return self._env.step(actions, steps)
-    except RuntimeError:
+    except RuntimeError as e:
       if self._env.is_running():
         raise
       else:
-        raise EpisodeFinishedError()
+        raise EpisodeFinishedError from e
 
   @property
   def position(self):
