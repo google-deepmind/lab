@@ -25,11 +25,11 @@ exports_files(["defs.bzl"])
 cc_library(
     name = "python_headers",
     hdrs = select({
-        "@bazel_tools//tools/python:PY2": glob(["python2/**/*.h", "numpy2/**/*.h"]),
+
         "@bazel_tools//tools/python:PY3": glob(["python3/**/*.h", "numpy3/**/*.h"]),
     }),
     includes = select({
-        "@bazel_tools//tools/python:PY2": ["python2", "numpy2"],
+
         "@bazel_tools//tools/python:PY3": ["python3", "numpy3"],
     }),
     visibility = ["//visibility:public"],
@@ -68,5 +68,5 @@ python_repo = repository_rule(
     implementation = _python_repo_impl,
     configure = True,
     local = True,
-    attrs = {"py_version": attr.string(default = "PY2AND3", values = ["PY2", "PY3", "PY2AND3"])},
+    attrs = {"py_version": attr.string(default = "PY3", values = ["PY2", "PY3", "PY2AND3"])},
 )

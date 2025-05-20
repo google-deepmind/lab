@@ -51,7 +51,7 @@ function api:nextMap()
   local maze = maze_generation:mazeGeneration{entity = MAP}
   debug_observations.setMaze(maze)
   -- Override default camera position.
-  debug_observations.setCameraPos{395, 220, 400}
+  debug_observations.setCameraPos{395, 220, 1000}
   return make_map.makeMap{
       mapName = 'empty_room',
       mapEntityLayer = MAP,

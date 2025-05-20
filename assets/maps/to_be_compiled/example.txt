@@ -1,0 +1,5 @@
+mapEntityLayer="*****\n*PA *\n*   *\n*   *\n*****"
+mapVariationsLayer="*****\n*AAA*\n*AAA*\n*BBB*\n*****"
+decalFrequency=0.1
+randomSeed=1
+texture="TETRIS"

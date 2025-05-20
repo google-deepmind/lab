@@ -930,7 +930,7 @@ cc_binary(
     tags = ["manual"],
     deps = ["@six_archive//:six"],
 ) for py in [
-    "PY2",
+
     "PY3",
 ]]
 

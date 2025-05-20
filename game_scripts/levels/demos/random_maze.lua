@@ -82,15 +82,15 @@ function api:createPickup(classname)
 end
 
 function api:start(episode, seed, params)
-  random:seed(seed)
-  local rows, cols = 15, 15
+  random:seed(0)
+  local rows, cols = 21, 21
   local mazeT = generateTensorMaze(rows, cols)
   local maze = maze_generation.mazeGeneration{height = rows, width = cols}
   local variations = {'.', 'A', 'B', 'C'}
   mazeT:applyIndexed(function(val, index)
     local row, col = unpack(index)
     if 1 < row and row < rows and 1 < col and col < cols and
-        random:uniformReal(0, 1) < 0.15 then
+        random:uniformReal(0, 1) < 0.75 then
       maze:setEntityCell(row, col, ' ')
     else
       maze:setEntityCell(row, col, val == 0 and '*' or ' ')
@@ -113,7 +113,7 @@ function api:start(episode, seed, params)
         if distance > 5 then
             maze:setEntityCell(row, col, 'P')
         end
-        if 0 < distance and distance < 5 then
+        if 0 < distance and distance < 1 then
             maze:setEntityCell(row, col, 'A')
         end
       end
@@ -134,7 +134,7 @@ end
 custom_observations.decorate(api)
 setting_overrides.decorate{
     api = api,
-    apiParams = {episodeLengthSeconds = 3 * 60, camera = {750, 750, 750}},
+    apiParams = {episodeLengthSeconds = 3 * 5, camera = {750, 750, 750}},
     decorateWithTimeout = true
 }
 
