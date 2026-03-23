@@ -271,7 +271,7 @@ void AddHomeBasePath( char *path ){
 		basePaths[ i + 1 ] = basePaths[ i ];
 
 	/* concatenate home dir and path */
-	sprintf( temp, "%s/%s", homePath, path );
+	snprintf( temp, sizeof(temp), "%s/%s", homePath, path );
 
 	/* add it to the list */
 	basePaths[ 0 ] = safe_malloc( strlen( temp ) + 1 );
@@ -450,7 +450,7 @@ void InitPaths( int *argc, char **argv ){
 		for ( i = 0; i < numBasePaths; i++ )
 		{
 			/* create a full path and initialize it */
-			sprintf( temp, "%s/%s/", basePaths[ i ], gamePaths[ j ] );
+			snprintf( temp, sizeof(temp), "%s/%s/", basePaths[ i ], gamePaths[ j ] );
 			//quick n dirty patch to enable vfs for quakelive
 			if (strcmp(game->arg, "quakelive") == 0 ) {
 				unz_GAME_QL = 1;

@@ -1123,14 +1123,14 @@ int VisMain( int argc, char **argv ){
 
 
 	/* load the bsp */
-	sprintf( source, "%s%s", inbase, ExpandArg( argv[ i ] ) );
+	snprintf( source, sizeof(source), "%s%s", inbase, ExpandArg( argv[ i ] ) );
 	StripExtension( source );
 	strcat( source, ".bsp" );
 	Sys_Printf( "Loading %s\n", source );
 	LoadBSPFile( source );
 
 	/* load the portal file */
-	sprintf( portalfile, "%s%s", inbase, ExpandArg( argv[ i ] ) );
+	snprintf( portalfile, sizeof(portalfile), "%s%s", inbase, ExpandArg( argv[ i ] ) );
 	StripExtension( portalfile );
 	strcat( portalfile, ".prt" );
 	Sys_Printf( "Loading %s\n", portalfile );
