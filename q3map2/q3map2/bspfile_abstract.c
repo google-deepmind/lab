@@ -397,7 +397,7 @@ void WriteBSPFile( const char *filename ){
 
 	/* make fake temp name so existing bsp file isn't damaged in case write process fails */
 	time( &tm );
-	sprintf( tempname, "%s.%08X", filename, (int) tm );
+	snprintf( tempname, sizeof(tempname), "%s.%08X", filename, (int) tm );
 
 	/* byteswap, write the bsp, then swap back so it can be manipulated further */
 	SwapBSPFile();

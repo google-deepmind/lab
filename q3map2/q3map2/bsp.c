@@ -420,7 +420,7 @@ void ProcessWorldModel( void ){
 	/* ydnar: fog hull */
 	value = ValueForKey( &entities[ 0 ], "_foghull" );
 	if ( value[ 0 ] != '\0' ) {
-		sprintf( shader, "textures/%s", value );
+		snprintf( shader, sizeof(shader), "textures/%s", value );
 		MakeFogHullSurfs( e, tree, shader );
 	}
 
@@ -630,7 +630,7 @@ void OnlyEnts( void ){
 	/* note it */
 	Sys_Printf( "--- OnlyEnts ---\n" );
 
-	sprintf( out, "%s.bsp", source );
+	snprintf( out, sizeof(out), "%s.bsp", source );
 	LoadBSPFile( out );
 	numEntities = 0;
 
@@ -864,9 +864,9 @@ int BSPMain( int argc, char **argv ){
 	SetDefaultSampleSize( sampleSize );
 
 	/* delete portal, line and surface files */
-	sprintf( path, "%s.prt", source );
+	snprintf( path, sizeof(path), "%s.prt", source );
 	remove( path );
-	sprintf( path, "%s.lin", source );
+	snprintf( path, sizeof(path), "%s.lin", source );
 	remove( path );
 	//%	sprintf( path, "%s.srf", source );	/* ydnar */
 	//%	remove( path );
@@ -875,7 +875,7 @@ int BSPMain( int argc, char **argv ){
 	strcpy( name, ExpandArg( argv[ i ] ) );
 	if ( strcmp( name + strlen( name ) - 4, ".reg" ) ) {
 		/* if we are doing a full map, delete the last saved region map */
-		sprintf( path, "%s.reg", source );
+		snprintf( path, sizeof(path), "%s.reg", source );
 		remove( path );
 		DefaultExtension( name, ".map" );   /* might be .reg */
 	}
