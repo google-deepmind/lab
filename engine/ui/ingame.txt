@@ -1,6 +1,6 @@
 // menu defs
-// 
-{	
+//
+{
  	loadMenu { "ui/ingame.menu" }
 	loadMenu { "ui/ingame_vote.menu" }
 	loadMenu { "ui/ingame_about.menu" }

@@ -31,28 +31,28 @@ For *nix:
 1. This should be identical to installing ioq3.  Check their README for more
    details.
 
-   
+
 For Win32:
 
 1. Have a Quake 3 install, fully patched.
 
-2. Copy the following files into Quake 3's install directory: 
-     
+2. Copy the following files into Quake 3's install directory:
+
      ioquake3.x86.exe
      renderer_opengl1_x86.dll
      renderer_opengl2_x86.dll
-     
+
    These can be found in build/release-mingw32-x86 after compiling, or bug
    someone to release binaries.
-  
+
 
 -------------------------------------------------------------------------------
   RUNNING
 -------------------------------------------------------------------------------
 
 1. Start ioquake3. (ioquake3.x86.exe on Win32)
- 
-2. Open the console (the default key is tilde ~) and type 
+
+2. Open the console (the default key is tilde ~) and type
 `/cl_renderer opengl2` and press enter
 `/vid_restart` then press enter again.
 
@@ -100,7 +100,7 @@ Cvars for HDR and tonemapping:
                                      0 - No.
                                      1 - Yes. (default)
 
-*  `r_toneMap`                      - Enable tone mapping.  Requires 
+*  `r_toneMap`                      - Enable tone mapping.  Requires
                                    r_hdr and r_postProcess.
                                      0 - No.
                                      1 - Yes. (default)
@@ -110,7 +110,7 @@ Cvars for HDR and tonemapping:
                                      1 - Yes.
 
 *  `r_forceToneMapAvg`              - Cheat.  Map average scene luminance to this
-                                   value, in powers of two.  Requires 
+                                   value, in powers of two.  Requires
                                    r_forceToneMap.
                                     -2.0 - Dark.
                                     -1.0 - Kinda dark. (default).
@@ -139,7 +139,7 @@ Cvars for HDR and tonemapping:
 
 *  `r_forceAutoExposure`            - Cheat.  Override built-in and map auto
                                    exposure settings and use cvars
-                                   r_forceAutoExposureMin and 
+                                   r_forceAutoExposureMin and
                                    r_forceAutoExposureMax.
                                      0 - No. (default)
                                      1 - Yes.
@@ -171,7 +171,7 @@ Cvars for advanced material usage:
                                      1 - Yes. (default)
 
 *  `r_deluxeMapping`                - Enable deluxe mapping.  (Map is compiled
-                                   with light directions.)  Even if the map 
+                                   with light directions.)  Even if the map
                                    doesn't have deluxe mapping compiled in,
                                    an approximation based on the lightgrid
                                    will be used.
@@ -309,7 +309,7 @@ Cvars that you probably don't care about or shouldn't mess with:
                                      0 - No.
                                      1 - Yes. (default)
 
-*  `r_mergeLightmaps`               - Merge the small (128x128) lightmaps into 
+*  `r_mergeLightmaps`               - Merge the small (128x128) lightmaps into
                                    2 or fewer giant (4096x4096) lightmaps.
                                    Easy speedup.
                                      0 - Don't.
@@ -342,7 +342,7 @@ Cvars that have broken bits:
 -------------------------------------------------------------------------------
 
 OpenGL2 supports .mtr files, which are basically the same as .shader files, and
-are located in the same place, but override existing .shader files if they 
+are located in the same place, but override existing .shader files if they
 exist.  This is to allow maps and mods to use the new material features without
 breaking the map when using the old renderer.
 
@@ -373,29 +373,29 @@ Here's an example of a material stored in one, showing off some new features:
         }
     }
 
-The first thing to notice is that this is basically the same as old Quake 3 
-shader files.  The next thing to notice are the new keywords.  Here is what 
+The first thing to notice is that this is basically the same as old Quake 3
+shader files.  The next thing to notice are the new keywords.  Here is what
 they mean:
 
   `stage <type>`
     - State how this imagemap will be used by OpenGL2:
         diffuseMap        - Standard, same as no stage entry
         normalMap         - Image will be used as a normal map
-        normalParallaxMap - Image will be used as a normal map with 
+        normalParallaxMap - Image will be used as a normal map with
                             alpha treated as height for parallax mapping
         specularMap       - Image will be used as a specular map with
                             alpha treated as shininess.
 
   `specularReflectance <value>`
-    - State how metallic this material is.  Metals typically have a high 
+    - State how metallic this material is.  Metals typically have a high
       specular and a low diffuse, so this is typically high for them, and low
       for other materials, such as plastic.  For typical values for various
       materials, see http://refractiveindex.info , pick a material, then scroll
       down to the reflection calculator and look up its reflectance.  Default
       is 0.04, since most materials aren't metallic.
-  
+
   `specularExponent <value>`
-    - State how shiny this material is.  Note that this is modulated by the 
+    - State how shiny this material is.  Note that this is modulated by the
       alpha channel of the specular map, so if it were set to 16, and the alpha
       channel of the specular map was set to 0.5, then the shininess would be
       set to 8.  Default 256.
@@ -446,7 +446,7 @@ declared before them, so materials like this are possible:
             blendfunc GL_DST_COLOR GL_ZERO
         }
     }
-    
+
 Though note due to the complexity of lighting, dynamic light (including
 sunlight with cascaded shadow maps) currently only works 100% on materials like
 this, where the second diffuse map doesn't have its own alpha, and only
@@ -473,7 +473,7 @@ surfaces.  To enable this, make your material look like this:
         }
     }
 
-Note the new keyword, 'vertexLit' after rgbGen.  This is analogous to 
+Note the new keyword, 'vertexLit' after rgbGen.  This is analogous to
 'rgbGen vertex', except a light direction will be determined from the lightgrid
 and used with the normal and specular maps.  'exactVertexLit' exists as well,
 and is the equivalent for 'exactVertex'.
@@ -486,17 +486,17 @@ and is the equivalent for 'exactVertex'.
 This adds a new keyword to sky materials, q3gl2_sun.  The syntax is:
 
     q3gl2_sun <red> <green> <blue> <intensity> <degrees> <elevation> <shadowScale>
-  
+
 Note the first six parameters are the same as in q3map_sun or q3map_sunExt,
 and the last two indicate scaling factors for the map brightness and an ambient
 light of the same color as the sun.
 
 There are currently two ways to use this in your own (and other people's) maps.
 
-  1. Create your map as normal, set r_sunlightMode to 1, and add a 
+  1. Create your map as normal, set r_sunlightMode to 1, and add a
      'q3gl2_sun' line after your 'q3map_sun' line in your sky material, like
      so:
-     
+
         textures/skies/bluesky
         {
           qer_editorimage textures/skies/bluesky.jpg
@@ -517,10 +517,10 @@ There are currently two ways to use this in your own (and other people's) maps.
      with the old renderer with the sunlight baked into the lightmap, and it
      can be used with existing maps without recompilation.  The downside is
      artifacts like doubled shadows and uneven shadow edges.
-     
+
   2. Set r_sunlightMode to 2 and use 'q3gl2_sun' instead of 'q3map_sun' or
      'q3map_sunExt', like so:
-  
+
         textures/skies/bluesky
         {
           qer_editorimage textures/skies/bluesky.jpg
@@ -542,7 +542,7 @@ There are currently two ways to use this in your own (and other people's) maps.
      not display properly with the old renderer, and you lose the bounced light
      that compiling the map with q3map_sun* in it would have.
 
-     
+
 -------------------------------------------------------------------------------
   TONE MAPPING AND AUTO EXPOSURE
 -------------------------------------------------------------------------------
@@ -550,7 +550,7 @@ There are currently two ways to use this in your own (and other people's) maps.
 This adds a new keyword to sky materials, q3gl2_tonemap.  The syntax is:
 
     q3gl2_tonemap <toneMapMin> <toneMapAvg> <toneMapMax> <autoExposureMin> <autoExposureMax>
-  
+
 Each of these settings corresponds to a matching cvar, so you can view and
 adjust the effect before settling on fixed settings.
 
@@ -571,17 +571,17 @@ contributed thoughts, ideas, and whole swaths of code to this project.
 
   - Robert 'Tr3B' Beckebans and the other contributors to XReaL, for letting me
     liberally copy code from you. :)
-  
+
   - Andrew 'Black Monk' Prosnik, Andrei 'Makro' Drexler, Tomi 'T.T.I.' Isoaho,
     Richard 'JBravo' Allen, Walter 'Johnny Rocket' Somol, and the rest of the
     Boomstick Studios, for contributing code, feature requests, and testing.
-    
+
   - Yoshiharu Gotanda, Tatsuya Shoji, and the rest of tri-Ace's R&D Department,
     for creating the tri-Ace shading equations and posting their derivations in
     simple English.
-    
+
   - Matthias 'gimhael' Bentrup, for random ideas and bits of code.
-  
+
   - Evan 'megatog615' Goers, for testing, ideas, and bugging me just enough
     that I'd write documentation. :)
 
