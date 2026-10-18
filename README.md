@@ -1,5 +1,9 @@
 # <img src="/docs/template/logo.png" alt="DeepMind Lab">
 
+<p align="center">
+  <b>English</b> · <a href="https://github.com/google-deepmind/lab/blob/master/README.zh.md">简体中文</a>
+</p>
+
 *DeepMind Lab* is a 3D learning environment based on id Software's
 [Quake III Arena](https://github.com/id-Software/Quake-III-Arena) via
 [ioquake3](https://github.com/ioquake/ioq3) and
