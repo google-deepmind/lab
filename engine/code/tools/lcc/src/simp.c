@@ -182,7 +182,7 @@ static int subi(long x, long y, long min, long max, int needconst) {
 static int subd(double x, double y, double min, double max, int needconst) {
 	return addd(x, -y, min, max, needconst);
 }
-Tree constexpr(int tok) {
+Tree const_expr(int tok) {
 	Tree p;
 
 	needconst++;
@@ -192,7 +192,7 @@ Tree constexpr(int tok) {
 }
 
 int intexpr(int tok, int n) {
-	Tree p = constexpr(tok);
+	Tree p = const_expr(tok);
 
 	needconst++;
 	if (p->op == CNST+I || p->op == CNST+U)

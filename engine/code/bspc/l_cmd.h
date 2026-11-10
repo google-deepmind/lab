@@ -51,8 +51,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
-typedef enum {false, true} qboolean;
+
+typedef enum {qfalse, qtrue} qboolean;
 typedef unsigned char byte;
+
+#ifndef false
+#define false qfalse
+#endif
+
+#ifndef true
+#define true qtrue
+#endif
+
 #endif
 
 // the dec offsetof macro doesnt work very well...

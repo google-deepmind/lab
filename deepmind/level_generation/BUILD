@@ -1,3 +1,7 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
 # Description:
 #   Libraries for dynamic level generation.
 

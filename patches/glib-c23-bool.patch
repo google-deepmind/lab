@@ -1,0 +1,8 @@
+--- a/glib/goption.c
++++ b/glib/goption.c
+@@ -212 +212 @@
+-    gboolean bool;
++    gboolean boolean_value;
+@@ -1742 +1742 @@
+-              *(gboolean *)change->arg_data = change->prev.bool;
++              *(gboolean *)change->arg_data = change->prev.boolean_value;

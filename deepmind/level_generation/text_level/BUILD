@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 # Description:
 #   Translation from text levels into .map format.
 #   See deepmind/docs/developers/creating_levels/text_level.md.

@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
 # Description:
 #   Tree provides utilities for working with nested data structures.
 #   The tree package used to support Bazel, but no longer does so.

@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 # Description:
 #   Internal C API for hooks and callbacks.
 

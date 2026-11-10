@@ -645,7 +645,7 @@ extern int process(char *);
 extern int findfunc(char *, char *);
 extern int findcount(char *, int, int);
 
-extern Tree constexpr(int);
+extern Tree const_expr(int);
 extern int intexpr(int, int);
 extern Tree simplify(int, Type, Tree, Tree);
 extern int ispow2(unsigned long u);
