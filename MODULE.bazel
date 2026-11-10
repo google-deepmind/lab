@@ -1,0 +1,232 @@
+module(
+    name = "org_deepmind_lab",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "rules_python", version = "2.4.5")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "rules_shell", version = "0.8.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+http_archive = use_repo_rule(
+    "@bazel_tools//tools/build_defs/repo:http.bzl",
+    "http_archive",
+)
+
+new_local_repository = use_repo_rule(
+    "@bazel_tools//tools/build_defs/repo:local.bzl",
+    "new_local_repository",
+)
+
+http_archive(
+    name = "com_google_googletest",
+    urls = ["https://github.com/google/googletest/archive/main.zip"],
+    strip_prefix = "googletest-main",
+)
+
+http_archive(
+    name = "com_google_absl",
+    urls = ["https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz"],
+    sha256 = "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
+    strip_prefix = "abseil-cpp-20240722.0",
+patch_cmds = ["""
+python3 - <<'PY'
+from pathlib import Path
+
+rules = {
+    "cc_library": "cc_library",
+    "cc_test": "cc_test",
+    "cc_binary": "cc_binary",
+}
+
+newline = chr(10)
+count = 0
+
+for path in Path(".").rglob("*"):
+    if not path.is_file() or path.name not in ("BUILD", "BUILD.bazel"):
+        continue
+
+    content = path.read_text()
+    lines = content.splitlines()
+
+    additions = []
+    for rule, filename in rules.items():
+        if rule + "(" in content and filename + ".bzl" not in content:
+            additions.append(
+                'load("@rules_cc//cc:' + filename + '.bzl", "' + rule + '")'
+            )
+
+    if not additions:
+        continue
+
+    index = next(
+        (i for i, line in enumerate(lines)
+         if line.startswith(("load(", "package("))),
+        0
+    )
+
+    lines[index:index] = additions + [""]
+    path.write_text(newline.join(lines) + newline)
+    count += 1
+
+print("Updated", count, "Abseil BUILD files")
+PY
+"""],
+)
+
+http_archive(
+    name = "eigen_archive",
+    urls = [
+        "https://mirror.bazel.build/bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
+        "https://bitbucket.org/eigen/eigen/get/5d5dd50b2eb6.zip",
+    ],
+    sha256 = "9a01fed6311df359f3f9af119fcf298a3353aef7d1b1bc86f6c8ae0ca6a2f842",
+    strip_prefix = "/eigen-eigen-5d5dd50b2eb6",
+    build_file = "@//bazel:eigen.BUILD",
+    patches = ["//:patches/eigen-transpositions.patch"],
+    patch_args = ["-p1"],
+)
+
+http_archive(
+    name = "png_archive",
+    urls = [
+        "https://mirror.bazel.build/github.com/glennrp/libpng/archive/v1.6.37.zip",
+        "https://github.com/glennrp/libpng/archive/v1.6.37.zip",
+    ],
+    sha256 = "c2c50c13a727af73ecd3fc0167d78592cf5e0bca9611058ca414b6493339c784",
+    strip_prefix = "libpng-1.6.37",
+    build_file = "@//bazel:png.BUILD",
+)
+
+http_archive(
+    name = "lua_archive",
+    urls = [
+        "https://mirror.bazel.build/www.lua.org/ftp/lua-5.1.5.tar.gz",
+        "https://www.lua.org/ftp/lua-5.1.5.tar.gz",
+    ],
+    sha256 = "2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333",
+    strip_prefix = "lua-5.1.5/src",
+    build_file = "@//bazel:lua.BUILD",
+)
+
+http_archive(
+    name = "zlib_archive",
+    urls = [
+        "https://mirror.bazel.build/zlib.net/zlib-1.2.11.tar.gz",
+        "https://zlib.net/zlib-1.2.11.tar.gz",
+    ],
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    strip_prefix = "zlib-1.2.11",
+    build_file = "@//bazel:zlib.BUILD",
+)
+
+new_local_repository(
+    name = "sdl_system",
+    path = "/usr",
+    build_file = "@//bazel:sdl.BUILD",
+)
+
+http_archive(
+    name = "bazel_skylib",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/main.zip"],
+    strip_prefix = "bazel-skylib-main",
+)
+
+http_archive(
+    name = "com_google_absl_py",
+    urls = ["https://github.com/abseil/abseil-py/archive/main.zip"],
+    strip_prefix = "abseil-py-main",
+)
+
+http_archive(
+    name = "enum34_archive",
+    urls = [
+        "https://mirror.bazel.build/pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+        "https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+    ],
+    sha256 = "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1",
+    build_file = "@com_google_absl_py//third_party:enum34.BUILD",
+)
+
+http_archive(
+    name = "funcsigs_archive",
+    urls = [
+        "https://pypi.python.org/packages/94/4a/db842e7a0545de1cdb0439bb80e6e42dfe82aaeaadd4072f2263a4fbed23/funcsigs-1.0.2.tar.gz",
+    ],
+    strip_prefix = "funcsigs-1.0.2",
+    build_file = "@//bazel:funcsigs.BUILD",
+)
+
+http_archive(
+    name = "glib_archive",
+    urls = [
+        "https://mirror.bazel.build/ftp.gnome.org/pub/gnome/sources/glib/2.55/glib-2.55.1.tar.xz",
+        "https://ftp.gnome.org/pub/gnome/sources/glib/2.55/glib-2.55.1.tar.xz",
+    ],
+    sha256 = "0cbb3d31c9d181bbcc97cba3d9dbe3250f75e2da25e5f7c8bf5a993fe54baf6a",
+    strip_prefix = "glib-2.55.1",
+    build_file = "@//bazel:glib.BUILD",
+    patches = ["//:patches/glib-c23-bool.patch"],
+    patch_args = ["-p1"],
+)
+
+http_archive(
+    name = "jpeg_archive",
+    urls = ["http://www.ijg.org/files/jpegsrc.v9d.tar.gz"],
+    sha256 = "2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a",
+    strip_prefix = "jpeg-9d",
+    build_file = "@//bazel:jpeg.BUILD",
+)
+
+http_archive(
+    name = "libxml_archive",
+    urls = [
+        "https://mirror.bazel.build/xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
+        "http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz",
+    ],
+    sha256 = "f63c5e7d30362ed28b38bfa1ac6313f9a80230720b7fb6c80575eeab3ff5900c",
+    strip_prefix = "libxml2-2.9.7",
+    build_file = "@//bazel:libxml.BUILD",
+)
+
+http_archive(
+    name = "six_archive",
+    urls = [
+        "https://mirror.bazel.build/pypi.python.org/packages/source/s/six/six-1.15.0.tar.gz",
+        "https://pypi.python.org/packages/source/s/six/six-1.15.0.tar.gz",
+    ],
+    sha256 = "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259",
+    strip_prefix = "six-1.15.0",
+    build_file = "@//bazel:six.BUILD",
+)
+
+http_archive(
+    name = "dm_env_archive",
+    urls = ["https://github.com/deepmind/dm_env/archive/master.zip"],
+    strip_prefix = "dm_env-master",
+    build_file = "@//bazel:dm_env.BUILD",
+)
+
+http_archive(
+    name = "tree_archive",
+    urls = ["https://github.com/deepmind/tree/archive/master.zip"],
+    strip_prefix = "tree-master",
+    build_file = "@//bazel:tree.BUILD",
+)
+
+http_archive(
+    name = "pybind11_archive",
+    urls = ["https://github.com/pybind/pybind11/archive/master.zip"],
+    strip_prefix = "pybind11-master",
+    build_file = "@//bazel:pybind11.BUILD",
+)
+
+python_repo = use_repo_rule(
+    "@//:python_system.bzl",
+    "python_repo",
+)
+
+python_repo(
+    name = "python_system",
+    py_version = "PY3",
+)

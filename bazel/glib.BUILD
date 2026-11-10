@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 genrule(
     name = "gen_configure",
     srcs = [
@@ -141,6 +143,11 @@ cc_library(
         "glib/gwakeup.h",
         "glib/libcharset/libcharset.h",
         "glib/pcre/pcre.h",
+        "glib/gnulib/asnprintf.c",
+        "glib/gnulib/printf.c",
+        "glib/gnulib/printf-args.c",
+        "glib/gnulib/printf-parse.c",
+        "glib/gnulib/vasnprintf.c",
     ],
     hdrs = [
         "config.h",
@@ -231,6 +238,13 @@ cc_library(
         "glib/gversionmacros.h",
         "glib/valgrind.h",
         "glibconfig.h",
+        "glib/gnulib/printf-args.h",
+        "glib/gnulib/printf-parse.h",
+        "glib/gnulib/vasnprintf.h",
+        "glib/gnulib/printf.h",
+        "glib/gnulib/verify.h",
+        "glib/gnulib/xsize.h",
+        "glib/gnulib/g-gnulib.h",
     ],
     copts = [
         "-Iexternal/glib_archive/glib",
@@ -240,7 +254,7 @@ cc_library(
         "-DHAVE_CONFIG_H",
         "-DPCRE_STATIC",
     ],
-    includes = ["."],
+    includes = [".", "glib",  "glib/gnulib"],
     visibility = ["//visibility:public"],
     deps = [":charset"],
 )

@@ -119,7 +119,7 @@ void statement(int loop, Swtch swp, int lev) {
 		       		static char stop[] = { IF, ID, 0 };
 		       		Tree p;
 		       		t = gettok();
-		       		p = constexpr(0);
+		       		p = const_expr(0);
 		       		if (generic(p->op) == CNST && isint(p->type)) {
 		       			if (swp) {
 		       				needconst++;

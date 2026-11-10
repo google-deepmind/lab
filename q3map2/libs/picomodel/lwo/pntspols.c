@@ -493,7 +493,8 @@ void lwFreeTags( lwTagList *tlist ){
    ====================================================================== */
 
 int lwGetTags( picoMemStream_t *fp, int cksize, lwTagList *tlist ){
-	char *buf, *bp;
+	char *buf;
+        unsigned char *bp;
 	int i, len, ntags;
 
 	if ( cksize == 0 ) {
@@ -511,9 +512,9 @@ int lwGetTags( picoMemStream_t *fp, int cksize, lwTagList *tlist ){
 	/* count the strings */
 
 	ntags = 0;
-	bp = buf;
+	bp = (unsigned char*)buf;
 	while ( bp < buf + cksize ) {
-		len = strlen( bp ) + 1;
+		len = strlen((char*) bp ) + 1;
 		len += len & 1;
 		bp += len;
 		++ntags;

@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 # Description:
 #   Build rule for SDL2.
 #   Compiler and linker flags found with `sdl2-config --libs --cflags`.

@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 # Description:
 #   EGL Utility function required to correctly create and initialize an EGL
 #   display on multi-GPU machines.

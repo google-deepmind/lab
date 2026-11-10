@@ -17,7 +17,7 @@
 
 """Generates a local repository that points at the system's Python installation."""
 
-_BUILD_FILE = '''# Description:
+_BUILD_FILE = '''load("@rules_cc//cc:cc_library.bzl", "cc_library")
 #   Build rule for Python
 
 exports_files(["defs.bzl"])
@@ -25,8 +25,8 @@ exports_files(["defs.bzl"])
 cc_library(
     name = "python_headers",
     hdrs = select({
-        "@bazel_tools//tools/python:PY2": glob(["python2/**/*.h", "numpy2/**/*.h"]),
-        "@bazel_tools//tools/python:PY3": glob(["python3/**/*.h", "numpy3/**/*.h"]),
+        "@bazel_tools//tools/python:PY2": glob(["python2/**/*.h", "numpy2/**/*.h"], allow_empty = True),
+        "@bazel_tools//tools/python:PY3": glob(["python3/**/*.h", "numpy3/**/*.h"], allow_empty = True),
     }),
     includes = select({
         "@bazel_tools//tools/python:PY2": ["python2", "numpy2"],

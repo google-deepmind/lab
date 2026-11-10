@@ -2,6 +2,11 @@
 #   DeepMind Lab, a machine-learning research environment
 #   forked from ioquake/ioq3.
 
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 licenses(["restricted"])
 
 exports_files(["LICENSE"])
@@ -930,7 +935,6 @@ cc_binary(
     tags = ["manual"],
     deps = ["@six_archive//:six"],
 ) for py in [
-    "PY2",
     "PY3",
 ]]
 

@@ -1,0 +1,5 @@
+--- a/Eigen/src/Core/Transpositions.h
++++ b/Eigen/src/Core/Transpositions.h
+@@ -387 +387 @@
+-      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt.derived());
++      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt);
